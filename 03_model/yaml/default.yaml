@@ -1,0 +1,16 @@
+out_tag: test
+sex: 
+strain: 
+age_var: 
+  - "age_wk"
+  - "per_age_wk"
+fixed: "~ $age_var + $age_var2 + sex + strain" 
+mixture: "~ $age_var + $age_var2 + sex + strain" 
+random: 
+  - "~1"
+subject: idno
+idiag: FALSE
+nwg: FALSE
+ng_max: 3
+plan: 
+sample_n: 20
