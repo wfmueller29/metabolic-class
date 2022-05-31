@@ -2,7 +2,7 @@
 title: "SLAM Glucose Trajectory Analysis"
 author: "William Mueller"
 date: "`r format(Sys.time(), '%Y %B %d')`"
-output: 
+output:
   html_document:
     df_print: paged
 params:
@@ -23,13 +23,29 @@ library(helphlme)
 
 
 #setting global knitr options for r markdown output
-knitr::opts_chunk$set(autodep = TRUE) 
-knitr::opts_chunk$set(warning = FALSE) 
-knitr::opts_chunk$set(message = FALSE) 
-knitr::opts_chunk$set(echo = FALSE) 
-knitr::opts_chunk$set(cache = FALSE) 
-knitr::opts_chunk$set(include = FALSE) 
-knitr::opts_chunk$set(results = "asis") 
+knitr::opts_chunk$set(autodep = TRUE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(cache = FALSE)
+knitr::opts_chunk$set(include = FALSE)
+knitr::opts_chunk$set(results = "asis")
+
+```
+
+## Render
+```{r render, eval = FALSE}
+model_dir <- "20220510_124214_test"
+output_dir <- normalizePath(file.path("output", model_dir))
+rmarkdown::render(input = "04_model_select.Rmd",
+                  output_dir = output_dir,
+                  params = list(model_dir = model_dir))
+
+model_dir <- "20220523_121216_test"
+output_dir <- normalizePath(file.path("output", model_dir))
+rmarkdown::render(input = "04_model_select.Rmd",
+                  output_dir = output_dir,
+                  params = list(model_dir = model_dir))
 
 ```
 
@@ -57,35 +73,72 @@ cf_nest <- cf %>% nest_by(`data|oc`, `$age_var`)
 ```{r step1 mo_eval output, include = TRUE, eval = params$eval_step1, fig.height=7, fig.width=12}
 for(i in seq_len(nrow(cf_nest))) {
   models <- cf_nest$data[[i]]$final_model
-  mo_eval <- helphlme::mo_eval(models)
+  mo_eval <- helphlme::compare_models(models)
   print(kable(mo_eval$table, caption = names(models)) %>% kable_styling("striped", full_width = F))
   print(mo_eval$plot + labs(title = names(models)))
 }
 ```
 
-```{r model eval, include = TRUE, results= 'asis'}
-
+```{r model eval, include = TRUE, results = 'asis'}
 for(i in seq_len(nrow(cf_nest))) {
   cf <- cf_nest$data[[i]]
-  age_var <- cf_nest$`$age_var`[[i]]
+  outcome <- cf$oc[[1]]
+  df <- df_list[[cf$data[[1]]]]
+  ylim <- c(min(df[[outcome]]), max(df[[outcome]]))
   data_oc <- cf_nest$`data|oc`[[i]]
-  header <- paste("Data|Outcome =", data_oc, "; Age Variable =", age_var, sep = " ")
+  age_var <- cf_nest$`$age_var`[[i]]
+  header <- paste("Data|Outcome =",
+                  data_oc, 
+                  "; Age Variable =", 
+                  age_var, 
+                  sep = " ")
   cat("\n\n## ", header, "\n\n")
-  pred <- lapply(1:nrow(cf), function(i) {
-    lcpred(df = df_list[[cf$data[[i]]]], 
+  pred <-  helphlme::create_pred_df(df = df,
            age_vars = paste(age_var, c("", "2"), sep = ""),
            fixcov = c("sex" = 0, "strain" = 0))
-  })
-  keval_apply(df = pred[[1]],
+  helphlme::display_classes(df = pred,
                                  cf$final_model,
                                  age_var,
                                  main = header,
-                                 xlab = "Age (weeks)",
-                                 ylab = "Glucose")
-  mo_eval <- helphlme::mo_eval(cf$final_model)
+                                 xlab = age_var,
+                                 ylab = outcome,
+                            ylim = ylim)
+  mo_eval <- helphlme::compare_models(cf$final_model)
   print(kable(mo_eval$table) %>%  kable_styling("striped", full_width = F))
   print(mo_eval$plot)
 }
+
+
+```
+
+```{r select model in nest}
+final_models <- data.frame()
+for(i in seq_len(nrow(cf_nest))) {
+  age_var <- cf_nest$`$age_var`[[i]]
+  data_oc <- cf_nest$`data|oc`[[i]]
+  cf <- cf_nest$data[[i]]
+  models <- cf$final_model
+  mo_eval_table <- helphlme::compare_models(models)$table
+  cf <- cbind(cf, mo_eval_table) %>%
+    mutate(smallest_greater_5 = ifelse(`Smallest Class (%)` >= .05, 1, 0)) %>%
+    arrange(ICL, -smallest_greater_5)
+  final_model_df_row <- as.data.frame(cf)[1, ]
+  final_model_df_row$age_var <- age_var
+  final_model_df_row$data_oc <- data_oc
+  final_model_df_row$model_name <- paste(data_oc, age_var, sep = "_")
+  final_models <- rbind(final_models, final_model_df_row)
+}
+
+```
+
+```{r save final models}
+output_path <- normalizePath(file.path("output", params$model_dir))
+
+R.utils::copyDirectory(from = path, output_path)
+
+final_model_path <- file.path(output_path, "final_models.RDATA")
+
+save(final_models, file = final_model_path)
 
 ```
 
