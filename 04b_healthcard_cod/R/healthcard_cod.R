@@ -139,13 +139,14 @@ health <- health %>%
         condition_clean == "enlarged bladder",
       "enlarged organs",
       ifelse(condition_clean == "cloudy/tinted urine", "discolored urine",
-      ifelse(condition_clean == "unsteady gait",
-        "abnormal gait",
-        condition_clean
+        ifelse(condition_clean == "unsteady gait",
+          "abnormal gait",
+          condition_clean
+        )
       )
       )
     )
-  )))
+  ))
 
 sort(unique(health$condition_clean))
 
@@ -153,6 +154,22 @@ sort(unique(health$condition_clean))
 dvr_cod_df <- dvr_cod_protocol(dvr$cod)
 head(dvr_cod_df)
 dvr <- cbind(dvr, dvr_cod_df)
+
+# clean up cod_coded
+dvr <- dvr %>%
+  mutate(cod_coded = ifelse(cod_coded == "Neoplastic", "N",
+    ifelse(cod_coded == "Both Non-Neoplastic + Neoplastic", "NN + N",
+      ifelse(cod_code == "NN&NN Non-Neoplastic", "NN + NN",
+        ifelse(cod_coded == "Non-Neoplastic", "NN",
+          ifelse(cod_coded == "N&N Neoplastic", "N + N",
+            ifelse(cod_coded == "N+NN+N", "N + NN + N",
+              ifelse(cod_coded == "Nx3 Neoplastic", "N + N + N", cod_coded)
+            )
+          )
+        )
+      )
+    )
+  ))
 
 sort(unique(dvr$cod_1))
 
