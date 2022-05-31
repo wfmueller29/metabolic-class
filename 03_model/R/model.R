@@ -10,7 +10,7 @@ library(future)
 # load in data
 load("../02_prep_model_data/output/df_list.RDATA")
 
-# create object variables 
+# create object variables
 for (name in names(df_list)) {
   assign(x = name, value = df_list[[name]], envir = .GlobalEnv)
 }
@@ -148,7 +148,7 @@ time <- format(Sys.time(), "%Y%m%d_%H%M%S")
 out_dir <- paste(time, config$out_tag, sep = "_")
 out_path <- file.path("output", out_dir)
 
-# Create file paths 
+# Create file paths
 df_list_path <- file.path(out_path, "df_list.RDATA")
 models_path <- file.path(out_path, "models.RDATA")
 cf_path <- file.path(out_path, "cf.RDATA")
