@@ -53,41 +53,9 @@ load(file = "../04b_healthcard_cod/output/health.RDATA")
 load(file = "../04b_healthcard_cod/output/dvr.RDATA")
 ```
 
-```{r create summary dataframe}
-subject_sum <- main_cat_surv %>%
-  select(idno,
-         tag,
-         sex,
-         strain,
-         dead_censor,
-         fu_age_wk,
-         le_wk,
-         cod,
-         lastdate,
-         maxdate,
-         tod) %>%
-  mutate(idno = as.numeric(idno)) %>%
-  left_join(dvr, by = "idno")
 
-# check na's after merging
-apply(apply(subject_sum, 2, is.na), 2, sum)
-
-# obs goe from 1304 to 1310, so their are duplicates, lets find these duplicates
-# and choose the correct one
-id <- subject_sum$idno
-subject_sum[duplicated(id) | duplicated(id, fromLast = TRUE),]
-
-# if there a duplicates, we are going to take the observation with the cod.y
-# that is not NA or Undetermined. If there is no NA or undetermined, we are 
-# going to take the observation with the later dod
-subject_sum <- subject_sum %>%
-  group_by(idno) %>%
-  # cod_effective is 0 if "undetermined" or is.na
-  mutate(cod_effective = ifelse(cod.y == "Undetermined" | is.na(cod.y), 0, 1)) %>%
-  arrange(desc(cod_effective), desc(dod)) %>%
-  distinct(idno, .keep_all = TRUE) %>%
-  ungroup() %>%
-  as.data.frame()
+#### Healthcard Cleaning
+```{r healthcard}
 
 # now we have to add the health card information. lets convert it to wide format
 # so that we can add it to the subject summary 
@@ -127,17 +95,68 @@ rownames(count) <- NULL
 
 # select interesting healthcard 
 count <- arrange(count, -n)
+
+# save healthcard count
 write.csv(count, file = "output/conditions_and_counts.csv")
 ```
 
 ### Class Analysis
+
+#### Create Summary Dataframe
+```{r create summary dataframe}
+merge_dvr <- dvr %>%
+  select(idno, cod, dod, cod_coded, cod_1:cod_4_parens)
+
+merge_health <- health_wide_heat %>%
+  select(-dod, -idno)
+
+subject_sum <- main_cat_surv %>%
+  select(idno,
+         tag,
+         sex,
+         strain,
+         dead_censor,
+         fu_age_wk,
+         le_wk,
+         cod,
+         lastdate,
+         maxdate,
+         tod) %>%
+  mutate(idno = as.numeric(idno)) %>%
+  left_join(merge_dvr, by = "idno")
+
+# check na's after merging
+apply(apply(subject_sum, 2, is.na), 2, sum)
+
+# obs goe from 1304 to 1310, so their are duplicates, lets find these duplicates
+# and choose the correct one
+id <- subject_sum$idno
+subject_sum[duplicated(id) | duplicated(id, fromLast = TRUE),]
+
+# if there a duplicates, we are going to take the observation with the cod.y
+# that is not NA or Undetermined. If there is no NA or undetermined, we are 
+# going to take the observation with the later dod
+subject_sum <- subject_sum %>%
+  group_by(idno) %>%
+  # cod_effective is 0 if "undetermined" or is.na
+  mutate(cod_effective = ifelse(cod.y == "Undetermined" | is.na(cod.y), 0, 1)) %>%
+  arrange(desc(cod_effective), desc(dod)) %>%
+  distinct(idno, .keep_all = TRUE) %>%
+  ungroup() %>%
+  as.data.frame() %>%
+  rename(cod_census = cod.x,
+         cod_dvr = cod.y)
+
+subject_sum <- subject_sum %>%
+  left_join(merge_health, by = "tag")
+
+```
 
 #### Create Census Dataframe
 ```{r census data frame}
 # will number classes so that all classes of list given to function
 # are labelled uniquely
 make_census <- function(cf_row) {
-  cf_row <- final_models[1,]
   model <- unlist(cf_row$final_model, recursive = FALSE)
   class_df <- model$pprob
   
@@ -148,13 +167,14 @@ make_census <- function(cf_row) {
     mutate(idno = as.numeric(idno)) %>%
     left_join(class_df, by = "idno") %>%
     distinct(idno, .keep_all = T) %>%
-    select(class, idno, cohort, sex, strain, le_wk, starts_with("prob")) %>%
+    select(class, idno, cohort, starts_with("prob")) %>%
     filter(!is.na(class)) %>%
     mutate(idno = as.character(idno)) 
   
   # add survival information to census
   census <- census %>%
-    left_join(select(main_cat_surv, cod, dead_censor, idno), by ="idno") %>%
+    mutate(idno = as.numeric(idno)) %>%
+    left_join(subject_sum, by = "idno") %>%
     mutate(
       age_wk_death = le_wk,
       dead_nat = dead_censor
@@ -176,106 +196,8 @@ final_models$census <- lapply(seq_len(nrow(final_models)), function(i) {
 
 #### Create Table 1
 ```{r create table 1}
+source("R/t1.R")
 
-final_models$model_df <- lapply(final_models$data, function(data_name) {
-  df_list[[data_name]]
-})
-
-
-final_models$census_surv_cod <- lapply(final_models$model_df, function(df) {
-  
-})
-
-t1 <- function(df) {
-  df_main <- df
-  df_table <- df_main %>%
-    group_by(class) %>%
-    summarise(n = n()) %>%
-    select(class, n, everything())
-
-  df_count_cohort <- df_main %>%
-    group_by(class) %>%
-    count(cohort) %>%
-    ungroup() %>%
-    spread(key = cohort, value = n, sep = "_")
-
-  df_count_sex <- df_main %>%
-    group_by(class) %>%
-    count(sex) %>%
-    ungroup() %>%
-    spread(key = sex, value = n, sep = "_")
-
-  df_count_strain <- df_main %>%
-    group_by(class) %>%
-    count(strain) %>%
-    ungroup() %>%
-    spread(key = strain, value = n, sep = "_")
-
-  surv <- survfit(
-    data = df_main,
-    Surv(time = age_wk_death, event = dead_nat) ~ factor(class)
-  )
-  df_surv <- surv_median(surv) %>%
-    rename(
-      class = strata,
-      median_surv = median
-    ) %>%
-    select(-lower, -upper)
-
-  df_surv$class <- sort(unique(df_main$class))
-
-
-  df_table <- df_table %>%
-    left_join(df_count_cohort, by = "class") %>%
-    left_join(df_count_sex, by = "class") %>%
-    left_join(df_count_strain, by = "class") %>%
-    left_join(df_surv, by = "class")
-
-  df_table <- df_table %>%
-    t() %>%
-    data.frame() %>%
-    round() %>%
-    janitor::row_to_names(1)
-
-  df_table[is.na(df_table)] <- 0
-
-
-  names(df_table) <- paste0("class_", names(df_table))
-
-  df_table$total <- rowSums(df_table[, ]) ## sum rows to create total column
-  ## get set survival columns to NA
-  df_table[grepl(rownames(df_table), pattern = "surv"), "total"] <- NA
-
-  ## create new cols that are the frequency of the n columns
-  new_cols <- do.call(cbind, lapply(1:(length(df_table) - 1), function(i) {
-    new_col <- round(df_table[[i]] / df_table$total * 100, 1)
-  })) %>%
-    data.frame()
-
-  names(new_cols) <- paste0(names(df_table[, -length(df_table)]), "_freq")
-
-  df_table <- cbind(df_table, new_cols) ## bind freq columns to original table
-
-  l <- length(df_table) ## number of columns of dataframe
-  x <- (length(df_table) - 1) / 2 ## number of classes
-  for (i in 1:x) {
-    df_table[, i + l] <- paste0(
-      as.character(df_table[, i]),
-      " (",
-      df_table[, i + x + 1],
-      "%)"
-    )
-  }
-
-  df_table <- as.data.frame(
-    sapply(df_table,
-      gsub,
-      pattern = "(NA%)",
-      replacement = "weeks"
-    ),
-    row.names = rownames(df_table)
-  )
-  return(df_table)
-}
+final_models$t1_raw <- lapply(final_models$census, t1)
 
 ```
