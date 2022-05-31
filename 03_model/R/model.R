@@ -25,7 +25,7 @@ if (length(args) == 0) {
   )
 } else {
   params <- list(
-    default_yaml = "yaml/models/default.yaml",
+    default_yaml = "yaml/default.yaml",
     config_yaml = args[[1]]
   )
 }
@@ -49,6 +49,11 @@ config[in_config] <- config_yaml
 if (!is.null(config$sample_n)) {
   df_list <- lapply(df_list, sample_df, "idno", config$sample_n)
 }
+
+# filter for each sex and strain
+source("R/filter_group.R")
+df_list <- lapply(df_list, filter_group, subsets = c(sex = config$sex))
+df_list <- lapply(df_list, filter_group, subsets = c(strain = config$strain))
 
 # create call frame -----------------------------------------------------------
 # name of df_list are named with syntax <outcome>_<data type>
