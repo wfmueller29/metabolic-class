@@ -13,7 +13,7 @@ config <- yaml::read_yaml("yaml/default.yaml")
 
 traj_gluc <- main_all2 %>%
   filter(!is.na(gluc)) %>%
-  select(idno, gluc, sex, strain, age_wk, le_wk, per_age_wk) %>%
+  select(idno, cohort, gluc, sex, strain, age_wk, le_wk, per_age_wk) %>%
   mutate(
     age_wk2 = age_wk * age_wk,
     per_age_wk2 = per_age_wk * per_age_wk,
@@ -22,7 +22,7 @@ traj_gluc <- main_all2 %>%
 
 traj_bw <- main_all2 %>%
   filter(!is.na(bw)) %>%
-  select(idno, bw, sex, strain, age_wk, le_wk, per_age_wk) %>%
+  select(idno, cohort, bw, sex, strain, age_wk, le_wk, per_age_wk) %>%
   mutate(
     age_wk2 = age_wk * age_wk,
     per_age_wk2 = per_age_wk * per_age_wk,
@@ -31,7 +31,7 @@ traj_bw <- main_all2 %>%
 
 traj_fat <- main_all2 %>%
   filter(!is.na(fat)) %>%
-  select(idno, fat, sex, strain, age_wk, le_wk, per_age_wk) %>%
+  select(idno, cohort, fat, sex, strain, age_wk, le_wk, per_age_wk) %>%
   mutate(
     age_wk2 = age_wk * age_wk,
     per_age_wk2 = per_age_wk * per_age_wk,
@@ -40,7 +40,7 @@ traj_fat <- main_all2 %>%
 
 traj_lean <- main_all2 %>%
   filter(!is.na(lean)) %>%
-  select(idno, lean, sex, strain, age_wk, le_wk, per_age_wk) %>%
+  select(idno, cohort, lean, sex, strain, age_wk, le_wk, per_age_wk) %>%
   mutate(
     age_wk2 = age_wk * age_wk,
     per_age_wk2 = per_age_wk * per_age_wk,
@@ -69,13 +69,14 @@ df_list <- list(
 )
 
 df_list <- lapply(df_list,
-                  prep_hlme2,
-                  c("age_wk", "age_wk2", "per_age_wk", "per_age_wk2"),
-                  center = config$center,
-                  scale = config$scale)
+  helphlme::prep_hlme,
+  c("age_wk", "age_wk2", "per_age_wk", "per_age_wk2"),
+  center = config$center,
+  scale = config$scale
+)
 
 
-lapply(df_list, function(df) apply(apply(df,2,is.na),2,sum))
+lapply(df_list, function(df) apply(apply(df, 2, is.na), 2, sum))
 
 
 
