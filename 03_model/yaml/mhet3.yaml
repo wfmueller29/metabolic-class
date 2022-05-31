@@ -1,0 +1,22 @@
+out_tag: mhet3
+sex: M
+strain: HET3 
+age_var: 
+  - "age_wk"
+fixed: "~ $age_var + $age_var2" 
+mixture: "~ $age_var + $age_var2" 
+random: 
+  - "~ 1"
+  - "~ 1 + $age_var"
+  - "~ 1 + $age_var + $age_var2"
+subject: idno
+idiag:
+  - FALSE
+  - TRUE
+nwg:
+  - FALSE
+  - TRUE
+ng_max: 10
+plan: multisession
+sample_n: NULL
+
