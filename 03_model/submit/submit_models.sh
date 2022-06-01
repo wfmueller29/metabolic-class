@@ -3,7 +3,7 @@
 config=$1
 
 sbatch --mem=200g \
-  --cpus-per-task=20 \
+  --cpus-per-task=50 \
   -t 1-00:00:00 \
   -o log/models-slurmo-%A_%a.out \
   -e log/models-slurme-%A_%a.out \
