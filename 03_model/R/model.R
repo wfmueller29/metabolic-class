@@ -150,7 +150,11 @@ models <- pmap_cf(cf,
 # -----save stuff -------------------------------------------------------------
 # Create output directory
 time <- format(Sys.time(), "%Y%m%d_%H%M%S")
-out_dir <- paste(time, config$out_tag, sep = "_")
+if (config$tag_time) {
+  out_dir <- paste(time, config$out_tag, sep = "_")
+} else {
+  out_dir <- paste(config$out_tag)
+}
 out_path <- file.path("output", out_dir)
 
 # Create file paths
