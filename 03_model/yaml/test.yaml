@@ -1,7 +1,7 @@
-out_tag: mhet3
+out_tag: fb6
 tag_time: TRUE
-sex: M
-strain: HET3 
+sex: F
+strain: B6 
 age_var: 
   - "age_wk"
 fixed: "~ $age_var + $age_var2" 
@@ -19,5 +19,4 @@ nwg:
   - TRUE
 ng_max: 10
 plan: multisession
-sample_n: NULL
-
+sample_n: 100
