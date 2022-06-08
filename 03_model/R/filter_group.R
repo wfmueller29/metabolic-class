@@ -18,8 +18,10 @@ filter_group <- function(data, subsets) {
   filter_calls <- lapply(subsets, filter_call)
   if (length(filter_calls) > 1) {
     filter_calls <- do.call(combine_amper, filter_calls)
-  } else {
+  } else if (length(filter_calls) == 1) {
     filter_calls <- filter_calls[[1]]
+  } else {
+    message("subsets empty so no filer applied")
   }
 
   dt <- dt[eval(filter_calls), ]
