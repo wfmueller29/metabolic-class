@@ -74,7 +74,8 @@ cf_nest <- cf %>% nest_by(`data|oc`, `$age_var`)
 for(i in seq_len(nrow(cf_nest))) {
   models <- cf_nest$data[[i]]$final_model
   mo_eval <- helphlme::compare_models(models)
-  print(kable(mo_eval$table, caption = names(models)) %>% kable_styling("striped", full_width = F))
+  print(kable(mo_eval$table, caption = names(models)) %>% 
+        kable_styling("striped", full_width = F))
   print(mo_eval$plot + labs(title = names(models)))
 }
 ```
@@ -120,7 +121,7 @@ for(i in seq_len(nrow(cf_nest))) {
   models <- cf$final_model
   mo_eval_table <- helphlme::compare_models(models)$table
   cf <- cbind(cf, mo_eval_table) %>%
-    mutate(smallest_greater_5 = ifelse(`Smallest Class (%)` >= .05, 1, 0)) %>%
+    mutate(smallest_greater_5 = ifelse(`Smallest Class (%)` >= 5, 1, 0)) %>%
     arrange(-smallest_greater_5, ICL)
   final_model_df_row <- as.data.frame(cf)[1, ]
   final_model_df_row$age_var <- age_var
