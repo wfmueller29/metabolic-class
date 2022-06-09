@@ -6,7 +6,7 @@ output:
   html_document:
     df_print: paged
 params:
-  model_dir: "20220523_121216_test"
+  model_dir: "20220602_013532_all"
 ---
 
 ```{r setup, warning=FALSE, message=FALSE, echo=FALSE}
@@ -39,11 +39,16 @@ mega_pal <- rep(palette(), 40)
 
 ```{r load models}
 path <- normalizePath(file.path("..", "04_model_select", "output", params$model_dir))
-df_list_path <- normalizePath(file.path(path, "df_list.RDATA"))
-final_models_path <- normalizePath(file.path(path, "final_models.RDATA"))
 
-load(file = df_list_path)
-load(file = final_models_path)
+load_output <- function(file_name) {
+  file_path <- normalizePath(file.path(path, paste0(file_name, ".RDATA")))
+  load(file = file_path, envir = .GlobalEnv)
+}
+
+load_output("cf")
+load_output("df_list")
+load_output("final_models")
+load_output("models")
 
 # load in main_cat_surv
 load(file = "../04b_healthcard_cod/output/main_cat_surv.RDATA")
@@ -198,6 +203,6 @@ final_models$census <- lapply(seq_len(nrow(final_models)), function(i) {
 ```{r create table 1}
 source("R/t1.R")
 
-final_models$t1_raw <- lapply(final_models$census, t1)
+final_models$t1_raw <- lapply(final_models$census, t1, columns = c("sex", "strain"))
 
 ```
