@@ -9,7 +9,7 @@ t1 <- function(df, columns, total = TRUE, surv = TRUE) {
 
   df_freq <- create_freq_column(df_table)
 
-  df_final <- create_count_columns(df_table, df_freq)
+  df_final <- create_combo_column(df_table, df_freq)
 
   # return df_final
   df_final
@@ -18,10 +18,12 @@ t1 <- function(df, columns, total = TRUE, surv = TRUE) {
 create_count_columns <- function(df, columns, total = TRUE, surv = TRUE) {
   df_main <- df
 
-  df_table <- df_main %>%
-    group_by(class) %>%
-    summarise(n = n()) %>%
-    select(class, n, everything())
+  if (total) {
+    df_total <- df_main %>%
+      group_by(class) %>%
+      summarise(n = n()) %>%
+      select(class, n, everything())
+  }
 
   df_list_count_by_class <- lapply(
     columns,
@@ -29,20 +31,31 @@ create_count_columns <- function(df, columns, total = TRUE, surv = TRUE) {
     df = df, group = "class"
   )
 
-  surv <- survfit(
-    data = df_main,
-    Surv(time = age_wk_death, event = dead_nat) ~ factor(class)
-  )
-  df_surv <- surv_median(surv) %>%
-    rename(
-      class = strata,
-      median_surv = median
-    ) %>%
-    select(-lower, -upper)
+  if (surv) {
+    surv_fit <- survfit(
+      data = df_main,
+      Surv(time = age_wk_death, event = dead_nat) ~ factor(class)
+    )
+    df_surv <- surv_median(surv_fit) %>%
+      rename(
+        class = strata,
+        median_surv = median
+      ) %>%
+      select(-lower, -upper)
 
-  df_surv$class <- sort(unique(df_main$class))
+    df_surv$class <- sort(unique(df_main$class))
+  }
 
-  dfs <- c(list(df_table), df_list_count_by_class, list(df_surv))
+  dfs <- df_list_count_by_class
+
+  if (total) {
+    dfs <- c(list(df_total), dfs)
+  }
+
+  if (surv) {
+    dfs <- c(dfs, list(df_surv))
+  }
+
 
   df_table <- dfs %>%
     reduce(left_join, by = "class")
@@ -88,20 +101,28 @@ create_freq_column <- function(df_table) {
     data.frame()
 
   names(new_cols) <- paste0(names(df_table[, -length(df_table)]), "_freq")
+  
+  df_freq <- new_cols
 }
 
 create_combo_column <- function(df_table, df_freq) {
+  # store column names
+  col_names <- names(df_table)
+  # final column names
+  combo_col_names <- paste0(col_names, "_final")
+  # all_col_names
+  all_col_names <- c(col_names, names(df_freq), combo_col_names)
   # bind freq columns to original table
   df_table <- cbind(df_table, df_freq)
   # number of columns of dataframe
   l <- length(df_table)
   # number of classes
-  x <- (length(df_table) - 1) / 2
+  x <- round((l - 1) / 2 + .1)
   for (i in 1:x) {
     df_table[, i + l] <- paste0(
       as.character(df_table[, i]),
       " (",
-      df_table[, i + x + 1],
+      df_table[, i + x],
       "%)"
     )
   }
@@ -114,4 +135,8 @@ create_combo_column <- function(df_table, df_freq) {
     ),
     row.names = rownames(df_table)
   )
+  
+  names(df_table) <- all_col_names
+  
+  df_table
 }

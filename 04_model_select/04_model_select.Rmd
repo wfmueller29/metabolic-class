@@ -74,7 +74,8 @@ cf_nest <- cf %>% nest_by(`data|oc`, `$age_var`)
 for(i in seq_len(nrow(cf_nest))) {
   models <- cf_nest$data[[i]]$final_model
   mo_eval <- helphlme::compare_models(models)
-  print(kable(mo_eval$table, caption = names(models)) %>% kable_styling("striped", full_width = F))
+  print(kable(mo_eval$table, caption = names(models)) %>% 
+        kable_styling("striped", full_width = F))
   print(mo_eval$plot + labs(title = names(models)))
 }
 ```
