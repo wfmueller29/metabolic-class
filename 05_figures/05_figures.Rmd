@@ -49,6 +49,7 @@ load_output("cf")
 load_output("df_list")
 load_output("final_models")
 load_output("models")
+load_output("config")
 
 # load in main_cat_surv
 load(file = "../04b_healthcard_cod/output/main_cat_surv.RDATA")
@@ -56,8 +57,32 @@ load(file = "../04b_healthcard_cod/output/main_cat_surv.RDATA")
 load(file = "../04b_healthcard_cod/output/health.RDATA")
 # load in dvr
 load(file = "../04b_healthcard_cod/output/dvr.RDATA")
+
+final_models$dfs <- lapply(final_models$data, function(name) {
+  df_list[[name]]
+})
 ```
 
+#### Name Model Variables
+
+```{r naming}
+
+final_models <- final_models %>%
+  mutate(oc_name = ifelse(oc == "bw", "Body Weight", 
+                           ifelse(oc == "gluc", "Glucose",
+                                  ifelse(oc == "fat", "Body Fat", 
+                                         ifelse(oc == "lean", "Lean Mass", NA))))) %>%
+  mutate(oc_units = ifelse(oc == "bw" | oc == "fat" | oc == "lean", "(g)", 
+                           ifelse(oc == "gluc", "(mg/dL)", NA))) %>%
+  mutate(age_var_name = ifelse(age_var == "age_wk", "Age", 
+                               ifelse(age_var == "per_age_wk", "Relative Age", NA))) %>%
+  mutate(age_var_units = ifelse(age_var == "age_wk", "(weeks)", 
+                                ifelse(age_var == "per_age_wk", "(%)", NA)))
+
+final_models_info <- final_models %>%
+  select(-final_model)
+
+```
 
 #### Healthcard Cleaning
 ```{r healthcard}
@@ -204,5 +229,160 @@ final_models$census <- lapply(seq_len(nrow(final_models)), function(i) {
 source("R/t1.R")
 
 final_models$t1_raw <- lapply(final_models$census, t1, columns = c("sex", "strain"))
+
+```
+
+#### Perform Chi-squared Test
+```{r chi squared test}
+source("R/chi_test.R")
+
+chi_results <- lapply(final_models$census,
+                               chi_test,
+                               columns = c("sex", "strain"))
+
+final_models$chi_df <- chi_results$dfs
+final_models$chi_test <- chi_results$tests
+
+```
+
+#### Create clean t1
+```{r clean t1}
+source("R/clean_t1.R")
+
+final_models$clean_t1 <- lapply(final_models$census, 
+                   clean_t1,
+                   columns = c("sex", "strain"))
+```
+
+### Surival Analysis 
+```{r surv analysis}
+source("R/surv.R")
+
+attach(final_models)
+final_models$kap_plot <- lapply(1:nrow(final_models), function(i) {
+  kap_plot_all(census[[i]], 
+               var = "class", 
+               ptitle = paste(oc_name[[i]], 
+                              age_var_name[[i]],
+                              "KM", 
+                              sep = " "))
+})
+
+```
+
+### Trajectory Fixed Effects Plotted
+
+```{r fixed effects, include = FALSE}
+source("R/traj_plot.R")
+
+if (is.null(config$sex) & is.null(config$strain)) {
+  fixcov <- c(sex = 0, strain = 0)
+} else if (is.null(config$sex)) {
+  fixcov <- c(strain = 0)
+} else if (is.null(config$strain)) {
+  fixcov <- c(sex = 0)
+} else {
+  fixcov <- NULL
+}
+
+attach(final_models)
+final_models$traj_pred <- lapply(1:nrow(final_models), function(i) {
+  traj_plot(df = dfs[[i]],
+            mo = final_model[[i]], 
+            t1 = t1_raw[[i]],
+            age_var = age_var[[i]], 
+            y_var = oc[[i]], 
+            title = paste("Predicted", 
+                          oc_name[[i]], 
+                          "Trajectories across",
+                          age_var_name[[i]],
+                          sep = " "),
+            ylab = paste(oc_name[[i]], 
+                         oc_units[[i]],
+                         sep = " "),
+            xlab =  paste(age_var_name[[i]], 
+                         age_var_units[[i]],
+                         sep = " "),
+            fixcov = fixcov)
+  # can render this plot with ggdraw or plot_grid
+  plot <- recordPlot()
+})
+
+```
+
+### Create Observed Trajectory Plots
+
+```{r observed plots, include = FALSE}
+attach(final_models)
+final_models$traj_obs <- lapply(1:nrow(final_models), function(i){
+  plot <- traj_obs(main = census[[i]],
+                   df = dfs[[i]],
+                   t1 = t1_raw[[i]], 
+                   age_var = age_var[[i]],
+                   y_var = oc[[i]],
+                   title = paste("Observed",
+                                 oc_name[[i]],
+                                 "Trajectory with",
+                                 age_var_name[[i]],
+                                 sep = " "),
+                   ylab = paste(oc_name[[i]],
+                                oc_units[[i]],
+                                sep = " "),
+                   xlab = paste(age_var_name[[i]],
+                                age_var_units[[i]],
+                                sep = " "
+                                ))
+  
+  plot
+})
+
+
+lapply(final_models$traj_obs, print)
+
+  
+```
+
+### Create Spaghettie Plots
+
+```{r spag plot}
+
+plot_spag <- function(data, x, y, id, title = " ", xlab = " ", ylab = " ") {
+  x <- paste0(x, "_ns")
+  ggplot2::ggplot(
+    data = data,
+    mapping = ggplot2::aes_string(
+      x = x,
+      y = y,
+      group = id
+    )
+  ) +
+    #    ggplot2::geom_point() +
+    ggplot2::geom_line() +
+    ggplot2::geom_smooth(
+      data = data,
+      mapping = ggplot2::aes_string(
+        x = x,
+        y = y,
+        group = NULL
+      ) 
+    ) +
+    labs(title = title, 
+         x = xlab,
+         y = ylab)
+}
+
+attach(final_models)
+lapply(1:nrow(final_models), function(i) {
+  plot_spag(data = dfs[[i]],
+            x = age_var[[i]],
+            y = oc[[i]],
+            id = subject[[i]],
+            title = paste(oc_name[[i]],
+                          age_var_name[[i]],
+                          "Spaghetti Plot",
+                          sep = " "),
+            xlab = paste(age_var_name[[i]], age_var_units[[i]], sep = " "),
+            ylab = paste(oc_name[[i]], oc_units[[i]], sep = " "))
+})
 
 ```

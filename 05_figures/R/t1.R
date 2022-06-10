@@ -68,8 +68,8 @@ create_count_columns <- function(df, columns, total = TRUE, surv = TRUE) {
 
   df_table[is.na(df_table)] <- 0
 
-
   names(df_table) <- paste0("class_", names(df_table))
+
 
   df_table
 }
