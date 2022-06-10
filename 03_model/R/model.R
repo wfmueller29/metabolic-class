@@ -10,11 +10,6 @@ library(future)
 # load in data
 load("../02_prep_model_data/output/df_list.RDATA")
 
-# create object variables
-for (name in names(df_list)) {
-  assign(x = name, value = df_list[[name]], envir = .GlobalEnv)
-}
-
 # take command line arguments for parameter file ------------------------------
 args <- commandArgs(trailingOnly = TRUE)
 
@@ -56,12 +51,8 @@ df_list <- lapply(df_list, filter_group, subsets = c(sex = config$sex))
 df_list <- lapply(df_list, filter_group, subsets = c(strain = config$strain))
 
 # create call frame -----------------------------------------------------------
-# name of df_list are named with syntax <outcome>_<data type>
-data <- names(df_list)
-outcome <- stringr::str_match(data, "(^.*?)_")[, 2]
-data_oc <- paste(data, outcome, sep = "|")
 cf <- make_cf(
-  `data|oc` = data_oc,
+  `data|oc` = config$data_oc,
   fixed = config$fixed,
   random = config$random,
   idiag = config$idiag,
@@ -127,6 +118,12 @@ if (!is.null(config$plan)) {
   }
 } else {
   plan("default")
+}
+
+# create object variables for data because they are in list and need to be 
+# in global env for pmap function
+for (name in names(df_list)) {
+  assign(x = name, value = df_list[[name]], envir = .GlobalEnv)
 }
 
 

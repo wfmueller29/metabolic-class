@@ -2,6 +2,11 @@ out_tag: test
 tag_time: TRUE
 sex: 
 strain: 
+data_oc: 
+  - "bw_main|bw"
+  - "gluc_main|gluc"
+  - "fat_main|fat"
+  - "lean_main|lean"
 age_var: 
   - "age_wk"
   - "per_age_wk"
