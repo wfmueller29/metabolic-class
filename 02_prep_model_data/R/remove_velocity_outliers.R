@@ -84,7 +84,7 @@ cat("Number of observations before removing outliers
     by velocity body weight percent change from baseline: \n")
 nrow(traj_bwperxbl30)
 
-traj_bwperxbl30 <- traj_perxblbw %>%
+traj_bwperxbl30 <- traj_bwperxbl30 %>%
   per_change("bw_per_x_bl30") %>%
   mutate(threshold = ifelse(abs(bw_per_x_bl30_velocity) > bw_per_x_bl30_v_threshold, 1, 0)) %>%
   filter(threshold != 1) %>%
