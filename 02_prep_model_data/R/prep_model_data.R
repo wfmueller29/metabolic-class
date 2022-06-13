@@ -13,6 +13,7 @@ load("../01_dataset/output/main_all2.RDATA")
 
 config <- yaml::read_yaml("yaml/default.yaml")
 
+# glucose --------------------------------------------------------------------
 
 traj_gluc <- main_all2 %>%
   filter(!is.na(gluc)) %>%
@@ -21,13 +22,33 @@ traj_gluc <- main_all2 %>%
     age_wk2 = age_wk * age_wk,
     per_age_wk2 = per_age_wk * per_age_wk,
     idno = as.numeric(idno)
-  ) %>%
-  per_change("gluc") %>%
-  mutate(threshold = ifelse(abs(gluc_velocity) > 50, 1, 0)) %>%
-  filter(threshold != 1) %>%
-  as.data.frame()
+  )
 
-hist(traj_gluc$gluc_velocity)
+# body fat --------------------------------------------------------------------
+
+traj_fat <- main_all2 %>%
+  filter(!is.na(fat)) %>%
+  select(idno, cohort, fat, sex, strain, age_wk, le_wk, per_age_wk) %>%
+  mutate(
+    age_wk2 = age_wk * age_wk,
+    per_age_wk2 = per_age_wk * per_age_wk,
+    idno = as.numeric(idno)
+  ) 
+
+
+# lean ------------------------------------------------------------------------
+
+traj_lean <- main_all2 %>%
+  filter(!is.na(lean)) %>%
+  select(idno, cohort, lean, sex, strain, age_wk, le_wk, per_age_wk) %>%
+  mutate(
+    age_wk2 = age_wk * age_wk,
+    per_age_wk2 = per_age_wk * per_age_wk,
+    idno = as.numeric(idno)
+  )
+
+
+# body weight -----------------------------------------------------------------
 
 traj_bw <- main_all2 %>%
   filter(!is.na(bw)) %>%
@@ -38,38 +59,8 @@ traj_bw <- main_all2 %>%
     idno = as.numeric(idno)
   )
 
-traj_fat <- main_all2 %>%
-  filter(!is.na(fat)) %>%
-  select(idno, cohort, fat, sex, strain, age_wk, le_wk, per_age_wk) %>%
-  mutate(
-    age_wk2 = age_wk * age_wk,
-    per_age_wk2 = per_age_wk * per_age_wk,
-    idno = as.numeric(idno)
-  ) %>%
-  per_change("fat") %>%
-  mutate(threshold = ifelse(abs(fat_velocity) > 5, 1, 0)) %>%
-  filter(threshold != 1) %>%
-  as.data.frame()
+# keep bw measurements closest to 3 month intervals
 
-hist(traj_fat$fat_velocity)
-
-traj_lean <- main_all2 %>%
-  filter(!is.na(lean)) %>%
-  select(idno, cohort, lean, sex, strain, age_wk, le_wk, per_age_wk) %>%
-  mutate(
-    age_wk2 = age_wk * age_wk,
-    per_age_wk2 = per_age_wk * per_age_wk,
-    idno = as.numeric(idno)
-  ) %>%
-  per_change("lean") %>%
-  mutate(threshold = ifelse(abs(lean_velocity) > 8, 1, 0)) %>%
-  filter(threshold != 1) %>%
-  as.data.frame()
-
-# View(traj_lean[traj_lean$threshold == 1 & !is.na(traj_lean$threshold), ])
-hist(traj_lean$lean_velocity)
-
-### keep bw measurements closest to 3 month intervals
 traj_bw <- traj_bw %>%
   mutate(
     age_m = round(age_wk * 0.230137 / 3) * 3,
@@ -79,16 +70,13 @@ traj_bw <- traj_bw %>%
   group_by(idno, age_m) %>%
   mutate(min_dif = min(dif)) %>%
   ungroup() %>%
-  filter(dif == min_dif) %>%
-  per_change("bw") %>%
-  mutate(threshold = ifelse(abs(bw_velocity) > 3, 1, 0)) %>%
-  filter(bw_threshol != 1) %>%
-  as.data.frame()
-
-View(traj_bw[traj_bw$threshold == 1 & !is.na(traj_bw$threshold), ])
-hist(df_list$bw_main$bw_velocity)
+  filter(dif == min_dif)
 
 
+# remove outliers -------------------------------------------------------------
+ 
+source("R/remove_velocity_outliers.R")
+ 
 df_list <- list(
   gluc_main = traj_gluc,
   bw_main = traj_bw,
