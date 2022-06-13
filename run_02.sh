@@ -1,9 +1,4 @@
 #!/bin/bash
 
-#load R
-module load R/4.1
+bash submit/submit_prep_data.sh
 
-# Run prep model data
-cd 02_prep_model_data/
-Rscript R/prep_model_data.R
-cd ..
