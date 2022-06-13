@@ -5,6 +5,7 @@ bw_v_threshold <- 5
 gluc_v_threshold <- 75
 fat_v_threshold <- 7
 lean_v_treshold <- 10
+bw_per_x_bl30_v_threshold <- 5
 
 # lean ------------------------------------------------------------------------
 cat("Number of observations before removing outliers
@@ -77,3 +78,20 @@ nrow(traj_gluc)
 
 hist(traj_gluc$gluc_velocity)
 
+# body weight percent change baseline ------------------------------------------
+
+cat("Number of observations before removing outliers
+    by velocity body weight percent change from baseline: \n")
+nrow(traj_bwperxbl30)
+
+traj_bwperxbl30 <- traj_perxblbw %>%
+  per_change("bw_per_x_bl30") %>%
+  mutate(threshold = ifelse(abs(bw_per_x_bl30_velocity) > bw_per_x_bl30_v_threshold, 1, 0)) %>%
+  filter(threshold != 1) %>%
+  as.data.frame()
+
+cat("Number of observations after removing outliers
+    by velocity body weight percent change from baseline: \n")
+nrow(traj_bwperxbl30)
+
+hist(traj_bwperxbl30$bw_per_x_bl30_velocity)

@@ -33,7 +33,7 @@ traj_fat <- main_all2 %>%
     age_wk2 = age_wk * age_wk,
     per_age_wk2 = per_age_wk * per_age_wk,
     idno = as.numeric(idno)
-  ) 
+  )
 
 
 # lean ------------------------------------------------------------------------
@@ -61,6 +61,8 @@ traj_bw <- main_all2 %>%
 
 # keep bw measurements closest to 3 month intervals
 
+traj_bwperxbl30 <- traj_bw
+
 traj_bw <- traj_bw %>%
   mutate(
     age_m = round(age_wk * 0.230137 / 3) * 3,
@@ -72,16 +74,23 @@ traj_bw <- traj_bw %>%
   ungroup() %>%
   filter(dif == min_dif)
 
+# create percentage change from baseline --------------------------------------
+
+source("R/create_per_x_bl.R")
 
 # remove outliers -------------------------------------------------------------
- 
+
 source("R/remove_velocity_outliers.R")
- 
+
+
+# Store dataframes
+
 df_list <- list(
   gluc_main = traj_gluc,
   bw_main = traj_bw,
   fat_main = traj_fat,
-  lean_main = traj_lean
+  lean_main = traj_lean,
+  bwperxbl30_main = traj_bwperxbl30
 )
 
 df_list <- lapply(df_list,
