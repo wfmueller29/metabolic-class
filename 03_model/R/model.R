@@ -47,8 +47,13 @@ if (!is.null(config$sample_n)) {
 
 # filter for each sex and strain
 source("R/filter_group.R")
-df_list <- lapply(df_list, filter_group, subsets = c(sex = config$sex))
-df_list <- lapply(df_list, filter_group, subsets = c(strain = config$strain))
+if (!is.null(config$sex)) {
+  df_list <- lapply(df_list, filter_group, subsets = c(sex = config$sex))
+}
+
+if (!is.null(config$strain)) {
+  df_list <- lapply(df_list, filter_group, subsets = c(strain = config$strain))
+}
 
 # create call frame -----------------------------------------------------------
 cf <- make_cf(
