@@ -58,6 +58,9 @@ load(file = "../04b_healthcard_cod/output/health.RDATA")
 # load in dvr
 load(file = "../04b_healthcard_cod/output/dvr.RDATA")
 
+# load in prediction data
+load(file = "../04c_prediction_data/output/dfs_prediction.RDATA")
+
 final_models$dfs <- lapply(final_models$data, function(name) {
   df_list[[name]]
 })
@@ -385,4 +388,71 @@ lapply(1:nrow(final_models), function(i) {
             ylab = paste(oc_name[[i]], oc_units[[i]], sep = " "))
 })
 
+```
+
+```{r create prediction results}
+for (subset_name in names(dfs_prediction)) {
+  subset <- list()
+  for (i in seq_len(nrow(final_models))) {
+    data_name <- final_models$data[[i]]
+    dfs_pred_list <- dfs_prediction[[subset_name]][[data_name]]
+    subset[i] <- list(dfs_pred_list)
+  }
+  final_models[[subset_name]] <- subset
+}
+
+predict_model <- function(data,
+                          model,
+                           vars,
+                           center,
+                           scale,
+                           ref_data = NULL) {
+  pred_df <- helphlme::prep_hlme(df = data, 
+                                 vars = vars,
+                                 center = center,
+                                 scale = scale, 
+                                 ref_data = ref_data)
+  model$call[[1]] <- "hlme"
+  
+  prediction <- lcmm::predictClass(model = model,
+                     newdata = pred_df)
+  
+  prediction
+}
+
+predict_model_list <- function(data_list, 
+                               model,
+                               vars, 
+                               center, 
+                               scale, 
+                               ref_data = NULL) {
+  lapply(data_list,
+         predict_model,
+         model = model,
+         vars = vars,
+         center = center,
+         scale = scale,
+         ref_data = ref_data)
+}
+
+prediction_columns <- names(dfs_prediction)[-1]
+
+predict_model_subset <- function(subset, vars, center, scale) {
+  lapply(seq_len(nrow(final_models)), function(i){
+    predict_model_list(data = final_models[[subset]][[i]],
+                       model = final_models$final_model[[i]],
+                       vars = vars,
+                       center = center, 
+                       scale = scale,
+                       ref_data = final_models$dfs[[i]])
+                       
+  })
+}
+
+list <- lapply(prediction_columns, function(col) {
+  predict_model_subset(subset = col,
+                       vars = c("age_wk", "age_wk2"),
+                       center = TRUE,
+                       scale = FALSE)
+})
 ```
