@@ -21,7 +21,9 @@ traj_gluc <- main_all2 %>%
   mutate(
     age_wk2 = age_wk * age_wk,
     per_age_wk2 = per_age_wk * per_age_wk,
-    idno = as.numeric(idno)
+    idno = as.numeric(idno),
+    sex = factor(sex, levels = c("M", "F"),
+    strain = factor(strain, levels = c("B6", "HET3")))
   )
 
 # body fat --------------------------------------------------------------------
@@ -32,7 +34,9 @@ traj_fat <- main_all2 %>%
   mutate(
     age_wk2 = age_wk * age_wk,
     per_age_wk2 = per_age_wk * per_age_wk,
-    idno = as.numeric(idno)
+    idno = as.numeric(idno),
+    sex = factor(sex, levels = c("M", "F"),
+    strain = factor(strain, levels = c("B6", "HET3"))
   )
 
 
@@ -44,7 +48,9 @@ traj_lean <- main_all2 %>%
   mutate(
     age_wk2 = age_wk * age_wk,
     per_age_wk2 = per_age_wk * per_age_wk,
-    idno = as.numeric(idno)
+    idno = as.numeric(idno),
+    sex = factor(sex, levels = c("M", "F"),
+    strain = factor(strain, levels = c("B6", "HET3"))
   )
 
 
@@ -56,7 +62,9 @@ traj_bw <- main_all2 %>%
   mutate(
     age_wk2 = age_wk * age_wk,
     per_age_wk2 = per_age_wk * per_age_wk,
-    idno = as.numeric(idno)
+    idno = as.numeric(idno),
+    sex = factor(sex, levels = c("M", "F"),
+    strain = factor(strain, levels = c("B6", "HET3"))
   )
 
 # keep bw measurements closest to 3 month intervals
