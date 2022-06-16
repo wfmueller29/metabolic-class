@@ -457,12 +457,14 @@ predict_model_subset <- function(subset, vars, center, scale) {
   })
 }
 
-final_models[,prediction_results_names] <- lapply(prediction_columns, function(col) {
+prediction_results <- lapply(prediction_columns, function(col) {
   predict_model_subset(subset = col,
                        vars = c("age_wk", "age_wk2"),
                        center = TRUE,
                        scale = FALSE)
 })
+
+final_models[,prediction_results_names] <- prediction_results
 ```
 
 ##### Temp Table Example, Used for Calculating Sensitivity, Specificity, PPV, and NPG
@@ -511,7 +513,7 @@ make_new_df <- function(pred_df, og_df, subject) {
   new_df <- pred_df %>%
     left_join(og_df, by = subject, suffix = c(".pred", ".og")) %>%
     mutate(tp = ifelse(class.pred == class.og, 1, 0)) %>%
-    filter(!is.na(class.pred))
+    filter(!is.na(class.og))
 }
 
 make_final_table <- function(new_df, og_df, pred_df, subject) {
@@ -591,12 +593,14 @@ prediction_results_table_names <- paste(prediction_results_names,
                                         "table",
                                         sep = "_")
 
-final_models[,prediction_results_table_names] <- lapply(
+prediction_results_tables <- lapply(
   prediction_results_names, 
   function(subset){
   create_pred_table_subset(subset,
                            subject = "idno")
 })
+
+final_models[,prediction_results_table_names] <- prediction_results_tables
 
 
 
@@ -665,12 +669,31 @@ for (i in seq_len(length(test2))) {
     mutate(tp = ifelse(class.x == class.y, 1, 0)) %>%
     filter(!is.na(class.y))
   
-  names(test2)[[i]]
+  print(names(test2)[[i]])
   
-  nrow(new_df)
-  sum(new_df$tp)/nrow(new_df)
+  print(nrow(new_df))
+  print(sum(new_df$tp)/nrow(new_df))
   
 }
 
+
+test2 <- final_models$threshold_results[[1]]
+
+pred_df <- final_models$threshold[[1]]
+
+test2_census <- final_models$census[[1]]
+
+for (i in seq_len(length(test2))) {
+  new_df <- test2[[i]] %>%
+    left_join(test2_census, by ="idno") %>%
+    mutate(tp = ifelse(class.x == class.y, 1, 0)) %>%
+    filter(!is.na(class.y))
+  
+  print(names(test2)[[i]])
+  
+  print(nrow(new_df))
+  print(sum(new_df$tp)/nrow(new_df))
+  
+}
 
 ```
