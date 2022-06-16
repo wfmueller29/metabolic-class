@@ -8,6 +8,11 @@ data_oc:
   - "fat_main|fat"
   - "lean_main|lean"
   - "bwperxbl30_main|bw_per_x_bl30"
+  - "bw_main_xvout|bw"
+  - "gluc_main_xvout|gluc"
+  - "fat_main_xvout|fat"
+  - "lean_main_xvout|lean"
+  - "bwperxbl30_main_xvout|bw_per_x_bl30"
 age_var: 
   - "age_wk"
   - "per_age_wk"
