@@ -12,7 +12,7 @@ cat("Number of observations before removing outliers
     by velocity lean mass: \n")
 nrow(traj_lean)
 
-traj_lean <- traj_lean %>%
+traj_lean_xvout <- traj_lean %>%
   per_change("lean") %>%
   mutate(threshold = ifelse(abs(lean_velocity) > lean_v_treshold, 1, 0)) %>%
   filter(threshold != 1) %>%
@@ -20,10 +20,10 @@ traj_lean <- traj_lean %>%
 
 cat("Number of observations after removing outliers
     by velocity lean mass: \n")
-nrow(traj_lean)
+nrow(traj_lean_xvout)
 
-# View(traj_lean[traj_lean$threshold == 1 & !is.na(traj_lean$threshold), ])
-hist(traj_lean$lean_velocity)
+# View(traj_lean_xvout[traj_lean$threshold == 1 & !is.na(traj_lean$threshold), ])
+hist(traj_lean_xvout$lean_velocity)
 
 # body weight ----------------------------------------------------------------
 
@@ -31,24 +31,24 @@ cat("Number of observations before removing outliers
     by velocity body weight: \n")
 nrow(traj_bw)
 
-traj_bw <- traj_bw %>%
+traj_bw_xvout <- traj_bw %>%
   per_change("bw") %>%
   mutate(threshold = ifelse(abs(bw_velocity) > bw_v_threshold, 1, 0)) %>%
   filter(threshold != 1) %>%
   as.data.frame()
 
-# View(traj_bw[traj_bw$threshold == 1 & !is.na(traj_bw$threshold), ])
+# View(traj_bw[traj_bw_xvout$threshold == 1 & !is.na(traj_bw_xvout$threshold), ])
 cat("Number of observations after removing outliers
     by velocity body weight: \n")
-nrow(traj_bw)
+nrow(traj_bw_xvout)
 
 # body fat -----------------------------------------------------------------
 
 cat("Number of observations before removing outliers
     by velocity body fat: \n")
-nrow(traj_fat)
+nrow(traj_fat_xvout)
 
-traj_fat <- traj_fat %>%
+traj_fat_xvout <- traj_fat %>%
   per_change("fat") %>%
   mutate(threshold = ifelse(abs(fat_velocity) > fat_v_threshold, 1, 0)) %>%
   filter(threshold != 1) %>%
@@ -56,9 +56,9 @@ traj_fat <- traj_fat %>%
 
 cat("Number of observations after removing outliers
     by velocity body fat: \n")
-nrow(traj_fat)
+nrow(traj_fat_xvout)
 
-hist(traj_fat$fat_velocity)
+hist(traj_fat_xvout$fat_velocity)
 
 # gluc -----------------------------------------------------------------------
 
@@ -66,7 +66,7 @@ cat("Number of observations before removing outliers
     by velocity glucose: \n")
 nrow(traj_gluc)
 
-traj_gluc <- traj_gluc %>%
+traj_gluc_xvout <- traj_gluc %>%
   per_change("gluc") %>%
   mutate(threshold = ifelse(abs(gluc_velocity) > gluc_v_threshold, 1, 0)) %>%
   filter(threshold != 1) %>%
@@ -74,9 +74,9 @@ traj_gluc <- traj_gluc %>%
 
 cat("Number of observations after removing outliers
     by velocity glucose: \n")
-nrow(traj_gluc)
+nrow(traj_gluc_xvout)
 
-hist(traj_gluc$gluc_velocity)
+hist(traj_gluc_xvout$gluc_velocity)
 
 # body weight percent change baseline ------------------------------------------
 
@@ -84,7 +84,7 @@ cat("Number of observations before removing outliers
     by velocity body weight percent change from baseline: \n")
 nrow(traj_bwperxbl30)
 
-traj_bwperxbl30 <- traj_bwperxbl30 %>%
+traj_bwperxbl30_xvout <- traj_bwperxbl30 %>%
   per_change("bw_per_x_bl30") %>%
   mutate(threshold = ifelse(abs(bw_per_x_bl30_velocity) > bw_per_x_bl30_v_threshold, 1, 0)) %>%
   filter(threshold != 1) %>%
@@ -92,6 +92,6 @@ traj_bwperxbl30 <- traj_bwperxbl30 %>%
 
 cat("Number of observations after removing outliers
     by velocity body weight percent change from baseline: \n")
-nrow(traj_bwperxbl30)
+nrow(traj_bwperxbl30_xvout)
 
-hist(traj_bwperxbl30$bw_per_x_bl30_velocity)
+hist(traj_bwperxbl30_xvout$bw_per_x_bl30_velocity)

@@ -101,7 +101,12 @@ df_list <- list(
   bw_main = traj_bw,
   fat_main = traj_fat,
   lean_main = traj_lean,
-  bwperxbl30_main = traj_bwperxbl30
+  bwperxbl30_main = traj_bwperxbl30,
+  gluc_main_xvout = traj_gluc_xvout,
+  bw_main_xvout = traj_bw_xvout,
+  fat_main_xvout = traj_fat_xvout,
+  lean_main_xvout = traj_lean_xvout,
+  bwperxbl30_main_xvout = traj_bwperxbl30_xvout
 )
 
 df_list <- lapply(df_list,
