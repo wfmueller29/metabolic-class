@@ -35,15 +35,16 @@ df_sample_list <- lapply(df_list,
 )
 # df_sample_list <- unlist_filter_list(df_sample_list)
 
-# Find threshold 
+# Find threshold
 threshold_intervals <- lapply(20:150, function(thresh) {
-  interval <- paste0("(0,",thresh,"]")
+  interval <- paste0("(0,", thresh, "]")
   names(interval) <- "age_wk"
   interval
 })
 df_threshold_list <- lapply(df_list,
-                            filter_interval_loop,
-                            intervals = threshold_intervals)
+  filter_interval_loop,
+  intervals = threshold_intervals
+)
 # df_threshold_list <- unlist_filter_list(df_threshold_list)
 
 
