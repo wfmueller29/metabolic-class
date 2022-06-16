@@ -109,6 +109,8 @@ df_list <- list(
   bwperxbl30_main_xvout = traj_bwperxbl30_xvout
 )
 
+df_list <- lapply(df_list, as.data.frame)
+
 df_list <- lapply(df_list,
   helphlme::prep_hlme,
   c("age_wk", "age_wk2", "per_age_wk", "per_age_wk2"),
