@@ -1,7 +1,7 @@
 out_tag: test
 tag_time: TRUE
-sex: 
-strain: 
+female: 
+het3: 
 data_oc: 
   - "bw_main|bw"
   - "gluc_main|gluc"

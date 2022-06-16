@@ -47,12 +47,12 @@ if (!is.null(config$sample_n)) {
 
 # filter for each sex and strain
 source("R/filter_group.R")
-if (!is.null(config$sex)) {
-  df_list <- lapply(df_list, filter_group, subsets = c(sex = config$sex))
+if (!is.null(config$female)) {
+  df_list <- lapply(df_list, filter_group, subsets = c(female = config$female))
 }
 
-if (!is.null(config$strain)) {
-  df_list <- lapply(df_list, filter_group, subsets = c(strain = config$strain))
+if (!is.null(config$het3)) {
+  df_list <- lapply(df_list, filter_group, subsets = c(het3 = config$het3))
 }
 
 # create call frame -----------------------------------------------------------

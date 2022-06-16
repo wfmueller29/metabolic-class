@@ -1,7 +1,7 @@
 out_tag: mhet3
 tag_time: TRUE
-sex: M
-strain: HET3 
+female: 0
+het3: 1 
 age_var: 
   - "age_wk"
 fixed: "~ $age_var + $age_var2" 

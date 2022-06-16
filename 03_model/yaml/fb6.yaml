@@ -1,7 +1,7 @@
 out_tag: fb6
 tag_time: TRUE
-sex: F
-strain: B6 
+female: 1
+het3: 0 
 age_var: 
   - "age_wk"
 fixed: "~ $age_var + $age_var2" 
