@@ -46,7 +46,7 @@ nrow(traj_bw_xvout)
 
 cat("Number of observations before removing outliers
     by velocity body fat: \n")
-nrow(traj_fat_xvout)
+nrow(traj_fat)
 
 traj_fat_xvout <- traj_fat %>%
   per_change("fat") %>%
