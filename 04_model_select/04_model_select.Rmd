@@ -6,7 +6,7 @@ output:
   html_document:
     df_print: paged
 params:
-  model_dir: "20220602_013532_all"
+  model_dir: "20220615_095311_all"
 ---
 
 
