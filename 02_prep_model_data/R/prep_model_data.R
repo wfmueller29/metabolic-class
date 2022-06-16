@@ -14,6 +14,9 @@ load("../01_dataset/output/main_all2.RDATA")
 config <- yaml::read_yaml("yaml/default.yaml")
 
 # glucose --------------------------------------------------------------------
+# we need to make sex and strain dummy variables because some of the lcmm
+# functions do not like factor variables. It may be worth including this in
+# the data prep function
 
 traj_gluc <- main_all2 %>%
   filter(!is.na(gluc)) %>%

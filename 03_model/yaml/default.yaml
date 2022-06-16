@@ -11,8 +11,8 @@ data_oc:
 age_var: 
   - "age_wk"
   - "per_age_wk"
-fixed: "~ $age_var + $age_var2 + sex + strain" 
-mixture: "~ $age_var + $age_var2 + sex + strain" 
+fixed: "~ $age_var + $age_var2 + female + het3" 
+mixture: "~ $age_var + $age_var2" 
 random: 
   - "~1"
 subject: idno

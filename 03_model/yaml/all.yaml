@@ -4,7 +4,7 @@ sex:
 strain: 
 age_var: 
   - "age_wk"
-fixed: "~ $age_var + $age_var2 + sex + strain" 
+fixed: "~ $age_var + $age_var2 + female + het3" 
 mixture: "~ $age_var + $age_var2" 
 random: 
   - "~ 1"
