@@ -6,7 +6,7 @@ output:
   html_document:
     df_print: paged
 params:
-  model_dir: "20220615_095311_all"
+  model_dir: "20220617_142335_test"
 ---
 
 
@@ -96,7 +96,7 @@ for(i in seq_len(nrow(cf_nest))) {
   cat("\n\n## ", header, "\n\n")
   pred <-  helphlme::create_pred_df(df = df,
            age_vars = paste(age_var, c("", "2"), sep = ""),
-           fixcov = c("sex" = 0, "strain" = 0))
+           fixcov = c("female" = 0, "het3" = 0))
   helphlme::display_classes(df = pred,
                                  cf$final_model,
                                  age_var,
