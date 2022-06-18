@@ -35,17 +35,15 @@ df_sample_list <- lapply(df_list,
 )
 # df_sample_list <- unlist_filter_list(df_sample_list)
 
-# Find threshold
-threshold_intervals <- lapply(20:150, function(thresh) {
-  interval <- paste0("(0,", thresh, "]")
-  names(interval) <- "age_wk"
-  interval
-})
+# Threshold timepoint
+threshold <- lapply(config$threshold, unlist, use.names = TRUE)
+
+# Filter by time interval
+source("R/filter_interval.R")
 df_threshold_list <- lapply(df_list,
   filter_interval_loop,
-  intervals = threshold_intervals
+  intervals = threshold
 )
-# df_threshold_list <- unlist_filter_list(df_threshold_list)
 
 
 dfs_prediction <- list(
