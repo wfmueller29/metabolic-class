@@ -5,11 +5,21 @@
 library(tidyverse)
 
 t1 <- function(df, columns, total = TRUE, surv = TRUE) {
-  df_table <- create_count_columns(df, columns, total, surv)
-
-  df_freq <- create_freq_column(df_table)
-
-  df_final <- create_combo_column(df_table, df_freq)
+  
+  # number of unique classes
+  no_class <- length(unique(df$class))
+  
+  if (no_class != 1) {
+    df_table <- create_count_columns(df, columns, total, surv)
+  
+    df_freq <- create_freq_column(df_table)
+  
+    df_final <- create_combo_column(df_table, df_freq)
+  } else {
+    cat("Only one class")
+    
+    df_final <- NA
+  }
 
   # return df_final
   df_final

@@ -8,9 +8,36 @@ clean_t1 <- function(census,
                      total = TRUE) {
 
   # create t1
-  df_table <- create_count_columns(census, columns, total = include_n, surv = surv)
+  df_table <- create_count_columns(census,
+                                   columns,
+                                    total = include_n,
+                                    surv = surv)
   t1 <- t1(census, columns, total = include_n, surv = surv)
+  
+  if (!is.na(t1)) {
+    clean_t1 <- create_clean_t1(df_table,
+                                    t1,
+                                    census,
+                                    columns,
+                                    include_n,
+                                    surv,
+                                    total)
+  } else {
+    clean_t1 <- NA
+  }
+  
+  clean_t1
 
+}
+
+create_clean_t1 <- function(df_table,
+                                    t1,
+                                    census,
+                                    columns,
+                                    include_n,
+                                    surv,
+                                    total) {
+  
   total <- rowSums(df_table)
 
   t1 <- t1 %>%
@@ -42,5 +69,5 @@ clean_t1 <- function(census,
 
   # return cleaned t1
   t1
-
+  
 }
