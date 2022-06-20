@@ -30,7 +30,6 @@ knitr::opts_chunk$set(cache = FALSE)
 
 
 mega_pal <- rep(palette(), 40)
-
 ```
 
 ## Analysis
@@ -75,39 +74,42 @@ source("R/name_model_args.R")
 
 final_models_info <- final_models %>%
   select(-final_model)
-
 ```
 
 #### Healthcard Cleaning
 ```{r healthcard}
 
 # now we have to add the health card information. lets convert it to wide format
-# so that we can add it to the subject summary 
+# so that we can add it to the subject summary
 # create wave for health
 health <- health %>%
   group_by(tag) %>%
   arrange(date_created) %>%
-  mutate(wave =row_number()) %>%
+  mutate(wave = row_number()) %>%
   ungroup()
 health_wide <- pivot_wider(health,
-                       id_cols = c("idno", "tag", "dod"),
-                       names_from = "wave",
-                       names_prefix = "condition_",
-                       values_from = "condition_clean") 
+  id_cols = c("idno", "tag", "dod"),
+  names_from = "wave",
+  names_prefix = "condition_",
+  values_from = "condition_clean"
+)
 
 health_wide_heat <- pivot_wider(health,
-                                id_cols = c("idno", "tag", "dod"),
-                                names_from = "condition_clean",
-                                values_from = "condition_clean")
+  id_cols = c("idno", "tag", "dod"),
+  names_from = "condition_clean",
+  values_from = "condition_clean"
+)
 
-health_wide_heat <- health_wide_heat 
+health_wide_heat <- health_wide_heat
 
 col_of_interest <- 4:length(health_wide_heat)
 
-health_wide_heat[, col_of_interest] <- lapply(health_wide_heat[, col_of_interest],
-                                   function(col) {
-                                     ifelse(col == "NULL", 0, 1)
-                                   }) 
+health_wide_heat[, col_of_interest] <- lapply(
+  health_wide_heat[, col_of_interest],
+  function(col) {
+    ifelse(col == "NULL", 0, 1)
+  }
+)
 
 count <- as.data.frame(apply(health_wide_heat[, col_of_interest], 2, sum))
 
@@ -117,7 +119,7 @@ names(count) <- "n"
 count$condition <- rownames(count)
 rownames(count) <- NULL
 
-# select interesting healthcard 
+# select interesting healthcard
 count <- arrange(count, -n)
 
 # save healthcard count
@@ -135,17 +137,19 @@ merge_health <- health_wide_heat %>%
   select(-dod, -idno)
 
 subject_sum <- main_cat_surv %>%
-  select(idno,
-         tag,
-         sex,
-         strain,
-         dead_censor,
-         fu_age_wk,
-         le_wk,
-         cod,
-         lastdate,
-         maxdate,
-         tod) %>%
+  select(
+    idno,
+    tag,
+    sex,
+    strain,
+    dead_censor,
+    fu_age_wk,
+    le_wk,
+    cod,
+    lastdate,
+    maxdate,
+    tod
+  ) %>%
   mutate(idno = as.numeric(idno)) %>%
   left_join(merge_dvr, by = "idno")
 
@@ -155,10 +159,10 @@ apply(apply(subject_sum, 2, is.na), 2, sum)
 # obs goe from 1304 to 1310, so their are duplicates, lets find these duplicates
 # and choose the correct one
 id <- subject_sum$idno
-subject_sum[duplicated(id) | duplicated(id, fromLast = TRUE),]
+subject_sum[duplicated(id) | duplicated(id, fromLast = TRUE), ]
 
 # if there a duplicates, we are going to take the observation with the cod.y
-# that is not NA or Undetermined. If there is no NA or undetermined, we are 
+# that is not NA or Undetermined. If there is no NA or undetermined, we are
 # going to take the observation with the later dod
 subject_sum <- subject_sum %>%
   group_by(idno) %>%
@@ -168,12 +172,13 @@ subject_sum <- subject_sum %>%
   distinct(idno, .keep_all = TRUE) %>%
   ungroup() %>%
   as.data.frame() %>%
-  rename(cod_census = cod.x,
-         cod_dvr = cod.y)
+  rename(
+    cod_census = cod.x,
+    cod_dvr = cod.y
+  )
 
 subject_sum <- subject_sum %>%
   left_join(merge_health, by = "tag")
-
 ```
 
 #### Create Census Dataframe
@@ -183,9 +188,9 @@ subject_sum <- subject_sum %>%
 make_census <- function(cf_row) {
   model <- unlist(cf_row$final_model, recursive = FALSE)
   class_df <- model$pprob
-  
+
   main <- df_list[[cf_row$data]]
-  
+
   # add class_df to main
   census <- main %>%
     mutate(idno = as.numeric(idno)) %>%
@@ -193,8 +198,8 @@ make_census <- function(cf_row) {
     distinct(idno, .keep_all = T) %>%
     select(class, idno, cohort, starts_with("prob")) %>%
     filter(!is.na(class)) %>%
-    mutate(idno = as.character(idno)) 
-  
+    mutate(idno = as.character(idno))
+
   # add survival information to census
   census <- census %>%
     mutate(idno = as.numeric(idno)) %>%
@@ -203,18 +208,16 @@ make_census <- function(cf_row) {
       age_wk_death = le_wk,
       dead_nat = dead_censor
     )
-  
+
   # return census
   census
 }
 
 
 final_models$census <- lapply(seq_len(nrow(final_models)), function(i) {
-  cf_row <- final_models[i,]
+  cf_row <- final_models[i, ]
   make_census(cf_row)
 })
-
-
 ```
 
 
@@ -226,7 +229,7 @@ final_models$t1_raw <- lapply(1:length(final_models$census), function(i) {
   cat(i, "- ")
   t1 <- t1(final_models$census[[i]], columns = c("sex", "strain"))
   cat("\n")
-  
+
   t1
 })
 ```
@@ -236,21 +239,22 @@ final_models$t1_raw <- lapply(1:length(final_models$census), function(i) {
 source("R/chi_test.R")
 
 chi_results <- lapply(final_models$census,
-                               chi_test,
-                               columns = c("sex", "strain"))
+  chi_test,
+  columns = c("sex", "strain")
+)
 
 final_models$chi_df <- chi_results$dfs
 final_models$chi_test <- chi_results$tests
-
 ```
 
 #### Create clean t1
 ```{r clean t1}
 source("R/clean_t1.R")
 
-final_models$clean_t1 <- lapply(final_models$census, 
-                   clean_t1,
-                   columns = c("sex", "strain"))
+final_models$clean_t1 <- lapply(final_models$census,
+  clean_t1,
+  columns = c("sex", "strain")
+)
 ```
 
 ### Surival Analysis 
@@ -260,20 +264,22 @@ source("R/surv.R")
 attach(final_models)
 final_models$kap_plot <- lapply(1:nrow(final_models), function(i) {
   if (!is.na(final_models$t1[[i]])) {
-    kap_plot <- kap_plot_all(census[[i]], 
-                 var = "class", 
-                 ptitle = paste(oc_name[[i]], 
-                                age_var_name[[i]],
-                                "KM", 
-                                sep = " "))
+    kap_plot <- kap_plot_all(census[[i]],
+      var = "class",
+      ptitle = paste(oc_name[[i]],
+        age_var_name[[i]],
+        "KM",
+        sep = " "
+      )
+    )
   } else {
     kap_plot <- NA
   }
-  
+
   kap_plot
 })
 
-detach(final_models)  
+detach(final_models)
 ```
 
 ### Trajectory Fixed Effects Plotted
@@ -294,115 +300,102 @@ if (is.null(config$female) & is.null(config$het3)) {
 attach(final_models)
 final_models$traj_pred <- lapply(1:nrow(final_models), function(i) {
   if (!is.na(final_models$t1[[i]])) {
-    traj_plot(df = dfs[[i]],
-              mo = final_model[[i]], 
-              t1 = t1_raw[[i]],
-              age_var = age_var[[i]], 
-              y_var = oc[[i]], 
-              title = paste("Predicted", 
-                            oc_name[[i]], 
-                            "Trajectories across",
-                            age_var_name[[i]],
-                            sep = " "),
-              ylab = paste(oc_name[[i]], 
-                           oc_units[[i]],
-                           sep = " "),
-              xlab =  paste(age_var_name[[i]], 
-                           age_var_units[[i]],
-                           sep = " "),
-              fixcov = fixcov)
+    traj_plot(
+      df = dfs[[i]],
+      mo = final_model[[i]],
+      t1 = t1_raw[[i]],
+      age_var = age_var[[i]],
+      y_var = oc[[i]],
+      title = paste("Predicted",
+        oc_name[[i]],
+        "Trajectories across",
+        age_var_name[[i]],
+        sep = " "
+      ),
+      ylab = paste(oc_name[[i]],
+        oc_units[[i]],
+        sep = " "
+      ),
+      xlab = paste(age_var_name[[i]],
+        age_var_units[[i]],
+        sep = " "
+      ),
+      fixcov = fixcov
+    )
     # can render this plot with ggdraw or plot_grid
     plot <- recordPlot()
   } else {
     plot <- NA
   }
-  
+
   plot
 })
-detach(final_models)  
-
+detach(final_models)
 ```
 
 ### Create Observed Trajectory Plots
 
 ```{r observed plots, include = FALSE}
 attach(final_models)
-final_models$traj_obs <- lapply(1:nrow(final_models), function(i){
+final_models$traj_obs <- lapply(1:nrow(final_models), function(i) {
   if (final_models$ng[[i]] != 1) {
-    plot <- traj_obs(main = census[[i]],
-                     df = dfs[[i]],
-                     t1 = t1_raw[[i]], 
-                     age_var = age_var[[i]],
-                     y_var = oc[[i]],
-                     title = paste("Observed",
-                                   oc_name[[i]],
-                                   "Trajectory with",
-                                   age_var_name[[i]],
-                                   sep = " "),
-                     ylab = paste(oc_name[[i]],
-                                  oc_units[[i]],
-                                  sep = " "),
-                     xlab = paste(age_var_name[[i]],
-                                  age_var_units[[i]],
-                                  sep = " "
-                                  ))
+    plot <- traj_obs(
+      main = census[[i]],
+      df = dfs[[i]],
+      t1 = t1_raw[[i]],
+      age_var = age_var[[i]],
+      y_var = oc[[i]],
+      title = paste("Observed",
+        oc_name[[i]],
+        "Trajectory with",
+        age_var_name[[i]],
+        sep = " "
+      ),
+      ylab = paste(oc_name[[i]],
+        oc_units[[i]],
+        sep = " "
+      ),
+      xlab = paste(age_var_name[[i]],
+        age_var_units[[i]],
+        sep = " "
+      )
+    )
   } else {
     plot <- NA
   }
-  
+
   plot
 })
 
 
 lapply(final_models$traj_obs, print)
 
-detach(final_models)  
+detach(final_models)
 ```
 
 ### Create Spaghettie Plots
 
 ```{r spag plot}
 
-plot_spag <- function(data, x, y, id, title = " ", xlab = " ", ylab = " ") {
-  x <- paste0(x, "_ns")
-  ggplot2::ggplot(
-    data = data,
-    mapping = ggplot2::aes_string(
-      x = x,
-      y = y,
-      group = id
-    )
-  ) +
-    #    ggplot2::geom_point() +
-    ggplot2::geom_line() +
-    ggplot2::geom_smooth(
-      data = data,
-      mapping = ggplot2::aes_string(
-        x = x,
-        y = y,
-        group = NULL
-      ) 
-    ) +
-    labs(title = title, 
-         x = xlab,
-         y = ylab)
-}
+source("R/plot_spag.R")
 
 attach(final_models)
 lapply(1:nrow(final_models), function(i) {
-  plot_spag(data = dfs[[i]],
-            x = age_var[[i]],
-            y = oc[[i]],
-            id = subject[[i]],
-            title = paste(oc_name[[i]],
-                          age_var_name[[i]],
-                          "Spaghetti Plot",
-                          sep = " "),
-            xlab = paste(age_var_name[[i]], age_var_units[[i]], sep = " "),
-            ylab = paste(oc_name[[i]], oc_units[[i]], sep = " "))
+  plot_spag(
+    data = dfs[[i]],
+    x = age_var[[i]],
+    y = oc[[i]],
+    id = subject[[i]],
+    title = paste(oc_name[[i]],
+      age_var_name[[i]],
+      "Spaghetti Plot",
+      sep = " "
+    ),
+    xlab = paste(age_var_name[[i]], age_var_units[[i]], sep = " "),
+    ylab = paste(oc_name[[i]], oc_units[[i]], sep = " ")
+  )
 })
 detach(final_models)
-
 ```
 ### Class Prediction
 
@@ -426,17 +419,19 @@ source("R/pred_class.R")
 
 attach(final_models)
 prediction_results <- lapply(prediction_columns, function(col) {
-  predict_class_model_list(nested_newdata_list = final_models[[col]],
-                           model_list = final_model,
-                           vars = c("age_wk", "age_wk2", "per_age_wk", "per_age_wk2"),
-                           center = TRUE,
-                           scale = FALSE,
-                           ref_data = dfs,
-                           names = model_name)
+  predict_class_model_list(
+    nested_newdata_list = final_models[[col]],
+    model_list = final_model,
+    vars = c("age_wk", "age_wk2", "per_age_wk", "per_age_wk2"),
+    center = TRUE,
+    scale = FALSE,
+    ref_data = dfs,
+    names = model_name
+  )
 })
 detach(final_models)
 
-final_models[,prediction_results_names] <- prediction_results
+final_models[, prediction_results_names] <- prediction_results
 ```
 
 #### Sensititviy, Specificity, PPV, NPV, Tables
@@ -469,22 +464,21 @@ $\frac{TN}{FN + TN} =
 
 source("R/pred_table.R")
 
-prediction_results_table_names <- paste(prediction_results_names, 
-                                        "table",
-                                        sep = "_")
+prediction_results_table_names <- paste(prediction_results_names,
+  "table",
+  sep = "_"
+)
 
 prediction_results_tables <- lapply(
-  prediction_results_names, 
-  function(subset){
-  create_pred_table_subset(subset,
-                           subject = "idno")
-})
+  prediction_results_names,
+  function(subset) {
+    create_pred_table_subset(subset,
+      subject = "idno"
+    )
+  }
+)
 
-final_models[,prediction_results_table_names] <- prediction_results_tables
-
-
-
-
+final_models[, prediction_results_table_names] <- prediction_results_tables
 ```
 
 #### Dataframe for each subset type with prediction statistics
@@ -494,8 +488,9 @@ final_models[,prediction_results_table_names] <- prediction_results_tables
 source("R/combine_pred_df.R")
 
 prediction_results_df_names <- paste(prediction_results_names,
-                                     "df",
-                                     sep = "_")
+  "df",
+  sep = "_"
+)
 pred_results <- lapply(
   prediction_results_table_names,
   combine_pred_df_subset
@@ -512,7 +507,8 @@ source("R/rename_pred.R")
 
 final_models$interval_results_df <- lapply(
   final_models$interval_results_df,
-  name_interval)
+  name_interval
+)
 
 
 final_models$threshold_results_df <- lapply(
@@ -530,5 +526,59 @@ final_models$sample_results_df <- lapply(
 
 ```{r plot pred_results, fig.height=10, fig.width=5}
 source("R/plot_pred.R")
+
+final_models$interval_plots <- lapply(
+  seq_along(final_models$interval_results_df),
+  function(i) {
+    plot_interval(final_models$interval_results_df[[i]],
+      title = paste(final_models$data_name[[i]],
+                    final_models$age_var_name[[i]],
+                    sep = " "),
+      y = "Value",
+      x = paste(final_models$age_var_name[[i]],
+                final_models$age_var_units[[i]],
+                "Interval",
+                sep = " ")
+    )
+  }
+)
+
+final_models$interval_plots
+
+final_models$threshold_plots <- lapply(
+  seq_along(final_models$threshold_results_df),
+  function(i) {
+    plot_threshold(final_models$threshold_results_df[[i]],
+      title = paste(final_models$data_name[[i]],
+                    final_models$age_var_name[[i]],
+                    sep = " "),
+      y = "Value",
+      x = paste(final_models$age_var_name[[i]],
+                final_models$age_var_units[[i]],
+                "threshold",
+                sep = " ")
+    )
+  }
+)
+
+final_models$threshold_plots
+
+final_models$sample_plots <- lapply(
+  seq_along(final_models$sample_results_df),
+  function(i) {
+    plot_sample(final_models$sample_results_df[[i]],
+      title = paste(final_models$data_name[[i]],
+                    final_models$age_var_name[[i]],
+                    sep = " "),
+      y = "Value",
+      x = paste(final_models$age_var_name[[i]],
+                final_models$age_var_units[[i]],
+                "sample",
+                sep = " ")
+    )
+  }
+)
+
+final_models$sample_plots
 
 ```
