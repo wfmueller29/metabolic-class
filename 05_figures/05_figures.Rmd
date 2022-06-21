@@ -469,7 +469,7 @@ $\frac{TN}{FN + TN} =
 \frac{n - (og\_class + pred\_class - tp)}{n - pred\_class}$
 
 
-```{r prediciton tables, file = 'R/pred_table.R'}
+```{r source prediciton tables, file = 'R/pred_table.R'}
 source('R/pred_table.R')
 ```
 
@@ -493,7 +493,7 @@ final_models[, prediction_results_table_names] <- prediction_results_tables
 
 #### Dataframe for each subset type with prediction statistics
 
-```{r create prediciton dataframe for plotting, file = 'R/combine_pred_df.R'}
+```{r source create prediciton dataframe for plotting, file = 'R/combine_pred_df.R'}
 source('R/combine_pred_df.R')
 ```
 
@@ -537,11 +537,11 @@ final_models$sample_results_df <- lapply(
 
 #### Plot Prediction Results
 
-```{r plot pred_results, fig.height=10, fig.width=5, file = 'R/plot_pred.R'}
+```{r source plot pred_results, file = 'R/plot_pred.R'}
 source('R/plot_pred.R')
 ```
 
-```{r plot pred_results}
+```{r plot pred_results, fig.height=10, fig.width=5}
 final_models$interval_plots <- lapply(
   seq_along(final_models$interval_results_df),
   function(i) {
