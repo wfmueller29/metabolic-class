@@ -1,0 +1,66 @@
+---
+title: "SLAM Metabolic Class Figures Display"
+author: "William Mueller"
+data: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  html_document:
+    df_print: paged
+params:
+  model_dir: "20220617_142335_test"
+---
+
+```{r setup, warning=FALSE, message=FALSE, echo=FALSE}
+library(helphlme)
+library(tidyverse)
+library(kableExtra)
+library(survival)
+library(survminer)
+library(ggplotify)
+library(sjPlot)
+library(lme4)
+library(cowplot)
+library(RColorBrewer)
+# setting global knitr options for r markdown output
+knitr::opts_chunk$set(autodep = TRUE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(cache = FALSE)
+
+
+
+mega_pal <- rep(palette(), 40)
+```
+
+## Analysis
+
+### Load Models
+
+```{r load models}
+path <- normalizePath(file.path("..", "04_model_select", "output", params$model_dir))
+
+load_output <- function(file_name) {
+  file_path <- normalizePath(file.path(path, paste0(file_name, ".RDATA")))
+  load(file = file_path, envir = .GlobalEnv)
+}
+
+load_output("cf")
+load_output("df_list")
+load_output("final_models")
+load_output("models")
+load_output("config")
+
+# load in main_cat_surv
+load(file = "../04b_healthcard_cod/output/main_cat_surv.RDATA")
+# load in health
+load(file = "../04b_healthcard_cod/output/health.RDATA")
+# load in dvr
+load(file = "../04b_healthcard_cod/output/dvr.RDATA")
+
+# load in prediction data
+load(file = "../04c_prediction_data/output/dfs_prediction.RDATA")
+
+final_models$dfs <- lapply(final_models$data, function(name) {
+  df_list[[name]]
+})
+```

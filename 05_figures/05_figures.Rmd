@@ -261,13 +261,12 @@ final_models$clean_t1 <- lapply(final_models$census,
 ```{r surv analysis}
 source("R/surv.R")
 
-attach(final_models)
 final_models$kap_plot <- lapply(1:nrow(final_models), function(i) {
   if (!is.na(final_models$t1[[i]])) {
-    kap_plot <- kap_plot_all(census[[i]],
+    kap_plot <- kap_plot_all(final_models$census[[i]],
       var = "class",
-      ptitle = paste(oc_name[[i]],
-        age_var_name[[i]],
+      ptitle = paste(final_models$oc_name[[i]],
+        final_models$age_var_name[[i]],
         "KM",
         sep = " "
       )
@@ -279,7 +278,6 @@ final_models$kap_plot <- lapply(1:nrow(final_models), function(i) {
   kap_plot
 })
 
-detach(final_models)
 ```
 
 ### Trajectory Fixed Effects Plotted
@@ -297,27 +295,26 @@ if (is.null(config$female) & is.null(config$het3)) {
   fixcov <- NULL
 }
 
-attach(final_models)
 final_models$traj_pred <- lapply(1:nrow(final_models), function(i) {
   if (!is.na(final_models$t1[[i]])) {
     traj_plot(
-      df = dfs[[i]],
-      mo = final_model[[i]],
-      t1 = t1_raw[[i]],
-      age_var = age_var[[i]],
-      y_var = oc[[i]],
+      df = final_models$dfs[[i]],
+      mo = final_models$final_model[[i]],
+      t1 = final_models$t1_raw[[i]],
+      age_var = final_models$age_var[[i]],
+      y_var = final_models$oc[[i]],
       title = paste("Predicted",
-        oc_name[[i]],
+        final_models$oc_name[[i]],
         "Trajectories across",
-        age_var_name[[i]],
+        final_models$age_var_name[[i]],
         sep = " "
       ),
-      ylab = paste(oc_name[[i]],
-        oc_units[[i]],
+      ylab = paste(final_models$oc_name[[i]],
+        final_models$oc_units[[i]],
         sep = " "
       ),
-      xlab = paste(age_var_name[[i]],
-        age_var_units[[i]],
+      xlab = paste(final_models$age_var_name[[i]],
+        final_models$age_var_units[[i]],
         sep = " "
       ),
       fixcov = fixcov
@@ -330,33 +327,31 @@ final_models$traj_pred <- lapply(1:nrow(final_models), function(i) {
 
   plot
 })
-detach(final_models)
 ```
 
 ### Create Observed Trajectory Plots
 
 ```{r observed plots, include = FALSE}
-attach(final_models)
 final_models$traj_obs <- lapply(1:nrow(final_models), function(i) {
   if (final_models$ng[[i]] != 1) {
     plot <- traj_obs(
-      main = census[[i]],
-      df = dfs[[i]],
-      t1 = t1_raw[[i]],
-      age_var = age_var[[i]],
-      y_var = oc[[i]],
+      main = final_models$census[[i]],
+      df = final_models$dfs[[i]],
+      t1 = final_models$t1_raw[[i]],
+      age_var = final_models$age_var[[i]],
+      y_var = final_models$oc[[i]],
       title = paste("Observed",
-        oc_name[[i]],
+        final_models$oc_name[[i]],
         "Trajectory with",
-        age_var_name[[i]],
+        final_models$age_var_name[[i]],
         sep = " "
       ),
-      ylab = paste(oc_name[[i]],
-        oc_units[[i]],
+      ylab = paste(final_models$oc_name[[i]],
+        final_models$oc_units[[i]],
         sep = " "
       ),
-      xlab = paste(age_var_name[[i]],
-        age_var_units[[i]],
+      xlab = paste(final_models$age_var_name[[i]],
+        final_models$age_var_units[[i]],
         sep = " "
       )
     )
@@ -370,7 +365,6 @@ final_models$traj_obs <- lapply(1:nrow(final_models), function(i) {
 
 lapply(final_models$traj_obs, print)
 
-detach(final_models)
 ```
 
 ### Create Spaghettie Plots
@@ -379,23 +373,21 @@ detach(final_models)
 
 source("R/plot_spag.R")
 
-attach(final_models)
 lapply(1:nrow(final_models), function(i) {
   plot_spag(
-    data = dfs[[i]],
-    x = age_var[[i]],
-    y = oc[[i]],
-    id = subject[[i]],
-    title = paste(oc_name[[i]],
-      age_var_name[[i]],
+    data = final_models$dfs[[i]],
+    x = final_models$age_var[[i]],
+    y = final_models$oc[[i]],
+    id = final_models$subject[[i]],
+    title = paste(final_models$oc_name[[i]],
+      final_models$age_var_name[[i]],
       "Spaghetti Plot",
       sep = " "
     ),
-    xlab = paste(age_var_name[[i]], age_var_units[[i]], sep = " "),
-    ylab = paste(oc_name[[i]], oc_units[[i]], sep = " ")
+    xlab = paste(final_models$age_var_name[[i]], final_models$age_var_units[[i]], sep = " "),
+    ylab = paste(final_models$oc_name[[i]], final_models$oc_units[[i]], sep = " ")
   )
 })
-detach(final_models)
 ```
 ### Class Prediction
 
@@ -417,19 +409,17 @@ prediction_results_names <- paste(prediction_columns, "results", sep = "_")
 source("R/pred_class.R")
 
 
-attach(final_models)
 prediction_results <- lapply(prediction_columns, function(col) {
   predict_class_model_list(
     nested_newdata_list = final_models[[col]],
-    model_list = final_model,
+    model_list = final_models$final_model,
     vars = c("age_wk", "age_wk2", "per_age_wk", "per_age_wk2"),
     center = TRUE,
     scale = FALSE,
-    ref_data = dfs,
-    names = model_name
+    ref_data = final_models$dfs,
+    names = final_models$model_name
   )
 })
-detach(final_models)
 
 final_models[, prediction_results_names] <- prediction_results
 ```
@@ -580,5 +570,11 @@ final_models$sample_plots <- lapply(
 )
 
 final_models$sample_plots
+
+```
+
+### Save R Objects
+
+```{r save R objects}
 
 ```
