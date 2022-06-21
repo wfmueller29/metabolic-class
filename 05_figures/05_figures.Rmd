@@ -513,7 +513,7 @@ final_models[, prediction_results_df_names] <- pred_results
 
 #### Prepare prediciton dataframe for plotting
 
-```{r prepare prediction dataframe, file = 'R/rename_pred.R'}
+```{r source prepare prediction dataframe, file = 'R/rename_pred.R'}
 source('R/rename_pred.R')
 ```
 
