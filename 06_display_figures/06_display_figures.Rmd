@@ -6,7 +6,11 @@ output:
   html_document:
     df_print: paged
 params:
-  model_dir: "20220617_142335_test"
+  all_dir: "20220614_081638_all"
+  mb6_dir: "20220614_163126_mb6"
+  fb6_dir: "20220614_175701_fb6"
+  mhet3_dir: "20220614_173921_mhet3"
+  fhet3_dir: "20220614_160836_fhet3"
 ---
 
 ```{r setup, warning=FALSE, message=FALSE, echo=FALSE}
@@ -26,10 +30,6 @@ knitr::opts_chunk$set(warning = FALSE)
 knitr::opts_chunk$set(message = FALSE)
 knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(cache = FALSE)
-
-
-
-mega_pal <- rep(palette(), 40)
 ```
 
 ## Analysis
@@ -37,30 +37,33 @@ mega_pal <- rep(palette(), 40)
 ### Load Models
 
 ```{r load models}
-path <- normalizePath(file.path("..", "04_model_select", "output", params$model_dir))
+output_path <- file.path("..", "05_figures", "output")
 
-load_output <- function(file_name) {
-  file_path <- normalizePath(file.path(path, paste0(file_name, ".RDATA")))
-  load(file = file_path, envir = .GlobalEnv)
+load_models <- function(subgroup, envir = .GlobalEnv) {
+  subgroup_param <- paste(subgroup, "dir", sep = "_")
+  subgroup_path <- params[[subgroup_param]]
+  path <- file.path(output_path,
+                    subgroup_path,
+                    "data",
+                    "final_models.RDATA")
+  env_name <- paste(subgroup, "env", sep = "_")
+  assign(env_name, rlang::env(), envir = envir)
+  load(path, eval(as.symbol(env_name)))
 }
 
-load_output("cf")
-load_output("df_list")
-load_output("final_models")
-load_output("models")
-load_output("config")
+subgroups <- c("all", "mb6", "fb6", "mhet3", "fhet3")
 
-# load in main_cat_surv
-load(file = "../04b_healthcard_cod/output/main_cat_surv.RDATA")
-# load in health
-load(file = "../04b_healthcard_cod/output/health.RDATA")
-# load in dvr
-load(file = "../04b_healthcard_cod/output/dvr.RDATA")
+for(subgroup in subgroups) {
+  load_models(subgroup)
+}
 
-# load in prediction data
-load(file = "../04c_prediction_data/output/dfs_prediction.RDATA")
+```
 
-final_models$dfs <- lapply(final_models$data, function(name) {
-  df_list[[name]]
-})
+## Figures
+
+### Figure 1: Dispaly How latent class models work
+
+```{r figure 1}
+p1 <- all_env$final_models %>%
+  filter
 ```
