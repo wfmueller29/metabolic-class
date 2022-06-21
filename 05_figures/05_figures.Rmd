@@ -549,8 +549,9 @@ final_models$sample_plots
 ### Save R Objects
 
 ```{r save R objects}
-dir.create("output_data")
-setwd("output_data")
+setwd(file.path("output", params$model_dir))
+dir.create("data")
+setwd("data")
 
 save(cf, file = "cf.RDATA")
 save(final_models, file = "final_models.RDATA")
