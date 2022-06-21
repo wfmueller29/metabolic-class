@@ -9,7 +9,7 @@ params:
   model_dir: "20220617_142335_test"
 ---
 
-```{r setup, warning=FALSE, message=FALSE, echo=FALSE}
+```{r setup, warning=FALSE, message=FALSE, echo=FALSE, eval = TRUE}
 library(helphlme)
 library(tidyverse)
 library(kableExtra)
