@@ -26,8 +26,8 @@ knitr::opts_chunk$set(warning = FALSE)
 knitr::opts_chunk$set(message = FALSE)
 knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(cache = FALSE)
-
-
+knitr::opts_chunk$set(eval = TRUE)
+knitr::opts_chunk$set(include = TRUE)
 
 mega_pal <- rep(palette(), 40)
 ```
@@ -67,11 +67,7 @@ final_models$dfs <- lapply(final_models$data, function(name) {
 
 #### Name Model Variables
 
-```{r naming}
-
-source("R/name_model_args.R")
-
-
+```{r naming, file = 'R/name_model_args.R'}
 final_models_info <- final_models %>%
   select(-final_model)
 ```
@@ -222,9 +218,7 @@ final_models$census <- lapply(seq_len(nrow(final_models)), function(i) {
 
 
 #### Create Table 1
-```{r create table 1}
-source("R/t1.R")
-
+```{r create table 1, file = 'R/t1.R'}
 final_models$t1_raw <- lapply(1:length(final_models$census), function(i) {
   cat(i, "- ")
   t1 <- t1(final_models$census[[i]], columns = c("sex", "strain"))
@@ -235,9 +229,7 @@ final_models$t1_raw <- lapply(1:length(final_models$census), function(i) {
 ```
 
 #### Perform Chi-squared Test
-```{r chi squared test}
-source("R/chi_test.R")
-
+```{r chi squared test, file ='R/chi_test.R'}
 chi_results <- lapply(final_models$census,
   chi_test,
   columns = c("sex", "strain")
@@ -248,9 +240,7 @@ final_models$chi_test <- chi_results$tests
 ```
 
 #### Create clean t1
-```{r clean t1}
-source("R/clean_t1.R")
-
+```{r clean t1, file = 'R/clean_t1.R'}
 final_models$clean_t1 <- lapply(final_models$census,
   clean_t1,
   columns = c("sex", "strain")
@@ -258,9 +248,7 @@ final_models$clean_t1 <- lapply(final_models$census,
 ```
 
 ### Surival Analysis 
-```{r surv analysis}
-source("R/surv.R")
-
+```{r surv analysis, file = 'R/surv.R'}
 final_models$kap_plot <- lapply(1:nrow(final_models), function(i) {
   if (!is.na(final_models$t1[[i]])) {
     kap_plot <- kap_plot_all(final_models$census[[i]],
@@ -282,8 +270,7 @@ final_models$kap_plot <- lapply(1:nrow(final_models), function(i) {
 
 ### Trajectory Fixed Effects Plotted
 
-```{r fixed effects, include = FALSE}
-source("R/traj_plot.R")
+```{r fixed effects, include = FALSE, file = 'R/traj_plot.R'}
 
 if (is.null(config$female) & is.null(config$het3)) {
   fixcov <- c(female = 0, het3 = 0)
@@ -331,7 +318,7 @@ final_models$traj_pred <- lapply(1:nrow(final_models), function(i) {
 
 ### Create Observed Trajectory Plots
 
-```{r observed plots, include = FALSE}
+```{r observed plots, include = FALSE, file = 'R/traj_plot.R'}
 final_models$traj_obs <- lapply(1:nrow(final_models), function(i) {
   if (final_models$ng[[i]] != 1) {
     plot <- traj_obs(
@@ -369,9 +356,7 @@ lapply(final_models$traj_obs, print)
 
 ### Create Spaghettie Plots
 
-```{r spag plot}
-
-source("R/plot_spag.R")
+```{r spag plot, file = "R/plot_spag.R"}
 
 lapply(1:nrow(final_models), function(i) {
   plot_spag(
@@ -392,7 +377,8 @@ lapply(1:nrow(final_models), function(i) {
 ### Class Prediction
 
 #### Class Prediction Raw Results
-```{r create prediction results}
+```{r create prediction results, file = 'R/pred_class.R'}
+# add prediction dataframes to final_models
 for (subset_name in names(dfs_prediction)) {
   subset <- list()
   for (i in seq_len(nrow(final_models))) {
@@ -405,9 +391,6 @@ for (subset_name in names(dfs_prediction)) {
 
 prediction_columns <- names(dfs_prediction)[-1]
 prediction_results_names <- paste(prediction_columns, "results", sep = "_")
-
-source("R/pred_class.R")
-
 
 prediction_results <- lapply(prediction_columns, function(col) {
   predict_class_model_list(
@@ -450,10 +433,7 @@ $\frac{TN}{FN + TN} =
 \frac{n - (og\_class + pred\_class - tp)}{n - pred\_class}$
 
 
-```{r prediciton tables}
-
-source("R/pred_table.R")
-
+```{r prediciton tables, file = 'R/pred_table.R'}
 prediction_results_table_names <- paste(prediction_results_names,
   "table",
   sep = "_"
@@ -473,10 +453,7 @@ final_models[, prediction_results_table_names] <- prediction_results_tables
 
 #### Dataframe for each subset type with prediction statistics
 
-```{r create prediciton dataframe for plotting}
-
-source("R/combine_pred_df.R")
-
+```{r create prediciton dataframe for plotting, file = 'R/combine_pred_df.R'}
 prediction_results_df_names <- paste(prediction_results_names,
   "df",
   sep = "_"
@@ -492,9 +469,7 @@ final_models[, prediction_results_df_names] <- pred_results
 
 #### Prepare prediciton dataframe for plotting
 
-```{r prepare prediction dataframe}
-source("R/rename_pred.R")
-
+```{r prepare prediction dataframe, file = 'R/rename_pred.R'}
 final_models$interval_results_df <- lapply(
   final_models$interval_results_df,
   name_interval
@@ -514,9 +489,7 @@ final_models$sample_results_df <- lapply(
 
 #### Plot Prediction Results
 
-```{r plot pred_results, fig.height=10, fig.width=5}
-source("R/plot_pred.R")
-
+```{r plot pred_results, fig.height=10, fig.width=5, file = 'R/plot_pred.R'}
 final_models$interval_plots <- lapply(
   seq_along(final_models$interval_results_df),
   function(i) {
@@ -576,5 +549,12 @@ final_models$sample_plots
 ### Save R Objects
 
 ```{r save R objects}
+dir.create("output_data")
+setwd("output_data")
 
+save(cf, file = "cf.RDATA")
+save(final_models, file = "final_models.RDATA")
+save(config, file = "config.RDATA")
+save(df_list, file = "df_list.RDATA")
+save(dfs_prediction, file = "dfs_prediction.RDATA")
 ```
