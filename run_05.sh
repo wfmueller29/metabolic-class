@@ -1,3 +1,3 @@
 #!/bin/bash
 
-bash submit/submit_predict_data.sh
+bash submit/submit_figures.sh
