@@ -14,6 +14,9 @@ dirs <- list.dirs(path = "../04_model_select/output/.",
                   full.names = FALSE,
                   recursive = FALSE)
 
+# drop archive dir
+dirs <- dirs[dirs != "archive"]
+
 for (dir in dirs) {
   render_model_output(dir)
 }
