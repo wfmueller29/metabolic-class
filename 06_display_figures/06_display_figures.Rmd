@@ -64,6 +64,7 @@ for(subgroup in subgroups) {
 ### Figure 1: Dispaly How latent class models work
 
 ```{r figure 1}
-p1 <- all_env$final_models %>%
-  filter
+p1 <- all_env$final_models[model_name == "bw_main|bw_age_wk", "spag_plot"]
+p2 <- ggplot()
+p3
 ```
