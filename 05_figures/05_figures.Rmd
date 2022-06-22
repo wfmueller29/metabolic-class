@@ -6,7 +6,7 @@ output:
   html_document:
     df_print: paged
 params:
-  model_dir: "20220617_142335_test"
+  model_dir: "20220618_104254_all"
 ---
 
 ```{r setup, warning=FALSE, message=FALSE, echo=FALSE, eval = TRUE}
@@ -221,6 +221,30 @@ final_models$census <- lapply(seq_len(nrow(final_models)), function(i) {
 })
 ```
 
+#### Tamper with census to create correct class numbering
+
+```{r class numbering}
+mo_names <- c("bw_main|bw_age_wk",
+              "gluc_main|gluc_age_wk",
+              "fat_main|fat_age_wk")
+
+reorder_class <- function(final_models, mo_names) {
+  i <- 0
+  for (name in mo_names) {
+    x <- final_models
+    census <- x[x$model_name == name, ]$census
+    census <- unlist(census, recursive = FALSE)
+    census$class <- census$class + i
+    uni_class <- length(unique(census$class))
+    i <- uni_class + i
+    x[x$model_name == name, ]$census <- list(census)
+  }
+  x
+}
+  
+final_models <- reorder_class(final_models, mo_names)
+look <- final_models[, c("model_name", "census")]
+```
 
 #### Create Table 1
 ```{r source create table 1, file = 'R/t1.R'}
