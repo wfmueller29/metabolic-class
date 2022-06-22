@@ -6,11 +6,11 @@ output:
   html_document:
     df_print: paged
 params:
-  all_dir: "20220614_081638_all"
-  mb6_dir: "20220614_163126_mb6"
-  fb6_dir: "20220614_175701_fb6"
-  mhet3_dir: "20220614_173921_mhet3"
-  fhet3_dir: "20220614_160836_fhet3"
+  all_dir: "20220618_104254_all"
+  mb6_dir: "20220617_045809_mb6"
+  fb6_dir: "20220617_072941_fb6"
+  mhet3_dir: "20220617_052502_mhet3"
+  fhet3_dir: "20220617_033852_fhet3"
 ---
 
 ```{r setup, warning=FALSE, message=FALSE, echo=FALSE}

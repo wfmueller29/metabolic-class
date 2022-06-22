@@ -389,7 +389,7 @@ source("R/plot_spag.R")
 ```
 
 ```{r spag plot}
-lapply(1:nrow(final_models), function(i) {
+final_models$spag_plot <- lapply(1:nrow(final_models), function(i) {
   plot_spag(
     data = final_models$dfs[[i]],
     x = final_models$age_var[[i]],
