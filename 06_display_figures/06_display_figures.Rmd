@@ -57,14 +57,255 @@ for(subgroup in subgroups) {
   load_models(subgroup)
 }
 
+# Add subgroup name to env
+all_env$subgroup <- "All Mice"
+mb6_env$subgroup <- "Male B6"
+fb6_env$subgroup <- "Female B6"
+mhet3_env$subgroup <- "Male HET3"
+fhet3_env$subgroup <- "Female HET3"
+
 ```
 
 ## Figures
 
 ### Figure 1: Dispaly How latent class models work
 
-```{r figure 1}
-p1 <- all_env$final_models[model_name == "bw_main|bw_age_wk", "spag_plot"]
+```{r figure 1, fig.height=5, fig.width=10}
+x <- all_env$final_models
+p1 <- x[x$model_name == "bw_main|bw_age_wk", "spag_plot"][[1]]
 p2 <- ggplot()
-p3
+p3 <- x[x$model_name == "bw_main|bw_age_wk", "traj_obs"][[1]]
+
+
+cowplot::plot_grid(p1, p3, nrow = 1)
+```
+
+### Figure 2: Dispaly predicted and observed
+
+- Supplement will include sex strain strata 
+
+```{r figure 2, fig.height= 16, fig.width=12}
+
+create_fig2 <- function(env) {
+  x <- env$final_models
+  bw_pred <- x[x$model_name == "bw_main|bw_age_wk", "traj_pred"][[1]]
+  bw_obs <- x[x$model_name == "bw_main|bw_age_wk", "traj_obs"][[1]]
+  gluc_pred <- x[x$model_name == "gluc_main|gluc_age_wk", "traj_pred"][[1]]  
+  gluc_obs <- x[x$model_name == "gluc_main|gluc_age_wk", "traj_obs"][[1]]
+  fat_pred <- x[x$model_name == "fat_main|fat_age_wk", "traj_pred"][[1]]
+  fat_obs <- x[x$model_name == "fat_main|fat_age_wk", "traj_obs"][[1]]
+  
+  bw_pred <- ggdraw(bw_pred, clip = "on")
+  gluc_pred <- ggdraw(gluc_pred, clip = "on")
+  fat_pred <- ggdraw(fat_pred, clip = "on")
+  
+  title_theme <- ggdraw() + 
+    draw_label(paste(env$subgroup,
+                     "Predicted and Observed Metabolic Life Course Trajectories", 
+                     sep = " "))
+  
+  fig2 <- cowplot::plot_grid(bw_pred, bw_obs,
+                   gluc_pred, gluc_obs,
+                   fat_pred, fat_obs, 
+                   nrow = 3,
+                   greedy = FALSE,
+                   labels = "AUTO"
+                   )
+  
+  env$fig2 <- cowplot::plot_grid(title_theme, fig2, rel_heights = c(.05, 1),
+                                 ncol = 1)
+  
+  env
+  
+}
+
+env_list <- list(all_env, mb6_env, fb6_env, mhet3_env, fhet3_env)
+
+env_list <- lapply(env_list, create_fig2)
+
+lapply(env_list, `[[`, "fig2")
+
+```
+
+### Table 1: Who's in what class
+
+```{r table 1, results='asis'}
+
+mo_names <- c("bw_main|bw_age_wk", "gluc_main|gluc_age_wk", "fat_main|fat_age_wk")
+create_t1 <- function(env, mo_names) {
+  x <- env$final_models
+  t1_list <- lapply(mo_names, function(name) {
+    x[x$model_name == name, ]$clean_t1[[1]]
+  })
+  
+  outcome_names <- lapply(mo_names, function(name) {
+    x[x$model_name == name, ]$oc_name
+  })
+  
+  t1_list <- lapply(seq_along(t1_list), function(i) {
+    t1 <- t1_list[[i]]
+    oc_name <- outcome_names[[i]]
+    
+    
+   if(!is.na(t1[[1]])) {
+     t1 <- t1
+    t1 <- as.data.frame(t(t1))
+    t1$row_names <- row.names(t1)
+    row.names(t1) <- NULL
+    t1$oc_name <- oc_name
+   } else {
+     t1 <- NULL
+   }
+    t1
+  })
+  
+  t1_df <- do.call(rbind, t1_list) %>%
+    select(oc_name, row_names, everything())
+  
+  env$t1_df <- t1_df
+  
+  env
+}
+
+env_list <- lapply(env_list, function(env) {
+  create_t1(env, mo_names)
+})
+
+lapply(env_list, function(env) {
+  uni_models <- unique(env$t1_df$oc_name)
+  j <- 0
+  no_rows <- list()
+  for (i in seq_along(uni_models)) {
+    number_rows <- sum(env$t1_df$oc_name == uni_models[[i]])
+    no_rows[[i]] <- number_rows + j
+    j <- number_rows
+  }
+  table <- kable(env$t1_df, format = "html") %>%
+    column_spec(1, bold = TRUE, border_right = TRUE) %>%
+    row_spec(no_rows[[1]], hline_after = T) %>%
+    row_spec(no_rows[[2]], hline_after = T) %>%
+    row_spec(no_rows[[3]], hline_after = T) %>%
+    collapse_rows(columns = 1, valign = "middle") %>%
+    kable_styling(bootstrap_options = "striped")
+  
+  print(table)
+    
+})
+```
+
+### Figure 3: Mortality outcomes by class
+
+- Supplement will include same figures but for each sex strain strata
+
+```{r figure 3, fig.height= 16, fig.width=12}
+
+create_fig3 <- function(env){
+  x <- env$final_models
+  bw_obs <- x[x$model_name == "bw_main|bw_age_wk", "traj_obs"][[1]]
+  gluc_obs <- x[x$model_name == "gluc_main|gluc_age_wk", "traj_obs"][[1]]
+  fat_obs <- x[x$model_name == "fat_main|fat_age_wk", "traj_obs"][[1]]
+  bw_kap <- x[x$model_name == "bw_main|bw_age_wk", "kap_plot"][[1]]
+  gluc_kap <- x[x$model_name == "gluc_main|gluc_age_wk", "kap_plot"][[1]]  
+  fat_kap <- x[x$model_name == "fat_main|fat_age_wk", "kap_plot"][[1]]   
+  
+  if (!is.na(bw_kap)) bw_kap <- bw_kap$plot
+  if (!is.na(gluc_kap)) gluc_kap <- gluc_kap$plot
+  if (!is.na(fat_kap)) fat_kap <- fat_kap$plot
+
+  fig3 <- cowplot::plot_grid(bw_obs, bw_kap,
+                   gluc_obs, gluc_kap,
+                   fat_obs, fat_kap, 
+                   nrow = 3,
+                   greedy = FALSE,
+                   labels = "AUTO")
+  
+  title_theme <- ggdraw() + 
+    draw_label(paste(env$subgroup,
+                     "Observed Metabolic Life Course Trajectories and Kaplan Meiers by Class", 
+                     sep = " "))
+  
+  env$fig3 <- cowplot::plot_grid(title_theme, fig3, rel_heights = c(.05, 1),
+                                 ncol = 1)
+  
+  env
+}
+env_list <- lapply(env_list, create_fig3)
+
+lapply(env_list, `[[`, "fig3")
+```
+
+### Table 2: Hazard Ratios Adjusted for Sex Strain and proportional hazards
+
+```{r table 2}
+
+```
+
+### Figure 4: Metabolic Outcomes by Class
+
+- Supplement will show the same figures but fore each sex strain combo
+
+```{r figure 4, fig.height=16, fig.width=24}
+
+create_fig4 <- function(env) {
+  x <- env$final_models
+  bw_pred <- x[x$model_name == "bw_main|bw_age_wk", "traj_pred"][[1]]
+  gluc_pred <- x[x$model_name == "gluc_main|gluc_age_wk", "traj_pred"][[1]]  
+  fat_pred <- x[x$model_name == "fat_main|fat_age_wk", "traj_pred"][[1]]
+  
+  bw_pred <- ggdraw(bw_pred, clip = "on")
+  gluc_pred <- ggdraw(gluc_pred, clip = "on")
+  fat_pred <- ggdraw(fat_pred, clip = "on")
+  
+  bw_bw <- x[x$model_name == "bw_main|bw_age_wk", "plot_bw"][[1]]
+  gluc_bw <- x[x$model_name == "gluc_main|gluc_age_wk", "plot_bw"][[1]]  
+  fat_bw <- x[x$model_name == "fat_main|fat_age_wk", "plot_bw"][[1]]
+  
+  bw_gluc <- x[x$model_name == "bw_main|bw_age_wk", "plot_gluc"][[1]]
+  gluc_gluc <- x[x$model_name == "gluc_main|gluc_age_wk", "plot_gluc"][[1]]  
+  fat_gluc <- x[x$model_name == "fat_main|fat_age_wk", "plot_gluc"][[1]]
+  
+  bw_fat <- x[x$model_name == "bw_main|bw_age_wk", "plot_fat"][[1]]
+  gluc_fat <- x[x$model_name == "gluc_main|gluc_age_wk", "plot_fat"][[1]]  
+  fat_fat <- x[x$model_name == "fat_main|fat_age_wk", "plot_fat"][[1]]
+  
+  fig4 <- cowplot::plot_grid(bw_pred, bw_bw, bw_gluc, bw_fat,
+                   gluc_pred, gluc_bw, gluc_gluc, gluc_fat,
+                   fat_pred, fat_bw, fat_gluc, fat_fat,
+                   nrow = 3,
+                   greedy = FALSE,
+                   labels = "AUTO")
+  
+  title_theme <- ggdraw() + 
+    draw_label(paste(env$subgroup,
+                     "Cross-reference Other Metabolic Parameters by Each Metabolic Class",
+                     sep = " "))
+    
+  env$fig4 <- cowplot::plot_grid(title_theme, fig4, rel_heights = c(.05, 1),
+                                 ncol = 1)
+  
+  env
+  
+}
+
+  
+env_list <- lapply(env_list, create_fig4)
+
+lapply(env_list, `[[`, "fig4")
+```
+
+### Figure 5: Class Prediction 
+
+- Supplmenet will include same table for glucose and body fat
+
+```{r figure 5, fig.height=16, fig.width=16}
+bw_interval <- x[x$model_name == "bw_main|bw_age_wk", "interval_plots"][[1]]
+bw_threshold <- x[x$model_name == "bw_main|bw_age_wk", "threshold_plots"][[1]]
+bw_sample <- x[x$model_name == "bw_main|bw_age_wk", "sample_plots"][[1]]
+
+fig5 <- cowplot::plot_grid(bw_interval, bw_threshold, bw_sample,
+                           ncol = 3,
+                           labels = "AUTO"
+                           )
+
+fig5
 ```
