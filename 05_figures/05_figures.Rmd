@@ -50,8 +50,10 @@ load_output("final_models")
 load_output("models")
 load_output("config")
 
+
 # load in main_cat_surv
 load(file = "../04b_healthcard_cod/output/main_cat_surv.RDATA")
+# load(file = "../01_dataset/output/main_cat_surv.RDATA")
 # load in health
 load(file = "../04b_healthcard_cod/output/health.RDATA")
 # load in dvr
@@ -65,6 +67,11 @@ final_models$dfs <- lapply(final_models$data, function(name) {
 })
 ```
 
+```{r read in census}
+census <- read.csv(file = "../01_dataset/data/census.csv") %>%
+  select(cohort, tag, sex, strain, idno) %>%
+  filter(cohort <= 10)
+```
 #### Name Model Variables
 
 ```{r source naming, file = 'R/name_model_args.R'}
@@ -136,22 +143,23 @@ merge_dvr <- dvr %>%
 merge_health <- health_wide_heat %>%
   select(-dod, -idno)
 
-subject_sum <- main_cat_surv %>%
-  select(
-    idno,
-    tag,
-    sex,
-    strain,
-    dead_censor,
-    fu_age_wk,
-    le_wk,
-    cod,
-    lastdate,
-    maxdate,
-    tod
-  ) %>%
+main_cat_surv_prep <- main_cat_surv %>% 
+  select(-tag,
+         -sex,
+         -strain,
+          dead_censor,
+          fu_age_wk,
+          le_wk,
+          cod,
+          lastdate,
+          maxdate,
+          tod)
+
+subject_sum <- census %>%
+  left_join(main_cat_surv_prep, by = "idno") %>%
   mutate(idno = as.numeric(idno)) %>%
   left_join(merge_dvr, by = "idno")
+
 
 # check na's after merging
 apply(apply(subject_sum, 2, is.na), 2, sum)
