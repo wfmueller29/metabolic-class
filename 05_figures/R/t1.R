@@ -5,19 +5,19 @@
 library(tidyverse)
 
 t1 <- function(df, columns, total = TRUE, surv = TRUE) {
-  
+
   # number of unique classes
   no_class <- length(unique(df$class))
-  
+
   if (no_class != 1) {
     df_table <- create_count_columns(df, columns, total, surv)
-  
+
     df_freq <- create_freq_column(df_table)
-  
+
     df_final <- create_combo_column(df_table, df_freq)
   } else {
     cat("Only one class")
-    
+
     df_final <- NA
   }
 
@@ -30,30 +30,30 @@ create_count_columns <- function(df, columns, total = TRUE, surv = TRUE) {
 
   if (total) {
     df_total <- df_main %>%
-      group_by(class) %>%
+      group_by(new_class) %>%
       summarise(n = n()) %>%
-      select(class, n, everything())
+      select(new_class, n, everything())
   }
 
   df_list_count_by_class <- lapply(
     columns,
     count_column_by_class,
-    df = df, group = "class"
+    df = df, group = "new_class"
   )
 
   if (surv) {
     surv_fit <- survfit(
       data = df_main,
-      Surv(time = age_wk_death, event = dead_nat) ~ factor(class)
+      Surv(time = age_wk_death, event = dead_nat) ~ factor(new_class)
     )
     df_surv <- surv_median(surv_fit) %>%
       rename(
-        class = strata,
+        new_class = strata,
         median_surv = median
       ) %>%
       select(-lower, -upper)
 
-    df_surv$class <- sort(unique(df_main$class))
+    df_surv$new_class <- sort(unique(df_main$new_class))
   }
 
   dfs <- df_list_count_by_class
@@ -68,11 +68,12 @@ create_count_columns <- function(df, columns, total = TRUE, surv = TRUE) {
 
 
   df_table <- dfs %>%
-    reduce(left_join, by = "class")
+    reduce(left_join, by = "new_class")
 
   df_table <- df_table %>%
     t() %>%
     data.frame() %>%
+    mutate_all(function(x) as.numeric(x)) %>%
     round() %>%
     janitor::row_to_names(1)
 
@@ -111,7 +112,7 @@ create_freq_column <- function(df_table) {
     data.frame()
 
   names(new_cols) <- paste0(names(df_table[, -length(df_table)]), "_freq")
-  
+
   df_freq <- new_cols
 }
 
@@ -145,8 +146,8 @@ create_combo_column <- function(df_table, df_freq) {
     ),
     row.names = rownames(df_table)
   )
-  
+
   names(df_table) <- all_col_names
-  
+
   df_table
 }

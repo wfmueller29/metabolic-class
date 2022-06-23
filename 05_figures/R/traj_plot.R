@@ -134,7 +134,7 @@ traj_obs <- function(main,
     mapping = aes(
       x = eval(as.symbol((age_var))),
       y = eval(as.symbol(y_var)),
-      color = factor(class)
+      color = factor(new_class)
     )
   ) +
     geom_point(alpha = .1) +

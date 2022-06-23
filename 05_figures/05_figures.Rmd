@@ -30,7 +30,6 @@ knitr::opts_chunk$set(eval = TRUE)
 knitr::opts_chunk$set(include = TRUE)
 
 mega_pal <- rep(palette(), 40)
-
 ```
 
 ## Analysis
@@ -224,24 +223,35 @@ final_models$census <- lapply(seq_len(nrow(final_models)), function(i) {
 #### Tamper with census to create correct class numbering
 
 ```{r class numbering}
-mo_names <- c("bw_main|bw_age_wk",
-              "gluc_main|gluc_age_wk",
-              "fat_main|fat_age_wk")
+mo_names <- c(
+  "bw_main|bw_age_wk",
+  "gluc_main|gluc_age_wk",
+  "fat_main|fat_age_wk"
+)
 
 reorder_class <- function(final_models, mo_names) {
+  x <- final_models
+  all_names <- x$model_name
+  missing_names <- all_names[!(all_names %in% mo_names)]
   i <- 0
   for (name in mo_names) {
-    x <- final_models
     census <- x[x$model_name == name, ]$census
     census <- unlist(census, recursive = FALSE)
-    census$class <- census$class + i
+    census$new_class <- as.character(census$class + i)
     uni_class <- length(unique(census$class))
     i <- uni_class + i
-    x[x$model_name == name, ]$census <- list(census)
+    x[x$model_name == name, ]$census[[1]] <- as.data.frame(census)
+  }
+
+  for (name in missing_names) {
+    census <- x[x$model_name == name, ]$census
+    census <- unlist(census, recursive = FALSE)
+    census$new_class <- as.character(census$class)
+    x[x$model_name == name, ]$census[[1]] <- as.data.frame(census)
   }
   x
 }
-  
+
 final_models <- reorder_class(final_models, mo_names)
 look <- final_models[, c("model_name", "census")]
 ```
@@ -278,7 +288,7 @@ final_models$chi_test <- chi_results$tests
 
 #### Create clean t1
 ```{r source clean t1, file = 'R/clean_t1.R'}
-source('R/clean_t1.R')
+source("R/clean_t1.R")
 ```
 
 ```{r clean t1}
@@ -289,8 +299,9 @@ final_models$clean_t1 <- lapply(final_models$census,
 ```
 
 ### Surival Analysis 
+
 ```{r source surv analysis, file = 'R/surv.R'}
-source('R/surv.R')
+source("R/surv.R")
 ```
 
 ```{r surv analysis}
@@ -310,13 +321,12 @@ final_models$kap_plot <- lapply(1:nrow(final_models), function(i) {
 
   kap_plot
 })
-
 ```
 
 ### Trajectory Fixed Effects Plotted
 
 ```{r source fixed effects, include = FALSE, file = 'R/traj_plot.R'}
-source('R/traj_plot.R')
+source("R/traj_plot.R")
 ```
 
 ```{r fixed effects}
@@ -367,7 +377,7 @@ final_models$traj_pred <- lapply(1:nrow(final_models), function(i) {
 ### Create Observed Trajectory Plots
 
 ```{r source observed plots, include = FALSE, file = 'R/traj_plot.R'}
-source('R/traj_plot.R')
+source("R/traj_plot.R")
 ```
 
 ```{r observed plots}
@@ -403,7 +413,28 @@ final_models$traj_obs <- lapply(1:nrow(final_models), function(i) {
 
 
 lapply(final_models$traj_obs, print)
+```
 
+### Create Plots for Other Metabolic Outcomes by Class
+
+```{r source other plot, file = 'R/plot_other.R'}
+source("R/plot_other.R")
+```
+
+```{r other metabolic outcomes}
+final_models$plot_gluc <- plot_other_apply(
+  final_models,
+  "gluc_main|gluc_age_wk"
+)
+final_models$plot_bw <- plot_other_apply(
+  final_models,
+  "bw_main|bw_age_wk"
+)
+final_models$plot_fat <- plot_other_apply(
+  final_models,
+  "fat_main|fat_age_wk"
+)
+lapply(final_models$plot_gluc, print)
 ```
 
 ### Create Spaghettie Plots
@@ -434,7 +465,7 @@ final_models$spag_plot <- lapply(1:nrow(final_models), function(i) {
 
 #### Class Prediction Raw Results
 ```{r source create prediction results, file = 'R/pred_class.R'}
-source('R/pred_class.R')
+source("R/pred_class.R")
 ```
 
 ```{r create prediction results}
@@ -494,7 +525,7 @@ $\frac{TN}{FN + TN} =
 
 
 ```{r source prediciton tables, file = 'R/pred_table.R'}
-source('R/pred_table.R')
+source("R/pred_table.R")
 ```
 
 ```{r prediciton tables}
@@ -518,7 +549,7 @@ final_models[, prediction_results_table_names] <- prediction_results_tables
 #### Dataframe for each subset type with prediction statistics
 
 ```{r source create prediciton dataframe for plotting, file = 'R/combine_pred_df.R'}
-source('R/combine_pred_df.R')
+source("R/combine_pred_df.R")
 ```
 
 ```{r create prediciton dataframe for plotting}
@@ -538,7 +569,7 @@ final_models[, prediction_results_df_names] <- pred_results
 #### Prepare prediciton dataframe for plotting
 
 ```{r source prepare prediction dataframe, file = 'R/rename_pred.R'}
-source('R/rename_pred.R')
+source("R/rename_pred.R")
 ```
 
 ```{r prepare prediction dataframe}
@@ -562,7 +593,7 @@ final_models$sample_results_df <- lapply(
 #### Plot Prediction Results
 
 ```{r source plot pred_results, file = 'R/plot_pred.R'}
-source('R/plot_pred.R')
+source("R/plot_pred.R")
 ```
 
 ```{r plot pred_results, fig.height=10, fig.width=5}
@@ -571,13 +602,15 @@ final_models$interval_plots <- lapply(
   function(i) {
     plot_interval(final_models$interval_results_df[[i]],
       title = paste(final_models$data_name[[i]],
-                    final_models$age_var_name[[i]],
-                    sep = " "),
+        final_models$age_var_name[[i]],
+        sep = " "
+      ),
       y = "Value",
       x = paste(final_models$age_var_name[[i]],
-                final_models$age_var_units[[i]],
-                "Interval",
-                sep = " ")
+        final_models$age_var_units[[i]],
+        "Interval",
+        sep = " "
+      )
     )
   }
 )
@@ -589,13 +622,15 @@ final_models$threshold_plots <- lapply(
   function(i) {
     plot_threshold(final_models$threshold_results_df[[i]],
       title = paste(final_models$data_name[[i]],
-                    final_models$age_var_name[[i]],
-                    sep = " "),
+        final_models$age_var_name[[i]],
+        sep = " "
+      ),
       y = "Value",
       x = paste(final_models$age_var_name[[i]],
-                final_models$age_var_units[[i]],
-                "threshold",
-                sep = " ")
+        final_models$age_var_units[[i]],
+        "threshold",
+        sep = " "
+      )
     )
   }
 )
@@ -607,19 +642,20 @@ final_models$sample_plots <- lapply(
   function(i) {
     plot_sample(final_models$sample_results_df[[i]],
       title = paste(final_models$data_name[[i]],
-                    final_models$age_var_name[[i]],
-                    sep = " "),
+        final_models$age_var_name[[i]],
+        sep = " "
+      ),
       y = "Value",
       x = paste(final_models$age_var_name[[i]],
-                final_models$age_var_units[[i]],
-                "sample",
-                sep = " ")
+        final_models$age_var_units[[i]],
+        "sample",
+        sep = " "
+      )
     )
   }
 )
 
 final_models$sample_plots
-
 ```
 
 ### Save R Objects
