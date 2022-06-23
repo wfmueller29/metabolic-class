@@ -38,7 +38,7 @@ kap_plot_cox <- function(df, var, covariates = NULL) {
 }
 
 kap_plot_all <- function(df, var, ptitle = " ", subtitle = " ") {
-  pal_names <- sort(unique(df[[var]]))
+  pal_names <- as.numeric(sort(unique(df[[var]])))
   pal <- rep(palette(), 20)[pal_names]
   df[[var]] <- factor(df[[var]])
   hr1 <- kap_plot_cox(df, var)
