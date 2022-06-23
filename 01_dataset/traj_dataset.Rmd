@@ -307,7 +307,7 @@ main_all <- glucose %>%
 main_all$age_wk <- as.numeric(main_all$age_wk)
 ```
   
-#### restriction to cohorts 1 to 6
+#### restriction to cohorts 1 to 10
 
 ```{r slam_ratio, warning=FALSE, message=FALSE, echo=FALSE}
 
