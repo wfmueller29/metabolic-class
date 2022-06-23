@@ -2,46 +2,54 @@
 # Author: William Mueller
 
 plot_other <- function(census, t1, other_df, age_var, title, xlab, ylab) {
-  lej <- create_legend(t1)
+  no_class <- length(unique(census$class))
 
-  census <- census %>%
-    select(idno, new_class)
+  if (no_class > 1) {
+    lej <- create_legend(t1)
 
-  other_plot <- other_df %>%
-    left_join(census, by = "idno") %>%
-    filter(!is.na(new_class))
+    census <- census %>%
+      select(idno, new_class)
 
-  ggplot(
-    data = other_plot,
-    aes(
-      x = eval(as.symbol(age_var)),
-      y = gluc,
-      color = factor(new_class)
-    )
-  ) +
-    geom_point(alpha = .1) +
-    geom_smooth(
-      method = "gam",
-      formula = y ~ s(x, bs = "cs"),
-      span = .7,
-      inherit.aes = TRUE
+    other_plot <- other_df %>%
+      left_join(census, by = "idno") %>%
+      filter(!is.na(new_class))
+
+    plot <- ggplot(
+      data = other_plot,
+      aes(
+        x = eval(as.symbol(age_var)),
+        y = gluc,
+        color = factor(new_class)
+      )
     ) +
-    scale_color_manual(values = lej$col) +
-    labs(
-      color = "Class",
-      y = ylab,
-      x = xlab,
-      title = title
-    ) +
-    theme(
-      plot.title = element_text(
-        face = "bold",
-        color = "black",
-        size = 16,
-        hjust = .5
-      ),
-      plot.margin = unit(c(10, 4, 25, 2), "pt")
-    )
+      geom_point(alpha = .1) +
+      geom_smooth(
+        method = "gam",
+        formula = y ~ s(x, bs = "cs"),
+        span = .7,
+        inherit.aes = TRUE
+      ) +
+      scale_color_manual(values = lej$col) +
+      labs(
+        color = "Class",
+        y = ylab,
+        x = xlab,
+        title = title
+      ) +
+      theme(
+        plot.title = element_text(
+          face = "bold",
+          color = "black",
+          size = 16,
+          hjust = .5
+        ),
+        plot.margin = unit(c(10, 4, 25, 2), "pt")
+      )
+  } else {
+    plot <- NA
+  }
+
+  plot
 }
 
 plot_other_apply <- function(final_models, model_name) {
