@@ -2,52 +2,46 @@
 # Author: William Mueller
 
 plot_other <- function(census, t1, other_df, oc, age_var, title, xlab, ylab) {
-  no_class <- length(unique(census$class))
+  lej <- create_legend(t1)
 
-  if (no_class > 1) {
-    lej <- create_legend(t1)
+  census <- census %>%
+    select(idno, new_class)
 
-    census <- census %>%
-      select(idno, new_class)
+  other_plot <- other_df %>%
+    left_join(census, by = "idno") %>%
+    filter(!is.na(new_class))
 
-    other_plot <- other_df %>%
-      left_join(census, by = "idno") %>%
-      filter(!is.na(new_class))
-
-    plot <- ggplot(
-      data = other_plot,
-      aes(
-        x = eval(as.symbol(age_var)),
-        y = eval(as.symbol(oc)),
-        color = factor(new_class)
-      )
+  plot <- ggplot(
+    data = other_plot,
+    aes(
+      x = eval(as.symbol(age_var)),
+      y = eval(as.symbol(oc)),
+      color = factor(new_class)
+    )
+  ) +
+    geom_point(alpha = .1) +
+    geom_smooth(
+      method = "gam",
+      formula = y ~ s(x, bs = "cs"),
+      span = .7,
+      inherit.aes = TRUE
     ) +
-      geom_point(alpha = .1) +
-      geom_smooth(
-        method = "gam",
-        formula = y ~ s(x, bs = "cs"),
-        span = .7,
-        inherit.aes = TRUE
-      ) +
-      scale_color_manual(values = lej$col) +
-      labs(
-        color = "Class",
-        y = ylab,
-        x = xlab,
-        title = title
-      ) +
-      theme(
-        plot.title = element_text(
-          face = "bold",
-          color = "black",
-          size = 16,
-          hjust = .5
-        ),
-        plot.margin = unit(c(10, 4, 25, 2), "pt")
-      )
-  } else {
-    plot <- NA
-  }
+    scale_color_manual(values = lej$col) +
+    labs(
+      color = "Class",
+      y = ylab,
+      x = xlab,
+      title = title
+    ) +
+    theme(
+      plot.title = element_text(
+        face = "bold",
+        color = "black",
+        size = 16,
+        hjust = .5
+      ),
+      plot.margin = unit(c(10, 4, 25, 2), "pt")
+    )
 
   plot
 }

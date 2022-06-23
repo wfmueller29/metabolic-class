@@ -306,7 +306,6 @@ source("R/surv.R")
 
 ```{r surv analysis}
 final_models$kap_plot <- lapply(1:nrow(final_models), function(i) {
-  if (!is.na(final_models$t1[[i]])) {
     kap_plot <- kap_plot_all(final_models$census[[i]],
       var = "new_class",
       ptitle = paste(final_models$oc_name[[i]],
@@ -315,9 +314,6 @@ final_models$kap_plot <- lapply(1:nrow(final_models), function(i) {
         sep = " "
       )
     )
-  } else {
-    kap_plot <- NA
-  }
 
   kap_plot
 })
@@ -341,7 +337,6 @@ if (is.null(config$female) & is.null(config$het3)) {
 }
 
 final_models$traj_pred <- lapply(1:nrow(final_models), function(i) {
-  if (!is.na(final_models$t1[[i]])) {
     traj_plot(
       df = final_models$dfs[[i]],
       mo = final_models$final_model[[i]],
@@ -366,9 +361,6 @@ final_models$traj_pred <- lapply(1:nrow(final_models), function(i) {
     )
     # can render this plot with ggdraw or plot_grid
     plot <- recordPlot()
-  } else {
-    plot <- NA
-  }
 
   plot
 })
@@ -382,7 +374,6 @@ source("R/traj_plot.R")
 
 ```{r observed plots}
 final_models$traj_obs <- lapply(1:nrow(final_models), function(i) {
-  if (final_models$ng[[i]] != 1) {
     plot <- traj_obs(
       main = final_models$census[[i]],
       df = final_models$dfs[[i]],
@@ -404,9 +395,6 @@ final_models$traj_obs <- lapply(1:nrow(final_models), function(i) {
         sep = " "
       )
     )
-  } else {
-    plot <- NA
-  }
 
   plot
 })

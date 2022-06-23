@@ -58,7 +58,11 @@ create_clean_t1 <- function(df_table,
   # create named list of pvals with column name
   pvals <- list()
   for (col in columns) {
-    pvals[[col]] <- chi_tests[[col]]$p.value
+    if (is.na(chi_tests[[col]])) {
+      pvals[[col]] <- NA
+    } else {
+      pvals[[col]] <- chi_tests[[col]]$p.value
+    }
   }
 
   t1_rownames <- rownames(t1)

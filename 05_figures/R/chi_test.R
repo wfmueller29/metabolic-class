@@ -1,10 +1,10 @@
 # Purpose: Perform chi-squared test on columns from a census
 # Author: William Mueller
 chi_test <- function(census, columns) {
-  
+
   # Create t1 table from census with total = FALSE and surv = FALSE
   t1 <- t1(census, columns, total = FALSE, surv = FALSE)
-  
+
   if (!is.na(t1)) {
     result <- create_chi_test(t1, columns)
   } else {
@@ -12,7 +12,6 @@ chi_test <- function(census, columns) {
     result <- NA
   }
   result
-
 }
 
 create_chi_test <- function(t1, columns) {
@@ -32,10 +31,13 @@ create_chi_test <- function(t1, columns) {
 
   # apply chi_test
   tests <- lapply(test_dfs, function(df) {
-    chisq.test(data.matrix(df))
+    if (l != 1) {
+      chisq.test(data.matrix(df))
+    } else {
+      NA
+    }
   })
 
   # return test and dataframe used for test
   list(tests = tests, dfs = test_dfs)
-    
 }

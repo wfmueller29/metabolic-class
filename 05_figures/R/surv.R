@@ -41,7 +41,11 @@ kap_plot_all <- function(df, var, ptitle = " ", subtitle = " ") {
   pal_names <- as.numeric(sort(unique(df[[var]])))
   pal <- rep(palette(), 20)[pal_names]
   df[[var]] <- factor(df[[var]])
-  hr1 <- kap_plot_cox(df, var)
+  if (length(unique(df[[var]])) == 1) {
+    hr1 <- NULL
+  } else {
+    hr1 <- kap_plot_cox(df, var)
+  }
   surv_object <- Surv(time = df$age_wk_death, event = df$dead_nat)
   fit1 <- surv_fit(as.formula(paste0("surv_object ~ ", var)), data = df)
   p <- ggsurvplot(fit1,
