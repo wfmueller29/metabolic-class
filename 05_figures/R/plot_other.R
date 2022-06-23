@@ -1,7 +1,7 @@
 # Purpose: Function to plot other metabolic outcomes by class
 # Author: William Mueller
 
-plot_other <- function(census, t1, other_df, age_var, title, xlab, ylab) {
+plot_other <- function(census, t1, other_df, oc, age_var, title, xlab, ylab) {
   no_class <- length(unique(census$class))
 
   if (no_class > 1) {
@@ -18,7 +18,7 @@ plot_other <- function(census, t1, other_df, age_var, title, xlab, ylab) {
       data = other_plot,
       aes(
         x = eval(as.symbol(age_var)),
-        y = gluc,
+        y = eval(as.symbol(oc)),
         color = factor(new_class)
       )
     ) +
@@ -56,11 +56,13 @@ plot_other_apply <- function(final_models, model_name) {
   x <- final_models
   other_df <- x[x$model_name == model_name, ]$dfs[[1]]
   other_name <- x[x$model_name == model_name, ]$oc_name
+  oc <- x[x$model_name == model_name, ]$oc
   plots <- lapply(seq_len(nrow(x)), function(i) {
     plot_other(
       census = x$census[[i]],
       t1 = x$t1_raw[[i]],
       other_df = other_df,
+      oc = oc,
       age_var = x$age_var[[i]],
       title = paste(
         other_name,
