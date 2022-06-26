@@ -143,17 +143,19 @@ merge_dvr <- dvr %>%
 merge_health <- health_wide_heat %>%
   select(-dod, -idno)
 
-main_cat_surv_prep <- main_cat_surv %>% 
-  select(-tag,
-         -sex,
-         -strain,
-          dead_censor,
-          fu_age_wk,
-          le_wk,
-          cod,
-          lastdate,
-          maxdate,
-          tod)
+main_cat_surv_prep <- main_cat_surv %>%
+  select(
+    -tag,
+    -sex,
+    -strain,
+    dead_censor,
+    fu_age_wk,
+    le_wk,
+    cod,
+    lastdate,
+    maxdate,
+    tod
+  )
 
 subject_sum <- census %>%
   left_join(main_cat_surv_prep, by = "idno") %>%
@@ -183,6 +185,10 @@ subject_sum <- subject_sum %>%
   rename(
     cod_census = cod.x,
     cod_dvr = cod.y
+  ) %>%
+  mutate(
+    female = ifelse(sex == "F", 1, 0),
+    het3 = ifelse(strain == "HET3", 1, 0)
   )
 
 subject_sum <- subject_sum %>%
@@ -313,17 +319,45 @@ source("R/surv.R")
 ```
 
 ```{r surv analysis}
+final_models$census <- lapply(final_models$census, function(df) {
+  df <- df %>%
+    mutate(Class = new_class)
+  df
+})
 final_models$kap_plot <- lapply(1:nrow(final_models), function(i) {
-    kap_plot <- kap_plot_all(final_models$census[[i]],
-      var = "new_class",
-      ptitle = paste(final_models$oc_name[[i]],
-        final_models$age_var_name[[i]],
-        "KM",
-        sep = " "
-      )
+  kap_plot <- kap_plot_all(final_models$census[[i]],
+    var = "Class",
+    ptitle = paste(final_models$oc_name[[i]],
+      final_models$age_var_name[[i]],
+      "KM",
+      sep = " "
     )
+  )
 
   kap_plot
+})
+```
+
+### Create Cox Models
+
+- Model 1: $ Surv ~ Class $
+- Model 2: $ Surv ~ Class + Sex + Strain$
+- Model 3: $ Surv ~ Class + Sex * Strain$
+```{r source model_cox, file = 'R/model_cox.R'}
+source("R/model_cox.R")
+```
+
+```{r cox models}
+
+x <- final_models
+final_models$cox_models <- lapply(seq_len(nrow(x)), function(i) {
+  model_cox(
+    census = x$census[[i]],
+    var = "Class",
+    covariates = c("female", "het3"),
+    age_death = "age_wk_death",
+    censor = "dead_nat"
+  )
 })
 ```
 
@@ -345,30 +379,30 @@ if (is.null(config$female) & is.null(config$het3)) {
 }
 
 final_models$traj_pred <- lapply(1:nrow(final_models), function(i) {
-    traj_plot(
-      df = final_models$dfs[[i]],
-      mo = final_models$final_model[[i]],
-      t1 = final_models$t1_raw[[i]],
-      age_var = final_models$age_var[[i]],
-      y_var = final_models$oc[[i]],
-      title = paste("Predicted",
-        final_models$oc_name[[i]],
-        "Trajectories across",
-        final_models$age_var_name[[i]],
-        sep = " "
-      ),
-      ylab = paste(final_models$oc_name[[i]],
-        final_models$oc_units[[i]],
-        sep = " "
-      ),
-      xlab = paste(final_models$age_var_name[[i]],
-        final_models$age_var_units[[i]],
-        sep = " "
-      ),
-      fixcov = fixcov
-    )
-    # can render this plot with ggdraw or plot_grid
-    plot <- recordPlot()
+  traj_plot(
+    df = final_models$dfs[[i]],
+    mo = final_models$final_model[[i]],
+    t1 = final_models$t1_raw[[i]],
+    age_var = final_models$age_var[[i]],
+    y_var = final_models$oc[[i]],
+    title = paste("Predicted",
+      final_models$oc_name[[i]],
+      "Trajectories across",
+      final_models$age_var_name[[i]],
+      sep = " "
+    ),
+    ylab = paste(final_models$oc_name[[i]],
+      final_models$oc_units[[i]],
+      sep = " "
+    ),
+    xlab = paste(final_models$age_var_name[[i]],
+      final_models$age_var_units[[i]],
+      sep = " "
+    ),
+    fixcov = fixcov
+  )
+  # can render this plot with ggdraw or plot_grid
+  plot <- recordPlot()
 
   plot
 })
@@ -376,33 +410,33 @@ final_models$traj_pred <- lapply(1:nrow(final_models), function(i) {
 
 ### Create Observed Trajectory Plots
 
-```{r source observed plots, include = FALSE, file = 'R/traj_plot.R'}
-source("R/traj_plot.R")
+```{r source observed plots, include = FALSE, file = 'R/plot_obs.R'}
+source("R/plot_obs.R")
 ```
 
 ```{r observed plots}
 final_models$traj_obs <- lapply(1:nrow(final_models), function(i) {
-    plot <- traj_obs(
-      main = final_models$census[[i]],
-      df = final_models$dfs[[i]],
-      t1 = final_models$t1_raw[[i]],
-      age_var = final_models$age_var[[i]],
-      y_var = final_models$oc[[i]],
-      title = paste("Observed",
-        final_models$oc_name[[i]],
-        "Trajectory with",
-        final_models$age_var_name[[i]],
-        sep = " "
-      ),
-      ylab = paste(final_models$oc_name[[i]],
-        final_models$oc_units[[i]],
-        sep = " "
-      ),
-      xlab = paste(final_models$age_var_name[[i]],
-        final_models$age_var_units[[i]],
-        sep = " "
-      )
+  plot <- traj_obs(
+    main = final_models$census[[i]],
+    df = final_models$dfs[[i]],
+    t1 = final_models$t1_raw[[i]],
+    age_var = final_models$age_var[[i]],
+    y_var = final_models$oc[[i]],
+    title = paste("Observed",
+      final_models$oc_name[[i]],
+      "Trajectory with",
+      final_models$age_var_name[[i]],
+      sep = " "
+    ),
+    ylab = paste(final_models$oc_name[[i]],
+      final_models$oc_units[[i]],
+      sep = " "
+    ),
+    xlab = paste(final_models$age_var_name[[i]],
+      final_models$age_var_units[[i]],
+      sep = " "
     )
+  )
 
   plot
 })
@@ -431,6 +465,39 @@ final_models$plot_fat <- plot_other_apply(
   "fat_main|fat_age_wk"
 )
 lapply(final_models$plot_gluc, print)
+```
+
+### Fit other metabolic outcomes with LME
+
+- Model0 (No interaction): $outcome = Age + Age^2 + Class + (Age + Age^2 | Subject)$
+- Model0.5 : $outcome = Age + Age^2 + Class + sex * Strain + (Age + Age^2 | Subject)$
+- Model1 (no controlled): $outcome = (Age + Age^2) * Class + (Age + Age^2| Subject)$
+- Model2 (Sex and Strain additive controlled) : $outcome = (Age + Age^2) * Class + Sex * Strain + (Age + Age^2 | Subject)$
+- Model3 (Sex and Strain interacted controlled): $outcome = (Age + Age^2) * Class + (Age + Age^2) * Sex * Strain + (Age + Age^2 | Subject)$
+
+```{r source mixed effects, file = 'R/model_other.R'}
+source("R/model_other.R")
+```
+
+```{r mixed effects}
+
+final_models$model_bw <- model_other_apply(final_models,
+  "bw_main|bw_age_wk",
+  fixcovs = c("female", "het3"),
+  class = "new_class"
+)
+
+final_models$model_gluc <- model_other_apply(final_models,
+  "gluc_main|gluc_age_wk",
+  fixcovs = c("female", "het3"),
+  class = "new_class"
+)
+
+final_models$model_fat <- model_other_apply(final_models,
+  "fat_main|fat_age_wk",
+  fixcovs = c("female", "het3"),
+  class = "new_class"
+)
 ```
 
 ### Create Spaghettie Plots
@@ -494,7 +561,7 @@ prediction_results <- lapply(prediction_columns, function(col) {
 final_models[, prediction_results_names] <- prediction_results
 ```
 
-#### Sensititviy, Specificity, PPV, NPV, Tables
+### Sensititviy, Specificity, PPV, NPV, Tables
 
 |  | Gold Yes | Gold No | total |
 | --- | --- | --- | ---- |
@@ -518,6 +585,9 @@ $\frac{TP}{TP + FP} =
 $\frac{TN}{FN + TN} = 
 \frac{n - (og\_class + pred\_class -tp)}{og\_class - tp + n - og\_class - pred\_class + tp) } =
 \frac{n - (og\_class + pred\_class - tp)}{n - pred\_class}$
+- Accuracy = 
+$\frac{TN + TP}{TN + TP + FN + FP} = 
+\frac{2tp + n - og\_class - pred\_class}{n}$
 
 
 ```{r source prediciton tables, file = 'R/pred_table.R'}
@@ -597,6 +667,7 @@ final_models$interval_plots <- lapply(
   seq_along(final_models$interval_results_df),
   function(i) {
     plot_interval(final_models$interval_results_df[[i]],
+      cols = c("Sensitivity", "Specificity", "PPV", "NPV"),
       title = paste(final_models$data_name[[i]],
         final_models$age_var_name[[i]],
         sep = " "
@@ -617,6 +688,7 @@ final_models$threshold_plots <- lapply(
   seq_along(final_models$threshold_results_df),
   function(i) {
     plot_threshold(final_models$threshold_results_df[[i]],
+      cols = c("Sensitivity", "Specificity", "PPV", "NPV"),
       title = paste(final_models$data_name[[i]],
         final_models$age_var_name[[i]],
         sep = " "
@@ -637,6 +709,7 @@ final_models$sample_plots <- lapply(
   seq_along(final_models$sample_results_df),
   function(i) {
     plot_sample(final_models$sample_results_df[[i]],
+      cols = c("Sensitivity", "Specificity", "PPV", "NPV"),
       title = paste(final_models$data_name[[i]],
         final_models$age_var_name[[i]],
         sep = " "
@@ -654,7 +727,322 @@ final_models$sample_plots <- lapply(
 final_models$sample_plots
 ```
 
+#### Plot Accuracy
+
+```{r plot accuracy}
+final_models$interval_accuracy_plots <- lapply(
+  seq_along(final_models$interval_results_df),
+  function(i) {
+    plot_interval(final_models$interval_results_df[[i]],
+      cols = "Accuracy",
+      title = paste(final_models$data_name[[i]],
+        final_models$age_var_name[[i]],
+        sep = " "
+      ),
+      y = "Value",
+      x = paste(final_models$age_var_name[[i]],
+        final_models$age_var_units[[i]],
+        "Interval",
+        sep = " "
+      )
+    )
+  }
+)
+
+final_models$interval_accuracy_plots
+
+final_models$threshold_accuracy_plots <- lapply(
+  seq_along(final_models$threshold_results_df),
+  function(i) {
+    plot_threshold(final_models$threshold_results_df[[i]],
+      cols = "Accuracy",
+      title = paste(final_models$data_name[[i]],
+        final_models$age_var_name[[i]],
+        sep = " "
+      ),
+      y = "Value",
+      x = paste(final_models$age_var_name[[i]],
+        final_models$age_var_units[[i]],
+        "threshold",
+        sep = " "
+      )
+    )
+  }
+)
+
+final_models$threshold_accuracy_plots
+
+final_models$sample_accuracy_plots <- lapply(
+  seq_along(final_models$sample_results_df),
+  function(i) {
+    plot_sample(final_models$sample_results_df[[i]],
+      cols = "Accuracy",
+      title = paste(final_models$data_name[[i]],
+        final_models$age_var_name[[i]],
+        sep = " "
+      ),
+      y = "Value",
+      x = paste(final_models$age_var_name[[i]],
+        final_models$age_var_units[[i]],
+        "sample",
+        sep = " "
+      )
+    )
+  }
+)
+
+final_models$sample_accuracy_plots
+```
+
+### Compute Accuracy Again as Double Check and Bootstrap
+
+```{r source boot accuracy, file = 'R/boot_accuracy.R'}
+source("R/boot_accuracy.R")
+```
+
+```{r compute accuracy}
+final_models$interval_accuracy <- lapply(
+  seq_len(nrow(final_models)),
+  function(i) {
+    boot_accuracy_list(
+      pred_df_list = final_models$interval_results[[i]],
+      og_df = final_models$census[[i]],
+      subject = final_models$subject[[i]]
+    )
+  }
+)
+
+final_models$threshold_accuracy <- lapply(
+  seq_len(nrow(final_models)),
+  function(i) {
+    boot_accuracy_list(
+      pred_df_list = final_models$threshold_results[[i]],
+      og_df = final_models$census[[i]],
+      subject = final_models$subject[[i]]
+    )
+  }
+)
+
+final_models$sample_accuracy <- lapply(
+  seq_len(nrow(final_models)),
+  function(i) {
+    boot_accuracy_list(
+      pred_df_list = final_models$sample_results[[i]],
+      og_df = final_models$census[[i]],
+      subject = final_models$subject[[i]]
+    )
+  }
+)
+```
+
+#### Combine bootstraped accuracy for each simulation type
+
+```{r source combine accuracy, file = `R/combine_boot_accuracy.R`}
+source("R/combine_boot_accuracy.R")
+```
+
+```{r combine accuracy}
+
+x <- final_models
+x$interval_accuracy_df <- combine_boot_accuracy_list(x$interval_accuracy)
+x$threshold_accuracy_df <- combine_boot_accuracy_list(x$threshold_accuracy)
+x$sample_accuracy_df <- combine_boot_accuracy_list(x$sample_accuracy)
+final_models <- x
+```
+
+#### Prepare Accuracy Dataframe for pLotting
+
+```{r prepare accuracy for plotting}
+final_models$interval_accuracy_df <- lapply(
+  final_models$interval_accuracy_df,
+  name_interval
+)
+
+
+final_models$threshold_accuracy_df <- lapply(
+  final_models$threshold_accuracy_df,
+  name_threshold
+)
+
+final_models$sample_accuracy_df <- lapply(
+  final_models$sample_accuracy_df,
+  name_sample
+)
+```
+
+#### Extract Mean and CI from Bootstrapped Accuracy
+
+```{r source extraction, file = 'R/extract_accuracy_ci.R'}
+source("R/extract_accuracy_ci.R")
+```
+
+```{r mean and ci}
+final_models$interval_accuracy_df <- lapply(
+  final_models$interval_accuracy_df,
+  extract_accuracy_ci
+)
+
+final_models$threshold_accuracy_df <- lapply(
+  final_models$threshold_accuracy_df,
+  extract_accuracy_ci
+)
+
+final_models$sample_accuracy_df <- lapply(
+  final_models$sample_accuracy_df,
+  extract_accuracy_ci
+)
+```
+
+#### Plot Accuracy Again With confidence Intervals
+
+```{r source boot plot, file = 'R/plot_boot_accuracy.R'}
+source("R/plot_boot_accuracy.R")
+```
+
+```{r plot accuracy with bootstrapped confidence intervals}
+
+final_models$interval_boot_accuracy_plot <- lapply(
+  seq_len(nrow(final_models)),
+  function(i) {
+    plot_boot_accuracy_interval(final_models$interval_accuracy_df[[i]],
+      xlab = "Life Stage",
+      ylab = "Accuracy",
+      title = paste(
+        "Classification Accuracy using",
+        final_models$oc_name[[i]],
+        final_models$data_name[[i]]
+      )
+    )
+  }
+)
+
+final_models$interval_boot_accuracy_plot
+
+final_models$threshold_boot_accuracy_plot <- lapply(
+  seq_len(nrow(final_models)),
+  function(i) {
+    plot_boot_accuracy_threshold(final_models$threshold_accuracy_df[[i]],
+      xlab = "Lower Bound Age (weeks)",
+      ylab = "Accuracy",
+      title = paste(
+        "Cumulative Classification Accuracy using",
+        final_models$oc_name[[i]],
+        final_models$data_name[[i]]
+      ),
+      legend_title = "Upper Bound Age (weeks)"
+    )
+  }
+)
+
+final_models$threshold_boot_accuracy_plot
+
+final_models$sample_boot_accuracy_plot <- lapply(
+  seq_len(nrow(final_models)),
+  function(i) {
+    plot_boot_accuracy_sample(final_models$sample_accuracy_df[[i]],
+      xlab = "Lower Bound Age (weeks)",
+      ylab = "Accuracy",
+      title = paste(
+        "Cumulative Classification Accuracy using",
+        final_models$oc_name[[i]],
+        final_models$data_name[[i]]
+      )
+    )
+  }
+)
+
+final_models$sample_boot_accuracy_plot
+```
+
+#### Extract Accuracy Sample 
+
+```{r extract accuracy sample}
+accuracy_df <- final_models$interval_accuracy_df[[7]]
+
+variables <- as.character(unique(accuracy_df$data_name))
+comparisons <- combn(variables, m = 2, simplify = FALSE)
+
+sig <- vector()
+for (i in seq_along(comparisions)) {
+  comparison <- comparisons[[i]]
+  a_lower <- accuracy_df[accuracy_df$data_name == comparison[[1]], ]$lower_ci
+  a_upper <- accuracy_df[accuracy_df$data_name == comparison[[1]], ]$upper_ci
+  b_lower <- accuracy_df[accuracy_df$data_name == comparison[[2]], ]$lower_ci
+  b_upper <- accuracy_df[accuracy_df$data_name == comparison[[2]], ]$upper_ci
+  
+  if ((a_lower >= b_upper) | (b_lower >= a_upper)) {
+    test <- TRUE
+  } else {
+    test <- FALSE
+  }
+  sig[[i]] <- test 
+}
+
+new_comparisions <- comparisons[sig]
+
+ggplot(data = accuracy_df, aes(x = data_name, y = accuracy)) + 
+  geom_bar(stat = "identity") +
+  geom_errorbar(data = accuracy_df, 
+                aes(x = data_name, ymin = lower_ci, ymax = upper_ci),
+                width = .2) +
+  geom_signif(comparisons = new_comparisions, annotations = "*", 
+              margin_top = .1,
+              step_increase = .4)
+
+
+expand_accuracy_df <- function(accuracy_df) {
+boot_accuracy_list <- lapply(seq_len(nrow(accuracy_df)), function(i) {
+  boot_accuracy <- accuracy_df$boot_accuracy[[i]]$t[,1]
+  rest <- accuracy_df[, names(accuracy_df) != "boot_accuracy"][i, ]
+  new_data <- data.frame(boot_accuracy = boot_accuracy, rest)
+  new_data
+})
+
+boot_accuracy_df <- do.call(rbind, boot_accuracy_list)
+ 
+boot_accuracy_df
+  
+}
+
+a <- expand_accuracy_df(accuracy_df)
+
+
+
+df <- do.call(
+  rbind,
+  lapply(seq_len(nrow(accuracy_df)), function(i) {
+    data <- as.numeric(accuracy_df$boot_accuracy[[i]]$t[,1])
+    rest <- accuracy_df[, names(accuracy_df) != "boot_accuracy"][[i]]
+    data_new <- data.frame(boot_accuracy = data, rest)
+  })
+)
+
+sig <- list()
+i <- 1
+for (comparison in comparisions) {
+  i <- i + 1
+}
+ggplot(data = a, aes(x = data_name, y = boot_accuracy)) + 
+  geom_boxplot() +
+  stat_compare_means(comparisons = comparisions, method = "t.test", label = "p.signif")
+  stat_compare_means(method = "t.test", ref.group = ".all.", label = "p.signif")
+  ggpubr::compare_means(data = df, accuracy ~ data_name)
+```
+
 ### Save R Objects
+
+#### Prune Final Models Before Saving 
+
+```{r prune}
+final_models <- final_models %>%
+  select(-c(interval_accuracy_plots,
+            threshold_accuracy_plots,
+            sample_accuracy_plots),
+         -c(ends_with("results_table"),
+            ends_with("accuracy")))
+```
+
+#### Save 
 
 ```{r save R objects}
 setwd(file.path("output", params$model_dir))
