@@ -99,7 +99,7 @@ interval_comparisons <- function(accuracy_interval_df) {
   comparisons <- combn(variables, m = 2, simplify = FALSE)
 
   sig <- vector()
-  for (i in seq_along(comparisions)) {
+  for (i in seq_along(comparisons)) {
     comparison <- comparisons[[i]]
     a_lower <- accuracy_df[accuracy_df$data_name == comparison[[1]], ]$lower_ci
     a_upper <- accuracy_df[accuracy_df$data_name == comparison[[1]], ]$upper_ci
