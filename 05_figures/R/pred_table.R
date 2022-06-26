@@ -30,6 +30,7 @@ make_final_table <- function(new_df, og_df, pred_df, subject) {
     "Specificity",
     "PPV",
     "NPV",
+    "Accuracy",
     "n"
   ))
   order_classes <- sort(unique(og_df$class))
@@ -53,6 +54,8 @@ make_final_table <- function(new_df, og_df, pred_df, subject) {
     final_table["PPV", class] <- tp / pred_class
     final_table["NPV", class] <- (n - og_class - pred_class + tp) /
       (n - pred_class)
+    final_table["Accuracy", class] <- (2*tp + n - og_class - pred_class) /
+      n
     final_table["n", class] <- og_class
   }
 
