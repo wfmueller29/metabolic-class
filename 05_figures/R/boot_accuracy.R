@@ -11,7 +11,7 @@ boot_accuracy <- function(pred_df, og_df, subject) {
     tp <- sum(data$tp)
     n <- nrow(data)
     accuracy <- tp / n
-  }, R = 1000)
+  }, R = 2000)
 
   bootobj
 }

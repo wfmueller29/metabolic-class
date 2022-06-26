@@ -125,6 +125,7 @@ env_list <- lapply(env_list, create_fig2)
 
 lapply(env_list, `[[`, "fig2")
 
+
 ```
 
 ### Table 1: Who's in what class
@@ -162,6 +163,7 @@ create_t1 <- function(env, mo_names) {
   t1_df <- do.call(rbind, t1_list) %>%
     select(oc_name, row_names, everything())
   
+  
   env$t1_df <- t1_df
   
   env
@@ -180,8 +182,13 @@ lapply(env_list, function(env) {
     no_rows[[i]] <- number_rows + j
     j <- number_rows
   }
-  table <- kable(env$t1_df, format = "html") %>%
-    column_spec(1, bold = TRUE, border_right = TRUE) %>%
+  cap <- paste(env$subgroup,
+               "Demographics by Metabolic Index and Class",
+               sep = " ")
+  table <- kable(env$t1_df,
+                 format = "html",
+                 caption = cap) %>%
+    column_spec(1:2, bold = TRUE, border_right = TRUE) %>%
     row_spec(no_rows[[1]], hline_after = T) %>%
     row_spec(no_rows[[2]], hline_after = T) %>%
     row_spec(no_rows[[3]], hline_after = T) %>%
@@ -191,6 +198,13 @@ lapply(env_list, function(env) {
   print(table)
     
 })
+```
+
+#### Table 2: Display Mixed Effects Models and See if Class is significant predictor 
+of other metabolic outcomes
+
+```{r table 2}
+
 ```
 
 ### Figure 3: Mortality outcomes by class
