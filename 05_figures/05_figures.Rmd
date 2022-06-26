@@ -837,7 +837,7 @@ final_models$sample_accuracy <- lapply(
 
 #### Combine bootstraped accuracy for each simulation type
 
-```{r source combine accuracy, file = `R/combine_boot_accuracy.R`}
+```{r source combine accuracy, file = 'R/combine_boot_accuracy.R'}
 source("R/combine_boot_accuracy.R")
 ```
 
