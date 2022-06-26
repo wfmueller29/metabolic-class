@@ -4,12 +4,7 @@
 plot_other <- function(census, t1, other_df, oc, age_var, title, xlab, ylab) {
   lej <- create_legend(t1)
 
-  census <- census %>%
-    select(idno, new_class)
-
-  other_plot <- other_df %>%
-    left_join(census, by = "idno") %>%
-    filter(!is.na(new_class))
+  other_plot <- create_other_plot_df(census, other_df)
 
   plot <- ggplot(
     data = other_plot,
@@ -44,6 +39,17 @@ plot_other <- function(census, t1, other_df, oc, age_var, title, xlab, ylab) {
     )
 
   plot
+}
+
+create_other_plot_df <- function(census, other_df) {
+  census <- census %>%
+    select(idno, new_class)
+
+  other_plot_data <- other_df %>%
+    left_join(census, by = "idno") %>%
+    filter(!is.na(new_class))
+
+  other_plot_data
 }
 
 plot_other_apply <- function(final_models, model_name) {
