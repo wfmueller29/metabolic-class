@@ -30,6 +30,7 @@ name_threshold <- function(threshold_df) {
                             pattern = "\\(|,|\\)",
                             n = Inf)
   threshold_df$upper_bound <- as.numeric(splits[,3])
+  threshold_df$lower_bound <- as.numeric(splits[,2])
 
   threshold_df
 }
