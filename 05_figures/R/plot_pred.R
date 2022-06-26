@@ -3,11 +3,13 @@
 # Author: William Mueller
 
 plot_interval <- function(interval_df,
+                          cols,
                           title = "",
                           ylab = "",
                           xlab = "",
-                          subtitle = "") {
-  interval_df <- pivot_longer(interval_df, cols = Sensitivity:NPV) %>%
+                          subtitle = "",
+                          error_bars = NULL) {
+  interval_df <- pivot_longer(interval_df, cols = all_of(cols)) %>%
     filter(class == "all")
 
   ggplot(data = interval_df, mapping = aes(x = data_name, y = value)) +
@@ -22,11 +24,12 @@ plot_interval <- function(interval_df,
 }
 
 plot_threshold <- function(threshold_df,
+                           cols,
                           title = "",
                           ylab = "",
                           xlab = "",
                           subtitle = "") {
-  threshold_df <- pivot_longer(threshold_df, cols = Sensitivity:NPV) %>%
+  threshold_df <- pivot_longer(threshold_df, cols = all_of(cols)) %>%
     filter(class == "all")
 
   ggplot(data = threshold_df, mapping = aes(x = upper_bound, y = value)) +
@@ -42,11 +45,12 @@ plot_threshold <- function(threshold_df,
 }
 
 plot_sample <- function(sample_df,
+                        cols,
                           title = "",
                           ylab = "",
                           xlab = "",
                           subtitle = "") {
-  sample_df <- pivot_longer(sample_df, cols = Sensitivity:NPV) %>%
+  sample_df <- pivot_longer(sample_df, cols = all_of(cols)) %>%
     filter(class == "all")
 
   ggplot(data = sample_df, mapping = aes(x = sample_per_id, y = value)) +
