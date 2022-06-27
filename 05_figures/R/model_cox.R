@@ -37,7 +37,6 @@ model_cox <- function(census, var, covariates, age_death, censor) {
     form <- as.formula(form)
     surv_object <- Surv(time = census[[age_death]], event = census[[censor]])
     coxph(form, data = census)
-    coxph
   })
 
   model_list
