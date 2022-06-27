@@ -909,8 +909,7 @@ final_models$interval_boot_accuracy_plot <- lapply(
       ylab = "Accuracy",
       title = paste(
         "Classification Accuracy using",
-        final_models$oc_name[[i]],
-        final_models$data_name[[i]]
+        final_models$oc_name[[i]]
       )
     )
   }
@@ -922,14 +921,13 @@ final_models$threshold_boot_accuracy_plot <- lapply(
   seq_len(nrow(final_models)),
   function(i) {
     plot_boot_accuracy_threshold(final_models$threshold_accuracy_df[[i]],
-      xlab = "Lower Bound Age (weeks)",
+      xlab = "Upper Bound Age (weeks)",
       ylab = "Accuracy",
       title = paste(
         "Cumulative Classification Accuracy using",
-        final_models$oc_name[[i]],
-        final_models$data_name[[i]]
+        final_models$oc_name[[i]]
       ),
-      legend_title = "Upper Bound Age (weeks)"
+      legend_title = "Lower Bound"
     )
   }
 )
@@ -943,9 +941,8 @@ final_models$sample_boot_accuracy_plot <- lapply(
       xlab = "Lower Bound Age (weeks)",
       ylab = "Accuracy",
       title = paste(
-        "Cumulative Classification Accuracy using",
-        final_models$oc_name[[i]],
-        final_models$data_name[[i]]
+        "Classification Accuracy using",
+        final_models$oc_name[[i]]
       )
     )
   }
@@ -965,7 +962,15 @@ final_models <- final_models %>%
             threshold_accuracy_plots,
             sample_accuracy_plots),
          -c(ends_with("results_table"),
-            ends_with("accuracy")))
+            ends_with("accuracy")),
+         -c(final_model))
+
+final_models <- final_models %>%
+  select(-c(ends_with("_df"),
+            ends_with("_results")))
+
+final_models <- final_models %>%
+  select(-interval, -subset, -threshold, -sample)
 ```
 
 #### Save 
