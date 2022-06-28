@@ -42,10 +42,12 @@ output_path <- file.path("..", "05_figures", "output")
 load_models <- function(subgroup, envir = .GlobalEnv) {
   subgroup_param <- paste(subgroup, "dir", sep = "_")
   subgroup_path <- params[[subgroup_param]]
-  path <- file.path(output_path,
-                    subgroup_path,
-                    "data",
-                    "final_models.RDATA")
+  path <- file.path(
+    output_path,
+    subgroup_path,
+    "data",
+    "final_models.RDATA"
+  )
   env_name <- paste(subgroup, "env", sep = "_")
   assign(env_name, rlang::env(), envir = envir)
   load(path, eval(as.symbol(env_name)))
@@ -53,7 +55,7 @@ load_models <- function(subgroup, envir = .GlobalEnv) {
 
 subgroups <- c("all", "mb6", "fb6", "mhet3", "fhet3")
 
-for(subgroup in subgroups) {
+for (subgroup in subgroups) {
   load_models(subgroup)
 }
 
@@ -63,7 +65,6 @@ mb6_env$subgroup <- "Male B6"
 fb6_env$subgroup <- "Female B6"
 mhet3_env$subgroup <- "Male HET3"
 fhet3_env$subgroup <- "Female HET3"
-
 ```
 
 ## Figures
@@ -86,46 +87,46 @@ cowplot::plot_grid(p1, p3, nrow = 1)
 
 ```{r figure 2, fig.height= 16, fig.width=12}
 
-create_fig2 <- function(env) {
+create_pred_obs_panel <- function(env) {
   x <- env$final_models
   bw_pred <- x[x$model_name == "bw_main|bw_age_wk", "traj_pred"][[1]]
   bw_obs <- x[x$model_name == "bw_main|bw_age_wk", "traj_obs"][[1]]
-  gluc_pred <- x[x$model_name == "gluc_main|gluc_age_wk", "traj_pred"][[1]]  
+  gluc_pred <- x[x$model_name == "gluc_main|gluc_age_wk", "traj_pred"][[1]]
   gluc_obs <- x[x$model_name == "gluc_main|gluc_age_wk", "traj_obs"][[1]]
   fat_pred <- x[x$model_name == "fat_main|fat_age_wk", "traj_pred"][[1]]
   fat_obs <- x[x$model_name == "fat_main|fat_age_wk", "traj_obs"][[1]]
-  
+
   bw_pred <- ggdraw(bw_pred, clip = "on")
   gluc_pred <- ggdraw(gluc_pred, clip = "on")
   fat_pred <- ggdraw(fat_pred, clip = "on")
-  
-  title_theme <- ggdraw() + 
+
+  title_theme <- ggdraw() +
     draw_label(paste(env$subgroup,
-                     "Predicted and Observed Metabolic Life Course Trajectories", 
-                     sep = " "))
-  
-  fig2 <- cowplot::plot_grid(bw_pred, bw_obs,
-                   gluc_pred, gluc_obs,
-                   fat_pred, fat_obs, 
-                   nrow = 3,
-                   greedy = FALSE,
-                   labels = "AUTO"
-                   )
-  
-  env$fig2 <- cowplot::plot_grid(title_theme, fig2, rel_heights = c(.05, 1),
-                                 ncol = 1)
-  
+      "Predicted and Observed Metabolic Life Course Trajectories",
+      sep = " "
+    ))
+
+  pred_obs_panel <- cowplot::plot_grid(bw_pred, bw_obs,
+    gluc_pred, gluc_obs,
+    fat_pred, fat_obs,
+    nrow = 3,
+    greedy = FALSE,
+    labels = "AUTO"
+  )
+
+  env$pred_obs_panel <- cowplot::plot_grid(title_theme, pred_obs_panel,
+    rel_heights = c(.05, 1),
+    ncol = 1
+  )
+
   env
-  
 }
 
 env_list <- list(all_env, mb6_env, fb6_env, mhet3_env, fhet3_env)
 
-env_list <- lapply(env_list, create_fig2)
+env_list <- lapply(env_list, create_pred_obs_panel)
 
-lapply(env_list, `[[`, "fig2")
-
-
+lapply(env_list, `[[`, "pred_obs_panel")
 ```
 
 ### Table 1: Who's in what class
@@ -138,34 +139,34 @@ create_t1 <- function(env, mo_names) {
   t1_list <- lapply(mo_names, function(name) {
     x[x$model_name == name, ]$clean_t1[[1]]
   })
-  
+
   outcome_names <- lapply(mo_names, function(name) {
     x[x$model_name == name, ]$oc_name
   })
-  
+
   t1_list <- lapply(seq_along(t1_list), function(i) {
     t1 <- t1_list[[i]]
     oc_name <- outcome_names[[i]]
-    
-    
-   if(!is.na(t1[[1]])) {
-     t1 <- t1
-    t1 <- as.data.frame(t(t1))
-    t1$row_names <- row.names(t1)
-    row.names(t1) <- NULL
-    t1$oc_name <- oc_name
-   } else {
-     t1 <- NULL
-   }
+
+
+    if (!is.na(t1[[1]])) {
+      t1 <- t1
+      t1 <- as.data.frame(t(t1))
+      t1$row_names <- row.names(t1)
+      row.names(t1) <- NULL
+      t1$oc_name <- oc_name
+    } else {
+      t1 <- NULL
+    }
     t1
   })
-  
+
   t1_df <- do.call(rbind, t1_list) %>%
     select(oc_name, row_names, everything())
-  
-  
+
+
   env$t1_df <- t1_df
-  
+
   env
 }
 
@@ -183,128 +184,212 @@ lapply(env_list, function(env) {
     j <- number_rows
   }
   cap <- paste(env$subgroup,
-               "Demographics by Metabolic Index and Class",
-               sep = " ")
+    "Demographics by Metabolic Index and Class",
+    sep = " "
+  )
   table <- kable(env$t1_df,
-                 format = "html",
-                 caption = cap) %>%
+    format = "html",
+    caption = cap
+  ) %>%
     column_spec(1:2, bold = TRUE, border_right = TRUE) %>%
     row_spec(no_rows[[1]], hline_after = T) %>%
     row_spec(no_rows[[2]], hline_after = T) %>%
     row_spec(no_rows[[3]], hline_after = T) %>%
     collapse_rows(columns = 1, valign = "middle") %>%
     kable_styling(bootstrap_options = "striped")
-  
+
   print(table)
-    
 })
 ```
 
-#### Table 2: Display Mixed Effects Models and See if Class is significant predictor 
-of other metabolic outcomes
 
-```{r table 2}
-
-```
-
-### Figure 3: Mortality outcomes by class
+### Mortality outcomes by class
 
 - Supplement will include same figures but for each sex strain strata
 
 ```{r figure 3, fig.height= 16, fig.width=12}
 
-create_fig3 <- function(env){
+create_mortality_panel <- function(env) {
   x <- env$final_models
   bw_obs <- x[x$model_name == "bw_main|bw_age_wk", "traj_obs"][[1]]
   gluc_obs <- x[x$model_name == "gluc_main|gluc_age_wk", "traj_obs"][[1]]
   fat_obs <- x[x$model_name == "fat_main|fat_age_wk", "traj_obs"][[1]]
   bw_kap <- x[x$model_name == "bw_main|bw_age_wk", "kap_plot"][[1]]
-  gluc_kap <- x[x$model_name == "gluc_main|gluc_age_wk", "kap_plot"][[1]]  
-  fat_kap <- x[x$model_name == "fat_main|fat_age_wk", "kap_plot"][[1]]   
-  
+  gluc_kap <- x[x$model_name == "gluc_main|gluc_age_wk", "kap_plot"][[1]]
+  fat_kap <- x[x$model_name == "fat_main|fat_age_wk", "kap_plot"][[1]]
+
   if (!is.na(bw_kap)) bw_kap <- bw_kap$plot
   if (!is.na(gluc_kap)) gluc_kap <- gluc_kap$plot
   if (!is.na(fat_kap)) fat_kap <- fat_kap$plot
 
-  fig3 <- cowplot::plot_grid(bw_obs, bw_kap,
-                   gluc_obs, gluc_kap,
-                   fat_obs, fat_kap, 
-                   nrow = 3,
-                   greedy = FALSE,
-                   labels = "AUTO")
-  
-  title_theme <- ggdraw() + 
+  mortality_panel <- cowplot::plot_grid(bw_obs, bw_kap,
+    gluc_obs, gluc_kap,
+    fat_obs, fat_kap,
+    nrow = 3,
+    greedy = FALSE,
+    labels = "AUTO"
+  )
+
+  title_theme <- ggdraw() +
     draw_label(paste(env$subgroup,
-                     "Observed Metabolic Life Course Trajectories and Kaplan Meiers by Class", 
-                     sep = " "))
-  
-  env$fig3 <- cowplot::plot_grid(title_theme, fig3, rel_heights = c(.05, 1),
-                                 ncol = 1)
-  
+      "Observed Metabolic Life Course Trajectories and Kaplan Meiers by Class",
+      sep = " "
+    ))
+
+  env$mortality_panel <- cowplot::plot_grid(title_theme, mortality_panel,
+    rel_heights = c(.05, 1),
+    ncol = 1
+  )
+
   env
 }
-env_list <- lapply(env_list, create_fig3)
+env_list <- lapply(env_list, create_mortality_panel)
 
-lapply(env_list, `[[`, "fig3")
+lapply(env_list, `[[`, "mortality_panel")
 ```
 
-### Table 2: Hazard Ratios Adjusted for Sex Strain and proportional hazards
+### Table of Hazard Ratios, Raw and Sex/Strain Adjusted
 
-```{r table 2}
+```{r hazard ratio table}
 
 ```
 
-### Figure 4: Metabolic Outcomes by Class
+### Metabolic Outcomes by Class
 
 - Supplement will show the same figures but fore each sex strain combo
 
 ```{r figure 4, fig.height=16, fig.width=24}
 
-create_fig4 <- function(env) {
+create_other_met_panel <- function(env) {
   x <- env$final_models
   bw_pred <- x[x$model_name == "bw_main|bw_age_wk", "traj_pred"][[1]]
-  gluc_pred <- x[x$model_name == "gluc_main|gluc_age_wk", "traj_pred"][[1]]  
+  gluc_pred <- x[x$model_name == "gluc_main|gluc_age_wk", "traj_pred"][[1]]
   fat_pred <- x[x$model_name == "fat_main|fat_age_wk", "traj_pred"][[1]]
-  
+
   bw_pred <- ggdraw(bw_pred, clip = "on")
   gluc_pred <- ggdraw(gluc_pred, clip = "on")
   fat_pred <- ggdraw(fat_pred, clip = "on")
-  
+
   bw_bw <- x[x$model_name == "bw_main|bw_age_wk", "plot_bw"][[1]]
-  gluc_bw <- x[x$model_name == "gluc_main|gluc_age_wk", "plot_bw"][[1]]  
+  gluc_bw <- x[x$model_name == "gluc_main|gluc_age_wk", "plot_bw"][[1]]
   fat_bw <- x[x$model_name == "fat_main|fat_age_wk", "plot_bw"][[1]]
-  
+
   bw_gluc <- x[x$model_name == "bw_main|bw_age_wk", "plot_gluc"][[1]]
-  gluc_gluc <- x[x$model_name == "gluc_main|gluc_age_wk", "plot_gluc"][[1]]  
+  gluc_gluc <- x[x$model_name == "gluc_main|gluc_age_wk", "plot_gluc"][[1]]
   fat_gluc <- x[x$model_name == "fat_main|fat_age_wk", "plot_gluc"][[1]]
-  
+
   bw_fat <- x[x$model_name == "bw_main|bw_age_wk", "plot_fat"][[1]]
-  gluc_fat <- x[x$model_name == "gluc_main|gluc_age_wk", "plot_fat"][[1]]  
+  gluc_fat <- x[x$model_name == "gluc_main|gluc_age_wk", "plot_fat"][[1]]
   fat_fat <- x[x$model_name == "fat_main|fat_age_wk", "plot_fat"][[1]]
-  
-  fig4 <- cowplot::plot_grid(bw_pred, bw_bw, bw_gluc, bw_fat,
-                   gluc_pred, gluc_bw, gluc_gluc, gluc_fat,
-                   fat_pred, fat_bw, fat_gluc, fat_fat,
-                   nrow = 3,
-                   greedy = FALSE,
-                   labels = "AUTO")
-  
-  title_theme <- ggdraw() + 
+
+  other_met_panel <- cowplot::plot_grid(bw_pred, bw_bw, bw_gluc, bw_fat,
+    gluc_pred, gluc_bw, gluc_gluc, gluc_fat,
+    fat_pred, fat_bw, fat_gluc, fat_fat,
+    nrow = 3,
+    greedy = FALSE,
+    labels = "AUTO"
+  )
+
+  title_theme <- ggdraw() +
     draw_label(paste(env$subgroup,
-                     "Cross-reference Other Metabolic Parameters by Each Metabolic Class",
-                     sep = " "))
-    
-  env$fig4 <- cowplot::plot_grid(title_theme, fig4, rel_heights = c(.05, 1),
-                                 ncol = 1)
-  
+      "Cross-reference Other Metabolic Parameters by Each Metabolic Class",
+      sep = " "
+    ))
+
+  env$other_met_panel <- cowplot::plot_grid(title_theme, other_met_panel,
+    rel_heights = c(.05, 1),
+    ncol = 1
+  )
+
   env
-  
 }
 
-  
-env_list <- lapply(env_list, create_fig4)
 
-lapply(env_list, `[[`, "fig4")
+env_list <- lapply(env_list, create_other_met_panel)
+
+lapply(env_list, `[[`, "other_met_panel")
+```
+
+### Table of lme models
+- Model1 (No interaction): $outcome = Age + Age^2 + Class + (Age + Age^2 | Subject)$
+- Model2 : $outcome = Age + Age^2 + Class + Female * HET3 + (Age + Age^2 | Subject)$
+- Model3 (no controlled): $outcome = (Age + Age^2) * Class + (Age + Age^2| Subject)$
+- Model4 (Sex and Strain additive controlled) : $outcome = (Age + Age^2) * Class + Female * HET3 + (Age + Age^2 | Subject)$
+- Model5 (Sex and Strain interacted controlled): $outcome = (Age + Age^2) * Class + (Age + Age^2) * Female * HET3 + (Age + Age^2 | Subject)$
+```{r table lme}
+
+tab_lme <- function(env, mo_names) {
+  x <- env$final_models
+  row <- x[x$model_name %in% mo_names, ]
+  
+  age_var <- row$age_var[[1]]
+  age_var_name <- row$age_var_name[[1]]
+  age_var_units <- row$age_var_units[[1]]
+  
+  age_var2_name <- paste(age_var_name, "2", sep = "^")
+  age_var2_units <- paste(age_var_units, "2", sep = "^")
+  
+  age_var2 <- paste(age_var, 2, sep = "")
+  age_var_ns <- paste(age_var, "ns", sep = "_")
+  age_var2_ns <- paste(age_var2, "ns", sep = "_")
+  class_names <- paste("Class", seq_len(100))
+  names(class_names) <- paste0("new_class", seq_len(100))
+  age_names <- c(age_var_ns = paste(age_var_name, age_var_units))
+  age2_names <- c(age_var2_ns = paste(age_var2_name, age_var2_units))
+  age_interaction_names <- paste(age_names, class_names, sep = ":")
+  names(age_interaction_names) <- paste(names(age_names),
+                                        names(class_names),
+                                        sep = ":")
+  age2_interaction_names <- paste(age_var2_ns, class_names, sep = ":")
+  names(age2_interaction_names) <- paste(names(age2_names), names(class_names), sep = ":")
+  fixcov_names <- c("female" = "Female", "HET3" = "het3")
+  
+  all_names <- c(class_names, age_names, age2_names, age_interaction_names, 
+                 age2_interaction_names, fixcov_names)
+    
+  lmes_bw <- row$model_bw
+  lmes_gluc <- row$model_gluc
+  lmes_fat <- row$model_fat
+  
+  model_list <- list()
+  oc_names_list <- list()
+  
+  for (i in seq_len(nrow(row))) {
+    model_list[[i]] <- list(lmes_bw[[i]][[4]],
+                            lmes_gluc[[i]][[4]],
+                            lmes_fat[[i]][[4]])
+    oc_names_list[[i]] <- c("Body Weight", 
+                         "Body Fat", 
+                         "Glucose")
+    
+    
+  }
+  model_list <- do.call(c, model_list)
+  oc_names_list <- do.call(c, oc_names_list)
+  
+  title <- paste(env$subgroup, "Mixed Effects Models")
+  lme_table <- tab_model(model_list,
+                 show.ci = FALSE,
+                 show.re.var = FALSE,
+                 pred.labels = all_names,
+                 show.reflvl = TRUE,
+                 show.icc = FALSE,
+                 show.r2 = FALSE,
+                 show.ngroups = FALSE,
+                 show.obs = FALSE,
+                 dv.labels = oc_names_list,
+                 title = title)
+  
+  env$lme_table <- lme_table
+  
+  env
+}
+
+env_list <-lapply(env_list, tab_lme, mo_names = mo_names)
+
+lapply(env_list, `[[`, "lme_table")
+
+
 ```
 
 ### Figure 5: Class Prediction 
@@ -312,14 +397,47 @@ lapply(env_list, `[[`, "fig4")
 - Supplmenet will include same table for glucose and body fat
 
 ```{r figure 5, fig.height=16, fig.width=16}
-bw_interval <- x[x$model_name == "bw_main|bw_age_wk", "interval_plots"][[1]]
-bw_threshold <- x[x$model_name == "bw_main|bw_age_wk", "threshold_plots"][[1]]
-bw_sample <- x[x$model_name == "bw_main|bw_age_wk", "sample_plots"][[1]]
+mo_names <- c("bw_main|bw_age_wk", "gluc_main|gluc_age_wk", "fat_main|fat_age_wk")
 
-fig5 <- cowplot::plot_grid(bw_interval, bw_threshold, bw_sample,
-                           ncol = 3,
-                           labels = "AUTO"
-                           )
+create_class_prediction_panel <- function(env, mo_names) {
+  x <- env$final_models
+  rows <- list()
+  for (model_name in mo_names) {
+    interval <- x[x$model_name == model_name, ]$interval_boot_accuracy_plot[[1]]
+    threshold <- x[x$model_name == model_name, ]$threshold_boot_accuracy_plot[[1]] +
+      theme(legend.title = element_text(size = 7), 
+               legend.text = element_text(size = 7))
+    sample <- x[x$model_name == model_name, ]$sample_boot_accuracy_plot[[1]]
 
-fig5
+    rows[[model_name]] <- list(interval, threshold, sample)
+  }
+  
+  rows <- do.call(c, rows)
+  
+  title <- paste(env$subgroup, "Classification Accuracy")
+  
+  title_theme <- ggdraw() +
+    draw_label(title)
+
+
+  class_prediction_panel <- cowplot::plot_grid(
+    plotlist = rows,
+    ncol = 3,
+    labels = "AUTO"
+  )
+  env$class_prediction_panel <- cowplot::plot_grid(title_theme, 
+                                                   class_prediction_panel,
+    rel_heights = c(.05, 1),
+    ncol = 1
+  )
+  
+  
+  env
+}
+
+env_list <- lapply(env_list, create_class_prediction_panel, mo_names = mo_names)
+
+lapply(env_list, function(env) {
+  env$class_prediction_panel
+})
 ```
