@@ -16,15 +16,18 @@ model_other <- function(census,
   keep_fixcovs <- lapply(fixcovs, function(fixcov) {
     l <- length(unique(new_df[[fixcov]]))
     if (l == 1) {
-      FALSE
+      keep <- FALSE
     } else {
-      TRUE
+      keep <- TRUE
     }
+    keep
   })
 
   fixcovs <- fixcovs[as.logical(keep_fixcovs)]
 
   age_var2 <- paste0(age_var, "2")
+  age_var <- paste(age_var, "ns", sep = "_")
+  age_var2 <- paste(age_var2, "ns", sep = "_")
   if (length(unique(new_df[[class]])) == 1) {
     class_term0 <- paste(age_var, age_var2, sep = " + ")
     class_term1 <- paste(age_var, age_var2, sep = " + ")
@@ -37,8 +40,8 @@ model_other <- function(census,
   fixeff1 <- paste(outcome, "~", class_term1)
   interact <- paste("+", "(", age_var, "+", age_var2, ")", "*", sep = " ")
   if (length(fixcovs) > 0) {
-    fixeff0.5 <- paste(fixeff0, paste(fixcovs, sep = " * "), sep = " + ")
-    fixeff2 <- paste(fixeff1, paste(fixcovs, sep = " * "), sep = " + ")
+    fixeff0.5 <- paste(paste(fixcovs, collapse = " * "), fixeff0, sep = " + ")
+    fixeff2 <- paste(paste(fixcovs, collapse = " * "), fixeff1, sep = " + ")
     fixeff3 <- paste(fixeff1,
       interact,
       paste(fixcovs, collapse = " * "),
