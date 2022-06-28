@@ -81,11 +81,11 @@ p3 <- x[x$model_name == "bw_main|bw_age_wk", "traj_obs"][[1]]
 cowplot::plot_grid(p1, p3, nrow = 1)
 ```
 
-### Figure 2: Dispaly predicted and observed
+### Dispaly predicted and observed
 
 - Supplement will include sex strain strata 
 
-```{r figure 2, fig.height= 16, fig.width=12}
+```{r pred_obs_panel, fig.height= 16, fig.width=12}
 
 create_pred_obs_panel <- function(env) {
   x <- env$final_models
@@ -129,9 +129,9 @@ env_list <- lapply(env_list, create_pred_obs_panel)
 lapply(env_list, `[[`, "pred_obs_panel")
 ```
 
-### Table 1: Who's in what class
+### Table Who's in what class
 
-```{r table 1, results='asis'}
+```{r table class demographics, results='asis'}
 
 mo_names <- c("bw_main|bw_age_wk", "gluc_main|gluc_age_wk", "fat_main|fat_age_wk")
 create_t1 <- function(env, mo_names) {
@@ -392,11 +392,11 @@ lapply(env_list, `[[`, "lme_table")
 
 ```
 
-### Figure 5: Class Prediction 
+### Class Prediction Panel
 
 - Supplmenet will include same table for glucose and body fat
 
-```{r figure 5, fig.height=16, fig.width=16}
+```{r class prediction panel, fig.height=16, fig.width=16}
 mo_names <- c("bw_main|bw_age_wk", "gluc_main|gluc_age_wk", "fat_main|fat_age_wk")
 
 create_class_prediction_panel <- function(env, mo_names) {
