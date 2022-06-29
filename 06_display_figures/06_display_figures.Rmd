@@ -552,10 +552,7 @@ fig1
 if (!params$sup) {
   all_env$pred_obs_panel
 } else {
-  mb6_env$pred_obs_panel
-  fb6_env$pred_obs_panel
-  mhet3_env$pred_obs_panel
-  fhet3_env$pred_obs_panel
+  lapply(env_list[-1], `[[`, "pred_obs_panel")
 }
 ```
 ### Table 1: Whos in each Class
@@ -596,10 +593,7 @@ if (!params$sup) {
 if (!params$sup) {
   all_env$other_met_panel
 } else {
-  mb6_env$other_met_panel
-  fb6_env$other_met_panel
-  mhet3_env$other_met_panel
-  fhet3_env$other_met_panel
+  lapply(env_list[-1], `[[`, "other_met_panel")
 }
 ```
 
