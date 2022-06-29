@@ -8,8 +8,6 @@ plot_boot_accuracy_interval <- function(accuracy_interval_df,
                                         legend_title = "Window Size") {
   uni_accuracy <- length(unique(accuracy_interval_df$accuracy))
   if (uni_accuracy != 1) {
-    comparisons <- interval_comparisons(accuracy_interval_df)
-
     plot <- ggplot(
       data = accuracy_interval_df,
       mapping = aes(x = upper_bound,
@@ -20,10 +18,6 @@ plot_boot_accuracy_interval <- function(accuracy_interval_df,
       geom_errorbar(aes(x = upper_bound, ymin = lower_ci, ymax = upper_ci),
         stat = "identity",
         width = 0.4
-      ) +
-      geom_signif(
-        comparisons = comparisons, annotations = "*", margin_top = .1,
-        step_increase = .35
       ) +
       labs(
         y = ylab,
