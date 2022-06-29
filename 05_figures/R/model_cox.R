@@ -26,8 +26,8 @@ model_cox <- function(census, var, covariates, age_death, censor) {
     rhs3 <- var
   } else {
     rhs1 <- var
-    rhs2 <- paste(var, "+", paste(covariates, sep = " + "))
-    rhs3 <- paste(var, "+", paste(covariates, sep = " * "))
+    rhs2 <- paste(var, "+", paste(covariates, collapse = " + "))
+    rhs3 <- paste(var, "+", paste(covariates, collapse = " * "))
   }
 
 
