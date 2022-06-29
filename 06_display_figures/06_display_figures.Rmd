@@ -455,8 +455,8 @@ tab_lme <- function(env, mo_names) {
     )
     oc_names_list[[i]] <- c(
       "Body Weight",
-      "Body Fat",
-      "Glucose"
+      "Glucose",
+      "Body Fat"
     )
   }
   # model_list <- do.call(c, model_list)
