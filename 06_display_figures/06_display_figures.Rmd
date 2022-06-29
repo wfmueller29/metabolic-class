@@ -173,7 +173,6 @@ create_t1 <- function(env, mo_names) {
 env_list <- lapply(env_list, function(env) {
   create_t1(env, mo_names)
 })
-
 ```
 
 
@@ -280,17 +279,19 @@ surv_gethr <- function(fit, vars, names = NULL, ndec = 4) {
 }
 
 
-make_cox_table <- function(cox_models, mo_select = c(1,3), outcome) {
+make_cox_table <- function(cox_models, mo_select = c(1, 3), outcome) {
   xlevels_list <- lapply(cox_models, `[[`, "xlevels")
-  if (length(x))
-  xlevels_names <- lapply(xlevels_list, names)
-  xlevels_list <- lapply(seq_along(xlevels_names), function(i){
+  if (length(x)) {
+    xlevels_names <- lapply(xlevels_list, names)
+  }
+  xlevels_list <- lapply(seq_along(xlevels_names), function(i) {
     paste0(xlevels_names[[i]], unlist(xlevels_list[[i]]))[-1]
   })
   hr_table_list <- list()
   for (i in mo_select) {
-    hr_table <- surv_gethr(cox_models[[i]], 
-                               vars = xlevels_list[[i]])$hr_table
+    hr_table <- surv_gethr(cox_models[[i]],
+      vars = xlevels_list[[i]]
+    )$hr_table
     hr_table <- cbind(row.names(hr_table), hr_table)
     names(hr_table)[[1]] <- "Class"
     row.names(hr_table) <- NULL
@@ -302,30 +303,28 @@ make_cox_table <- function(cox_models, mo_select = c(1,3), outcome) {
     hr_table_list[[i]] <- hr_table
   }
   result <- purrr::reduce(hr_table_list, dplyr::left_join, by = c("Class", "Outcome"))
-  
 }
 
 
 combine_cox_table <- function(final_models, mo_names, cox_mo_select) {
   x <- final_models
   cox_table_list <- list()
-  for (name in mo_names){
+  for (name in mo_names) {
     cox_models <- x[x$model_name == name, ]$cox_models[[1]]
     outcome <- x[x$model_name == name, ]$oc_name
     ng <- x[x$model_name == name, ]$ng
     if (ng != 1) {
-    cox_table_list[[name]] <- make_cox_table(cox_models,
-                                             cox_mo_select,
-                                             outcome)
-      
+      cox_table_list[[name]] <- make_cox_table(
+        cox_models,
+        cox_mo_select,
+        outcome
+      )
     } else {
       cox_table_list[[name]] <- NA
     }
-    
   }
   names(cox_table_list) <- NULL
   do.call(rbind, cox_table_list)
-  
 }
 
 create_hr_table <- function(env, mo_names, cox_mo_select) {
@@ -335,8 +334,7 @@ create_hr_table <- function(env, mo_names, cox_mo_select) {
   env
 }
 
-env_list <- lapply(env_list, create_hr_table, mo_names = mo_names, c(1,2,3))
-
+env_list <- lapply(env_list, create_hr_table, mo_names = mo_names, c(1, 2, 3))
 ```
 
 ### Metabolic Outcomes by Class
@@ -391,7 +389,6 @@ create_other_met_panel <- function(env) {
 
 
 env_list <- lapply(env_list, create_other_met_panel)
-
 ```
 
 ### Table of lme models
@@ -405,14 +402,14 @@ env_list <- lapply(env_list, create_other_met_panel)
 tab_lme <- function(env, mo_names) {
   x <- env$final_models
   row <- x[x$model_name %in% mo_names, ]
-  
+
   age_var <- row$age_var[[1]]
   age_var_name <- row$age_var_name[[1]]
   age_var_units <- row$age_var_units[[1]]
-  
+
   age_var2_name <- paste(age_var_name, "2</sup>", sep = "<sup>")
   age_var2_units <- paste(age_var_units, "2</sup>", sep = "<sup>")
-  
+
   age_var2 <- paste(age_var, 2, sep = "")
   age_var_ns <- paste(age_var, "ns", sep = "_")
   age_var2_ns <- paste(age_var2, "ns", sep = "_")
@@ -424,72 +421,73 @@ tab_lme <- function(env, mo_names) {
   names(age2_names) <- age_var2_ns
   age_interaction_names <- paste(age_names, class_names, sep = ":")
   names(age_interaction_names) <- paste(names(age_names),
-                                        names(class_names),
-                                        sep = ":")
+    names(class_names),
+    sep = ":"
+  )
   age2_interaction_names <- paste(age2_names, class_names, sep = ":")
   names(age2_interaction_names) <- paste(names(age2_names), names(class_names), sep = ":")
   fixcov_names <- c("female" = "Female", "het3" = "HET3")
   fixcov_names_interacted <- paste(fixcov_names, collapse = ":")
   names(fixcov_names_interacted) <- paste(names(fixcov_names), collapse = ":")
-  
-  all_names <- c(class_names,
-                 age_names,
-                 age2_names,
-                 age_interaction_names, 
-                 age2_interaction_names, 
-                 fixcov_names,
-                 fixcov_names_interacted)
-    
+
+  all_names <- c(
+    class_names,
+    age_names,
+    age2_names,
+    age_interaction_names,
+    age2_interaction_names,
+    fixcov_names,
+    fixcov_names_interacted
+  )
+
   lmes_bw <- row$model_bw
   lmes_gluc <- row$model_gluc
   lmes_fat <- row$model_fat
-  
+
   model_list <- list()
   oc_names_list <- list()
-  
+
   for (i in seq_len(nrow(row))) {
-    model_list[[i]] <- list(lmes_bw[[i]][[4]],
-                            lmes_gluc[[i]][[4]],
-                            lmes_fat[[i]][[4]])
-    oc_names_list[[i]] <- c("Body Weight", 
-                         "Body Fat", 
-                         "Glucose")
-    
-    
+    model_list[[i]] <- list(
+      lmes_bw[[i]][[4]],
+      lmes_gluc[[i]][[4]],
+      lmes_fat[[i]][[4]]
+    )
+    oc_names_list[[i]] <- c(
+      "Body Weight",
+      "Body Fat",
+      "Glucose"
+    )
   }
-  #model_list <- do.call(c, model_list)
-  #oc_names_list <- do.call(c, oc_names_list)
+  # model_list <- do.call(c, model_list)
+  # oc_names_list <- do.call(c, oc_names_list)
   lme_table_list <- list()
   title_list <- c("Body Weight Class", "Glucose Class", "Body Fat Class")
   for (i in seq_along(model_list)) {
     title <- paste(env$subgroup, title_list[[i]], "Mixed Effects Models")
     lme_table <- tab_model(model_list[[i]],
-                   show.ci = FALSE,
-                   show.re.var = FALSE,
-                   pred.labels = all_names,
-                   show.reflvl = TRUE,
-                   wrap.labels = 50,
-                   show.icc = FALSE,
-                   show.r2 = FALSE,
-                   show.ngroups = FALSE,
-                   show.obs = FALSE,
-                   dv.labels = oc_names_list[[i]],
-                   title = title)
+      show.ci = FALSE,
+      show.re.var = FALSE,
+      pred.labels = all_names,
+      show.reflvl = TRUE,
+      wrap.labels = 50,
+      show.icc = FALSE,
+      show.r2 = FALSE,
+      show.ngroups = FALSE,
+      show.obs = FALSE,
+      dv.labels = oc_names_list[[i]],
+      title = title
+    )
     lme_table_list[[i]] <- lme_table
-    
   }
-  
-  
+
+
   env$lme_table <- lme_table_list
-  
+
   env
 }
 
-env_list <-lapply(env_list, tab_lme, mo_names = mo_names)
-
-
-
-
+env_list <- lapply(env_list, tab_lme, mo_names = mo_names)
 ```
 
 ### Class Prediction Panel
@@ -505,17 +503,19 @@ create_class_prediction_panel <- function(env, mo_names) {
   for (model_name in mo_names) {
     interval <- x[x$model_name == model_name, ]$interval_boot_accuracy_plot[[1]]
     threshold <- x[x$model_name == model_name, ]$threshold_boot_accuracy_plot[[1]] +
-      theme(legend.title = element_text(size = 7), 
-               legend.text = element_text(size = 7))
+      theme(
+        legend.title = element_text(size = 7),
+        legend.text = element_text(size = 7)
+      )
     sample <- x[x$model_name == model_name, ]$sample_boot_accuracy_plot[[1]]
 
     rows[[model_name]] <- list(interval, threshold, sample)
   }
-  
+
   rows <- do.call(c, rows)
-  
+
   title <- paste(env$subgroup, "Classification Accuracy")
-  
+
   title_theme <- ggdraw() +
     draw_label(title)
 
@@ -525,18 +525,17 @@ create_class_prediction_panel <- function(env, mo_names) {
     ncol = 3,
     labels = "AUTO"
   )
-  env$class_prediction_panel <- cowplot::plot_grid(title_theme, 
-                                                   class_prediction_panel,
+  env$class_prediction_panel <- cowplot::plot_grid(title_theme,
+    class_prediction_panel,
     rel_heights = c(.05, 1),
     ncol = 1
   )
-  
-  
+
+
   env
 }
 
 env_list <- lapply(env_list, create_class_prediction_panel, mo_names = mo_names)
-
 ```
 
 
@@ -546,12 +545,11 @@ env_list <- lapply(env_list, create_class_prediction_panel, mo_names = mo_names)
 
 ```{r figure 1}
 fig1
-
 ```
 
 ### Figure 2: Predicted Observed
 ```{r figure 2, fig.height=18, fig.width=12}
-if(!params$sup){
+if (!params$sup) {
   all_env$pred_obs_panel
 } else {
   mb6_env$pred_obs_panel
@@ -562,12 +560,12 @@ if(!params$sup){
 ```
 ### Table 1: Whos in each Class
 ```{r table 1, results = 'asis'}
-print_table <- function(env, title) {
+print_table <- function(env, table_name, title) {
   cap <- paste(env$subgroup,
     title,
     sep = " "
   )
-  table <- kable(env$t1_df,
+  table <- kable(env[[table_name]],
     format = "html",
     caption = cap
   ) %>%
@@ -579,11 +577,16 @@ print_table <- function(env, title) {
 }
 
 if (!params$sup) {
-  print_table(all_env, title = "Demographics by Metabolic Index and Class")
+  print_table(all_env,
+    table_name = "t1_df",
+    title = "Demographics by Metabolic Index and Class"
+  )
 } else {
   lapply(env_list[-1],
-         print_table,
-         title = "Demographics by Metabolic Index and Class")
+    print_table,
+    table_name = "t1_df",
+    title = "Demographics by Metabolic Index and Class"
+  )
 }
 ```
 
@@ -598,23 +601,21 @@ if (!params$sup) {
   mhet3_env$other_met_panel
   fhet3_env$other_met_panel
 }
-
 ```
 
 ### Table 2: Metabolic Classes Predict other Metabolic Metrics
 
 ```{r table 2, results = 'asis'}
 if (!params$sup) {
-  lapply(all_env$lme_table, function(table){
+  lapply(all_env$lme_table, function(table) {
     cat(table$knitr)
   })
 } else {
   for (env in env_list[-1]) {
-    lapply(env$lme_table, function(table){
+    lapply(env$lme_table, function(table) {
       cat(table$knitr)
     })
   }
-  
 }
 ```
 
@@ -633,11 +634,15 @@ if (!params$sup) {
 ```{r table 3, results = 'asis'}
 if (!params$sup) {
   print_table(all_env,
-              title = "Table of Hazard Ratios by Metabolic Indices")
+    table_name = "hr_table",
+    title = "Table of Hazard Ratios by Metabolic Indices"
+  )
 } else {
-  lapply(env_list[-1], 
-         print_table, 
-         title = "Table of Hazard Ratios by Metabolic Indices")
+  lapply(env_list[-1],
+    print_table,
+    table_name = "t1_df",
+    title = "Table of Hazard Ratios by Metabolic Indices"
+  )
 }
 ```
 
