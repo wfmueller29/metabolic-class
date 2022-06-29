@@ -6,6 +6,7 @@ output:
   html_document:
     df_print: paged
 params:
+  sup: FALSE
   all_dir: "20220618_104254_all"
   mb6_dir: "20220617_045809_mb6"
   fb6_dir: "20220617_072941_fb6"
@@ -31,6 +32,7 @@ knitr::opts_chunk$set(message = FALSE)
 knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(cache = FALSE)
 ```
+
 
 ## Analysis
 
@@ -67,18 +69,18 @@ mhet3_env$subgroup <- "Male HET3"
 fhet3_env$subgroup <- "Female HET3"
 ```
 
-## Figures
+## Create Figures
 
-### Figure 1: Dispaly How latent class models work
+### Dispaly How latent class models work
 
-```{r figure 1, fig.height=5, fig.width=10}
+```{r how they work, fig.height=5, fig.width=10}
 x <- all_env$final_models
 p1 <- x[x$model_name == "bw_main|bw_age_wk", "spag_plot"][[1]]
 p2 <- ggplot()
 p3 <- x[x$model_name == "bw_main|bw_age_wk", "traj_obs"][[1]]
 
 
-cowplot::plot_grid(p1, p3, nrow = 1)
+fig1 <- cowplot::plot_grid(p1, p3, nrow = 1)
 ```
 
 ### Dispaly predicted and observed
@@ -125,8 +127,6 @@ create_pred_obs_panel <- function(env) {
 env_list <- list(all_env, mb6_env, fb6_env, mhet3_env, fhet3_env)
 
 env_list <- lapply(env_list, create_pred_obs_panel)
-
-lapply(env_list, `[[`, "pred_obs_panel")
 ```
 
 ### Table Who's in what class
@@ -174,32 +174,6 @@ env_list <- lapply(env_list, function(env) {
   create_t1(env, mo_names)
 })
 
-lapply(env_list, function(env) {
-  uni_models <- unique(env$t1_df$oc_name)
-  j <- 0
-  no_rows <- list()
-  for (i in seq_along(uni_models)) {
-    number_rows <- sum(env$t1_df$oc_name == uni_models[[i]])
-    no_rows[[i]] <- number_rows + j
-    j <- number_rows
-  }
-  cap <- paste(env$subgroup,
-    "Demographics by Metabolic Index and Class",
-    sep = " "
-  )
-  table <- kable(env$t1_df,
-    format = "html",
-    caption = cap
-  ) %>%
-    column_spec(1:2, bold = TRUE, border_right = TRUE) %>%
-    row_spec(no_rows[[1]], hline_after = T) %>%
-    row_spec(no_rows[[2]], hline_after = T) %>%
-    row_spec(no_rows[[3]], hline_after = T) %>%
-    collapse_rows(columns = 1, valign = "middle") %>%
-    kable_styling(bootstrap_options = "striped")
-
-  print(table)
-})
 ```
 
 
@@ -207,7 +181,7 @@ lapply(env_list, function(env) {
 
 - Supplement will include same figures but for each sex strain strata
 
-```{r figure 3, fig.height= 16, fig.width=12}
+```{r mortality outcomes by class, fig.height= 16, fig.width=12}
 
 create_mortality_panel <- function(env) {
   x <- env$final_models
@@ -244,13 +218,124 @@ create_mortality_panel <- function(env) {
   env
 }
 env_list <- lapply(env_list, create_mortality_panel)
-
-lapply(env_list, `[[`, "mortality_panel")
 ```
 
 ### Table of Hazard Ratios, Raw and Sex/Strain Adjusted
 
-```{r hazard ratio table}
+```{r hazard ratio table, results = 'asis'}
+surv_gethr <- function(fit, vars, names = NULL, ndec = 4) {
+  sum_fit <- summary(fit) ## get summary of fit
+  # save coeffecients as dataframe
+  coef <- data.frame(sum_fit$coefficients, check.names = F)
+  # save confidence interval as dataframe
+  conf <- data.frame(sum_fit$conf.int, check.names = F)
+  # initialize hr dataframe
+  hr <- data.frame()
+  # loop through vars
+  for (var in vars) {
+    # save hr
+    value <- format(round(conf[var, "exp(coef)"], ndec), nsmall = 2)
+    # save lower HR bound
+    lower <- format(round(conf[var, "lower .95"], ndec), nsmall = 2)
+    # save upper HR bound
+    upper <- format(round(conf[var, "upper .95"], ndec), nsmall = 2)
+    # save pval
+    pval <- coef[var, "Pr(>|z|)"]
+
+    ## add stars depending on significance
+    if (pval < .001) {
+      final <- paste0(value, " (", lower, ", ", upper, ")***")
+    } else if (pval < .005) {
+      final <- paste0(value, " (", lower, ", ", upper, ")**")
+    } else if (pval < 0.050) {
+      final <- paste0(value, " (", lower, ", ", upper, ")*")
+    } else {
+      final <- paste0(value, " (", lower, ", ", upper, ")")
+    }
+
+    ## save stats above to hr dataframe
+    hr[var, c("value", "lower", "upper", "pval", "final")] <- c(
+      value,
+      lower,
+      upper,
+      pval,
+      final
+    )
+  }
+
+  ## if names are provided, rename variables
+  if (!is.null(names)) {
+    rownames(hr) <- names
+  }
+
+  ## create a column that has the rownames printed before HR
+  hr[, "with_names"] <- unlist(lapply(rownames(hr), function(name) {
+    el <- paste(name, hr[name, "final"], sep = ": ")
+  }))
+
+  ## create text that can be used to easily add to KM plot in place of pval
+  one_text <- paste(as.vector(hr[, "with_names"]), collapse = "\n")
+
+  return(list(hr_table = hr, hr_text = one_text))
+}
+
+
+make_cox_table <- function(cox_models, mo_select = c(1,3), outcome) {
+  xlevels_list <- lapply(cox_models, `[[`, "xlevels")
+  if (length(x))
+  xlevels_names <- lapply(xlevels_list, names)
+  xlevels_list <- lapply(seq_along(xlevels_names), function(i){
+    paste0(xlevels_names[[i]], unlist(xlevels_list[[i]]))[-1]
+  })
+  hr_table_list <- list()
+  for (i in mo_select) {
+    hr_table <- surv_gethr(cox_models[[i]], 
+                               vars = xlevels_list[[i]])$hr_table
+    hr_table <- cbind(row.names(hr_table), hr_table)
+    names(hr_table)[[1]] <- "Class"
+    row.names(hr_table) <- NULL
+    model_name <- paste("HR Model", i)
+    hr_table <- hr_table %>%
+      select(Class, hr = final)
+    hr_table <- cbind(outcome, hr_table)
+    names(hr_table) <- c("Outcome", "Class", model_name)
+    hr_table_list[[i]] <- hr_table
+  }
+  result <- purrr::reduce(hr_table_list, dplyr::left_join, by = c("Class", "Outcome"))
+  
+}
+
+
+combine_cox_table <- function(final_models, mo_names, cox_mo_select) {
+  x <- final_models
+  cox_table_list <- list()
+  for (name in mo_names){
+    cox_models <- x[x$model_name == name, ]$cox_models[[1]]
+    outcome <- x[x$model_name == name, ]$oc_name
+    ng <- x[x$model_name == name, ]$ng
+    if (ng != 1) {
+    cox_table_list[[name]] <- make_cox_table(cox_models,
+                                             cox_mo_select,
+                                             outcome)
+      
+    } else {
+      cox_table_list[[name]] <- NA
+    }
+    
+  }
+  names(cox_table_list) <- NULL
+  do.call(rbind, cox_table_list)
+  
+}
+
+create_hr_table <- function(env, mo_names, cox_mo_select) {
+  x <- env$final_models
+  hr_table <- combine_cox_table(x, mo_names, cox_mo_select)
+  env$hr_table <- hr_table
+  env
+}
+
+env_list <- lapply(env_list, create_hr_table, mo_names = mo_names, c(1,2,3))
 
 ```
 
@@ -258,7 +343,7 @@ lapply(env_list, `[[`, "mortality_panel")
 
 - Supplement will show the same figures but fore each sex strain combo
 
-```{r figure 4, fig.height=16, fig.width=24}
+```{r metabolic outcomes by class, fig.height=16, fig.width=24}
 
 create_other_met_panel <- function(env) {
   x <- env$final_models
@@ -307,7 +392,6 @@ create_other_met_panel <- function(env) {
 
 env_list <- lapply(env_list, create_other_met_panel)
 
-lapply(env_list, `[[`, "other_met_panel")
 ```
 
 ### Table of lme models
@@ -316,7 +400,7 @@ lapply(env_list, `[[`, "other_met_panel")
 - Model3 (no controlled): $outcome = (Age + Age^2) * Class + (Age + Age^2| Subject)$
 - Model4 (Sex and Strain additive controlled) : $outcome = (Age + Age^2) * Class + Female * HET3 + (Age + Age^2 | Subject)$
 - Model5 (Sex and Strain interacted controlled): $outcome = (Age + Age^2) * Class + (Age + Age^2) * Female * HET3 + (Age + Age^2 | Subject)$
-```{r table lme}
+```{r table lme, results = 'asis'}
 
 tab_lme <- function(env, mo_names) {
   x <- env$final_models
@@ -326,26 +410,35 @@ tab_lme <- function(env, mo_names) {
   age_var_name <- row$age_var_name[[1]]
   age_var_units <- row$age_var_units[[1]]
   
-  age_var2_name <- paste(age_var_name, "2", sep = "^")
-  age_var2_units <- paste(age_var_units, "2", sep = "^")
+  age_var2_name <- paste(age_var_name, "2</sup>", sep = "<sup>")
+  age_var2_units <- paste(age_var_units, "2</sup>", sep = "<sup>")
   
   age_var2 <- paste(age_var, 2, sep = "")
   age_var_ns <- paste(age_var, "ns", sep = "_")
   age_var2_ns <- paste(age_var2, "ns", sep = "_")
   class_names <- paste("Class", seq_len(100))
   names(class_names) <- paste0("new_class", seq_len(100))
-  age_names <- c(age_var_ns = paste(age_var_name, age_var_units))
-  age2_names <- c(age_var2_ns = paste(age_var2_name, age_var2_units))
+  age_names <- paste(age_var_name, age_var_units)
+  names(age_names) <- age_var_ns
+  age2_names <- paste(age_var2_name, age_var2_units)
+  names(age2_names) <- age_var2_ns
   age_interaction_names <- paste(age_names, class_names, sep = ":")
   names(age_interaction_names) <- paste(names(age_names),
                                         names(class_names),
                                         sep = ":")
-  age2_interaction_names <- paste(age_var2_ns, class_names, sep = ":")
+  age2_interaction_names <- paste(age2_names, class_names, sep = ":")
   names(age2_interaction_names) <- paste(names(age2_names), names(class_names), sep = ":")
-  fixcov_names <- c("female" = "Female", "HET3" = "het3")
+  fixcov_names <- c("female" = "Female", "het3" = "HET3")
+  fixcov_names_interacted <- paste(fixcov_names, collapse = ":")
+  names(fixcov_names_interacted) <- paste(names(fixcov_names), collapse = ":")
   
-  all_names <- c(class_names, age_names, age2_names, age_interaction_names, 
-                 age2_interaction_names, fixcov_names)
+  all_names <- c(class_names,
+                 age_names,
+                 age2_names,
+                 age_interaction_names, 
+                 age2_interaction_names, 
+                 fixcov_names,
+                 fixcov_names_interacted)
     
   lmes_bw <- row$model_bw
   lmes_gluc <- row$model_gluc
@@ -364,30 +457,37 @@ tab_lme <- function(env, mo_names) {
     
     
   }
-  model_list <- do.call(c, model_list)
-  oc_names_list <- do.call(c, oc_names_list)
+  #model_list <- do.call(c, model_list)
+  #oc_names_list <- do.call(c, oc_names_list)
+  lme_table_list <- list()
+  title_list <- c("Body Weight Class", "Glucose Class", "Body Fat Class")
+  for (i in seq_along(model_list)) {
+    title <- paste(env$subgroup, title_list[[i]], "Mixed Effects Models")
+    lme_table <- tab_model(model_list[[i]],
+                   show.ci = FALSE,
+                   show.re.var = FALSE,
+                   pred.labels = all_names,
+                   show.reflvl = TRUE,
+                   wrap.labels = 50,
+                   show.icc = FALSE,
+                   show.r2 = FALSE,
+                   show.ngroups = FALSE,
+                   show.obs = FALSE,
+                   dv.labels = oc_names_list[[i]],
+                   title = title)
+    lme_table_list[[i]] <- lme_table
+    
+  }
   
-  title <- paste(env$subgroup, "Mixed Effects Models")
-  lme_table <- tab_model(model_list,
-                 show.ci = FALSE,
-                 show.re.var = FALSE,
-                 pred.labels = all_names,
-                 show.reflvl = TRUE,
-                 show.icc = FALSE,
-                 show.r2 = FALSE,
-                 show.ngroups = FALSE,
-                 show.obs = FALSE,
-                 dv.labels = oc_names_list,
-                 title = title)
   
-  env$lme_table <- lme_table
+  env$lme_table <- lme_table_list
   
   env
 }
 
 env_list <-lapply(env_list, tab_lme, mo_names = mo_names)
 
-lapply(env_list, `[[`, "lme_table")
+
 
 
 ```
@@ -437,7 +537,116 @@ create_class_prediction_panel <- function(env, mo_names) {
 
 env_list <- lapply(env_list, create_class_prediction_panel, mo_names = mo_names)
 
-lapply(env_list, function(env) {
-  env$class_prediction_panel
-})
+```
+
+
+## Display Figures
+
+### Figure 1:How it works
+
+```{r figure 1}
+fig1
+
+```
+
+### Figure 2: Predicted Observed
+```{r figure 2, fig.height=18, fig.width=12}
+if(!params$sup){
+  all_env$pred_obs_panel
+} else {
+  mb6_env$pred_obs_panel
+  fb6_env$pred_obs_panel
+  mhet3_env$pred_obs_panel
+  fhet3_env$pred_obs_panel
+}
+```
+### Table 1: Whos in each Class
+```{r table 1, results = 'asis'}
+print_table <- function(env, title) {
+  cap <- paste(env$subgroup,
+    title,
+    sep = " "
+  )
+  table <- kable(env$t1_df,
+    format = "html",
+    caption = cap
+  ) %>%
+    column_spec(1:2, bold = TRUE, border_right = TRUE) %>%
+    collapse_rows(columns = 1, valign = "middle") %>%
+    kable_styling(bootstrap_options = "striped")
+
+  print(table)
+}
+
+if (!params$sup) {
+  print_table(all_env, title = "Demographics by Metabolic Index and Class")
+} else {
+  lapply(env_list[-1],
+         print_table,
+         title = "Demographics by Metabolic Index and Class")
+}
+```
+
+### Figure 3: Metabolic Classes with Other Metabolic Metrics
+
+```{r figure 3, fig.height=18, fig.width=24}
+if (!params$sup) {
+  all_env$other_met_panel
+} else {
+  mb6_env$other_met_panel
+  fb6_env$other_met_panel
+  mhet3_env$other_met_panel
+  fhet3_env$other_met_panel
+}
+
+```
+
+### Table 2: Metabolic Classes Predict other Metabolic Metrics
+
+```{r table 2, results = 'asis'}
+if (!params$sup) {
+  lapply(all_env$lme_table, function(table){
+    cat(table$knitr)
+  })
+} else {
+  for (env in env_list[-1]) {
+    lapply(env$lme_table, function(table){
+      cat(table$knitr)
+    })
+  }
+  
+}
+```
+
+### Figure 4: Mortality and Class
+
+```{r figure 4, fig.height=18, fig.width=12}
+if (!params$sup) {
+  all_env$mortality_panel
+} else {
+  lapply(env_list[-1], `[[`, "mortality_panel")
+}
+```
+
+### Table 3: Hazard Ratios
+
+```{r table 3, results = 'asis'}
+if (!params$sup) {
+  print_table(all_env,
+              title = "Table of Hazard Ratios by Metabolic Indices")
+} else {
+  lapply(env_list[-1], 
+         print_table, 
+         title = "Table of Hazard Ratios by Metabolic Indices")
+}
+```
+
+### Figure 5: Class Prediction Panel
+
+```{r figure 5, fig.width=18, fig.height=18}
+if (!params$sup) {
+  all_env$class_prediction_panel
+} else {
+  lapply(env_list[-1], `[[`, "class_prediction_panel")
+}
 ```
