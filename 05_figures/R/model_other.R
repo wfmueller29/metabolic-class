@@ -40,8 +40,8 @@ model_other <- function(census,
   fixeff1 <- paste(outcome, "~", class_term1)
   interact <- paste("+", "(", age_var, "+", age_var2, ")", "*", sep = " ")
   if (length(fixcovs) > 0) {
-    fixeff0.5 <- paste(paste(fixcovs, collapse = " * "), fixeff0, sep = " + ")
-    fixeff2 <- paste(paste(fixcovs, collapse = " * "), fixeff1, sep = " + ")
+    fixeff0.5 <- paste(fixeff0, paste(fixcovs, collapse = " * "), sep = " + ")
+    fixeff2 <- paste(fixeff1, paste(fixcovs, collapse = " * "), sep = " + ")
     fixeff3 <- paste(fixeff1,
       interact,
       paste(fixcovs, collapse = " * "),
