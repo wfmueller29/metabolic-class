@@ -631,6 +631,10 @@ if (!params$sup) {
 
 ### Table 3: Hazard Ratios
 
+- Model 1: $ Surv ~ Class $
+- Model 2: $ Surv ~ Class + Sex + Strain$
+- Model 3: $ Surv ~ Class + Sex * Strain$
+
 ```{r table 3, results = 'asis'}
 if (!params$sup) {
   print_table(all_env,
