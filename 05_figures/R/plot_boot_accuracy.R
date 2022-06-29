@@ -1,31 +1,36 @@
 # Purpose: To plot the bootstrapped accuracy with error bars for each model
 # Author: WIlliam mueller
+#
 plot_boot_accuracy_interval <- function(accuracy_interval_df,
                                         xlab = "",
                                         ylab = "",
-                                        title = "") {
+                                        title = "",
+                                        legend_title = "Window Size") {
   uni_accuracy <- length(unique(accuracy_interval_df$accuracy))
   if (uni_accuracy != 1) {
     comparisons <- interval_comparisons(accuracy_interval_df)
 
     plot <- ggplot(
       data = accuracy_interval_df,
-      mapping = aes(x = data_name, y = as.numeric(accuracy))
+      mapping = aes(x = upper_bound,
+                    y = as.numeric(accuracy),
+                    color = facotr(window_size))
     ) +
-      geom_bar(stat = "identity") +
-      geom_errorbar(aes(x = data_name, ymin = lower_ci, ymax = upper_ci),
+      geom_line(stat = "identity") +
+      geom_errorbar(aes(x = upper_bound, ymin = lower_ci, ymax = upper_ci),
         stat = "identity",
         width = 0.4
       ) +
       geom_signif(
         comparisons = comparisons, annotations = "*", margin_top = .1,
         step_increase = .35
-      ) + 
-    labs(
-      y = ylab,
-      x = xlab,
-      title = title
-    )
+      ) +
+      labs(
+        y = ylab,
+        x = xlab,
+        title = title
+        color = legend_title
+      )
   } else {
     plot <- NA
   }
@@ -115,4 +120,39 @@ interval_comparisons <- function(accuracy_interval_df) {
   }
 
   new_comparisons <- comparisons[sig]
+}
+
+
+# Archive old function
+
+plot_boot_accuracy_interval_old <- function(accuracy_interval_df,
+                                            xlab = "",
+                                            ylab = "",
+                                            title = "") {
+  uni_accuracy <- length(unique(accuracy_interval_df$accuracy))
+  if (uni_accuracy != 1) {
+    comparisons <- interval_comparisons(accuracy_interval_df)
+
+    plot <- ggplot(
+      data = accuracy_interval_df,
+      mapping = aes(x = data_name, y = as.numeric(accuracy))
+    ) +
+      geom_bar(stat = "identity") +
+      geom_errorbar(aes(x = data_name, ymin = lower_ci, ymax = upper_ci),
+        stat = "identity",
+        width = 0.4
+      ) +
+      geom_signif(
+        comparisons = comparisons, annotations = "*", margin_top = .1,
+        step_increase = .35
+      ) +
+      labs(
+        y = ylab,
+        x = xlab,
+        title = title
+      )
+  } else {
+    plot <- NA
+  }
+  plot
 }

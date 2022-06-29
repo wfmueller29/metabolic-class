@@ -24,6 +24,18 @@ name_interval <- function(interval_df) {
     interval_df
 }
 
+name_new_interval <- function(new_interval_df) {
+  splits <- str_split_fixed(new_interval_df$dataset,
+                            pattern = "\\[|,|\\]",
+                            n = Inf)
+  new_interval_df$upper_bound <- as.numeric(splits[,3])
+  new_interval_df$lower_bound <- as.numeric(splits[,2])
+  new_interval_df$window_size <- new_interval_df$upper_bound - 
+    new_interval_df$lower_bound
+
+  new_interval_df
+
+}
 
 name_threshold <- function(threshold_df) {
   splits <- str_split_fixed(threshold_df$dataset,
