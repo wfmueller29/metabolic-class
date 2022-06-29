@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sbatch --mem=20g \
+sbatch --mem=100g \
   --cpus-per-task=2 \
   -t 1-00:00:00 \
   -o log/figures-slurmo-%A_%a.out \
