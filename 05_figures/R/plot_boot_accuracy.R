@@ -22,7 +22,7 @@ plot_boot_accuracy_interval <- function(accuracy_interval_df,
       labs(
         y = ylab,
         x = xlab,
-        title = title
+        title = title,
         color = legend_title
       )
   } else {
