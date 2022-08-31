@@ -4,15 +4,47 @@
 plot_boot_accuracy_interval <- function(accuracy_interval_df,
                                         xlab = "",
                                         ylab = "",
-                                        title = "",
-                                        legend_title = "Window Size") {
+                                        title = "") {
   uni_accuracy <- length(unique(accuracy_interval_df$accuracy))
   if (uni_accuracy != 1) {
+    comparisons <- interval_comparisons(accuracy_interval_df)
+
     plot <- ggplot(
       data = accuracy_interval_df,
+      mapping = aes(x = data_name, y = as.numeric(accuracy))
+    ) +
+      geom_bar(stat = "identity") +
+      geom_errorbar(aes(x = data_name, ymin = lower_ci, ymax = upper_ci),
+        stat = "identity",
+        width = 0.4
+      ) +
+      geom_signif(
+        comparisons = comparisons, annotations = "*", margin_top = .1,
+        step_increase = .35
+      ) + 
+    labs(
+      y = ylab,
+      x = xlab,
+      title = title
+    )
+  } else {
+    plot <- NA
+  }
+  plot
+}
+
+plot_boot_accuracy_window <- function(accuracy_window_df,
+                                        xlab = "",
+                                        ylab = "",
+                                        title = "",
+                                        legend_title = "Window Size") {
+  uni_accuracy <- length(unique(accuracy_window_df$accuracy))
+  if (uni_accuracy != 1) {
+    plot <- ggplot(
+      data = accuracy_window_df,
       mapping = aes(x = upper_bound,
                     y = as.numeric(accuracy),
-                    color = facotr(window_size))
+                    color = factor(window_size))
     ) +
       geom_line(stat = "identity") +
       geom_errorbar(aes(x = upper_bound, ymin = lower_ci, ymax = upper_ci),
@@ -30,6 +62,7 @@ plot_boot_accuracy_interval <- function(accuracy_interval_df,
   }
   plot
 }
+
 plot_boot_accuracy_threshold <- function(accuracy_threshold_df,
                                          xlab = "",
                                          ylab = "",

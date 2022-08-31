@@ -5,7 +5,7 @@ subsets:
   - [sex: F, strain: HET3]
   - [sex: M, strain: B6]
   - [sex: F, strain: B6]
-intervals:
+windows:
   - [age_wk_ns: "[0, 25]"]
   - [age_wk_ns: "[10, 35]"]
   - [age_wk_ns: "[20, 45]"]
