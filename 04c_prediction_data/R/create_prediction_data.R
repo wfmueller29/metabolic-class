@@ -25,6 +25,16 @@ df_interval_list <- lapply(df_list,
 )
 # df_interval_list <- unlist_filter_list(df_interval_list)
 
+windows <- lapply(config$windows, unlist, use.names = TRUE)
+
+# Filter by time interval
+source("R/filter_interval.R")
+df_windows_list <- lapply(df_list,
+  filter_interval_loop,
+  intervals = windows
+)
+# df_interval_list <- unlist_filter_list(df_interval_list)
+
 ns <- lapply(config$samples, unlist, use.names = TRUE)
 
 # Filter by measurement sample
@@ -50,6 +60,7 @@ dfs_prediction <- list(
   main = df_list,
   subset = df_subset_list,
   interval = df_interval_list,
+  window = df_windows_list,
   threshold = df_threshold_list,
   sample = df_sample_list
 )
