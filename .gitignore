@@ -9,3 +9,4 @@
 .Ruserdata
 *.csv
 *.out
+*.DS*
