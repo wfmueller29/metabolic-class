@@ -25,14 +25,41 @@ plot_interval <- function(interval_df,
 
 plot_threshold <- function(threshold_df,
                            cols,
-                          title = "",
-                          ylab = "",
-                          xlab = "",
-                          subtitle = "") {
+                           title = "",
+                           ylab = "",
+                           xlab = "",
+                           subtitle = "") {
   threshold_df <- pivot_longer(threshold_df, cols = all_of(cols)) %>%
     filter(class == "all")
 
-  ggplot(data = threshold_df, mapping = aes(x = upper_bound, y = value)) +
+  ggplot(data = threshold_df, mapping = aes(
+    x = upper_bound, y = value,
+    color = factor(lower_bound)
+  )) +
+    geom_line(stat = "identity") +
+    geom_point() +
+    facet_wrap(name ~ ., ncol = 1) +
+    labs(
+      title = title,
+      y = ylab,
+      x = xlab,
+      subtitle = subtitle
+    )
+}
+
+plot_window <- function(window_df,
+                           cols,
+                           title = "",
+                           ylab = "",
+                           xlab = "",
+                           subtitle = "") {
+  window_df <- pivot_longer(window_df, cols = all_of(cols)) %>%
+    filter(class == "all")
+
+  ggplot(data = window_df, mapping = aes(
+    x = upper_bound, y = value,
+    color = factor(window_size)
+  )) +
     geom_line(stat = "identity") +
     geom_point() +
     facet_wrap(name ~ ., ncol = 1) +
@@ -46,10 +73,10 @@ plot_threshold <- function(threshold_df,
 
 plot_sample <- function(sample_df,
                         cols,
-                          title = "",
-                          ylab = "",
-                          xlab = "",
-                          subtitle = "") {
+                        title = "",
+                        ylab = "",
+                        xlab = "",
+                        subtitle = "") {
   sample_df <- pivot_longer(sample_df, cols = all_of(cols)) %>%
     filter(class == "all")
 

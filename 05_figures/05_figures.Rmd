@@ -30,6 +30,7 @@ knitr::opts_chunk$set(eval = TRUE)
 knitr::opts_chunk$set(include = TRUE)
 
 mega_pal <- rep(palette(), 40)
+
 ```
 
 ## Analysis
@@ -47,7 +48,9 @@ load_output <- function(file_name) {
 load_output("cf")
 load_output("df_list")
 load_output("final_models")
-load_output("models")
+# we comment out the bottom line because we do not want to load the multitude of 
+# models we made
+#load_output("models")
 load_output("config")
 
 
@@ -654,6 +657,11 @@ final_models$sample_results_df <- lapply(
   final_models$sample_results_df,
   name_sample
 )
+
+final_models$window_results_df <- lapply(
+  final_models$window_results_df,
+  name_new_interval
+)
 ```
 
 #### Plot Prediction Results
@@ -725,6 +733,27 @@ final_models$sample_plots <- lapply(
 )
 
 final_models$sample_plots
+ 
+final_models$window_plots <- lapply(
+  seq_along(final_models$window_results_df),
+  function(i) {
+    plot_window(final_models$window_results_df[[i]],
+      cols = c("Sensitivity", "Specificity", "PPV", "NPV"),
+      title = paste(final_models$data_name[[i]],
+        final_models$age_var_name[[i]],
+        sep = " "
+      ),
+      y = "Value",
+      x = paste(final_models$age_var_name[[i]],
+        final_models$age_var_units[[i]],
+        "window",
+        sep = " "
+      )
+    )
+  }
+)
+
+final_models$window_plots
 ```
 
 #### Plot Accuracy
@@ -792,6 +821,27 @@ final_models$sample_accuracy_plots <- lapply(
 )
 
 final_models$sample_accuracy_plots
+
+final_models$window_plots <- lapply(
+  seq_along(final_models$window_results_df),
+  function(i) {
+    plot_window(final_models$window_results_df[[i]],
+      cols = "Accuracy",
+      title = paste(final_models$data_name[[i]],
+        final_models$age_var_name[[i]],
+        sep = " "
+      ),
+      y = "Value",
+      x = paste(final_models$age_var_name[[i]],
+        final_models$age_var_units[[i]],
+        "window",
+        sep = " "
+      )
+    )
+  }
+)
+
+final_models$window_plots
 ```
 
 ### Compute Accuracy Again as Double Check and Bootstrap
@@ -833,6 +883,17 @@ final_models$sample_accuracy <- lapply(
     )
   }
 )
+
+final_models$window_accuracy <- lapply(
+  seq_len(nrow(final_models)),
+  function(i) {
+    boot_accuracy_list(
+      pred_df_list = final_models$window_results[[i]],
+      og_df = final_models$census[[i]],
+      subject = final_models$subject[[i]]
+    )
+  }
+)
 ```
 
 #### Combine bootstraped accuracy for each simulation type
@@ -847,6 +908,7 @@ x <- final_models
 x$interval_accuracy_df <- combine_boot_accuracy_list(x$interval_accuracy)
 x$threshold_accuracy_df <- combine_boot_accuracy_list(x$threshold_accuracy)
 x$sample_accuracy_df <- combine_boot_accuracy_list(x$sample_accuracy)
+x$window_accuracy_df <- combine_boot_accuracy_list(x$window_accuracy)
 final_models <- x
 ```
 
@@ -867,6 +929,11 @@ final_models$threshold_accuracy_df <- lapply(
 final_models$sample_accuracy_df <- lapply(
   final_models$sample_accuracy_df,
   name_sample
+)
+
+final_models$window_accuracy_df <- lapply(
+  final_models$window_accuracy_df,
+  name_new_interval
 )
 ```
 
@@ -889,6 +956,11 @@ final_models$threshold_accuracy_df <- lapply(
 
 final_models$sample_accuracy_df <- lapply(
   final_models$sample_accuracy_df,
+  extract_accuracy_ci
+)
+
+final_models$window_accuracy_df <- lapply(
+  final_models$window_accuracy_df,
   extract_accuracy_ci
 )
 ```
@@ -920,7 +992,7 @@ final_models$interval_boot_accuracy_plot
 final_models$window_boot_accuracy_plot <- lapply(
   seq_len(nrow(final_models)),
   function(i) {
-    plot_boot_accuracy_window(final_models$interval_accuracy_df[[i]],
+    plot_boot_accuracy_window(final_models$window_accuracy_df[[i]],
       xlab = "Age (weeks)",
       ylab = "Accuracy",
       title = paste(
@@ -987,6 +1059,11 @@ final_models <- final_models %>%
 
 final_models <- final_models %>%
   select(-interval, -subset, -threshold, -sample)
+
+final_models <- final_models %>%
+  filter(model_name == "bw_main|bw_age_wk" |
+           model_name == "fat_main|fat_age_wk" | 
+           model_name == "gluc_main|gluc_age_wk")
 ```
 
 #### Save 

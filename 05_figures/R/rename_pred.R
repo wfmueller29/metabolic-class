@@ -51,3 +51,18 @@ name_sample <- function(sample_df) {
   sample_df <- sample_df %>%
     mutate(sample_per_id = as.numeric(dataset))
 }
+
+name_window <- function(window_df) {
+  splits <- str_split_fixed(window_df$dataset,
+                            pattern = "\\[|,|\\]",
+                            n = Inf)
+  window_df$upper_bound <- as.numeric(splits[,3])
+  window_df$lower_bound <- as.numeric(splits[,2])
+
+  window_df
+}
+
+name_sample <- function(sample_df) {
+  sample_df <- sample_df %>%
+    mutate(sample_per_id = as.numeric(dataset))
+}
