@@ -1039,6 +1039,24 @@ final_models$sample_boot_accuracy_plot <- lapply(
 final_models$sample_boot_accuracy_plot
 ```
 
+### Output CSV with idno's and class
+
+```{r idnos and class}
+# we want to output class, idno, tag to a csv so that collaborators can easily
+# work with the data
+
+setwd(file.path("output", params$model_dir))
+dir.create("csv")
+setwd("csv")
+
+for(model in seq_len(nrow(final_models))) {
+  census <- final_models$census[[model]]
+  model_name <- final_models$model_name[[model]]
+  census <- census[, c("class", "idno", "tag", "sex", "strain", "cohort.y")]
+  file_name <- paste0(model_name, ".csv")
+  write.csv(census, file = file_name)
+}
+```
 
 ### Save R Objects
 
