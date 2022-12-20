@@ -12,3 +12,4 @@ nwg:
 ng_max: 10
 plan: 
 sample_n: 30
+test: TRUE

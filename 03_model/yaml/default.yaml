@@ -12,3 +12,4 @@ nwg:
 ng_max: 10
 plan: multisession
 sample_n: FALSE
+test: FALSE

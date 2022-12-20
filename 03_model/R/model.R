@@ -76,13 +76,13 @@ for (dataset in datasets) {
     subject = dataset$id,
     `$age_var` = dataset$age_var
   )
-# create mixed column
+  # create mixed column
   cf <- data.table::set(cf,
     i = NULL,
     j = "mixture",
     value = dataset$model$mixture
   )
-  
+
   cf_all <- rbind(cf_all, cf)
 }
 
@@ -147,6 +147,9 @@ for (dataset in datasets) {
   assign(x = dataset$data_id, value = dataset$data, envir = .GlobalEnv)
 }
 
+if (config$test) {
+  cf <- cf[1:10, ]
+}
 
 models <- pmap_cf(cf,
   helphlme::hlme2,
@@ -165,6 +168,12 @@ models <- pmap_cf(cf,
   seed = TRUE
 )
 
+# name datasets
+
+names(datasets) <- lapply(datasets, function(dataset) {
+  dataset$data_id
+})
+
 # -----save stuff -------------------------------------------------------------
 # Create output directory
 time <- format(Sys.time(), "%Y%m%d_%H%M%S")
@@ -176,14 +185,14 @@ if (config$tag_time) {
 out_path <- file.path("output", out_dir)
 
 # Create file paths
-df_list_path <- file.path(out_path, "df_list.RDATA")
+datasets_path <- file.path(out_path, "datasets.RDATA")
 models_path <- file.path(out_path, "models.RDATA")
 cf_path <- file.path(out_path, "cf.RDATA")
 config_path <- file.path(out_path, "config.RDATA")
 
 # save objects
 dir.create(out_path)
-save(df_list, file = df_list_path)
+save(datasets, file = datasets_path)
 save(models, file = models_path)
 save(cf, file = cf_path)
 save(config, file = config_path)
