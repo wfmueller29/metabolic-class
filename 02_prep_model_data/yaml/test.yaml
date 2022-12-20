@@ -41,7 +41,13 @@
     lower: 0
     upper: 50
     keep_before: FALSE
-  sample_n: FALSE
+  model:
+    fixed: "~ $age_var + $age_var2 + sex_F + strain_HET3" 
+    mixture: "~ $age_var + $age_var2" 
+    random: 
+      - "~ 1"
+      - "~ 1 + $age_var"
+      - "~ 1 + $age_var + $age_var2"
 - name: "slam"
   path: "../01_dataset/output/main_all2.RDATA"
   outcome: "gluc"
@@ -61,7 +67,13 @@
     lower: 0
     upper: 50
     keep_before: FALSE
-  sample_n: FALSE
+  model:
+    fixed: "~ $age_var + $age_var2 + sex_F + strain_HET3" 
+    mixture: "~ $age_var + $age_var2" 
+    random: 
+      - "~ 1"
+      - "~ 1 + $age_var"
+      - "~ 1 + $age_var + $age_var2"
 - name: "slam"
   path: "../01_dataset/output/main_all2.RDATA"
   outcome: "fat"
@@ -81,7 +93,13 @@
     lower: 0
     upper: 50
     keep_before: FALSE
-  sample_n: FALSE
+  model:
+    fixed: "~ $age_var + $age_var2 + sex_F + strain_HET3" 
+    mixture: "~ $age_var + $age_var2" 
+    random: 
+      - "~ 1"
+      - "~ 1 + $age_var"
+      - "~ 1 + $age_var + $age_var2"
 - name: "slam"
   path: "../01_dataset/output/main_all2.RDATA"
   outcome: "lean"
@@ -101,14 +119,20 @@
     lower: 0
     upper: 50
     keep_before: FALSE
-  sample_n: FALSE
+  model:
+    fixed: "~ $age_var + $age_var2 + sex_F + strain_HET3" 
+    mixture: "~ $age_var + $age_var2" 
+    random: 
+      - "~ 1"
+      - "~ 1 + $age_var"
+      - "~ 1 + $age_var + $age_var2"
 - name: "slam"
   path: "data/deltas_blood.csv"
   outcome: "delta"
   age_var: "age_wk"
   id: "ID"
   dummy: ["sex", "strain"]
-  numeric: ["delta", "ID", "lifespan",
+  numeric: ["delta", "lifespan",
     "natural_death", "tstart", "tstop", "status"]
   factor: ["cohort"]
   remove_velocity_outliers:
@@ -122,6 +146,12 @@
     lower: 0
     upper: 50
     keep_before: FALSE
-  sample_n: FALSE
+  model:
+    fixed: "~ $age_var + $age_var2 + sex_F + strain_HET3 + strain_DO" 
+    mixture: "~ $age_var + $age_var2" 
+    random: 
+      - "~ 1"
+      - "~ 1 + $age_var"
+      - "~ 1 + $age_var + $age_var2"
 
 

@@ -9,6 +9,7 @@ library(future)
 
 # load in data
 load("../02_prep_model_data/output/df_list.RDATA")
+load("../02_prep_model_data/output/datasets.RDATA")
 
 # take command line arguments for parameter file ------------------------------
 args <- commandArgs(trailingOnly = TRUE)
@@ -16,7 +17,7 @@ args <- commandArgs(trailingOnly = TRUE)
 if (length(args) == 0) {
   params <- list(
     default_yaml = "yaml/default.yaml",
-    config_yaml = "yaml/default.yaml"
+    config_yaml = "yaml/test.yaml"
   )
 } else {
   params <- list(
@@ -40,38 +41,52 @@ config <- default_yaml
 in_config <- names(default_yaml) %in% names(config_yaml)
 config[in_config] <- config_yaml
 
+# filter for each sex and strain
+source("R/filter_group.R")
+if (!is.null(config$filters)) {
+  datasets <- lapply(datasets, function(dataset) {
+    dataset$data <- filter_group(dataset$data, subsets = unlist(config$filters))
+    dataset
+  })
+}
+
 # sample df
 if (!is.null(config$sample_n)) {
   df_list <- lapply(df_list, sample_df, "idno", config$sample_n)
-}
-
-# filter for each sex and strain
-source("R/filter_group.R")
-if (!is.null(config$female)) {
-  df_list <- lapply(df_list, filter_group, subsets = c(female = config$female))
-}
-
-if (!is.null(config$het3)) {
-  df_list <- lapply(df_list, filter_group, subsets = c(het3 = config$het3))
+  datasets <- lapply(datasets, function(dataset) {
+    dataset$data <- sample_df(
+      df = dataset$data,
+      id = dataset$id,
+      n = config$sample_n
+    )
+    dataset
+  })
 }
 
 # create call frame -----------------------------------------------------------
-cf <- make_cf(
-  `data|oc` = config$data_oc,
-  fixed = config$fixed,
-  random = config$random,
-  idiag = config$idiag,
-  nwg = config$nwg,
-  ng = 1:config$ng_max,
-  subject = config$subject,
-  `$age_var` = config$age_var
-)
-
+cf_all <- data.frame()
+for (dataset in datasets) {
+  cf <- make_cf(
+    `data|oc` = paste0(dataset$data_id, "|", dataset$outcome),
+    fixed = dataset$model$fixed,
+    random = dataset$model$random,
+    idiag = config$idiag,
+    nwg = config$nwg,
+    ng = 1:config$ng_max,
+    subject = dataset$id,
+    `$age_var` = dataset$age_var
+  )
 # create mixed column
-cf <- data.table::set(cf,
-i = NULL,
-j = "mixture",
-value = config$mixture)
+  cf <- data.table::set(cf,
+    i = NULL,
+    j = "mixture",
+    value = dataset$model$mixture
+  )
+  
+  cf_all <- rbind(cf_all, cf)
+}
+
+cf <- cf_all
 
 get_dollar <- function(cf) {
   dollar <- grepl(".*\\$.*", x = names(cf))
@@ -125,10 +140,11 @@ if (!is.null(config$plan)) {
   plan("default")
 }
 
-# create object variables for data because they are in list and need to be 
+# create object variables for data because they are in list and need to be
 # in global env for pmap function
-for (name in names(df_list)) {
-  assign(x = name, value = df_list[[name]], envir = .GlobalEnv)
+
+for (dataset in datasets) {
+  assign(x = dataset$data_id, value = dataset$data, envir = .GlobalEnv)
 }
 
 

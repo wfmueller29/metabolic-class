@@ -1,28 +1,14 @@
-out_tag: test
+out_tag: all
 tag_time: TRUE
-female: 
-het3: 
-data_oc: 
-  - "bw_main|bw"
-  - "gluc_main|gluc"
-  - "fat_main|fat"
-  - "lean_main|lean"
-  - "bwperxbl30_main|bw_per_x_bl30"
-  - "bw_main_xvout|bw"
-  - "gluc_main_xvout|gluc"
-  - "fat_main_xvout|fat"
-  - "lean_main_xvout|lean"
-  - "bwperxbl30_main_xvout|bw_per_x_bl30"
-age_var: 
-  - "age_wk"
-  - "per_age_wk"
-fixed: "~ $age_var + $age_var2 + female + het3" 
-mixture: "~ $age_var + $age_var2" 
-random: 
-  - "~1"
-subject: idno
-idiag: FALSE
-nwg: FALSE
-ng_max: 3
-plan: 
-sample_n: 20
+filters:
+  sex_F: 0
+  strain_HET3: 0
+idiag:
+  - FALSE
+  - TRUE
+nwg:
+  - FALSE
+  - TRUE
+ng_max: 10
+plan: multisession
+sample_n: FALSE

@@ -1,16 +1,8 @@
-out_tag: fb6
+out_tag: fhet3
 tag_time: TRUE
-female: 1
-het3: 0 
-age_var: 
-  - "age_wk"
-fixed: "~ $age_var + $age_var2" 
-mixture: "~ $age_var + $age_var2" 
-random: 
-  - "~ 1"
-  - "~ 1 + $age_var"
-  - "~ 1 + $age_var + $age_var2"
-subject: idno
+filters:
+  sex_F: 1
+  strain_HET3: 1
 idiag:
   - FALSE
   - TRUE
@@ -18,5 +10,5 @@ nwg:
   - FALSE
   - TRUE
 ng_max: 10
-plan: multisession
-sample_n: 100
+plan: 
+sample_n: 30
