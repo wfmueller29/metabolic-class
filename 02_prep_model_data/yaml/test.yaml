@@ -41,6 +41,9 @@
     lower: 0
     upper: 50
     keep_before: FALSE
+  sample:
+    interval: 3
+    age_var: "age_wk"
   model:
     fixed: "~ $age_var + $age_var2 + sex_F + strain_HET3" 
     mixture: "~ $age_var + $age_var2" 

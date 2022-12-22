@@ -155,6 +155,9 @@ remove_velocity_datasets <- list()
 
 for (dataset in datasets) {
   original <- is.null(dataset$data_mod)
+  # we only want to remove velocity outliers from the original dataset because
+  # if we were to do this for already modified datasets we would produce a
+  # Medusa head of datasets that would complicate our analysis exponentially.
   if (dataset$remove_velocity_outliers$execute & original) {
     remove_velocity_dataset <- dataset
     remove_velocity_dataset$data <- remove_velocity_outliers(
@@ -189,6 +192,21 @@ for (i in seq_along(datasets)) {
     center = config$center,
     scale = config$scale
   )
+}
+
+# sample datasets based upon 3 month time interval ----------------------------
+
+source("R/source/sample_monthwise.R")
+
+for (i in seq_along(datasets)) {
+  if (!is.null(datasets[[i]]$sample)) {
+    datasets[[i]]$data <- sample_monthwise(
+      data = datasets[[i]]$data,
+      age_var = paste0(datasets[[i]]$sample$age_var, "_ns"),
+      interval = datasets[[i]]$sample$interval,
+      id = datasets[[i]]$id
+    )
+  }
 }
 
 # create data_id --------------------------------------------------------------
