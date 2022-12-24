@@ -49,6 +49,8 @@
     mixture: "~ $age_var + $age_var2" 
     random: 
       - "~ 1"
+      - "~ 1 + $age_var"
+      - "~ 1 + $age_var + $age_var2"
 - name: "slam"
   path: "../01_dataset/output/main_all2.RDATA"
   outcome: "gluc"
@@ -73,6 +75,8 @@
     mixture: "~ $age_var + $age_var2" 
     random: 
       - "~ 1"
+      - "~ 1 + $age_var"
+      - "~ 1 + $age_var + $age_var2"
 - name: "slam"
   path: "../01_dataset/output/main_all2.RDATA"
   outcome: "fat"
@@ -97,6 +101,8 @@
     mixture: "~ $age_var + $age_var2" 
     random: 
       - "~ 1"
+      - "~ 1 + $age_var"
+      - "~ 1 + $age_var + $age_var2"
 - name: "slam"
   path: "../01_dataset/output/main_all2.RDATA"
   outcome: "lean"
@@ -121,6 +127,8 @@
     mixture: "~ $age_var + $age_var2" 
     random: 
       - "~ 1"
+      - "~ 1 + $age_var"
+      - "~ 1 + $age_var + $age_var2"
 - name: "slam"
   path: "data/deltas_blood.csv"
   outcome: "delta"
@@ -146,5 +154,7 @@
     mixture: "~ $age_var + $age_var2" 
     random: 
       - "~ 1"
+      - "~ 1 + $age_var"
+      - "~ 1 + $age_var + $age_var2"
 
 
