@@ -6,7 +6,7 @@ output:
   html_document:
     df_print: paged
 params:
-  model_dir: "20220617_142335_test"
+  model_dir: "20230104_205536_fhet3_test"
 ---
 
 
@@ -53,11 +53,11 @@ rmarkdown::render(input = "04_model_select.Rmd",
 path <- normalizePath(file.path("..", "03_model", "output", params$model_dir))
 cf_path <- normalizePath(file.path(path, "cf.RDATA"))
 models_path <- normalizePath(file.path(path, "models.RDATA"))
-df_list_path <- normalizePath(file.path(path, "df_list.RDATA"))
+datasets_path <- normalizePath(file.path(path, "datasets.RDATA"))
 
 load(file = cf_path)
 load(file= models_path)
-load(file = df_list_path)
+load(file = datasets_path)
 
 ```
 
@@ -72,6 +72,7 @@ cf_nest <- cf %>% nest_by(`data|oc`, `$age_var`)
 
 ```{r step1 mo_eval output, include = TRUE, eval = params$eval_step1, fig.height=7, fig.width=12}
 for(i in seq_len(nrow(cf_nest))) {
+  cat("\n\n", cf_nest$`data|oc`[[i]], "\n\n")
   models <- cf_nest$data[[i]]$final_model
   mo_eval <- helphlme::compare_models(models)
   print(kable(mo_eval$table, caption = names(models)) %>% 
@@ -84,7 +85,10 @@ for(i in seq_len(nrow(cf_nest))) {
 for(i in seq_len(nrow(cf_nest))) {
   cf <- cf_nest$data[[i]]
   outcome <- cf$oc[[1]]
-  df <- df_list[[cf$data[[1]]]]
+  df <- datasets[[cf$data[[1]]]]$data
+  fixcov_names <- datasets[[cf$data[[1]]]]$model$fixcov
+  fixcov <- rep(0, length(fixcov_names))
+  names(fixcov) <- fixcov_names
   ylim <- c(min(df[[outcome]]), max(df[[outcome]]))
   data_oc <- cf_nest$`data|oc`[[i]]
   age_var <- cf_nest$`$age_var`[[i]]
@@ -93,10 +97,10 @@ for(i in seq_len(nrow(cf_nest))) {
                   "; Age Variable =", 
                   age_var, 
                   sep = " ")
-  cat("\n\n## ", header, "\n\n")
+  cat("\n\n#### ", header, "\n\n")
   pred <-  helphlme::create_pred_df(df = df,
            age_vars = paste(age_var, c("", "2"), sep = ""),
-           fixcov = c("female" = 0, "het3" = 0))
+           fixcov = fixcov)
   helphlme::display_classes(df = pred,
                                  cf$final_model,
                                  age_var,
@@ -118,15 +122,28 @@ for(i in seq_len(nrow(cf_nest))) {
   age_var <- cf_nest$`$age_var`[[i]]
   data_oc <- cf_nest$`data|oc`[[i]]
   cf <- cf_nest$data[[i]]
+  data_id <- cf$data[[1]]
   models <- cf$final_model
   mo_eval_table <- helphlme::compare_models(models)$table
   cf <- cbind(cf, mo_eval_table) %>%
     mutate(smallest_greater_5 = ifelse(`Smallest Class (%)` >= 5, 1, 0)) %>%
     arrange(-smallest_greater_5, eval(as.symbol("BIC")))
   final_model_df_row <- as.data.frame(cf)[1, ]
+  final_model_df_row$dummy <- list(datasets[[data_id]]$dummy)
+  final_model_df_row$fixcov <- list(datasets[[data_id]]$model$fixcov)
+  final_model_df_row$data_id <- datasets[[data_id]]$data_id
+  final_model_df_row$data_age_vars <- list(datasets[[data_id]]$age_var)
   final_model_df_row$age_var <- age_var
   final_model_df_row$data_oc <- data_oc
   final_model_df_row$model_name <- paste(data_oc, age_var, sep = "_")
+  
+  # we want to add labels as well from datasets
+  final_model_df_row$oc_name <- datasets[[data_id]]$labels$oc_name
+  final_model_df_row$oc_units <- datasets[[data_id]]$labels$oc_units
+  which_age_var <- which(datasets[[data_id]]$age_var %in% final_model_df_row$age_var) 
+  final_model_df_row$age_var_name <- datasets[[data_id]]$labels$age_var_name[[which_age_var]]
+  final_model_df_row$age_var_units <- datasets[[data_id]]$labels$age_var_units[[which_age_var]]
+  final_model_df_row$data_name <- datasets[[data_id]]$labels$data_name
   final_models <- rbind(final_models, final_model_df_row)
 }
 
