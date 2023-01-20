@@ -6,6 +6,11 @@ source("R/pred_table.R")
 boot_accuracy <- function(pred_df, og_df, subject) {
   new_df <- make_new_df(pred_df, og_df, subject)
 
+  if (nrow(new_df) == 0) {
+    cat("No overlap for prediction")
+    return(NA)
+  }
+
   bootobj <- boot::boot(data = new_df, statistic = function(data, indices) {
     data <- data[indices, ]
     tp <- sum(data$tp)

@@ -6,7 +6,8 @@ output:
   html_document:
     df_print: paged
 params:
-  model_dir: "20220618_104254_all"
+  model_dir: "20230104_205536_fhet3_test"
+  yaml: "yaml/default.yaml"
 ---
 
 ```{r setup, warning=FALSE, message=FALSE, echo=FALSE, eval = TRUE}
@@ -30,7 +31,6 @@ knitr::opts_chunk$set(eval = TRUE)
 knitr::opts_chunk$set(include = TRUE)
 
 mega_pal <- rep(palette(), 40)
-
 ```
 
 ## Analysis
@@ -38,7 +38,12 @@ mega_pal <- rep(palette(), 40)
 ### Load Models
 
 ```{r load models}
-path <- normalizePath(file.path("..", "04_model_select", "output", params$model_dir))
+path <- normalizePath(file.path(
+  "..",
+  "04_model_select",
+  "output",
+  params$model_dir
+))
 
 load_output <- function(file_name) {
   file_path <- normalizePath(file.path(path, paste0(file_name, ".RDATA")))
@@ -46,11 +51,11 @@ load_output <- function(file_name) {
 }
 
 load_output("cf")
-load_output("df_list")
+load_output("datasets")
 load_output("final_models")
-# we comment out the bottom line because we do not want to load the multitude of 
+# we comment out the bottom line because we do not want to load the multitude of
 # models we made
-#load_output("models")
+# load_output("models")
 load_output("config")
 
 
@@ -66,8 +71,14 @@ load(file = "../04b_healthcard_cod/output/dvr.RDATA")
 load(file = "../04c_prediction_data/output/dfs_prediction.RDATA")
 
 final_models$dfs <- lapply(final_models$data, function(name) {
-  df_list[[name]]
+  datasets[[name]]$data
 })
+```
+
+### Read Yaml
+```{r load yaml}
+
+yaml_models <- yaml::read_yaml(params$yaml)
 ```
 
 ```{r read in census}
@@ -206,7 +217,7 @@ make_census <- function(cf_row) {
   model <- unlist(cf_row$final_model, recursive = FALSE)
   class_df <- model$pprob
 
-  main <- df_list[[cf_row$data]]
+  main <- datasets[[cf_row$data]]$data
 
   # add class_df to main
   census <- main %>%
@@ -240,10 +251,16 @@ final_models$census <- lapply(seq_len(nrow(final_models)), function(i) {
 #### Tamper with census to create correct class numbering
 
 ```{r class numbering}
-mo_names <- c(
-  "bw_main|bw_age_wk",
-  "gluc_main|gluc_age_wk",
-  "fat_main|fat_age_wk"
+mo_names_age <- c(
+  "slam_bw_og|bw_age_wk",
+  "slam_gluc_og|gluc_age_wk",
+  "slam_fat_og|fat_age_wk"
+)
+
+mo_names_perle <- c(
+  "slam_bw_og|bw_per_age_wk",
+  "slam_gluc_og|gluc_per_age_wk",
+  "slam_fat_og|fat_per_age_wk"
 )
 
 reorder_class <- function(final_models, mo_names) {
@@ -269,7 +286,8 @@ reorder_class <- function(final_models, mo_names) {
   x
 }
 
-final_models <- reorder_class(final_models, mo_names)
+final_models <- reorder_class(final_models, mo_names_age)
+final_models <- reorder_class(final_models, mo_names_perle)
 look <- final_models[, c("model_name", "census")]
 ```
 
@@ -281,7 +299,7 @@ source("R/t1.R")
 ```{r create table 1}
 final_models$t1_raw <- lapply(1:length(final_models$census), function(i) {
   cat(i, "- ")
-  t1 <- t1(final_models$census[[i]], columns = c("sex", "strain"))
+  t1 <- t1(final_models$census[[i]], columns = final_models$dummy[[i]])
   cat("\n")
 
   t1
@@ -294,10 +312,13 @@ source("R/chi_test.R")
 ```
 
 ```{r chi squred test}
-chi_results <- lapply(final_models$census,
-  chi_test,
-  columns = c("sex", "strain")
-)
+chi_results <- lapply(1:length(final_models$census), function(i) {
+  cat(i, "- ")
+  chi <- chi_test(final_models$census[[i]], columns = final_models$dummy[[i]])
+  cat("\n")
+
+  chi
+})
 
 final_models$chi_df <- chi_results$dfs
 final_models$chi_test <- chi_results$tests
@@ -309,10 +330,14 @@ source("R/clean_t1.R")
 ```
 
 ```{r clean t1}
-final_models$clean_t1 <- lapply(final_models$census,
-  clean_t1,
-  columns = c("sex", "strain")
-)
+final_models$clean_t1 <- lapply(1:length(final_models$census), function(i) {
+  cat(i, "- ")
+  clean_t1 <- clean_t1(final_models$census[[i]],
+                       columns = final_models$dummy[[i]])
+  cat("\n")
+
+  clean_t1
+})
 ```
 
 ### Surival Analysis 
@@ -327,6 +352,7 @@ final_models$census <- lapply(final_models$census, function(df) {
     mutate(Class = new_class)
   df
 })
+
 final_models$kap_plot <- lapply(1:nrow(final_models), function(i) {
   kap_plot <- kap_plot_all(final_models$census[[i]],
     var = "Class",
@@ -357,7 +383,7 @@ final_models$cox_models <- lapply(seq_len(nrow(x)), function(i) {
   model_cox(
     census = x$census[[i]],
     var = "Class",
-    covariates = c("female", "het3"),
+    covariates = c("sex", "strain"),
     age_death = "age_wk_death",
     censor = "dead_nat"
   )
@@ -371,17 +397,11 @@ source("R/traj_plot.R")
 ```
 
 ```{r fixed effects}
-if (is.null(config$female) & is.null(config$het3)) {
-  fixcov <- c(female = 0, het3 = 0)
-} else if (is.null(config$female)) {
-  fixcov <- c(het3 = 0)
-} else if (is.null(config$het3)) {
-  fixcov <- c(female = 0)
-} else {
-  fixcov <- NULL
-}
 
 final_models$traj_pred <- lapply(1:nrow(final_models), function(i) {
+  fixcov_names <- final_models$fixcov[[i]]
+  fixcov <- rep(0, length(final_models$fixcov[[i]]))
+  names(fixcov) <- fixcov_names
   traj_plot(
     df = final_models$dfs[[i]],
     mo = final_models$final_model[[i]],
@@ -455,19 +475,16 @@ source("R/plot_other.R")
 ```
 
 ```{r other metabolic outcomes}
-final_models$plot_gluc <- plot_other_apply(
-  final_models,
-  "gluc_main|gluc_age_wk"
-)
-final_models$plot_bw <- plot_other_apply(
-  final_models,
-  "bw_main|bw_age_wk"
-)
-final_models$plot_fat <- plot_other_apply(
-  final_models,
-  "fat_main|fat_age_wk"
-)
-lapply(final_models$plot_gluc, print)
+
+for (model in names(yaml_models$models)) {
+  col_name <- paste0("plot_", model)
+  a <- plot_other_apply(
+    final_models,
+    yaml_models$models[[model]]
+  )
+  final_models[[col_name]] <- a
+}
+
 ```
 
 ### Fit other metabolic outcomes with LME
@@ -484,23 +501,18 @@ source("R/model_other.R")
 
 ```{r mixed effects}
 
-final_models$model_bw <- model_other_apply(final_models,
-  "bw_main|bw_age_wk",
-  fixcovs = c("female", "het3"),
-  class = "new_class"
-)
-
-final_models$model_gluc <- model_other_apply(final_models,
-  "gluc_main|gluc_age_wk",
-  fixcovs = c("female", "het3"),
-  class = "new_class"
-)
-
-final_models$model_fat <- model_other_apply(final_models,
-  "fat_main|fat_age_wk",
-  fixcovs = c("female", "het3"),
-  class = "new_class"
-)
+for (model in names(yaml_models$models)) {
+  col_name <- paste0("model_", model)
+  model_name <- yaml_models$models[[model]]
+  fixcovs <- final_models[final_models$model_name == model_name, ]$fixcov[[1]]
+  a <- model_other_apply(
+    final_models,
+    model_name,
+    fixcovs = fixcovs,
+    class = "new_class"
+  )
+  final_models[[col_name]] <- a
+}
 ```
 
 ### Create Spaghettie Plots
@@ -550,13 +562,14 @@ prediction_columns <- names(dfs_prediction)[-1]
 prediction_results_names <- paste(prediction_columns, "results", sep = "_")
 
 prediction_results <- lapply(prediction_columns, function(col) {
+  print(col)
   predict_class_model_list(
     nested_newdata_list = final_models[[col]],
     model_list = final_models$final_model,
-    vars = c("age_wk", "age_wk2", "per_age_wk", "per_age_wk2"),
+    vars_list = final_models$data_age_vars,
     center = TRUE,
     scale = FALSE,
-    ref_data = final_models$dfs,
+    ref_data_list = final_models$dfs,
     names = final_models$model_name
   )
 })
@@ -733,7 +746,7 @@ final_models$sample_plots <- lapply(
 )
 
 final_models$sample_plots
- 
+
 final_models$window_plots <- lapply(
   seq_along(final_models$window_results_df),
   function(i) {
@@ -1049,7 +1062,7 @@ setwd(file.path("output", params$model_dir))
 dir.create("csv")
 setwd("csv")
 
-for(model in seq_len(nrow(final_models))) {
+for (model in seq_len(nrow(final_models))) {
   census <- final_models$census[[model]]
   model_name <- final_models$model_name[[model]]
   census <- census[, c("class", "idno", "tag", "sex", "strain", "cohort.y")]
@@ -1064,24 +1077,32 @@ for(model in seq_len(nrow(final_models))) {
 
 ```{r prune}
 final_models <- final_models %>%
-  select(-c(interval_accuracy_plots,
-            threshold_accuracy_plots,
-            sample_accuracy_plots),
-         -c(ends_with("results_table"),
-            ends_with("accuracy")),
-         -c(final_model))
+  select(
+    -c(
+      interval_accuracy_plots,
+      threshold_accuracy_plots,
+      sample_accuracy_plots
+    ),
+    -c(
+      ends_with("results_table"),
+      ends_with("accuracy")
+    ),
+    -c(final_model)
+  )
 
 final_models <- final_models %>%
-  select(-c(ends_with("_df"),
-            ends_with("_results")))
+  select(-c(
+    ends_with("_df"),
+    ends_with("_results")
+  ))
 
 final_models <- final_models %>%
   select(-interval, -subset, -threshold, -sample)
 
 final_models <- final_models %>%
   filter(model_name == "bw_main|bw_age_wk" |
-           model_name == "fat_main|fat_age_wk" | 
-           model_name == "gluc_main|gluc_age_wk")
+    model_name == "fat_main|fat_age_wk" |
+    model_name == "gluc_main|gluc_age_wk")
 ```
 
 #### Save 

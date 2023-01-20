@@ -11,6 +11,14 @@ model_other <- function(census,
                         class,
                         subject) {
   new_df <- create_other_plot_df(census, other_df)
+  
+  if (length(new_df$idno) == 0 ) {
+    return("No overlapping subjects")
+  }
+  
+  if (length(unique(new_df$idno)) < 2) {
+    return("Need more than one subject to model")
+  }
 
   # Keep fixcov if there are more than one value for the factor
   keep_fixcovs <- lapply(fixcovs, function(fixcov) {
@@ -76,6 +84,7 @@ model_other_apply <- function(final_models, model_name, fixcovs, class) {
       class = class,
       subject = x$subject[[i]]
     )
+    print(i)
   })
   models
   

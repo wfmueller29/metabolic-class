@@ -4,7 +4,11 @@
 
 
 extract_accuracy_ci <- function(accuracy_df) {
-  data <- accuracy_df
+  data <- accuracy_df 
+  
+  # filter out NA in boot_accuracy
+  data <- data[!is.na(data$boot_accuracy), ]
+
   data$accuracy <- lapply(data$boot_accuracy, function(boot) {
     boot$t0
   })

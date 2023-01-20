@@ -65,16 +65,17 @@ predict_class_newdata_list <- function(newdata_list,
 
 predict_class_model_list <- function(nested_newdata_list,
                                      model_list,
-                                     vars,
+                                     vars_list,
                                      center,
                                      scale,
                                      ref_data_list,
                                      names = NULL) {
   pred_result <- lapply(seq_along(model_list), function(i) {
+                          print(i)
     predict_class_newdata_list(
       newdata_list = nested_newdata_list[[i]],
       model = model_list[[i]],
-      vars = vars,
+      vars = vars_list[[i]],
       center = center,
       scale = scale,
       ref_data = ref_data_list[[i]]

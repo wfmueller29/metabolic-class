@@ -5,7 +5,16 @@ plot_boot_accuracy_interval <- function(accuracy_interval_df,
                                         xlab = "",
                                         ylab = "",
                                         title = "") {
+  # if accuracy is constant we do no want to plot. This covers case where all 
+  # predictions are completely accurate
   uni_accuracy <- length(unique(accuracy_interval_df$accuracy))
+
+  # if there are some NA's we want to remove those for the sake of running
+  # without errors
+  data <- accuracy_interval_df
+  data <- data[!is.na(data$ci), ]
+  accuracy_interval_df <- data
+
   if (uni_accuracy != 1) {
     comparisons <- interval_comparisons(accuracy_interval_df)
 

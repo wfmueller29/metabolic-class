@@ -1,0 +1,7 @@
+models:
+  bw_age: "slam_bw_og|bw_age_wk"
+  gluc_age: "slam_gluc_og|gluc_age_wk"
+  fat_age: "slam_fat_og|fat_age_wk" 
+  bw_perle: "slam_bw_og|bw_per_age_wk"
+  gluc_perle: "slam_gluc_og|gluc_per_age_wk"
+  fat_perle: "slam_fat_og|fat_per_age_wk" 
