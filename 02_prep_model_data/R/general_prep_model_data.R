@@ -89,7 +89,7 @@ convert_age <- function(dataset) {
   age_cols2 <- paste0(age_cols, "2")
 
   dataset$data[, age_cols2] <- lapply(age_cols, function(col) {
-    col2 <- dataset$data[, col] * dataset$data[, col]
+    dataset$data[, col] * dataset$data[, col]
   })
 
   dataset
@@ -111,8 +111,24 @@ filter_na <- function(dataset) {
 
 datasets <- lapply(datasets, filter_na)
 
-# calculate percent change from baseline --------------------------------------
+# generate idno if ID column not coercible to numeric -------------------------
 
+for (i in seq_along(datasets)) {
+  if (!is.null(datasets[[i]]$generate_idno)) {
+    if (datasets[[i]]$generate_idno) {
+      id <- datasets[[i]]$id
+      data <- datasets[[i]]$data
+      census <- unique(data[, id])
+      census <- as.data.frame(census)
+      names(census) <- id
+      census$idno <- seq_along(census[, 1])
+      data <- merge(data, census, by = id)
+      datasets[[i]]$data <- data
+      datasets[[i]]$id <- "idno"
+    }
+  }
+}
+# calculate percent change from baseline --------------------------------------
 
 source("R/source/percent_change_baseline.R")
 
@@ -137,6 +153,20 @@ for (dataset in datasets) {
     )
 
     percent_change_dataset$data_mod <- "percent_change_calculated"
+
+    percent_change_dataset$labels$data_name <- paste(
+      percent_change_dataset$labels$data_name,
+      "% Change",
+      sep = " "
+    )
+
+    percent_change_dataset$labels$oc_name <- paste(
+      percent_change_dataset$labels$oc_name,
+      "% Change",
+      sep = " "
+    )
+
+    percent_change_dataset$labels$oc_units <- "(%)"
 
     percent_change_datasets <- c(
       percent_change_datasets,
@@ -173,6 +203,13 @@ for (dataset in datasets) {
       "velocity_outliers_removed"
     )
 
+    remove_velocity_dataset$labels$data_name <- paste(
+      remove_velocity_dataset$labels$data_name,
+      "Velocity Outliers Removed",
+      sep = " "
+    )
+
+
     remove_velocity_datasets <- c(
       remove_velocity_datasets,
       list(remove_velocity_dataset)
@@ -181,6 +218,51 @@ for (dataset in datasets) {
 }
 
 datasets <- c(datasets, remove_velocity_datasets)
+
+# -----------------------------------------------------------------------------
+# down sample age at to see how classes separate with limited data late in life
+# we will only down sample the original dataset
+
+source("R/source/filter_interval.R")
+
+sample_age_interval_datasets <- list()
+for (dataset in datasets) {
+  original <- is.null(dataset$data_mod)
+  intervals <- lapply(dataset$sample_age_interval$intervals,
+    unlist,
+    use.names = TRUE
+  )
+
+  if (dataset$sample_age_interval$execute & original) {
+    sampled_data <- filter_interval_loop(
+      dataset$data,
+      intervals
+    )
+
+
+    new_datasets <- list()
+    interval <- intervals[[1]] # delete
+    for (interval in intervals) {
+      new_datasets[[interval]] <- dataset
+      new_datasets[[interval]]$data_mod <- paste("sample",
+        names(interval),
+        interval,
+        sep = "_"
+      )
+      new_datasets[[interval]]$labels$data_name <- paste(
+        new_datasets[[interval]]$labels$data_name,
+        "Sample",
+        names(interval),
+        interval,
+        sep = " "
+      )
+    }
+  }
+}
+
+
+
+# use prep_hlme to center and scale the data ----------------------------------
 
 for (i in seq_along(datasets)) {
   age_vars <- datasets[[i]]$age_var
