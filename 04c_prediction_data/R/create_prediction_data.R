@@ -6,9 +6,17 @@ library(tidyverse)
 
 config <- yaml::read_yaml("yaml/default.yaml")
 
-load("../02_prep_model_data/output/df_list.RDATA")
+load("../02_prep_model_data/output/datasets.RDATA")
 
 subsets <- lapply(config$subsets, unlist, use.names = TRUE)
+
+df_list <- list()
+
+for (i in seq_along(datasets)) {
+  dataset <- datasets[[i]]
+  df_list[[i]] <- data.frame(dataset$data)
+  names(df_list)[[i]] <- dataset$data_id
+}
 
 # Filter by sex and strain
 source("R/filter_group.R")
