@@ -1,0 +1,139 @@
+- name: "slam"
+  path: "../01_dataset/output/main_all2.RDATA"
+  outcome: "bw"
+  age_var: ["age_wk", "per_age_wk"]
+  id: "idno"
+  dummy: ["sex", "strain"]
+  numeric: ["bw", "idno", "le_wk"]
+  factor: ["cohort"]
+  sample:
+    interval: 3
+    age_var: "age_wk"
+  sample_age_interval:
+    execute: TRUE
+    intervals:
+      - [age_wk: "[0, 57.50]"]
+      - [age_wk: "[0, 86.25]"]
+      - [age_wk: "[0, 103.50]"]
+  model:
+    fixed: "~ $age_var + $age_var2 + sex_F + strain_HET3" 
+    fixcov: ["sex_F", "strain_HET3"]
+    mixture: "~ $age_var + $age_var2" 
+    random: 
+      - "~ 1"
+      - "~ 1 + $age_var"
+      - "~ 1 + $age_var + $age_var2"
+  labels:
+    oc_name: "Body Weight"
+    oc_units: "(g)"
+    age_var_name: ["Age", "Relative Age"]
+    age_var_units: ["(weeks)", "(%)"]
+    data_name: "SLAM Body Weight"
+- name: "slam"
+  path: "../01_dataset/output/main_all2.RDATA"
+  outcome: "gluc"
+  age_var: ["age_wk", "per_age_wk"]
+  id: "idno"
+  dummy: ["sex", "strain"]
+  numeric: ["gluc", "idno", "le_wk"]
+  factor: ["cohort"]
+  sample_age_interval:
+    execute: TRUE
+    intervals:
+      - [age_wk: "[0, 57.50]"]
+      - [age_wk: "[0, 86.25]"]
+      - [age_wk: "[0, 103.50]"]
+  model:
+    fixed: "~ $age_var + $age_var2 + sex_F + strain_HET3" 
+    fixcov: ["sex_F", "strain_HET3"]
+    mixture: "~ $age_var + $age_var2" 
+    random: 
+      - "~ 1"
+  labels:
+    oc_name: "Glucose"
+    oc_units: "(mg/dL)"
+    age_var_name: ["Age", "Relative Age"]
+    age_var_units: ["(weeks)", "(%)"]
+    data_name: "SLAM Glucose"
+- name: "slam"
+  path: "../01_dataset/output/main_all2.RDATA"
+  outcome: "fat"
+  age_var: ["age_wk", "per_age_wk"]
+  id: "idno"
+  dummy: ["sex", "strain"]
+  numeric: ["fat", "idno", "le_wk"]
+  factor: ["cohort"]
+  sample_age_interval:
+    execute: TRUE
+    intervals:
+      - [age_wk: "[0, 57.50]"]
+      - [age_wk: "[0, 86.25]"]
+      - [age_wk: "[0, 103.50]"]
+  model:
+    fixed: "~ $age_var + $age_var2 + sex_F + strain_HET3" 
+    fixcov: ["sex_F", "strain_HET3"]
+    mixture: "~ $age_var + $age_var2" 
+    random: 
+      - "~ 1"
+  labels:
+    oc_name: "Body Fat"
+    oc_units: "(g)"
+    age_var_name: ["Age", "Relative Age"]
+    age_var_units: ["(weeks)", "(%)"]
+    data_name: "SLAM Body Fat"
+- name: "slam"
+  path: "../01_dataset/output/main_all2.RDATA"
+  outcome: "lean"
+  age_var: ["age_wk", "per_age_wk"]
+  id: "idno"
+  dummy: ["sex", "strain"]
+  numeric: ["lean", "idno", "le_wk"]
+  factor: ["cohort"]
+  sample_age_interval:
+    execute: TRUE
+    intervals:
+      - [age_wk: "[0, 57.50]"]
+      - [age_wk: "[0, 86.25]"]
+      - [age_wk: "[0, 103.50]"]
+  model:
+    fixed: "~ $age_var + $age_var2 + sex_F + strain_HET3" 
+    fixcov: ["sex_F", "strain_HET3"]
+    mixture: "~ $age_var + $age_var2" 
+    random: 
+      - "~ 1"
+  labels:
+    oc_name: "Lean Mass"
+    oc_units: "(g)"
+    age_var_name: ["Age", "Relative Age"]
+    age_var_units: ["(weeks)", "(%)"]
+    data_name: "SLAM Lean Mass"
+- name: "slam"
+  path: "data/deltas_blood.csv"
+  outcome: "delta"
+  age_var: "age_wk"
+  id: "ID"
+  generate_idno: TRUE
+  dummy: ["sex", "strain"]
+  numeric: ["delta", "lifespan",
+    "natural_death", "tstart", "tstop", "status"]
+  factor: ["cohort"]
+  sample_age_interval:
+    execute: TRUE
+    intervals:
+      - [age_wk: "[0, 57.50]"]
+      - [age_wk: "[0, 86.25]"]
+      - [age_wk: "[0, 103.50]"]
+  model:
+    fixed: "~ $age_var + $age_var2 + sex_F + strain_HET3 + strain_DO" 
+    fixcov: ["sex_F", "strain_HET3", "strain_DO"]
+    mixture: "~ $age_var + $age_var2" 
+    random: 
+      - "~ 1"
+  labels:
+    oc_name: "Blood Delta"
+    oc_units: " "
+    age_var_name: ["Age", "Relative Age"]
+    age_var_units: ["(weeks)", "(%)"]
+    data_name: "SLAM Blood Delta"
+
+

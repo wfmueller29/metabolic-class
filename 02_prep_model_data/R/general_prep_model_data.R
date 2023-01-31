@@ -11,7 +11,13 @@ library(helphlme)
 config <- yaml::read_yaml("yaml/default.yaml")
 
 # load in data using file path ------------------------------------------------
-datasets <- yaml::read_yaml("yaml/test.yaml")
+args <- commandArgs(trailingOnly = TRUE)
+
+if (length(args) == 0) {
+  datasets <- yaml::read_yaml("yaml/test.yaml")
+} else {
+  datasets <- yaml::read_yaml(ars[[1]])
+}
 
 get_extension <- function(datasets) {
   datasets <- lapply(datasets, function(dataset) {
