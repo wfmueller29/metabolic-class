@@ -155,8 +155,10 @@ output_path <- normalizePath(file.path("output", params$model_dir))
 R.utils::copyDirectory(from = path, output_path)
 
 final_model_path <- file.path(output_path, "final_models.RDATA")
+datasets_path <- file.path(output_path, "datasets.RDATA")
 
 save(final_models, file = final_model_path)
+save(datasets, file = datasets_path)
 
 ```
 
