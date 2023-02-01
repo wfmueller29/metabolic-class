@@ -385,6 +385,7 @@ for (i in seq_along(datasets)) {
   )
 
   datasets[[i]]$data_id <- data_id
+  names(datasets)[[i]] <- data_id
 }
 
 # save datasets as R object list, individual R objects, and csv's -------------
