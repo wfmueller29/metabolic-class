@@ -44,6 +44,11 @@
   sample:
     interval: 3
     age_var: "age_wk"
+  train_test:
+    execute: TRUE
+    id: "idno"
+    sample_by: ["sex", "strain"]
+    split: .8
   sample_age_interval:
     execute: TRUE
     intervals:

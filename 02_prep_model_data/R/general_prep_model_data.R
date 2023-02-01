@@ -6,6 +6,7 @@
 
 library(tidyverse)
 library(helphlme)
+library(rsample)
 
 # load in config
 config <- yaml::read_yaml("yaml/default.yaml")
@@ -134,6 +135,8 @@ for (i in seq_along(datasets)) {
     }
   }
 }
+
+
 # calculate percent change from baseline --------------------------------------
 
 source("R/source/percent_change_baseline.R")
@@ -225,6 +228,53 @@ for (dataset in datasets) {
 
 datasets <- c(datasets, remove_velocity_datasets)
 
+# training testing split ------------------------------------------------------
+
+train_test_datasets <- list()
+
+for (dataset in datasets) {
+  
+  # check if train_test is part of dataset commands
+  if (!is.null(dataset$train_test)) {
+    # if it is check if the dataset is the originally loaded dataset
+    original <- is.null(dataset$data_mod)
+    # to ensure that we want to excute train test split 
+    if (dataset$train_test$execute & original) {
+      
+      # first we need to make one categorical variable that encompasses all 
+      # groups
+      cat_vars <- dataset$train_test$sample_by
+      data <- dataset$data
+      new_name <- paste(cat_vars, collapse = "-")
+      new_col <- apply( data[ , cat_vars ] , 1 , paste , collapse = "-" )
+      data[, new_name] <- new_col
+      dataset$data <- data
+      
+      # now we need to create a split determined by the split variable in the
+      # yaml file. This will split so that we have representative proportions
+      # of the original dataset in the initial split. 
+      split_data <- rsample::initial_split(
+        data = dataset$data,
+        prop = dataset$train_test$split,
+        strata = new_name,
+        group = dataset$train_test$id
+      )
+      
+      train_data <- rsample::training(split_data)
+      test_data <- rsample::testing(split_data)
+      
+      dataset$data <- train_data
+      dataset$test_data <- test_data
+      
+      dataset$data_mod <- "train_test" 
+
+      train_test_datasets <- c(train_test_datasets, list(dataset))
+    }
+  } 
+}
+
+datasets <- c(datasets, train_test_datasets)
+
 # -----------------------------------------------------------------------------
 # down sample age at to see how classes separate with limited data late in life
 # we will only down sample the original dataset
@@ -233,40 +283,58 @@ source("R/source/filter_interval.R")
 
 sample_age_interval_datasets <- list()
 for (dataset in datasets) {
-  original <- is.null(dataset$data_mod)
-  intervals <- lapply(dataset$sample_age_interval$intervals,
-    unlist,
-    use.names = TRUE
-  )
-
-  if (dataset$sample_age_interval$execute & original) {
-    sampled_data <- filter_interval_loop(
-      dataset$data,
-      intervals
+  
+  # to check if there are any commands about sampling age intervals
+  if (!is.null(dataset$sample_age_interval)) {
+    
+    # to check if the dataset is an original, if not we are not sample age
+    original <- is.null(dataset$data_mod)
+  
+    # get the intervals we want to sample
+    intervals <- lapply(dataset$sample_age_interval$intervals,
+      unlist,
+      use.names = TRUE
     )
-
-
-    new_datasets <- list()
-    interval <- intervals[[1]] # delete
-    for (interval in intervals) {
-      new_datasets[[interval]] <- dataset
-      new_datasets[[interval]]$data_mod <- paste("sample",
-        names(interval),
-        interval,
-        sep = "_"
+    
+    # check if we want to execute info in the sample_age_interval
+    # also check if the datsaet is an original
+    if (dataset$sample_age_interval$execute & original) {
+      sampled_data <- filter_interval_loop(
+        dataset$data,
+        intervals
       )
-      new_datasets[[interval]]$labels$data_name <- paste(
-        new_datasets[[interval]]$labels$data_name,
-        "Sample",
-        names(interval),
-        interval,
-        sep = " "
-      )
+  
+  
+      new_datasets <- list()
+      for (interval in intervals) {
+        new_datasets[[interval]] <- dataset
+        new_datasets[[interval]]$data_mod <- paste("sample",
+          names(interval),
+          interval,
+          sep = "_"
+        )
+        new_datasets[[interval]]$labels$data_name <- paste(
+          new_datasets[[interval]]$labels$data_name,
+          "Sample",
+          names(interval),
+          interval,
+          sep = " "
+        )
+        
+        new_datasets[[interval]]$data <- sampled_data[[interval]]
+      }
+      
+      new_datasets <- unname(new_datasets)
+      
+      sample_age_interval_datasets <- c(sample_age_interval_datasets,
+                                        new_datasets)
     }
+    
   }
+
 }
 
-
+datasets <- c(datasets, sample_age_interval_datasets)
 
 # use prep_hlme to center and scale the data ----------------------------------
 
