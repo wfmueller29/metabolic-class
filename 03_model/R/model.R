@@ -149,10 +149,6 @@ for (dataset in datasets) {
   assign(x = dataset$data_id, value = dataset$data, envir = .GlobalEnv)
 }
 
-if (config$test) {
-  cf <- cf[1:10, ]
-}
-
 models <- pmap_cf(cf,
   helphlme::hlme2,
   type = c(
