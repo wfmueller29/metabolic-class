@@ -5,4 +5,4 @@ sbatch --mem=100g \
   -t 1-00:00:00 \
   -o log/display_figures-slurmo-%A_%a.out \
   -e log/display_figures-slurme-%A_%a.out \
-  --mail-type=END bash/run_display_figures.sh
+  --mail-type=END bash/06_run_display_figures.sh

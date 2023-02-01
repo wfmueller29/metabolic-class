@@ -5,4 +5,4 @@ sbatch --mem=20g \
   -t 1-00:00:00 \
   -o log/prep_data-slurmo-%A_%a.out \
   -e log/prep_data-slurme-%A_%a.out \
-  --mail-type=END bash/run_prep_data.sh
+  --mail-type=END bash/02_run_prep_data.sh

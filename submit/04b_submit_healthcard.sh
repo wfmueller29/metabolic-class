@@ -5,4 +5,4 @@ sbatch --mem=20g \
   -t 1-00:00:00 \
   -o log/healthcard-slurmo-%A_%a.out \
   -e log/healthcard-slurme-%A_%a.out \
-  --mail-type=END bash/run_healthcard.sh
+  --mail-type=END bash/04b_run_healthcard.sh

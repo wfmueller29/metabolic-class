@@ -5,4 +5,4 @@ sbatch --mem=20g \
   -t 1-00:00:00 \
   -o log/predict_data-slurmo-%A_%a.out \
   -e log/predict_data-slurme-%A_%a.out \
-  --mail-type=END bash/run_predict_data.sh
+  --mail-type=END bash/04c_run_predict_data.sh

@@ -8,4 +8,4 @@ sbatch --mem=25g \
   -o log/models-slurmo-%A_%a.out \
   -e log/models-slurme-%A_%a.out \
   --export=CONFIG=$CONFIG \
-  --mail-type=END bash/run_models.sh
+  --mail-type=END bash/03_run_models.sh
