@@ -42,7 +42,9 @@ in_config <- names(default_yaml) %in% names(config_yaml)
 config[in_config] <- config_yaml
 
 # filter for each sex and strain
-source("R/filter_group.R")
+source("R/source/filter_utils.R")
+source("R/source/filter_group.R")
+
 if (!is.null(config$filters)) {
   datasets <- lapply(datasets, function(dataset) {
     dataset$data <- filter_group(dataset$data, subsets = unlist(config$filters))
