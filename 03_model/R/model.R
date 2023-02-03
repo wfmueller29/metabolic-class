@@ -72,9 +72,9 @@ for (dataset in datasets) {
     `data|oc` = paste0(dataset$data_id, "|", dataset$outcome),
     fixed = dataset$model$fixed,
     random = dataset$model$random,
-    idiag = config$idiag,
-    nwg = config$nwg,
-    ng = 1:config$ng_max,
+    idiag = dataset$model$idiag,
+    nwg = dataset$model$nwg,
+    ng = 1:dataset$model$ng_max,
     subject = dataset$id,
     `$age_var` = dataset$age_var
   )

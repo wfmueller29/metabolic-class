@@ -431,6 +431,11 @@ for (i in seq_along(datasets)) {
     sep = "_"
   )
 
+  if (!is.null(datasets[[i]]$data_subset)) {
+    data_subset_name <- paste(datasets[[i]]$data_subset, collapse = "_")
+    data_id <- paste(data_id, data_subset_name, sep  = "_")
+  }
+
   datasets[[i]]$data_id <- data_id
   names(datasets)[[i]] <- data_id
 }
