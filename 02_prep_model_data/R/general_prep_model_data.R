@@ -233,44 +233,44 @@ datasets <- c(datasets, remove_velocity_datasets)
 train_test_datasets <- list()
 
 for (dataset in datasets) {
-  
+
   # check if train_test is part of dataset commands
   if (!is.null(dataset$train_test)) {
     # if it is check if the dataset is the originally loaded dataset
     original <- is.null(dataset$data_mod)
-    # to ensure that we want to excute train test split 
+    # to ensure that we want to excute train test split
     if (dataset$train_test$execute & original) {
-      
-      # first we need to make one categorical variable that encompasses all 
+
+      # first we need to make one categorical variable that encompasses all
       # groups
       cat_vars <- dataset$train_test$sample_by
       data <- dataset$data
       new_name <- paste(cat_vars, collapse = "-")
-      new_col <- apply( data[ , cat_vars ] , 1 , paste , collapse = "-" )
+      new_col <- apply(data[, cat_vars], 1, paste, collapse = "-")
       data[, new_name] <- new_col
       dataset$data <- data
-      
+
       # now we need to create a split determined by the split variable in the
       # yaml file. This will split so that we have representative proportions
-      # of the original dataset in the initial split. 
+      # of the original dataset in the initial split.
       split_data <- rsample::initial_split(
         data = dataset$data,
         prop = dataset$train_test$split,
         strata = new_name,
         group = dataset$train_test$id
       )
-      
+
       train_data <- rsample::training(split_data)
       test_data <- rsample::testing(split_data)
-      
+
       dataset$data <- train_data
       dataset$test_data <- test_data
-      
-      dataset$data_mod <- "train_test" 
+
+      dataset$data_mod <- "train_test"
 
       train_test_datasets <- c(train_test_datasets, list(dataset))
     }
-  } 
+  }
 }
 
 datasets <- c(datasets, train_test_datasets)
@@ -283,19 +283,19 @@ source("R/source/filter_interval.R")
 
 sample_age_interval_datasets <- list()
 for (dataset in datasets) {
-  
+
   # to check if there are any commands about sampling age intervals
   if (!is.null(dataset$sample_age_interval)) {
-    
+
     # to check if the dataset is an original, if not we are not sample age
     original <- is.null(dataset$data_mod)
-  
+
     # get the intervals we want to sample
     intervals <- lapply(dataset$sample_age_interval$intervals,
       unlist,
       use.names = TRUE
     )
-    
+
     # check if we want to execute info in the sample_age_interval
     # also check if the datsaet is an original
     if (dataset$sample_age_interval$execute & original) {
@@ -303,8 +303,8 @@ for (dataset in datasets) {
         dataset$data,
         intervals
       )
-  
-  
+
+
       new_datasets <- list()
       for (interval in intervals) {
         new_datasets[[interval]] <- dataset
@@ -320,18 +320,18 @@ for (dataset in datasets) {
           interval,
           sep = " "
         )
-        
+
         new_datasets[[interval]]$data <- sampled_data[[interval]]
       }
-      
-      new_datasets <- unname(new_datasets)
-      
-      sample_age_interval_datasets <- c(sample_age_interval_datasets,
-                                        new_datasets)
-    }
-    
-  }
 
+      new_datasets <- unname(new_datasets)
+
+      sample_age_interval_datasets <- c(
+        sample_age_interval_datasets,
+        new_datasets
+      )
+    }
+  }
 }
 
 datasets <- c(datasets, sample_age_interval_datasets)
@@ -342,19 +342,17 @@ source("R/source/filter_group.R")
 sample_subsets_datasets <- list()
 
 for (dataset in datasets) {
-  if(!is.null(dataset$sample_subsets)) {
-    
-    if(dataset$sample_subsets$execute) {
-      
-      
+  if (!is.null(dataset$sample_subsets)) {
+    if (dataset$sample_subsets$execute) {
       subsets <- lapply(dataset$sample_subsets$subsets,
-                        unlist,
-                        use.names = TRUE) 
-      
-      sampled_data <- filter_loop(dataset$data, subsets = subsets)   
-      
+        unlist,
+        use.names = TRUE
+      )
+
+      sampled_data <- filter_loop(dataset$data, subsets = subsets)
+
       new_datasets <- list()
-      
+
       subset_names <- names(sampled_data)
       names(subsets) <- subset_names
       for (subset in subset_names) {
@@ -366,10 +364,10 @@ for (dataset in datasets) {
           paste(subsets[[subset]], collapse = " "),
           sep = " "
         )
-        
+
         new_datasets[[subset]]$data <- sampled_data[[subset]]
       }
-      
+
       new_datasets <- unname(new_datasets)
       sample_subsets_datasets <- c(sample_subsets_datasets, new_datasets)
     }
