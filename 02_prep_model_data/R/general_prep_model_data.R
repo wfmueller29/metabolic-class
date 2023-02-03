@@ -118,6 +118,52 @@ filter_na <- function(dataset) {
 
 datasets <- lapply(datasets, filter_na)
 
+# resample datasets by subsets of the data ------------------------------------
+
+source("R/source/filter_group.R")
+sample_subsets_datasets <- list()
+dataset_overwrite <- list()
+
+for (dataset in datasets) {
+  if (!is.null(dataset$sample_subsets)) {
+    if (dataset$sample_subsets$execute) {
+      subsets <- lapply(dataset$sample_subsets$subsets,
+        unlist,
+        use.names = TRUE
+      )
+
+      sampled_data <- filter_loop(dataset$data, subsets = subsets)
+
+      new_datasets <- list()
+
+      subset_names <- names(sampled_data)
+      names(subsets) <- subset_names
+      for (subset in subset_names) {
+        new_datasets[[subset]] <- dataset
+        old_data_mod <- dataset$data_mod
+        new_datasets[[subset]]$data_subset <- subsets[[subset]]
+        new_datasets[[subset]]$labels$data_name <- paste(
+          new_datasets[[subset]]$labels$data_name,
+          paste(subsets[[subset]], collapse = " "),
+          sep = " "
+        )
+
+        new_datasets[[subset]]$data <- sampled_data[[subset]]
+      }
+
+      new_datasets <- unname(new_datasets)
+      sample_subsets_datasets <- c(sample_subsets_datasets, new_datasets)
+      dataset_overwrite <- c(dataset_overwrite, sample_subsets_datasets)
+    } else {
+      dataset_overwrite <- c(dataset_overwrite, list(dataset))
+    }
+  } else {
+    dataset_overwrite <- c(dataset_overwrite, list(dataset))
+  }
+}
+
+datasets <- dataset_overwrite
+
 # generate idno if ID column not coercible to numeric -------------------------
 
 for (i in seq_along(datasets)) {
@@ -336,45 +382,6 @@ for (dataset in datasets) {
 
 datasets <- c(datasets, sample_age_interval_datasets)
 
-# resample datasets by subsets of the data ------------------------------------
-
-source("R/source/filter_group.R")
-sample_subsets_datasets <- list()
-
-for (dataset in datasets) {
-  if (!is.null(dataset$sample_subsets)) {
-    if (dataset$sample_subsets$execute) {
-      subsets <- lapply(dataset$sample_subsets$subsets,
-        unlist,
-        use.names = TRUE
-      )
-
-      sampled_data <- filter_loop(dataset$data, subsets = subsets)
-
-      new_datasets <- list()
-
-      subset_names <- names(sampled_data)
-      names(subsets) <- subset_names
-      for (subset in subset_names) {
-        new_datasets[[subset]] <- dataset
-        old_data_mod <- dataset$data_mod
-        new_datasets[[subset]]$data_subset <- subsets[[subset]]
-        new_datasets[[subset]]$labels$data_name <- paste(
-          new_datasets[[subset]]$labels$data_name,
-          paste(subsets[[subset]], collapse = " "),
-          sep = " "
-        )
-
-        new_datasets[[subset]]$data <- sampled_data[[subset]]
-      }
-
-      new_datasets <- unname(new_datasets)
-      sample_subsets_datasets <- c(sample_subsets_datasets, new_datasets)
-    }
-  }
-}
-
-datasets <- c(datasets, sample_subsets_datasets)
 
 # use prep_hlme to center and scale the data ----------------------------------
 

@@ -55,6 +55,51 @@
       - [age_wk: "[0, 100]"]
       - [age_wk: "[0, 110]"]
       - [age_wk: "[0, 120]"]
+  model:
+    fixed: "~ $age_var + $age_var2 + sex_F + strain_HET3" 
+    fixcov: ["sex_F", "strain_HET3"]
+    mixture: "~ $age_var + $age_var2" 
+    random: 
+      - "~ 1"
+  labels:
+    oc_name: "Body Weight"
+    oc_units: "(g)"
+    age_var_name: ["Age", "Relative Age"]
+    age_var_units: ["(weeks)", "(%)"]
+    data_name: "SLAM Body Weight"
+- name: "slam"
+  path: "../01_dataset/output/main_all2.RDATA"
+  outcome: "bw"
+  age_var: ["age_wk", "per_age_wk"]
+  id: "idno"
+  dummy: ["sex", "strain"]
+  numeric: ["bw", "idno", "le_wk"]
+  factor: ["cohort"]
+  remove_velocity_outliers:
+    execute: TRUE
+    threshold: 5
+    age_var: "age_wk"
+  percent_change_baseline:
+    execute: TRUE
+    age_var: "age_wk"
+    target: 30
+    lower: 0
+    upper: 50
+    keep_before: FALSE
+  sample:
+    interval: 3
+    age_var: "age_wk"
+  train_test:
+    execute: TRUE
+    id: "idno"
+    sample_by: ["sex", "strain"]
+    split: .8
+  sample_age_interval:
+    execute: TRUE
+    intervals:
+      - [age_wk: "[0, 100]"]
+      - [age_wk: "[0, 110]"]
+      - [age_wk: "[0, 120]"]
   sample_subsets:
     execute: TRUE
     subsets:
@@ -63,8 +108,7 @@
       - [sex: M, strain: B6]
       - [sex: F, strain: B6]
   model:
-    fixed: "~ $age_var + $age_var2 + sex_F + strain_HET3" 
-    fixcov: ["sex_F", "strain_HET3"]
+    fixed: "~ $age_var + $age_var2"
     mixture: "~ $age_var + $age_var2" 
     random: 
       - "~ 1"
