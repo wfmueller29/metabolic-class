@@ -61,6 +61,9 @@
     mixture: "~ $age_var + $age_var2" 
     random: 
       - "~ 1"
+    idiag: FALSE
+    nwg: FALSE
+    ng_max: 3
   labels:
     oc_name: "Body Weight"
     oc_units: "(g)"
@@ -112,6 +115,9 @@
     mixture: "~ $age_var + $age_var2" 
     random: 
       - "~ 1"
+    idiag: FALSE
+    nwg: FALSE
+    ng_max: 3
   labels:
     oc_name: "Body Weight"
     oc_units: "(g)"
@@ -143,6 +149,9 @@
     mixture: "~ $age_var + $age_var2" 
     random: 
       - "~ 1"
+    idiag: FALSE
+    nwg: FALSE
+    ng_max: 3
   labels:
     oc_name: "Glucose"
     oc_units: "(mg/dL)"
@@ -174,6 +183,9 @@
     mixture: "~ $age_var + $age_var2" 
     random: 
       - "~ 1"
+    idiag: FALSE
+    nwg: FALSE
+    ng_max: 3
   labels:
     oc_name: "Body Fat"
     oc_units: "(g)"
@@ -205,6 +217,9 @@
     mixture: "~ $age_var + $age_var2" 
     random: 
       - "~ 1"
+    idiag: FALSE
+    nwg: FALSE
+    ng_max: 3
   labels:
     oc_name: "Lean Mass"
     oc_units: "(g)"
@@ -238,6 +253,9 @@
     mixture: "~ $age_var + $age_var2" 
     random: 
       - "~ 1"
+    idiag: FALSE
+    nwg: FALSE
+    ng_max: 3
   labels:
     oc_name: "Blood Delta"
     oc_units: " "
