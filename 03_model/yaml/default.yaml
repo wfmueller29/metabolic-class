@@ -1,15 +1,4 @@
 out_tag: all
 tag_time: TRUE
-filters:
-  sex_F: 0
-  strain_HET3: 0
-idiag:
-  - FALSE
-  - TRUE
-nwg:
-  - FALSE
-  - TRUE
-ng_max: 10
 plan: multisession
 sample_n: FALSE
-test: FALSE
