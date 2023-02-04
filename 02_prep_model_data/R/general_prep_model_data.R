@@ -412,6 +412,11 @@ for (i in seq_along(datasets)) {
   }
 }
 
+# ensure all data is a data.frame object --------------------------------------
+for (i in seq_along(datasets)) {
+  datasets[[i]]$data <- as.data.frame(datasets[[i]]$data)
+}
+
 # create data_id --------------------------------------------------------------
 for (i in seq_along(datasets)) {
 

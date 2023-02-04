@@ -8,41 +8,24 @@ library(tidyverse)
 library(future)
 
 # load in data
-load("../02_prep_model_data/output/df_list.RDATA")
 load("../02_prep_model_data/output/datasets.RDATA")
 
 # take command line arguments for parameter file ------------------------------
 args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) == 0) {
-  params <- list(
-    default_yaml = "yaml/default.yaml",
-    config_yaml = "yaml/test.yaml"
-  )
+  yaml_path <- "yaml/test.yaml"
 } else {
-  params <- list(
-    default_yaml = "yaml/default.yaml",
-    config_yaml = args[[1]]
-  )
+  yaml_path <- args[[1]]
 }
 
 
 # ----read in config file------------------------------------------------------
-# Read in default and config yaml files
-default_yaml <- yaml::read_yaml(file = params$default_yaml)
-config_yaml <- yaml::read_yaml(file = params$config_yaml)
-
-# Create config by replacing defautl_yaml with config_yaml Values
 
 # make config the default yaml
-config <- default_yaml
-
-# if there are values in config_yaml add them to config
-in_config <- names(default_yaml) %in% names(config_yaml)
-config[in_config] <- config_yaml
+config <- yaml::read_yaml(file = yaml_path)
 
 # filter for each sex and strain
-source("R/source/filter_utils.R")
 source("R/source/filter_group.R")
 
 if (!is.null(config$filters)) {
@@ -52,9 +35,8 @@ if (!is.null(config$filters)) {
   })
 }
 
-# sample df
+# sample df -------------------------------------------------------------------
 if (!is.null(config$sample_n)) {
-  df_list <- lapply(df_list, sample_df, "idno", config$sample_n)
   datasets <- lapply(datasets, function(dataset) {
     dataset$data <- sample_df(
       df = dataset$data,
@@ -119,14 +101,12 @@ fill_dollar <- function(cf, dollar_nms) {
 dollar_names <- get_dollar(cf)
 cf <- fill_dollar(cf, dollar_names)
 
-
 # create new fixed
 cf <- data.table::set(cf,
   i = NULL,
   j = "fixed",
   value = paste0(cf[["oc"]], cf[["fixed"]], sep = " ")
 )
-
 
 ## ----pmap_cf----------------------------------------------------------------
 # if biowulf is in config file, allow for asyncronous eval
