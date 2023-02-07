@@ -54,6 +54,9 @@
       - "~ 1"
       - "~ 1 + $age_var"
       - "~ 1 + $age_var + $age_var2"
+    ng_max: 10
+    idiag: [TRUE, FALSE]
+    nwg: [TRUE, FALSE]
   labels:
     oc_name: "Body Weight"
     oc_units: "(g)"
@@ -123,6 +126,9 @@
       - "~ 1"
       - "~ 1 + $age_var"
       - "~ 1 + $age_var + $age_var2"
+    ng_max: 10
+    idiag: [TRUE, FALSE]
+    nwg: [TRUE, FALSE]
   labels:
     oc_name: "Body Weight"
     oc_units: "(g)"
@@ -186,6 +192,9 @@
       - "~ 1"
       - "~ 1 + $age_var"
       - "~ 1 + $age_var + $age_var2"
+    ng_max: 10
+    idiag: [TRUE, FALSE]
+    nwg: [TRUE, FALSE]
   labels:
     oc_name: "Glucose"
     oc_units: "(mg/dL)"
@@ -255,6 +264,9 @@
       - "~ 1"
       - "~ 1 + $age_var"
       - "~ 1 + $age_var + $age_var2"
+    ng_max: 10
+    idiag: [TRUE, FALSE]
+    nwg: [TRUE, FALSE]
   labels:
     oc_name: "Glucose"
     oc_units: "(mg/dL)"
@@ -318,6 +330,9 @@
       - "~ 1"
       - "~ 1 + $age_var"
       - "~ 1 + $age_var + $age_var2"
+    ng_max: 10
+    idiag: [TRUE, FALSE]
+    nwg: [TRUE, FALSE]
   labels:
     oc_name: "Body Fat"
     oc_units: "(g)"
@@ -387,6 +402,9 @@
       - "~ 1"
       - "~ 1 + $age_var"
       - "~ 1 + $age_var + $age_var2"
+    ng_max: 10
+    idiag: [TRUE, FALSE]
+    nwg: [TRUE, FALSE]
   labels:
     oc_name: "Body Fat"
     oc_units: "(g)"

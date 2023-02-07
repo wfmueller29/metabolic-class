@@ -83,6 +83,9 @@
       - "~ 1"
       - "~ 1 + $age_var"
       - "~ 1 + $age_var + $age_var2"
+    ng_max: 3
+    idiag: FALSE
+    nwg: FALSE
   # Labels are the labels of the variables
   labels:
     oc_name: "Body Weight"
@@ -145,6 +148,9 @@
       - "~ 1"
       - "~ 1 + $age_var"
       - "~ 1 + $age_var + $age_var2"
+    ng_max: 3
+    idiag: FALSE
+    nwg: FALSE
   labels:
     oc_name: "Body Weight"
     oc_units: "(g)"
