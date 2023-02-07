@@ -17,7 +17,7 @@ args <- commandArgs(trailingOnly = TRUE)
 if (length(args) == 0) {
   datasets <- yaml::read_yaml("yaml/test.yaml")
 } else {
-  datasets <- yaml::read_yaml(ars[[1]])
+  datasets <- yaml::read_yaml(args[[1]])
 }
 
 get_extension <- function(datasets) {
