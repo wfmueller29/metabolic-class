@@ -41,7 +41,8 @@
     lower: 0
     upper: 50
     keep_before: FALSE
-  sample:
+  sample_monthwise:
+    execute: TRUE
     interval: 3
     age_var: "age_wk"
   train_test:
@@ -89,7 +90,8 @@
     lower: 0
     upper: 50
     keep_before: FALSE
-  sample:
+  sample_monthwise:
+    execute: TRUE
     interval: 3
     age_var: "age_wk"
   train_test:
