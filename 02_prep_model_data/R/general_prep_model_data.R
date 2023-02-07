@@ -453,14 +453,15 @@ save(datasets, file = "output/datasets.RDATA")
 i <- 1
 for (dataset in datasets) {
   data_mod <- dataset$data_mod
-  file_name <- paste(dataset$outcome,
+  file_name <- paste(
+    i, 
+    dataset$outcome,
     data_mod,
-    i,
     sep = "_"
   )
   path_rdata <- file.path(
     "output",
-    "individual_rdata",
+    "rdata",
     paste0(
       file_name,
       ".RDATA"
@@ -468,7 +469,7 @@ for (dataset in datasets) {
   )
   path_csv <- file.path(
     "output",
-    "individual_csv",
+    "csv",
     paste0(
       file_name,
       ".csv"
