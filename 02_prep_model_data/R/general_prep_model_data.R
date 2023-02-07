@@ -402,14 +402,15 @@ for (i in seq_along(datasets)) {
 source("R/source/sample_monthwise.R")
 
 for (i in seq_along(datasets)) {
-  if (!is.null(datasets[[i]]$sample_monthwise &
-    datasets[[i]]$sample_monthwise$execute)) {
-    datasets[[i]]$data <- sample_monthwise(
-      data = datasets[[i]]$data,
-      age_var = paste0(datasets[[i]]$sample_monthwise$age_var, "_ns"),
-      interval = datasets[[i]]$sample_monthwise$interval,
-      id = datasets[[i]]$id
-    )
+  if (!is.null(datasets[[i]]$sample_monthwise)) {
+    if (datasets[[i]]$sample_monthwise$execute) {
+      datasets[[i]]$data <- sample_monthwise(
+        data = datasets[[i]]$data,
+        age_var = paste0(datasets[[i]]$sample_monthwise$age_var, "_ns"),
+        interval = datasets[[i]]$sample_monthwise$interval,
+        id = datasets[[i]]$id
+      )
+    }
   }
 }
 
