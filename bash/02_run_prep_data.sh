@@ -9,16 +9,16 @@ if [ -z "$1" ]
         echo No command line argument provided
     else 
         CONFIG=$1
-        CONFIG=$(echo $CONFIG | cut -d'/' -f2-)
 fi
 
-echo $CONFIG
+echo Raw config: $CONFIG
 
 if [ -z $CONFIG ]
     then 
         echo WARNING: No config file provided
         Rscript R/general_prep_model_data.R
     else 
-        echo Using config: $CONFIG
+        CONFIG=$(echo $CONFIG | cut -d'/' -f2-)
+        echo Using modified config: $CONFIG
         Rscript R/general_prep_model_data.R $CONFIG 
 fi
