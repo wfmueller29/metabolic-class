@@ -2,9 +2,9 @@
 
 CONFIG=$1
 
-sbatch --mem=25g \
-  --cpus-per-task=40 \
-  -t 2-00:00:00 \
+sbatch --mem=100g \
+  --cpus-per-task=50 \
+  -t 4-00:00:00 \
   -o log/models-slurmo-%A_%a.out \
   -e log/models-slurme-%A_%a.out \
   --export=CONFIG=$CONFIG \
