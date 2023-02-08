@@ -1,0 +1,4 @@
+out_tag: biowulf_test
+tag_time: TRUE
+plan: multisession
+sample_n: 15
