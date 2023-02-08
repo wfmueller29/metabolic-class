@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 # load R
 module load R/4.1 || echo WARNING: Could not load R module, continuing anyway
 
