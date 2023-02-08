@@ -8,5 +8,5 @@ sbatch --mem=100g \
   -t 4-00:00:00 \
   -o log/prep_model_select-slurmo-%A_%a.out \
   -e log/prep_model_select-%A_%a.out \
-  --export=CONFIG1,CONFIG2 \
+  --export=CONFIG1=$CONFIG1,CONFIG2=$CONFIG2 \
   --mail-type=END bash/02_03_04_run.sh
