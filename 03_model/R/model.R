@@ -14,7 +14,7 @@ load("../02_prep_model_data/output/datasets.RDATA")
 args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) == 0) {
-  yaml_path <- "yaml/test.yaml"
+  yaml_path <- "yaml/test_local.yaml"
 } else {
   yaml_path <- args[[1]]
 }
@@ -146,11 +146,14 @@ models <- pmap_cf(cf,
   seed = TRUE
 )
 
-# name datasets
+# This is to close background workers
+plan(sequential)
 
+# name datasets
 names(datasets) <- lapply(datasets, function(dataset) {
   dataset$data_id
 })
+
 
 # -----save stuff -------------------------------------------------------------
 # Create output directory
