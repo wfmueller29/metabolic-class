@@ -136,7 +136,7 @@
     age_var_units: ["(weeks)", "(%)"]
     data_name: "SLAM Body Weight"
 
-# Glucose All Mice ------------------------------------------------------------
+# FBG All Mice ------------------------------------------------------------
 - name: "slam"
   path: "../01_dataset/output/main_all2.RDATA"
   outcome: "gluc"
@@ -196,12 +196,12 @@
     idiag: [TRUE, FALSE]
     nwg: [TRUE, FALSE]
   labels:
-    oc_name: "Glucose"
+    oc_name: "FBG"
     oc_units: "(mg/dL)"
     age_var_name: ["Age", "Relative Age"]
     age_var_units: ["(weeks)", "(%)"]
-    data_name: "SLAM Glucose"
-# Glucose Sex, Strain Subsets
+    data_name: "SLAM FBG"
+# FBG Sex, Strain Subsets
 - name: "slam"
   path: "../01_dataset/output/main_all2.RDATA"
   outcome: "gluc"
@@ -268,11 +268,11 @@
     idiag: [TRUE, FALSE]
     nwg: [TRUE, FALSE]
   labels:
-    oc_name: "Glucose"
+    oc_name: "FBG"
     oc_units: "(mg/dL)"
     age_var_name: ["Age", "Relative Age"]
     age_var_units: ["(weeks)", "(%)"]
-    data_name: "SLAM Glucose"
+    data_name: "SLAM FBG"
 
 # Body Fat All Mice -----------------------------------------------------------
 - name: "slam"
