@@ -16,6 +16,15 @@
   numeric: ["bw", "idno", "le_wk"]
   # Variable we would like to make into factor variables
   factor: ["cohort"]
+  # If "execute" is true, we will subset the data for each object in list
+  # "subsets". These subsetted datasets will replace the orginal dataset
+  sample_subsets:
+    execute: FALSE
+    subsets:
+      - [sex: M, strain: HET3]
+      - [sex: F, strain: HET3]
+      - [sex: M, strain: B6]
+      - [sex: F, strain: B6]
   # If "execute" is true, we will calculate rate of change of outcome measurement
   # per "age_var" unit. If the magnitude of the rate of change is greater than 
   # "threshold", then those measurements will be considered outliers and will be 
@@ -87,70 +96,6 @@
     idiag: FALSE
     nwg: FALSE
   # Labels are the labels of the variables
-  labels:
-    oc_name: "Body Weight"
-    oc_units: "(g)"
-    age_var_name: ["Age", "Relative Age"]
-    age_var_units: ["(weeks)", "(%)"]
-    data_name: "SLAM Body Weight"
-# Body Weight Sex, Strain Subsets
-- name: "slam"
-  path: "../01_dataset/output/main_all2.RDATA"
-  outcome: "bw"
-  age_var: ["age_wk", "per_age_wk"]
-  id: "idno"
-  dummy: ["sex", "strain"]
-  numeric: ["bw", "idno", "le_wk"]
-  factor: ["cohort"]
-  remove_velocity_outliers:
-    execute: FALSE
-    threshold: 5
-    age_var: "age_wk"
-  percent_change_baseline:
-    execute: FALSE
-    age_var: "age_wk"
-    target: 30
-    lower: 0
-    upper: 50
-    keep_before: FALSE
-  sample_monthwise:
-    execute: TRUE
-    interval: 3
-    age_var: "age_wk"
-  train_test:
-    execute: TRUE
-    id: "idno"
-    sample_by: ["sex", "strain"]
-    split: .8
-  sample_age_interval:
-    execute: TRUE
-    intervals:
-      - [age_wk: "[0, 57.50]"]
-      - [age_wk: "[0, 86.25]"]
-      - [age_wk: "[0, 103.50]"]
-      - [age_wk: "(0, 57.50)"]
-      - [age_wk: "[57.50,86.25)"]
-      - [age_wk: "[86.25,103.50)"]
-      - [age_wk: "[103.50,Inf)"]
-      - [age_wk: "[57.50,103.50]"]
-  sample_subsets:
-    execute: TRUE
-    subsets:
-      - [sex: M, strain: HET3]
-      - [sex: F, strain: HET3]
-      - [sex: M, strain: B6]
-      - [sex: F, strain: B6]
-  model:
-    fixed: "~ $age_var + $age_var2 + sex_F + strain_HET3" 
-    fixcov: ["sex_F", "strain_HET3"]
-    mixture: "~ $age_var + $age_var2" 
-    random: 
-      - "~ 1"
-      - "~ 1 + $age_var"
-      - "~ 1 + $age_var + $age_var2"
-    ng_max: 3
-    idiag: FALSE
-    nwg: FALSE
   labels:
     oc_name: "Body Weight"
     oc_units: "(g)"

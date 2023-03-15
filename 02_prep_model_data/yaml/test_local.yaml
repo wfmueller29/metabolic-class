@@ -1,0 +1,7 @@
+out_tag: test_local
+tag_time: TRUE
+plan: 
+sample_n: 15
+center: TRUE
+scale: FALSE
+dataset: "yaml/datasets/test.yaml"

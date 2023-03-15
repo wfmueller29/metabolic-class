@@ -2,3 +2,6 @@ out_tag: biowulf_test
 tag_time: TRUE
 plan: multisession
 sample_n: 15
+center: TRUE
+scale: FALSE
+dataset: "yaml/datasets/test.yaml""
