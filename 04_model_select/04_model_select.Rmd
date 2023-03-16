@@ -6,7 +6,7 @@ output:
   html_document:
     df_print: paged
 params:
-  model_dir: "20230104_205536_fhet3_test"
+  model_dir: "test_local"
 ---
 
 
