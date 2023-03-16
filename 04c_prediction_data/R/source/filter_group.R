@@ -1,7 +1,6 @@
 # This R script has functions that filter by group
 # Author: William Mueller
 
-source("R/filter_utils.R")
 
 # loop through filter_group for list of subsets
 filter_loop <- function(data, subsets) {
