@@ -1,5 +1,5 @@
 out_tag: all
-tag_time: TRUE
+tag_time: FALSE
 plan: multisession
 sample_n: FALSE
 center: TRUE

@@ -118,37 +118,6 @@ filter_na <- function(dataset) {
 
 datasets <- lapply(datasets, filter_na)
 
-# use mixed effects models to determine fixed effects structure ---------------
-
-for (dataset in datasets) {
-  dataset <- datasets[[1]] # delete
-  fixcov <- dataset$model$fixcov
-  fixcov_form <- paste(fixcov, collapse = " * ")
-  age_vars <- dataset$age_var
-  outcome <- dataset$outcome
-  id <- dataset$id
-  models <- list()
-  for (age_var in age_vars) {
-    age_form <- paste(age_var, paste0(age_var, "2"), sep = " + ")
-    fixed_effects <- paste0("(", age_form, ")", " * ", "(", fixcov_form, ")")
-    random_effects <- paste0("(", age_form, "|", id, ")") 
-    form <- paste0(outcome, " ~ ", fixed_effects, " + ", random_effects)
-    form <- as.formula(form)
-    control <- buildmer::buildmerControl()
-    model <- buildmer::buildmer(
-      formula = form,
-      data = dataset$data,
-      buildmerControl = control
-    )
-    
-    models <- c(models, model)
-  }
-  for (form in forms) {
-    buildmer::buildmer()
-    
-  }
-}
-
 # generate idno if ID column not coercible to numeric -------------------------
 
 for (i in seq_along(datasets)) {
@@ -478,7 +447,12 @@ for (i in seq_along(datasets)) {
 }
 
 # save datasets as R object list, individual R objects, and csv's -------------
-save(datasets, file = "output/datasets.RDATA")
+path <- file.path("output", config$out_tag)
+dir.create(path)
+dir.create(file.path(path, "rdata"))
+dir.create(file.path(path, "csv"))
+save(datasets, file = file.path(path, "datasets.RDATA"))
+save(config, file = file.path(path, "config.RDATA"))
 
 i <- 1
 for (dataset in datasets) {
@@ -490,7 +464,7 @@ for (dataset in datasets) {
     sep = "_"
   )
   path_rdata <- file.path(
-    "output",
+    path,
     "rdata",
     paste0(
       file_name,
@@ -498,7 +472,7 @@ for (dataset in datasets) {
     )
   )
   path_csv <- file.path(
-    "output",
+    path,
     "csv",
     paste0(
       file_name,
