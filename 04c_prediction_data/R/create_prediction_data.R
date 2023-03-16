@@ -63,58 +63,20 @@ intervals <- lapply(config$intervals, unlist, use.names = TRUE)
 
 # Filter by time interval
 source("R/source/filter_interval.R")
+
 df_interval_list <- lapply(df_list,
   filter_interval_loop,
   intervals = intervals
 )
 # df_interval_list <- unlist_filter_list(df_interval_list)
 
-# old way of filtering time window --------------------------------------------
-
-windows <- lapply(config$windows, unlist, use.names = TRUE)
-
-# Filter by time interval
-source("R/source/filter_interval.R")
-df_windows_list <- lapply(df_list,
-  filter_interval_loop,
-  intervals = windows
-)
-# df_interval_list <- unlist_filter_list(df_interval_list)
-
-
-# filter by measurement sample ------------------------------------------------
-
-ns <- lapply(config$samples, unlist, use.names = TRUE)
-
-# Filter by measurement sample
-source("R/source/sample_measures.R")
-df_sample_list <- lapply(df_list,
-  sample_loop,
-  n = ns
-)
-# df_sample_list <- unlist_filter_list(df_sample_list)
-
-
-# threshold filtering ---------------------------------------------------------
-
-# Threshold timepoint
-threshold <- lapply(config$threshold, unlist, use.names = TRUE)
-
-# Filter by time interval
-source("R/source/filter_interval.R")
-df_threshold_list <- lapply(df_list,
-  filter_interval_loop,
-  intervals = threshold
-)
 
 
 dfs_prediction <- list(
   main = df_list,
-  subset = df_subset_list,
+  cumulative = df_cumulative_list,
   interval = df_interval_list,
-  window = df_windows_list,
-  threshold = df_threshold_list,
-  sample = df_sample_list
+  window = df_window_list,
 )
 
 # save our prediction dataframe -----------------------------------------------
