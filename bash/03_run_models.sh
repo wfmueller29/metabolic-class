@@ -10,17 +10,15 @@ if [ -z "$1" ]
     then
         echo No command line argument provided
     else 
-        CONFIG=$1
+        OUT_TAG=$1
 fi
 
-echo Raw config: $CONFIG
+echo Target Output Directory: $OUT_TAG
 
-if [ -z $CONFIG ]
+if [ -z $OUT_TAG ]
     then 
-        echo WARNING: No config file provided
+        echo WARNING: No output directory provided
         Rscript R/model.R
     else 
-        CONFIG=$(echo $CONFIG | cut -d'/' -f2-)
-        echo Using modified config: $CONFIG
-        Rscript R/model.R $CONFIG 
+        Rscript R/model.R $OUT_TAG 
 fi
