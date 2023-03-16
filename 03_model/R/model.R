@@ -7,23 +7,19 @@ library(callframe)
 library(tidyverse)
 library(future)
 
-# load in data
-load("../02_prep_model_data/output/datasets.RDATA")
-
-# take command line arguments for parameter file ------------------------------
+# take command line arguments for output tag ----------------------------------
 args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) == 0) {
-  yaml_path <- "yaml/test_local.yaml"
+  out_tag <- "test_local"
 } else {
-  yaml_path <- args[[1]]
+  out_tag <- args[[1]]
 }
 
-
-# ----read in config file------------------------------------------------------
-
-# make config the default yaml
-config <- yaml::read_yaml(file = yaml_path)
+# load in datasets and config -------------------------------------------------
+path <- file.path("..", "02_prep_model_data", "output", out_tag)
+load(file.path(path, "config.RDATA"))
+load(file.path(path, "datasets.RDATA"))
 
 # filter for each sex and strain
 source("R/source/filter_group.R")
