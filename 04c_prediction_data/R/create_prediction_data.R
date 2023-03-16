@@ -16,7 +16,7 @@ if (length(args) == 0) {
 # load in datasets and config -------------------------------------------------
 path <- file.path("..", "02_prep_model_data", "output", out_tag)
 load(file.path(path, "datasets.RDATA"))
- 
+
 config <- yaml::read_yaml("yaml/default.yaml")
 
 
@@ -42,21 +42,25 @@ df_subset_list <- lapply(df_list, filter_loop, subsets = subsets)
 # filter by cumulative time window --------------------------------------------
 
 source("R/source/filter_cumulative.R")
-df_cumulative_list <- filter_cumulative(data_list = df_list,
-                       age_var = "age_wk_ns",
-                       start_vector = c(0, 25, 50),
-                       end = 165,
-                       step = 25)
+df_cumulative_list <- filter_cumulative(
+  data_list = df_list,
+  age_var = "age_wk_ns",
+  start_vector = c(0, 25, 50),
+  end = 165,
+  step = 25
+)
 
 # filter by time window -------------------------------------------------------
 
 source("R/source/filter_window.R")
-df_window_list <- filter_window(data_list = df_list,
-                                age_var = "age_wk_ns",
-                                start = 0,
-                                end = 165,
-                                window_size_vector = c(25, 50),
-                                step = 10)
+df_window_list <- filter_window(
+  data_list = df_list,
+  age_var = "age_wk_ns",
+  start = 0,
+  end = 165,
+  window_size_vector = c(25, 50),
+  step = 10
+)
 
 # filter by time interval -----------------------------------------------------
 intervals <- lapply(config$intervals, unlist, use.names = TRUE)
@@ -70,7 +74,18 @@ df_interval_list <- lapply(df_list,
 )
 # df_interval_list <- unlist_filter_list(df_interval_list)
 
+# Decrease sample frequency ---------------------------------------------------
+source("R/source/resample_frequency.R")
 
+df_resample_list <- resample_frequency(
+  data_list = df_list,
+  id = "idno",
+  age_var = "age_wk_ns",
+  fraction_vector = c(.75, .667, .5, .333, .25)
+)
+
+datasets <- resample_frequency_dataset(datasets, 
+                                       fraction_vector = c(.75, .667, .5, .333, .25))
 
 dfs_prediction <- list(
   main = df_list,
