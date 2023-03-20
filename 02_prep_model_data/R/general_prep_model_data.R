@@ -145,7 +145,7 @@ for (i in seq_along(datasets)) {
     if (datasets[[i]]$sample_monthwise$execute) {
       datasets[[i]]$data <- sample_monthwise(
         data = datasets[[i]]$data,
-        age_var = paste0(datasets[[i]]$sample_monthwise$age_var, "_ns"),
+        age_var = paste0(datasets[[i]]$sample_monthwise$age_var),
         interval = datasets[[i]]$sample_monthwise$interval,
         id = datasets[[i]]$id
       )

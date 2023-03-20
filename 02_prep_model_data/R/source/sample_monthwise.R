@@ -20,7 +20,8 @@ sample_monthwise <- function(data, age_var, interval, id) {
     dplyr::group_by(!!sym(id), age_m) %>%
     dplyr::mutate(min_dif = min(dif)) %>%
     dplyr::ungroup() %>%
-    dplyr::filter(dif == min_dif)
+    dplyr::filter(dif == min_dif) %>%
+    as.data.frame()
 
   data
 
