@@ -136,6 +136,23 @@ for (i in seq_along(datasets)) {
   }
 }
 
+# sample datasets based upon 3 month time interval ----------------------------
+
+source("R/source/sample_monthwise.R")
+
+for (i in seq_along(datasets)) {
+  if (!is.null(datasets[[i]]$sample_monthwise)) {
+    if (datasets[[i]]$sample_monthwise$execute) {
+      datasets[[i]]$data <- sample_monthwise(
+        data = datasets[[i]]$data,
+        age_var = paste0(datasets[[i]]$sample_monthwise$age_var, "_ns"),
+        interval = datasets[[i]]$sample_monthwise$interval,
+        id = datasets[[i]]$id
+      )
+    }
+  }
+}
+
 # resample datasets by subsets of the data ------------------------------------
 
 source("R/source/filter_group.R")
@@ -394,23 +411,6 @@ for (i in seq_along(datasets)) {
     center = config$center,
     scale = config$scale
   )
-}
-
-# sample datasets based upon 3 month time interval ----------------------------
-
-source("R/source/sample_monthwise.R")
-
-for (i in seq_along(datasets)) {
-  if (!is.null(datasets[[i]]$sample_monthwise)) {
-    if (datasets[[i]]$sample_monthwise$execute) {
-      datasets[[i]]$data <- sample_monthwise(
-        data = datasets[[i]]$data,
-        age_var = paste0(datasets[[i]]$sample_monthwise$age_var, "_ns"),
-        interval = datasets[[i]]$sample_monthwise$interval,
-        id = datasets[[i]]$id
-      )
-    }
-  }
 }
 
 # ensure all data is a data.frame object --------------------------------------
