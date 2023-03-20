@@ -1,4 +1,13 @@
-
+# Create filter interval for datasets
+filter_interval_dataset <- function(datasets) {
+  datasets <- lapply(datasets, function(dataset) {
+    intervals <- dataset$prediction_data$filter_interval$intervals 
+    intervals <- lapply(intervals, unlist, use.names = TRUE)
+    data <- dataset$data
+    dataset$filter_interval <- filter_interval_loop(data, intervals)
+    dataset
+  })
+}
 # loop through filter_interval for list of intervals
 filter_interval_loop <- function(data, intervals) {
   names <- lapply(intervals, paste, collapse = "_")
@@ -19,12 +28,10 @@ filter_interval <- function(data, intervals) {
   dt <- dt[eval(filter_calls), ]
   data <- as.data.frame(dt)
   data
-
 }
 
 # Create call to filter an interval
 filter_interval_call <- function(interval) {
-
   col <- names(interval)
   interval <- unname(interval)
   # trim whitespace
@@ -34,19 +41,23 @@ filter_interval_call <- function(interval) {
   last <- substr(interval, nchar(interval), nchar(interval))
   # get value of first interval
   lower_bound <- get_bound(which = "lower", interval = interval)
-  upper_bound <- get_bound(which = "upper", interval = interval)  
+  upper_bound <- get_bound(which = "upper", interval = interval)
   # if [] or ()
   if (first == "(") {
     fun_low <- ">"
   } else if (first == "[") {
     fun_low <- ">="
-  } else stop("Incorrect lower bound, must be ( or [")
+  } else {
+    stop("Incorrect lower bound, must be ( or [")
+  }
 
   if (last == ")") {
     fun_high <- "<"
   } else if (last == "]") {
     fun_high <- "<="
-  } else stop("Incorecct upper bound, must be ) or ]")
+  } else {
+    stop("Incorecct upper bound, must be ) or ]")
+  }
   # create calls
   lower_call <- call(name = fun_low, as.symbol(col), lower_bound)
   upper_call <- call(name = fun_high, as.symbol(col), upper_bound)
@@ -67,7 +78,7 @@ get_bound <- function(which, interval) {
 
 
 # tests------------------------------------------------------------------------
-# test filter interval call 
-output <- filter_interval_call(c(sex = "( -213, Inf ]")) 
+# test filter interval call
+output <- filter_interval_call(c(sex = "( -213, Inf ]"))
 should_output <- quote(sex > -213 & sex <= Inf)
 if (!(output == should_output)) cat("filter_interval_call() not working")

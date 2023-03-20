@@ -78,7 +78,8 @@ resample_frequency <- function(data_list, id, age_var, fraction_vector) {
 .resample_frequency_across_dataset <- function(dataset, fraction_vector) {
   data <- dataset$data
   id <- dataset$id
-  age_var <- dataset$age_var
+  age_var <- dataset$prediction_data$resample$age_var
+  fraction_vector <- dataset$prediction_data$resample$fraction_vector
   if (length(age_var) > 1) {
     age_var <- age_var[1]
   }
@@ -91,15 +92,13 @@ resample_frequency <- function(data_list, id, age_var, fraction_vector) {
   
 }
 
-.resample_frequency_across_dataset_apply <- function(datasets, fraction_vector) {
-  datasets <- lapply(datasets, .resample_frequency_across_dataset,
-                     fraction_vector = fraction_vector)
+.resample_frequency_across_dataset_apply <- function(datasets) {
+  datasets <- lapply(datasets, .resample_frequency_across_dataset)
   datasets
 }
 
-resample_frequency_dataset <- function(datasets, fraction_vector) {
-  datasets <- .resample_frequency_across_dataset_apply(datasets,
-                                                       fraction_vector)
+resample_frequency_dataset <- function(datasets) {
+  datasets <- .resample_frequency_across_dataset_apply(datasets)
   
   datasets
 }
