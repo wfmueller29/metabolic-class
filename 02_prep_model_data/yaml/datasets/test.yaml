@@ -43,6 +43,29 @@
     idiag: FALSE
     nwg: FALSE
     ng_max: 3
+  prediction_data:
+    filter_interval:
+      intervals:
+        - [age_wk_ns: "(0, 57.50)"]
+        - [age_wk_ns: "[57.50,86.25)"]
+        - [age_wk_ns: "[86.25,103.50)"]
+        - [age_wk_ns: "[103.50,Inf)"]
+        - [age_wk_ns: "[57.50,103.50]"]
+      names:
+    filter_window:
+      age_var: "age_wk_ns"
+      start: 0
+      end: 165
+      window_size_vector: [25, 50]
+      step: 10
+    filter_cumulative:
+      age_var: "age_wk_ns"
+      start_vector: [0,25,50,75]
+      end: 165
+      step: 25
+    resample:
+      age_var: "age_wk_ns"
+      fraction_vector: [.75, .667, .5, .337, .25]
   labels:
     oc_name: "Body Weight"
     oc_units: "(g)"
@@ -98,6 +121,29 @@
     idiag: FALSE
     nwg: FALSE
     ng_max: 3
+  prediction_data:
+    filter_interval:
+      intervals:
+        - [age_wk_ns: "(0, 57.50)"]
+        - [age_wk_ns: "[57.50,86.25)"]
+        - [age_wk_ns: "[86.25,103.50)"]
+        - [age_wk_ns: "[103.50,Inf)"]
+        - [age_wk_ns: "[57.50,103.50]"]
+      names:
+    filter_window:
+      age_var: "age_wk_ns"
+      start: 0
+      end: 165
+      window_size_vector: [25, 50]
+      step: 10
+    filter_cumulative:
+      age_var: "age_wk_ns"
+      start_vector: [0,25,50,75]
+      end: 165
+      step: 25
+    resample:
+      age_var: "age_wk_ns"
+      fraction_vector: [.75, .667, .5, .337, .25]
   labels:
     oc_name: "Body Weight"
     oc_units: "(g)"
@@ -132,6 +178,29 @@
     idiag: FALSE
     nwg: FALSE
     ng_max: 3
+  prediction_data:
+    filter_interval:
+      intervals:
+        - [age_wk_ns: "(0, 57.50)"]
+        - [age_wk_ns: "[57.50,86.25)"]
+        - [age_wk_ns: "[86.25,103.50)"]
+        - [age_wk_ns: "[103.50,Inf)"]
+        - [age_wk_ns: "[57.50,103.50]"]
+      names:
+    filter_window:
+      age_var: "age_wk_ns"
+      start: 0
+      end: 165
+      window_size_vector: [25, 50]
+      step: 10
+    filter_cumulative:
+      age_var: "age_wk_ns"
+      start_vector: [0,25,50,75]
+      end: 165
+      step: 25
+    resample:
+      age_var: "age_wk_ns"
+      fraction_vector: [.75, .667, .5, .337, .25]
   labels:
     oc_name: "Glucose"
     oc_units: "(mg/dL)"
