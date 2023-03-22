@@ -6,7 +6,7 @@ output:
   html_document:
     df_print: paged
 params:
-  model_dir: "20230104_205536_fhet3_test"
+  model_dir: "test_local"
   yaml: "yaml/default.yaml"
 ---
 
@@ -38,25 +38,29 @@ mega_pal <- rep(palette(), 40)
 ### Load Models
 
 ```{r load models}
-path <- normalizePath(file.path(
+load_output <- function(path, file_name) {
+  file_path <- normalizePath(file.path(path, paste0(file_name, ".RDATA")))
+  load(file = file_path, envir = .GlobalEnv)
+}
+
+path_04 <- normalizePath(file.path(
   "..",
   "04_model_select",
   "output",
   params$model_dir
 ))
 
-load_output <- function(file_name) {
-  file_path <- normalizePath(file.path(path, paste0(file_name, ".RDATA")))
-  load(file = file_path, envir = .GlobalEnv)
-}
-
-load_output("cf")
-load_output("datasets")
-load_output("final_models")
-# we comment out the bottom line because we do not want to load the multitude of
-# models we made
-# load_output("models")
-load_output("config")
+path_04c <- normalizePath(file.path(
+  "..",
+  "04c_prediction_data",
+  "output",
+  params$model_dir
+))
+ 
+load_output(path_04, "cf")
+load_output(path_04c, "datasets")
+load_output(path_04, "final_models")
+load_output(path_04, "config")
 
 
 # load in main_cat_surv
@@ -68,7 +72,7 @@ load(file = "../04b_healthcard_cod/output/health.RDATA")
 load(file = "../04b_healthcard_cod/output/dvr.RDATA")
 
 # load in prediction data
-load(file = "../04c_prediction_data/output/dfs_prediction.RDATA")
+# load(file = "../04c_prediction_data/output/dfs_prediction.RDATA")
 
 final_models$dfs <- lapply(final_models$data, function(name) {
   datasets[[name]]$data
