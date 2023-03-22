@@ -149,6 +149,12 @@ for(i in seq_len(nrow(cf_nest))) {
 
 ```
 
+```{r create final model csv}
+final_model_csv <- final_models %>%
+  select(model_name, everything(), -final_model,
+         -dummy, -fixcov, -data_age_vars)
+```
+
 ```{r save final models}
 output_path <- normalizePath(file.path("output", params$model_dir))
 
@@ -156,6 +162,9 @@ R.utils::copyDirectory(from = path, output_path)
 
 final_model_path <- file.path(output_path, "final_models.RDATA")
 datasets_path <- file.path(output_path, "datasets.RDATA")
+csv_path <- file.path(output_path, "final_models.csv")
+
+write.csv(final_model_csv, csv_path)
 
 save(final_models, file = final_model_path)
 save(datasets, file = datasets_path)
