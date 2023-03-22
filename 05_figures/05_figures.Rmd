@@ -7,7 +7,7 @@ output:
     df_print: paged
 params:
   model_dir: "test_local"
-  yaml: "yaml/default.yaml"
+  yaml: "yaml/test.yaml"
 ---
 
 ```{r setup, warning=FALSE, message=FALSE, echo=FALSE, eval = TRUE}
@@ -83,6 +83,19 @@ final_models$dfs <- lapply(final_models$data, function(name) {
 ```{r load yaml}
 
 yaml_models <- yaml::read_yaml(params$yaml)
+```
+
+### Drop all models that will not be used
+The models that are used for figure generation are defined in the yaml file
+```{r drop useless}
+model_keep <- character()
+for (group in yaml_models) {
+  model_keep <- c(model_keep, group$model_names)
+}
+final_models <- final_models[final_models$model_name %in% model_keep,]
+
+# Make rownames null so that the rownumbers are correct
+rownames(final_models) <- NULL
 ```
 
 ```{r read in census}
@@ -252,21 +265,9 @@ final_models$census <- lapply(seq_len(nrow(final_models)), function(i) {
 })
 ```
 
-#### Tamper with census to create correct class numbering
+#### Create new class numbering
 
 ```{r class numbering}
-mo_names_age <- c(
-  "slam_bw_og|bw_age_wk",
-  "slam_gluc_og|gluc_age_wk",
-  "slam_fat_og|fat_age_wk"
-)
-
-mo_names_perle <- c(
-  "slam_bw_og|bw_per_age_wk",
-  "slam_gluc_og|gluc_per_age_wk",
-  "slam_fat_og|fat_per_age_wk"
-)
-
 reorder_class <- function(final_models, mo_names) {
   x <- final_models
   all_names <- x$model_name
@@ -281,17 +282,13 @@ reorder_class <- function(final_models, mo_names) {
     x[x$model_name == name, ]$census[[1]] <- as.data.frame(census)
   }
 
-  for (name in missing_names) {
-    census <- x[x$model_name == name, ]$census
-    census <- unlist(census, recursive = FALSE)
-    census$new_class <- as.character(census$class)
-    x[x$model_name == name, ]$census[[1]] <- as.data.frame(census)
-  }
   x
 }
 
-final_models <- reorder_class(final_models, mo_names_age)
-final_models <- reorder_class(final_models, mo_names_perle)
+for (group in yaml_models) {
+  final_models <- reorder_class(final_models, group$model_names)
+}
+
 look <- final_models[, c("model_name", "census")]
 ```
 
