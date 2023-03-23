@@ -12,7 +12,7 @@
     threshold: 5
     age_var: "age_wk"
   percent_change_baseline:
-    execute: FALSE
+    execute: TRUE
     age_var: "age_wk"
     target: 30
     lower: 0
@@ -47,7 +47,7 @@
       - [per_age_wk: "(90, 100]"] # oldest in life
       - [per_age_wk: "(50, 90]"] # midlife + late life
   model:
-    fixed: "~ $age_var + $age_var2 + sex_F + strain_HET3" 
+    fixed: "~ $age_var + $age_var2 + sex_F * strain_HET3" 
     fixcov: ["sex_F", "strain_HET3"]
     mixture: "~ $age_var + $age_var2" 
     random: 
@@ -57,6 +57,29 @@
     ng_max: 10
     idiag: [TRUE, FALSE]
     nwg: [TRUE, FALSE]
+  prediction_data:
+    filter_interval:
+      intervals:
+        - [age_wk_ns: "(0, 57.50)"]
+        - [age_wk_ns: "[57.50,86.25)"]
+        - [age_wk_ns: "[86.25,103.50)"]
+        - [age_wk_ns: "[103.50,Inf)"]
+        - [age_wk_ns: "[57.50,103.50]"]
+      names:
+    filter_window:
+      age_var: "age_wk_ns"
+      start: 0
+      end: 165
+      window_size_vector: [25, 50]
+      step: 10
+    filter_cumulative:
+      age_var: "age_wk_ns"
+      start_vector: [0,25,50,75]
+      end: 165
+      step: 25
+    resample:
+      age_var: "age_wk_ns"
+      fraction_vector: [.75, .667, .5, .337, .25]
   labels:
     oc_name: "Body Weight"
     oc_units: "(g)"
@@ -77,7 +100,7 @@
     threshold: 5
     age_var: "age_wk"
   percent_change_baseline:
-    execute: FALSE
+    execute: TRUE
     age_var: "age_wk"
     target: 30
     lower: 0
@@ -119,8 +142,7 @@
       - [sex: M, strain: B6]
       - [sex: F, strain: B6]
   model:
-    fixed: "~ $age_var + $age_var2 + sex_F + strain_HET3" 
-    fixcov: ["sex_F", "strain_HET3"]
+    fixed: "~ $age_var + $age_var2" 
     mixture: "~ $age_var + $age_var2" 
     random: 
       - "~ 1"
@@ -129,6 +151,29 @@
     ng_max: 10
     idiag: [TRUE, FALSE]
     nwg: [TRUE, FALSE]
+  prediction_data:
+    filter_interval:
+      intervals:
+        - [age_wk_ns: "(0, 57.50)"]
+        - [age_wk_ns: "[57.50,86.25)"]
+        - [age_wk_ns: "[86.25,103.50)"]
+        - [age_wk_ns: "[103.50,Inf)"]
+        - [age_wk_ns: "[57.50,103.50]"]
+      names:
+    filter_window:
+      age_var: "age_wk_ns"
+      start: 0
+      end: 165
+      window_size_vector: [25, 50]
+      step: 10
+    filter_cumulative:
+      age_var: "age_wk_ns"
+      start_vector: [0,25,50,75]
+      end: 165
+      step: 25
+    resample:
+      age_var: "age_wk_ns"
+      fraction_vector: [.75, .667, .5, .337, .25]
   labels:
     oc_name: "Body Weight"
     oc_units: "(g)"
@@ -150,14 +195,14 @@
     threshold: 5
     age_var: "age_wk"
   percent_change_baseline:
-    execute: FALSE
+    execute: TRUE
     age_var: "age_wk"
     target: 30
     lower: 0
     upper: 50
     keep_before: FALSE
   sample_monthwise:
-    execute: TRUE
+    execute: FALSE
     interval: 3
     age_var: "age_wk"
   train_test:
@@ -185,7 +230,7 @@
       - [per_age_wk: "(90, 100]"] # oldest in life
       - [per_age_wk: "(50, 90]"] # midlife + late life
   model:
-    fixed: "~ $age_var + $age_var2 + sex_F + strain_HET3" 
+    fixed: "~ $age_var + $age_var2 + sex_F * strain_HET3" 
     fixcov: ["sex_F", "strain_HET3"]
     mixture: "~ $age_var + $age_var2" 
     random: 
@@ -195,6 +240,52 @@
     ng_max: 10
     idiag: [TRUE, FALSE]
     nwg: [TRUE, FALSE]
+  prediction_data:
+    filter_interval:
+      intervals:
+        - [age_wk_ns: "(0, 57.50)"]
+        - [age_wk_ns: "[57.50,86.25)"]
+        - [age_wk_ns: "[86.25,103.50)"]
+        - [age_wk_ns: "[103.50,Inf)"]
+        - [age_wk_ns: "[57.50,103.50]"]
+      names:
+    filter_window:
+      age_var: "age_wk_ns"
+      start: 0
+      end: 165
+      window_size_vector: [25, 50]
+      step: 10
+    filter_cumulative:
+      age_var: "age_wk_ns"
+      start_vector: [0,25,50,75]
+      end: 165
+      step: 25
+    resample:
+      age_var: "age_wk_ns"
+      fraction_vector: [.75, .667, .5, .337, .25]
+  prediction_data:
+    filter_interval:
+      intervals:
+        - [age_wk_ns: "(0, 57.50)"]
+        - [age_wk_ns: "[57.50,86.25)"]
+        - [age_wk_ns: "[86.25,103.50)"]
+        - [age_wk_ns: "[103.50,Inf)"]
+        - [age_wk_ns: "[57.50,103.50]"]
+      names:
+    filter_window:
+      age_var: "age_wk_ns"
+      start: 0
+      end: 165
+      window_size_vector: [25, 50]
+      step: 10
+    filter_cumulative:
+      age_var: "age_wk_ns"
+      start_vector: [0,25,50,75]
+      end: 165
+      step: 25
+    resample:
+      age_var: "age_wk_ns"
+      fraction_vector: [.75, .667, .5, .337, .25]
   labels:
     oc_name: "FBG"
     oc_units: "(mg/dL)"
@@ -215,14 +306,14 @@
     threshold: 5
     age_var: "age_wk"
   percent_change_baseline:
-    execute: FALSE
+    execute: TRUE
     age_var: "age_wk"
     target: 30
     lower: 0
     upper: 50
     keep_before: FALSE
   sample_monthwise:
-    execute: TRUE
+    execute: FALSE
     interval: 3
     age_var: "age_wk"
   train_test:
@@ -257,8 +348,7 @@
       - [sex: M, strain: B6]
       - [sex: F, strain: B6]
   model:
-    fixed: "~ $age_var + $age_var2 + sex_F + strain_HET3" 
-    fixcov: ["sex_F", "strain_HET3"]
+    fixed: "~ $age_var + $age_var2" 
     mixture: "~ $age_var + $age_var2" 
     random: 
       - "~ 1"
@@ -267,6 +357,29 @@
     ng_max: 10
     idiag: [TRUE, FALSE]
     nwg: [TRUE, FALSE]
+  prediction_data:
+    filter_interval:
+      intervals:
+        - [age_wk_ns: "(0, 57.50)"]
+        - [age_wk_ns: "[57.50,86.25)"]
+        - [age_wk_ns: "[86.25,103.50)"]
+        - [age_wk_ns: "[103.50,Inf)"]
+        - [age_wk_ns: "[57.50,103.50]"]
+      names:
+    filter_window:
+      age_var: "age_wk_ns"
+      start: 0
+      end: 165
+      window_size_vector: [25, 50]
+      step: 10
+    filter_cumulative:
+      age_var: "age_wk_ns"
+      start_vector: [0,25,50,75]
+      end: 165
+      step: 25
+    resample:
+      age_var: "age_wk_ns"
+      fraction_vector: [.75, .667, .5, .337, .25]
   labels:
     oc_name: "FBG"
     oc_units: "(mg/dL)"
@@ -288,14 +401,14 @@
     threshold: 5
     age_var: "age_wk"
   percent_change_baseline:
-    execute: FALSE
+    execute: TRUE
     age_var: "age_wk"
     target: 30
     lower: 0
     upper: 50
     keep_before: FALSE
   sample_monthwise:
-    execute: TRUE
+    execute: FALSE
     interval: 3
     age_var: "age_wk"
   train_test:
@@ -323,7 +436,7 @@
       - [per_age_wk: "(90, 100]"] # oldest in life
       - [per_age_wk: "(50, 90]"] # midlife + late life
   model:
-    fixed: "~ $age_var + $age_var2 + sex_F + strain_HET3" 
+    fixed: "~ $age_var + $age_var2 + sex_F * strain_HET3" 
     fixcov: ["sex_F", "strain_HET3"]
     mixture: "~ $age_var + $age_var2" 
     random: 
@@ -333,6 +446,29 @@
     ng_max: 10
     idiag: [TRUE, FALSE]
     nwg: [TRUE, FALSE]
+  prediction_data:
+    filter_interval:
+      intervals:
+        - [age_wk_ns: "(0, 57.50)"]
+        - [age_wk_ns: "[57.50,86.25)"]
+        - [age_wk_ns: "[86.25,103.50)"]
+        - [age_wk_ns: "[103.50,Inf)"]
+        - [age_wk_ns: "[57.50,103.50]"]
+      names:
+    filter_window:
+      age_var: "age_wk_ns"
+      start: 0
+      end: 165
+      window_size_vector: [25, 50]
+      step: 10
+    filter_cumulative:
+      age_var: "age_wk_ns"
+      start_vector: [0,25,50,75]
+      end: 165
+      step: 25
+    resample:
+      age_var: "age_wk_ns"
+      fraction_vector: [.75, .667, .5, .337, .25]
   labels:
     oc_name: "Body Fat"
     oc_units: "(g)"
@@ -353,14 +489,14 @@
     threshold: 5
     age_var: "age_wk"
   percent_change_baseline:
-    execute: FALSE
+    execute: TRUE
     age_var: "age_wk"
     target: 30
     lower: 0
     upper: 50
     keep_before: FALSE
   sample_monthwise:
-    execute: TRUE
+    execute: FALSE
     interval: 3
     age_var: "age_wk"
   train_test:
@@ -395,8 +531,7 @@
       - [sex: M, strain: B6]
       - [sex: F, strain: B6]
   model:
-    fixed: "~ $age_var + $age_var2 + sex_F + strain_HET3" 
-    fixcov: ["sex_F", "strain_HET3"]
+    fixed: "~ $age_var + $age_var2" 
     mixture: "~ $age_var + $age_var2" 
     random: 
       - "~ 1"
@@ -405,6 +540,29 @@
     ng_max: 10
     idiag: [TRUE, FALSE]
     nwg: [TRUE, FALSE]
+  prediction_data:
+    filter_interval:
+      intervals:
+        - [age_wk_ns: "(0, 57.50)"]
+        - [age_wk_ns: "[57.50,86.25)"]
+        - [age_wk_ns: "[86.25,103.50)"]
+        - [age_wk_ns: "[103.50,Inf)"]
+        - [age_wk_ns: "[57.50,103.50]"]
+      names:
+    filter_window:
+      age_var: "age_wk_ns"
+      start: 0
+      end: 165
+      window_size_vector: [25, 50]
+      step: 10
+    filter_cumulative:
+      age_var: "age_wk_ns"
+      start_vector: [0,25,50,75]
+      end: 165
+      step: 25
+    resample:
+      age_var: "age_wk_ns"
+      fraction_vector: [.75, .667, .5, .337, .25]
   labels:
     oc_name: "Body Fat"
     oc_units: "(g)"

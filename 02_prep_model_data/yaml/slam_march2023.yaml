@@ -1,7 +1,7 @@
-out_tag: all
+out_tag: slam_march2023
 tag_time: FALSE
 plan: multisession
 sample_n: FALSE
 center: TRUE
 scale: FALSE
-dataset: "yaml/datasets/slam_february2023.yaml""
+dataset: "yaml/datasets/slam_march2023.yaml"

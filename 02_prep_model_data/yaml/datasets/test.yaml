@@ -33,9 +33,7 @@
       - [age_wk: "[0, 110]"]
       - [age_wk: "[0, 120]"]
   model:
-    fixed: 
-      - "~ $age_var + $age_var2 + sex_F + strain_HET3" 
-      - "~ $age_var + $age_var2 + sex_F * strain_HET3" 
+    fixed: "~ $age_var + $age_var2 + sex_F * strain_HET3" 
     fixcov: ["sex_F", "strain_HET3"]
     mixture: "~ $age_var + $age_var2" 
     random: 
