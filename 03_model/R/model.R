@@ -32,7 +32,7 @@ if (!is.null(config$filters)) {
 }
 
 # sample df -------------------------------------------------------------------
-if (!is.null(config$sample_n) & !config$sample_n) {
+if (!is.null(config$sample_n) & !isFALSE(config$sample_n)) {
   datasets <- lapply(datasets, function(dataset) {
     dataset$data <- sample_df(
       df = dataset$data,
