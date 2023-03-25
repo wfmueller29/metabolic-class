@@ -23,6 +23,22 @@ git clone https://github.com/wfmueller29/metabolic-class.git
 
 ### Step 2: Run code
 
+Move to correct working Directory
 ```
-bash submit
+cd /data/$USER/metabolic-class/analysis
 ```
+
+Submit general_prep_model_data.R with correct config file as a command line 
+argument. If no config file is provided, the test config is run
+
+```
+bash submit/02_submit_prep_data.sh <Config file path>
+```
+
+Submit model.R.
+
+```
+bash submit/03_submit_models.sh <Name of output directory from prep model>
+```
+
+
