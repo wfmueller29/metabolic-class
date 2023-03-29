@@ -86,7 +86,7 @@ filter_window <- function(data_list,
   window_size_vector <- dataset$prediction_data$filter_window$window_size_vector
   step <- dataset$prediction_data$filter_window$step
 
-  dataset$filter_window_data <- .filter_window_across(
+  dataset$prediction_data$data$filter_window_data <- .filter_window_across(
     data,
     age_var,
     start,

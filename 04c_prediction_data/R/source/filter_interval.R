@@ -1,10 +1,11 @@
 # Create filter interval for datasets
 filter_interval_dataset <- function(datasets) {
   datasets <- lapply(datasets, function(dataset) {
-    intervals <- dataset$prediction_data$filter_interval$intervals 
+    intervals <- dataset$prediction_data$filter_interval$intervals
     intervals <- lapply(intervals, unlist, use.names = TRUE)
     data <- dataset$data
-    dataset$filter_interval <- filter_interval_loop(data, intervals)
+    dataset$prediction_data$data$filter_interval_data <-
+      filter_interval_loop(data, intervals)
     dataset
   })
 }

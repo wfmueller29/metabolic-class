@@ -58,26 +58,26 @@ filter_cumulative <- function(data_list, age_var, start_vector, end, step) {
   start_vector <- dataset$prediction_data$filter_cumulative$start_vector
   end <- dataset$prediction_data$filter_cumulative$end
   step <- dataset$prediction_data$filter_cumulative$step
-  dataset$filter_cumulative_data <- .filter_cumulative_across(data,
-                                                              age_var,
-                                                              start_vector,
-                                                              end,
-                                                              step)
-  
-  dataset
+  dataset$prediction_data$data$filter_cumulative_data <-
+    .filter_cumulative_across(
+      data,
+      age_var,
+      start_vector,
+      end,
+      step
+    )
 
+  dataset
 }
 
 .filter_cumulative_across_dataset_apply <- function(datasets) {
   datasets <- lapply(datasets, .filter_cumulative_across_dataset)
 
   datasets
-
 }
 
 filter_cumulative_dataset <- function(datasets) {
-  datasets <- .filter_cumulative_across_dataset_apply(datasets) 
+  datasets <- .filter_cumulative_across_dataset_apply(datasets)
 
   datasets
 }
-

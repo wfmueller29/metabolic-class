@@ -32,6 +32,7 @@ for (i in seq_along(datasets)) {
 
 # filter by cumulative time window --------------------------------------------
 
+source("R/source/filter_utils.R")
 source("R/source/filter_cumulative.R")
 
 datasets <- filter_cumulative_dataset(datasets)
@@ -55,8 +56,7 @@ source("R/source/resample_frequency.R")
 
 datasets <- resample_frequency_dataset(datasets)
 
-# save our prediction dataframe -----------------------------------------------
-save(dfs_prediction, file = "output/dfs_prediction.RDATA")
+# save our datasets -----------------------------------------------------------
 
 out_dir <- file.path("output", out_tag)
 dir.create(out_dir)
