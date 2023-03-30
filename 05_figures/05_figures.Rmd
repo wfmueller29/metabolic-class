@@ -557,6 +557,10 @@ for (dataset in datasets) {
 }
 prediction_columns <- unique(prediction_data_names)
 
+# create a list of lists, where parent list is the filter applied, and the
+# daughter lists provides the filtered dataframes for the corresponding
+# row of final_models. This code does not take into account the case where
+# certain filters are applied to one row, but not another
 filter_list <- list()
 for (filter in prediction_columns) {
   row_list <- list()
