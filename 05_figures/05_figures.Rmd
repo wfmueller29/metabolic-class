@@ -548,18 +548,31 @@ source("R/pred_class.R")
 ```
 
 ```{r create prediction results}
-# add prediction dataframes to final_models
-for (subset_name in names(dfs_prediction)) {
-  subset <- list()
-  for (i in seq_len(nrow(final_models))) {
-    data_name <- final_models$data[[i]]
-    dfs_pred_list <- dfs_prediction[[subset_name]][[data_name]]
-    subset[i] <- list(dfs_pred_list)
+
+# Get the names of the filtered data
+prediction_data_names <- NULL
+for (dataset in datasets) {
+  new_prediction_data_names <- names(dataset$prediction$data)
+  prediction_data_names <- c(prediction_data_names, new_prediction_data_names)
+}
+prediction_columns <- unique(prediction_data_names)
+
+filter_list <- list()
+for (filter in prediction_columns) {
+  row_list <- list()
+  for (row_number in seq_len(nrow(final_models))) {
+    data_name <- final_models[row_number, "data"]
+    dataset <- datasets[[data_name]]
+    prediction_data <- dataset$prediction_data
+    row_list[[row_number]] <- prediction_data$data[[filter]]
   }
-  final_models[[subset_name]] <- subset
+  filter_list[[filter]] <- row_list
 }
 
-prediction_columns <- names(dfs_prediction)[-1]
+for (filter in names(filter_list)) {
+  final_models[[filter]] <- filter_list[[filter]]
+}
+
 prediction_results_names <- paste(prediction_columns, "results", sep = "_")
 
 prediction_results <- lapply(prediction_columns, function(col) {
