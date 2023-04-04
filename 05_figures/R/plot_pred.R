@@ -54,7 +54,8 @@ plot_window <- function(window_df,
                            xlab = "",
                            subtitle = "") {
   window_df <- pivot_longer(window_df, cols = all_of(cols)) %>%
-    filter(class == "all")
+    filter(class == "all") %>%
+    mutate(window_size = as.integer(upper_bound - lower_bound))
 
   ggplot(data = window_df, mapping = aes(
     x = upper_bound, y = value,

@@ -39,7 +39,7 @@ name_new_interval <- function(new_interval_df) {
 
 name_threshold <- function(threshold_df) {
   splits <- str_split_fixed(threshold_df$dataset,
-                            pattern = "\\(|,|\\)",
+                            pattern = "\\(|\\[|,|\\)|\\]",
                             n = Inf)
   threshold_df$upper_bound <- as.numeric(splits[,3])
   threshold_df$lower_bound <- as.numeric(splits[,2])
