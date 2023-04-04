@@ -1,0 +1,242 @@
+# Body Weight All Mice --------------------------------------------------------
+- name: "slam"
+  path: "../01_dataset/output/main_all2.RDATA"
+  outcome: "bw"
+  age_var: "per_age_wk"
+  id: "idno"
+  dummy: ["sex", "strain"]
+  numeric: ["bw", "idno", "le_wk"]
+  factor: ["cohort"]
+  remove_velocity_outliers:
+    execute: FALSE
+    threshold: 5
+    age_var: "age_wk"
+  percent_change_baseline:
+    execute: TRUE
+    age_var: "age_wk"
+    target: 30
+    lower: 0
+    upper: 50
+    keep_before: FALSE
+  sample_monthwise:
+    execute: TRUE
+    interval: 3
+    age_var: "age_wk"
+  train_test:
+    execute: TRUE
+    id: "idno"
+    sample_by: ["sex", "strain"]
+    split: .8
+  sample_age_interval:
+    execute: TRUE
+    intervals:
+      - [per_age_wk: "(0, 50]"]
+      - [per_age_wk: "(0, 75]"]
+      - [per_age_wk: "(0, 90]"]
+      - [per_age_wk: "(0, 50]"] # early life
+      - [per_age_wk: "(50, 75]"] # midlife
+      - [per_age_wk: "(75, 90]"] # late life
+      - [per_age_wk: "(90, 100]"] # oldest in life
+      - [per_age_wk: "(50, 90]"] # midlife + late life
+  model:
+    fixed: "~ per_age_wk + per_age_wk2 + sex_F * strain_HET3" 
+    fixcov: ["sex_F", "strain_HET3"]
+    mixture: "~ per_age_wk + per_age_wk2" 
+    random: 
+      - "~ 1"
+      - "~ 1 + per_age_wk"
+      - "~ 1 + per_age_wk + per_age_wk2"
+    ng_max: 10
+    idiag: [TRUE, FALSE]
+    nwg: [TRUE, FALSE]
+  prediction_data:
+    filter_interval:
+      intervals:
+        - [per_age_wk_ns: "(0, 50)"]
+        - [per_age_wk_ns: "[50, 75)"]
+        - [per_age_wk_ns: "[75, 90)"]
+        - [per_age_wk_ns: "[90, 100)"]
+        - [per_age_wk_ns: "[50, 90)"]
+      names:
+    filter_window:
+      age_var: "per_age_wk_ns"
+      start: 0
+      end: 100
+      window_size_vector: [25, 50]
+      step: 10
+    filter_cumulative:
+      age_var: "per_age_wk_ns"
+      start_vector: [0,25,50,75]
+      end: 100
+      step: 25
+    resample:
+      age_var: "per_age_wk_ns"
+      fraction_vector: [.75, .667, .5, .337, .25]
+  labels:
+    oc_name: "Body Weight"
+    oc_units: "(g)"
+    age_var_name: "Relative Age"
+    age_var_units: "(%)"
+    data_name: "SLAM Body Weight"
+
+# FBG All Mice ------------------------------------------------------------
+- name: "slam"
+  path: "../01_dataset/output/main_all2.RDATA"
+  outcome: "gluc"
+  age_var: "per_age_wk"
+  id: "idno"
+  dummy: ["sex", "strain"]
+  numeric: ["gluc", "idno", "le_wk"]
+  factor: ["cohort"]
+  remove_velocity_outliers:
+    execute: FALSE
+    threshold: 5
+    age_var: "age_wk"
+  percent_change_baseline:
+    execute: TRUE
+    age_var: "age_wk"
+    target: 30
+    lower: 0
+    upper: 50
+    keep_before: FALSE
+  sample_monthwise:
+    execute: FALSE
+    interval: 3
+    age_var: "age_wk"
+  train_test:
+    execute: TRUE
+    id: "idno"
+    sample_by: ["sex", "strain"]
+    split: .8
+  sample_age_interval:
+    execute: TRUE
+    intervals:
+      - [per_age_wk: "(0, 50]"]
+      - [per_age_wk: "(0, 75]"]
+      - [per_age_wk: "(0, 90]"]
+      - [per_age_wk: "(0, 50]"] # early life
+      - [per_age_wk: "(50, 75]"] # midlife
+      - [per_age_wk: "(75, 90]"] # late life
+      - [per_age_wk: "(90, 100]"] # oldest in life
+      - [per_age_wk: "(50, 90]"] # midlife + late life
+  model:
+    fixed: "~ per_age_wk + per_age_wk2 + sex_F * strain_HET3" 
+    fixcov: ["sex_F", "strain_HET3"]
+    mixture: "~ per_age_wk + per_age_wk2" 
+    random: 
+      - "~ 1"
+      - "~ 1 + per_age_wk"
+      - "~ 1 + per_age_wk + per_age_wk2"
+    ng_max: 10
+    idiag: [TRUE, FALSE]
+    nwg: [TRUE, FALSE]
+  prediction_data:
+    filter_interval:
+      intervals:
+        - [per_age_wk_ns: "(0, 50)"]
+        - [per_age_wk_ns: "[50, 75)"]
+        - [per_age_wk_ns: "[75, 90)"]
+        - [per_age_wk_ns: "[90, 100)"]
+        - [per_age_wk_ns: "[50, 90)"]
+      names:
+    filter_window:
+      age_var: "per_age_wk_ns"
+      start: 0
+      end: 100
+      window_size_vector: [25, 50]
+      step: 10
+    filter_cumulative:
+      age_var: "per_age_wk_ns"
+      start_vector: [0,25,50,75]
+      end: 100
+      step: 25
+    resample:
+      age_var: "per_age_wk_ns"
+      fraction_vector: [.75, .667, .5, .337, .25]
+  labels:
+    oc_name: "FBG"
+    oc_units: "(mg/dL)"
+    age_var_name: "Relative Age"
+    age_var_units: "(%)"
+    data_name: "SLAM FBG"
+
+# Body Fat All Mice -----------------------------------------------------------
+- name: "slam"
+  path: "../01_dataset/output/main_all2.RDATA"
+  outcome: "fat"
+  age_var: "per_age_wk"
+  id: "idno"
+  dummy: ["sex", "strain"]
+  numeric: ["fat", "idno", "le_wk"]
+  factor: ["cohort"]
+  remove_velocity_outliers:
+    execute: FALSE
+    threshold: 5
+    age_var: "age_wk"
+  percent_change_baseline:
+    execute: TRUE
+    age_var: "age_wk"
+    target: 30
+    lower: 0
+    upper: 50
+    keep_before: FALSE
+  sample_monthwise:
+    execute: FALSE
+    interval: 3
+    age_var: "age_wk"
+  train_test:
+    execute: TRUE
+    id: "idno"
+    sample_by: ["sex", "strain"]
+    split: .8
+  sample_age_interval:
+    execute: TRUE
+    intervals:
+      - [per_age_wk: "(0, 50]"]
+      - [per_age_wk: "(0, 75]"]
+      - [per_age_wk: "(0, 90]"]
+      - [per_age_wk: "(0, 50]"] # early life
+      - [per_age_wk: "(50, 75]"] # midlife
+      - [per_age_wk: "(75, 90]"] # late life
+      - [per_age_wk: "(90, 100]"] # oldest in life
+      - [per_age_wk: "(50, 90]"] # midlife + late life
+  model:
+    fixed: "~ per_age_wk + per_age_wk2 + sex_F * strain_HET3" 
+    fixcov: ["sex_F", "strain_HET3"]
+    mixture: "~ per_age_wk + per_age_wk2" 
+    random: 
+      - "~ 1"
+      - "~ 1 + per_age_wk"
+      - "~ 1 + per_age_wk + per_age_wk2"
+    ng_max: 10
+    idiag: [TRUE, FALSE]
+    nwg: [TRUE, FALSE]
+  prediction_data:
+    filter_interval:
+      intervals:
+        - [per_age_wk_ns: "(0, 50)"]
+        - [per_age_wk_ns: "[50, 75)"]
+        - [per_age_wk_ns: "[75, 90)"]
+        - [per_age_wk_ns: "[90, 100)"]
+        - [per_age_wk_ns: "[50, 90)"]
+      names:
+    filter_window:
+      age_var: "per_age_wk_ns"
+      start: 0
+      end: 100
+      window_size_vector: [25, 50]
+      step: 10
+    filter_cumulative:
+      age_var: "per_age_wk_ns"
+      start_vector: [0,25,50,75]
+      end: 100
+      step: 25
+    resample:
+      age_var: "per_age_wk_ns"
+      fraction_vector: [.75, .667, .5, .337, .25]
+  labels:
+    oc_name: "Body Fat"
+    oc_units: "(g)"
+    age_var_name: "Relative Age"
+    age_var_units: "(%)"
+    data_name: "SLAM Body Fat"

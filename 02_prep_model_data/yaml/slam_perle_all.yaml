@@ -1,0 +1,7 @@
+out_tag: slam_perle_all
+tag_time: FALSE
+plan: multisession
+sample_n: FALSE
+center: TRUE
+scale: FALSE
+dataset: "yaml/datasets/slam_perle_all.yaml"
