@@ -12,6 +12,8 @@ library(rsample)
 # load in config using file path ----------------------------------------------
 args <- commandArgs(trailingOnly = TRUE)
 
+args <- "yaml/slam_age_all.yaml" # delete
+
 if (length(args) == 0) {
   config <- yaml::read_yaml("yaml/test_local.yaml")
 } else {
@@ -199,6 +201,116 @@ for (dataset in datasets) {
 
 datasets <- dataset_overwrite
 
+# check if there is overlap in unique ID's for each dataset -------------------
+unique_id_list <- list()
+for (i in seq_along(datasets)) {
+  execute <- datasets[[i]]$train_test$execute
+  id <- datasets[[i]]$id
+  data <- datasets[[i]]$data
+  if (execute) {
+    unique_id_list[[i]] <- unique(data$id)
+  } else {
+    unique_id_list[[i]] <- NULL
+  }
+}
+
+# these are the id's that are common to all outcomes. This way we can exclude
+# the same ids from the training set for all outcome
+shared_unique_id <- Reduce(dplyr::intersect, unique_id_list)
+
+# keep ID's that have all outcomes --------------------------------------------
+new_datasets <- list()
+for (dataset in datasets) {
+  data <- dataset$data
+  id <- dataset$id
+  missing_data <- data[!data$id %in% shared_unique_id, ]
+  data <- data[data$id %in% shared_unique_id, ]
+  dataset$data <- data
+  dataset$missing_data <- missing_data
+  new_datasets <- c(new_datasets, list(dataset))
+}
+
+# Get orphaned ID numbers ------------------------------------------------------
+
+orphaned_ids <- list()
+
+for (dataset in new_datasets) {
+  id <- dataset$id
+  data <- dataset$missing_data
+  new_orphaned_ids <- unique(data[[id]])
+  orphaned_ids <- c(orphaned_ids, new_orphaned_ids)
+}
+
+orphaned_ids <- as.vector(orphaned_ids)
+
+datasets <- new_datasets
+
+# training testing split ------------------------------------------------------
+# I need to figure a way to ensure that each dataset has the same subjects
+# removed from the training and testing sets
+
+train_test_datasets <- list()
+i <- 1
+
+for (dataset in datasets) {
+
+  # check if train_test is part of dataset commands
+  if (!is.null(dataset$train_test)) {
+    # to ensure that we want to excute train test split
+    if (dataset$train_test$execute) {
+      # first we need to make one categorical variable that encompasses all
+      # groups
+      cat_vars <- dataset$train_test$sample_by
+      data <- dataset$data
+      new_name <- paste(cat_vars, collapse = "-")
+      new_col <- apply(data[, cat_vars], 1, paste, collapse = "-")
+      data[, new_name] <- new_col
+      dataset$data <- data
+
+      # now we need to create a split determined by the split variable in the
+      # yaml file. This will split so that we have representative proportions
+      # of the original dataset in the initial split.
+
+      # we are adding this counter so that we have coherant train and test
+      # ids across outcome variables
+      if (i == 1) {
+        split_data <- rsample::group_initial_split(
+          data = dataset$data,
+          prop = dataset$train_test$split,
+          strata = new_name,
+          group = dataset$train_test$id
+        )
+
+        train_data <- rsample::training(split_data)
+        test_data <- rsample::testing(split_data)
+
+        # get ID's from previous train test
+        train_id <- train_data[[dataset$id]]
+        test_id <- test_data[[dataset$id]]
+
+      } else {
+        id_name <- dataset$id
+        train_data <- data[data[[id_name]] %in% train_id, ]
+        test_data <- data[data[[id_name]] %in% test_id, ]
+
+      }
+
+      i <- i + 1
+
+      dataset$data <- train_data
+      dataset$test_data <- test_data
+
+      dataset$data_mod <- "train_test"
+
+      train_test_datasets <- c(train_test_datasets, list(dataset))
+    } else {
+      train_data <- dataset$data
+    }
+  }
+}
+
+datasets <- c(datasets, train_test_datasets)
+
 # calculate percent change from baseline --------------------------------------
 
 source("R/source/percent_change_baseline.R")
@@ -290,53 +402,6 @@ for (dataset in datasets) {
 
 datasets <- c(datasets, remove_velocity_datasets)
 
-# training testing split ------------------------------------------------------
-
-train_test_datasets <- list()
-
-for (dataset in datasets) {
-
-  # check if train_test is part of dataset commands
-  if (!is.null(dataset$train_test)) {
-    # if it is check if the dataset is the originally loaded dataset
-    original <- is.null(dataset$data_mod)
-    # to ensure that we want to excute train test split
-    if (dataset$train_test$execute & original) {
-
-      # first we need to make one categorical variable that encompasses all
-      # groups
-      cat_vars <- dataset$train_test$sample_by
-      data <- dataset$data
-      new_name <- paste(cat_vars, collapse = "-")
-      new_col <- apply(data[, cat_vars], 1, paste, collapse = "-")
-      data[, new_name] <- new_col
-      dataset$data <- data
-
-      # now we need to create a split determined by the split variable in the
-      # yaml file. This will split so that we have representative proportions
-      # of the original dataset in the initial split.
-      split_data <- rsample::initial_split(
-        data = dataset$data,
-        prop = dataset$train_test$split,
-        strata = new_name,
-        group = dataset$train_test$id
-      )
-
-      train_data <- rsample::training(split_data)
-      test_data <- rsample::testing(split_data)
-
-      dataset$data <- train_data
-      dataset$test_data <- test_data
-
-      dataset$data_mod <- "train_test"
-
-      train_test_datasets <- c(train_test_datasets, list(dataset))
-    }
-  }
-}
-
-datasets <- c(datasets, train_test_datasets)
-
 # -----------------------------------------------------------------------------
 # down sample age at to see how classes separate with limited data late in life
 # we will only down sample the original dataset
@@ -345,10 +410,8 @@ source("R/source/filter_interval.R")
 
 sample_age_interval_datasets <- list()
 for (dataset in datasets) {
-
   # to check if there are any commands about sampling age intervals
   if (!is.null(dataset$sample_age_interval)) {
-
     # to check if the dataset is an original, if not we are not sample age
     original <- is.null(dataset$data_mod)
 
@@ -420,7 +483,6 @@ for (i in seq_along(datasets)) {
 
 # create data_id --------------------------------------------------------------
 for (i in seq_along(datasets)) {
-
   # if no data mod, dataset is considered OG
   if (is.null(datasets[[i]]$data_mod)) {
     datasets[[i]]$data_mod <- "og"
@@ -458,7 +520,7 @@ i <- 1
 for (dataset in datasets) {
   data_mod <- dataset$data_mod
   file_name <- paste(
-    i, 
+    i,
     dataset$outcome,
     data_mod,
     sep = "_"
