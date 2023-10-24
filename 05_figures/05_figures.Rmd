@@ -56,7 +56,7 @@ path_04c <- normalizePath(file.path(
   "output",
   params$model_dir
 ))
- 
+
 load_output(path_04, "cf")
 load_output(path_04c, "datasets")
 load_output(path_04, "final_models")
@@ -81,7 +81,6 @@ final_models$dfs <- lapply(final_models$data, function(name) {
 
 ### Read Yaml
 ```{r load yaml}
-
 yaml_models <- yaml::read_yaml(params$yaml)
 ```
 
@@ -92,7 +91,7 @@ model_keep <- character()
 for (group in yaml_models) {
   model_keep <- c(model_keep, group$model_names)
 }
-final_models <- final_models[final_models$model_name %in% model_keep,]
+final_models <- final_models[final_models$model_name %in% model_keep, ]
 
 # Make rownames null so that the rownumbers are correct
 rownames(final_models) <- NULL
@@ -274,9 +273,19 @@ reorder_class <- function(final_models, mo_names) {
   missing_names <- all_names[!(all_names %in% mo_names)]
   i <- 0
   for (name in mo_names) {
+    # generate new_class
     census <- x[x$model_name == name, ]$census
     census <- unlist(census, recursive = FALSE)
     census$new_class <- as.character(census$class + i)
+
+    # Create new prob based off of new_class
+    probs_index <- grepl("^prob", names(census))
+    probs <- names(census)[grepl("^prob", names(census))]
+    probs <- stringr::str_split(probs, pattern = "prob", simplify = TRUE)[, 2]
+    new_probs <- as.numeric(probs) + i
+    new_probs <- paste0("prob", new_probs)
+    names(census)[probs_index] <- new_probs
+
     uni_class <- length(unique(census$class))
     i <- uni_class + i
     x[x$model_name == name, ]$census[[1]] <- as.data.frame(census)
@@ -334,7 +343,8 @@ source("R/clean_t1.R")
 final_models$clean_t1 <- lapply(1:length(final_models$census), function(i) {
   cat(i, "- ")
   clean_t1 <- clean_t1(final_models$census[[i]],
-                       columns = final_models$dummy[[i]])
+    columns = final_models$dummy[[i]]
+  )
   cat("\n")
 
   clean_t1
@@ -937,8 +947,8 @@ source("R/combine_boot_accuracy.R")
 
 x <- final_models
 x$interval_accuracy_df <- combine_boot_accuracy_list(x$interval_accuracy)
-x$threshold_accuracy_df <- combine_boot_accuracy_list(x$threshold_accuracy)
-x$sample_accuracy_df <- combine_boot_accuracy_list(x$sample_accuracy)
+x$cumulative_accuracy_df <- combine_boot_accuracy_list(x$cumulative_accuracy)
+x$resampled_accuracy_df <- combine_boot_accuracy_list(x$resampled_accuracy)
 x$window_accuracy_df <- combine_boot_accuracy_list(x$window_accuracy)
 final_models <- x
 ```
@@ -952,13 +962,13 @@ final_models$interval_accuracy_df <- lapply(
 )
 
 
-final_models$threshold_accuracy_df <- lapply(
-  final_models$threshold_accuracy_df,
+final_models$cumulative_accuracy_df <- lapply(
+  final_models$cumulative_accuracy_df,
   name_threshold
 )
 
-final_models$sample_accuracy_df <- lapply(
-  final_models$sample_accuracy_df,
+final_models$resampled_accuracy_df <- lapply(
+  final_models$resampled_accuracy_df,
   name_sample
 )
 
@@ -980,13 +990,13 @@ final_models$interval_accuracy_df <- lapply(
   extract_accuracy_ci
 )
 
-final_models$threshold_accuracy_df <- lapply(
-  final_models$threshold_accuracy_df,
+final_models$cumulative_accuracy_df <- lapply(
+  final_models$cumulative_accuracy_df,
   extract_accuracy_ci
 )
 
-final_models$sample_accuracy_df <- lapply(
-  final_models$sample_accuracy_df,
+final_models$resampled_accuracy_df <- lapply(
+  final_models$resampled_accuracy_df,
   extract_accuracy_ci
 )
 
@@ -1036,10 +1046,10 @@ final_models$window_boot_accuracy_plot <- lapply(
 
 final_models$window_boot_accuracy_plot
 
-final_models$threshold_boot_accuracy_plot <- lapply(
+final_models$cumulative_boot_accuracy_plot <- lapply(
   seq_len(nrow(final_models)),
   function(i) {
-    plot_boot_accuracy_threshold(final_models$threshold_accuracy_df[[i]],
+    plot_boot_accuracy_threshold(final_models$cumulative_accuracy_df[[i]],
       xlab = "Upper Bound Age (weeks)",
       ylab = "Accuracy",
       title = paste(
@@ -1051,12 +1061,12 @@ final_models$threshold_boot_accuracy_plot <- lapply(
   }
 )
 
-final_models$threshold_boot_accuracy_plot
+final_models$cumulative_boot_accuracy_plot
 
-final_models$sample_boot_accuracy_plot <- lapply(
+final_models$resampled_boot_accuracy_plot <- lapply(
   seq_len(nrow(final_models)),
   function(i) {
-    plot_boot_accuracy_sample(final_models$sample_accuracy_df[[i]],
+    plot_boot_accuracy_sample(final_models$resampled_accuracy_df[[i]],
       xlab = "Lower Bound Age (weeks)",
       ylab = "Accuracy",
       title = paste(
@@ -1067,9 +1077,62 @@ final_models$sample_boot_accuracy_plot <- lapply(
   }
 )
 
-final_models$sample_boot_accuracy_plot
+final_models$resampled_boot_accuracy_plot
 ```
 
+## Combined Metabolic Class
+
+### Create Combined Cox 
+
+```{r source combined_class_cox, file = 'R/combined_class_cox.R'}
+source("R/combined_class_cox.R")
+
+```
+
+```{r combined survival}
+# We can parameterize this later
+covariates <- c("sex", "strain")
+age_death <- "age_wk_death"
+censor <- "dead_nat"
+
+
+model_name_list <- unlist(yaml_models, recursive = FALSE)
+
+combined_cox_models <- lapply(
+  model_name_list,
+  cox_combine_class,
+  final_models,
+  datasets,
+  covariates,
+  age_death,
+  censor
+)
+
+names(combined_cox_models) <- lapply(model_name_list, paste, collapse = "-")
+
+for (name in names(combined_cox_models)) {
+  name_vector <- stringr::str_split(name, pattern = "-")[[1]]
+  model_index <- final_models$model_name %in% name_vector
+  model_index <- match(name_vector, final_models$model_name)
+  for (i in model_index) {
+    final_models[i, "cox_combined_models"] <- list(combined_cox_models[name])
+  }
+}
+```
+
+### Test Mortality Prediction of Train Test Datasets
+
+```{r test mortaility prediction using train test}
+
+
+```
+
+
+### Test Mortality Prediction of External Data
+
+```{r test mortality prediction using external data}
+ 
+```
 ### Output CSV with idno's and class
 
 ```{r idnos and class}
