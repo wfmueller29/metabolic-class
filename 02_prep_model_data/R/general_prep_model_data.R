@@ -8,7 +8,6 @@ library(tidyverse)
 library(helphlme)
 library(rsample)
 
-
 # load in config using file path ----------------------------------------------
 args <- commandArgs(trailingOnly = TRUE)
 
@@ -253,7 +252,6 @@ train_test_datasets <- list()
 i <- 1
 
 for (dataset in datasets) {
-
   # check if train_test is part of dataset commands
   if (!is.null(dataset$train_test)) {
     # to ensure that we want to excute train test split
@@ -287,12 +285,10 @@ for (dataset in datasets) {
         # get ID's from previous train test
         train_id <- train_data[[dataset$id]]
         test_id <- test_data[[dataset$id]]
-
       } else {
         id_name <- dataset$id
         train_data <- data[data[[id_name]] %in% train_id, ]
         test_data <- data[data[[id_name]] %in% test_id, ]
-
       }
 
       i <- i + 1
