@@ -137,6 +137,29 @@ for (i in seq_along(datasets)) {
   }
 }
 
+# harmonize the datasets for cohort -------------------------------------------
+
+source("R/source/harmonize.R")
+
+harmonized_datasets <- list()
+
+for (dataset in datasets) {
+  if (dataset$harmonize$execute) {
+    data_harmonized <- harmonize(
+      data = dataset$data,
+      formula = dataset$harmonize$formula,
+      outcome = dataset$outcome,
+      variable = dataset$harmonize$variable
+    )
+
+    dataset$data <- data_harmonized
+
+    harmonized_datasets <- c(harmonized_datasets, list(dataset))
+  }
+}
+
+datasets <- harmonized_datasets
+
 # sample datasets based upon 3 month time interval ----------------------------
 
 source("R/source/sample_monthwise.R")
