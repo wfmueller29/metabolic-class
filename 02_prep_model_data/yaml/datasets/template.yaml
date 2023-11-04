@@ -128,3 +128,8 @@
     age_var_name: ["Age", "Relative Age"]
     age_var_units: ["(weeks)", "(%)"]
     data_name: "SLAM Body Weight"
+  # Harmonizing the dataset
+  harmonize:
+    execute: TRUE
+    formula: "~ age_wk + age_wk2 + sex * strain + (1|idno)"
+    variable: "cohort"

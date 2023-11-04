@@ -78,6 +78,10 @@
     age_var_name: "Relative Age"
     age_var_units: "(%)"
     data_name: "SLAM Body Weight"
+  harmonize:
+    execute: TRUE
+    formula: "~ age_wk + age_wk2 + sex * strain + (1|idno)"
+    variable: "cohort"
 
 # FBG All Mice ------------------------------------------------------------
 - name: "slam"
@@ -159,6 +163,10 @@
     age_var_name: "Relative Age"
     age_var_units: "(%)"
     data_name: "SLAM FBG"
+  harmonize:
+    execute: TRUE
+    formula: "~ age_wk + age_wk2 + sex * strain + (1|idno)"
+    variable: "cohort"
 
 # Body Fat All Mice -----------------------------------------------------------
 - name: "slam"
@@ -240,3 +248,7 @@
     age_var_name: "Relative Age"
     age_var_units: "(%)"
     data_name: "SLAM Body Fat"
+  harmonize:
+    execute: TRUE
+    formula: "~ age_wk + age_wk2 + sex * strain + (1|idno)"
+    variable: "cohort"

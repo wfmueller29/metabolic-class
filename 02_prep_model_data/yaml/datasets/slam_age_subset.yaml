@@ -84,6 +84,10 @@
     age_var_name: "Age"
     age_var_units: "(weeks)"
     data_name: "SLAM Body Weight"
+  harmonize:
+    execute: TRUE
+    formula: "~ age_wk + age_wk2 + sex * strain + (1|idno)"
+    variable: "cohort"
 
 # FBG Sex, Strain Subsets
 - name: "slam"
@@ -171,6 +175,10 @@
     age_var_name: "Age"
     age_var_units: "(weeks)"
     data_name: "SLAM FBG"
+  harmonize:
+    execute: TRUE
+    formula: "~ age_wk + age_wk2 + sex * strain + (1|idno)"
+    variable: "cohort"
 
 # Body Fat Sex, Strain Subsets
 - name: "slam"
@@ -258,6 +266,10 @@
     age_var_name: "Age"
     age_var_units: "(weeks)"
     data_name: "SLAM Body Fat"
+  harmonize:
+    execute: TRUE
+    formula: "~ age_wk + age_wk2 + sex * strain + (1|idno)"
+    variable: "cohort"
 
 
 

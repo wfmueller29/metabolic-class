@@ -70,6 +70,10 @@
     age_var_name: ["Age", "Relative Age"]
     age_var_units: ["(weeks)", "(%)"]
     data_name: "SLAM Body Weight"
+  harmonize:
+    execute: TRUE
+    formula: "~ age_wk + age_wk2 + sex * strain + (1|idno)"
+    variable: "cohort"
 - name: "slam"
   path: "../01_dataset/output/main_all2.RDATA"
   outcome: "bw"
@@ -148,6 +152,10 @@
     age_var_name: ["Age", "Relative Age"]
     age_var_units: ["(weeks)", "(%)"]
     data_name: "SLAM Body Weight"
+  harmonize:
+    execute: TRUE
+    formula: "~ age_wk + age_wk2 + sex * strain + (1|idno)"
+    variable: "cohort"
 - name: "slam"
   path: "../01_dataset/output/main_all2.RDATA"
   outcome: "gluc"
@@ -205,3 +213,7 @@
     age_var_name: ["Age", "Relative Age"]
     age_var_units: ["(weeks)", "(%)"]
     data_name: "SLAM Glucose"
+  harmonize:
+    execute: TRUE
+    formula: "~ age_wk + age_wk2 + sex * strain + (1|idno)"
+    variable: "cohort"
