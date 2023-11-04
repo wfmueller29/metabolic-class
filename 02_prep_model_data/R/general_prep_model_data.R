@@ -11,8 +11,6 @@ library(rsample)
 # load in config using file path ----------------------------------------------
 args <- commandArgs(trailingOnly = TRUE)
 
-args <- "yaml/slam_age_all.yaml" # delete
-
 if (length(args) == 0) {
   config <- yaml::read_yaml("yaml/test_local.yaml")
 } else {
