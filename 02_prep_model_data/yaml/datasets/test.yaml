@@ -99,7 +99,7 @@
     interval: 3
     age_var: "age_wk"
   train_test:
-    execute: TRUE
+    execute: FALSE
     id: "idno"
     sample_by: ["sex", "strain"]
     split: .8

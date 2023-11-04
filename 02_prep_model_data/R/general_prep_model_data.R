@@ -241,13 +241,15 @@ shared_unique_id <- Reduce(dplyr::intersect, unique_id_list)
 # keep ID's that have all outcomes --------------------------------------------
 new_datasets <- list()
 for (dataset in datasets) {
-  data <- dataset$data
-  id <- dataset$id
-  missing_data <- data[!data$id %in% shared_unique_id, ]
-  data <- data[data$id %in% shared_unique_id, ]
-  dataset$data <- data
-  dataset$missing_data <- missing_data
-  new_datasets <- c(new_datasets, list(dataset))
+  if (datset$train_test$execute) {
+    data <- dataset$data
+    id <- dataset$id
+    missing_data <- data[!data$id %in% shared_unique_id, ]
+    data <- data[data$id %in% shared_unique_id, ]
+    dataset$data <- data
+    dataset$missing_data <- missing_data
+    new_datasets <- c(new_datasets, list(dataset))
+  }
 }
 
 # Get orphaned ID numbers ------------------------------------------------------
@@ -255,10 +257,12 @@ for (dataset in datasets) {
 orphaned_ids <- list()
 
 for (dataset in new_datasets) {
-  id <- dataset$id
-  data <- dataset$missing_data
-  new_orphaned_ids <- unique(data[[id]])
-  orphaned_ids <- c(orphaned_ids, new_orphaned_ids)
+  if (datset$train_test$execute) {
+    id <- dataset$id
+    data <- dataset$missing_data
+    new_orphaned_ids <- unique(data[[id]])
+    orphaned_ids <- c(orphaned_ids, new_orphaned_ids)
+  }
 }
 
 orphaned_ids <- as.vector(orphaned_ids)
