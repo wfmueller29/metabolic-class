@@ -74,6 +74,7 @@
     execute: TRUE
     formula: "~ age_wk + age_wk2 + sex * strain + (1|idno)"
     variable: "cohort"
+
 - name: "slam"
   path: "../01_dataset/output/main_all2.RDATA"
   outcome: "bw"
@@ -156,6 +157,7 @@
     execute: TRUE
     formula: "~ age_wk + age_wk2 + sex * strain + (1|idno)"
     variable: "cohort"
+
 - name: "slam"
   path: "../01_dataset/output/main_all2.RDATA"
   outcome: "gluc"
@@ -175,6 +177,21 @@
     lower: 0
     upper: 50
     keep_before: FALSE
+  sample_monthwise:
+    execute: TRUE
+    interval: 3
+    age_var: "age_wk"
+  train_test:
+    execute: TRUE
+    id: "idno"
+    sample_by: ["sex", "strain"]
+    split: .8
+  sample_age_interval:
+    execute: TRUE
+    intervals:
+      - [age_wk: "[0, 100]"]
+      - [age_wk: "[0, 110]"]
+      - [age_wk: "[0, 120]"]
   model:
     fixed: "~ $age_var + $age_var2 + sex_F + strain_HET3" 
     fixcov: ["sex_F", "strain_HET3"]
