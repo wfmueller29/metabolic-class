@@ -1,4 +1,7 @@
 .Rproj.user
+*__packages
+*.rdb
+*.rdx
 *.png
 *.pdf
 *.Rproj
