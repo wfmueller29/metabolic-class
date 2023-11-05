@@ -228,9 +228,8 @@ for (i in seq_along(datasets)) {
   id <- datasets[[i]]$id
   data <- datasets[[i]]$data
   if (execute) {
-    unique_id_list[[i]] <- unique(data$id)
-  } else {
-    unique_id_list[[i]] <- NULL
+    unique_ids <- unique(data$id)
+    unique_id_list <- c(unique_id_list, list(unique_ids))
   }
 }
 
@@ -241,13 +240,15 @@ shared_unique_id <- Reduce(dplyr::intersect, unique_id_list)
 # keep ID's that have all outcomes --------------------------------------------
 new_datasets <- list()
 for (dataset in datasets) {
-  if (datset$train_test$execute) {
+  if (dataset$train_test$execute) {
     data <- dataset$data
     id <- dataset$id
     missing_data <- data[!data$id %in% shared_unique_id, ]
     data <- data[data$id %in% shared_unique_id, ]
     dataset$data <- data
     dataset$missing_data <- missing_data
+    new_datasets <- c(new_datasets, list(dataset))
+  } else {
     new_datasets <- c(new_datasets, list(dataset))
   }
 }
@@ -257,7 +258,7 @@ for (dataset in datasets) {
 orphaned_ids <- list()
 
 for (dataset in new_datasets) {
-  if (datset$train_test$execute) {
+  if (dataset$train_test$execute) {
     id <- dataset$id
     data <- dataset$missing_data
     new_orphaned_ids <- unique(data[[id]])
