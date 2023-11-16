@@ -11,7 +11,6 @@
 #' @author William Mueller
 
 sample_monthwise <- function(data, age_var, interval, id) {
-
   data[, "age_m"] <- round(data[, age_var] * 0.230137 / interval) * interval
   data[, "age_wk_m"] <- data$age_m / 0.230137
   data[, "dif"] <- abs(data$age_wk_m - data$age_wk)
@@ -24,6 +23,4 @@ sample_monthwise <- function(data, age_var, interval, id) {
     as.data.frame()
 
   data
-
 }
-
