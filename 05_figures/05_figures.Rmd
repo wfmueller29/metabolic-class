@@ -65,6 +65,7 @@ load_output(path_04, "config")
 
 # load in main_cat_surv
 load(file = "../04b_healthcard_cod/output/main_cat_surv.RDATA")
+main_cat_surv <- as.data.frame(main_cat_surv)
 # load(file = "../01_dataset/output/main_cat_surv.RDATA")
 # load in health
 load(file = "../04b_healthcard_cod/output/health.RDATA")
@@ -123,18 +124,22 @@ health <- health %>%
   arrange(date_created) %>%
   mutate(wave = row_number()) %>%
   ungroup()
+health <- as.data.frame(health)
+
 health_wide <- pivot_wider(health,
   id_cols = c("idno", "tag", "dod"),
   names_from = "wave",
   names_prefix = "condition_",
   values_from = "condition_clean"
 )
+health_wide <- as.data.frame(health_wide)
 
 health_wide_heat <- pivot_wider(health,
   id_cols = c("idno", "tag", "dod"),
   names_from = "condition_clean",
   values_from = "condition_clean"
 )
+health_wide <- as.data.frame(health_wide)
 
 health_wide_heat <- health_wide_heat
 
@@ -185,6 +190,7 @@ main_cat_surv_prep <- main_cat_surv %>%
     maxdate,
     tod
   )
+main_cat_surv_prep <- as.data.frame(main_cat_surv_prep)
 
 subject_sum <- census %>%
   left_join(main_cat_surv_prep, by = "idno") %>%

@@ -1,16 +1,19 @@
 # Purpose: Perform chi-squared test on columns from a census
 # Author: William Mueller
 chi_test <- function(census, columns) {
-
   # Create t1 table from census with total = FALSE and surv = FALSE
   t1 <- t1(census, columns, total = FALSE, surv = FALSE)
 
-  if (!is.na(t1)) {
+  if (class(t1) == "data.frame") {
     result <- create_chi_test(t1, columns)
-  } else {
+  } else if (is.na(t1)) {
     cat("T1 was NA \n")
     result <- NA
+  } else {
+    cat("T1 is not NA or a data.frame \n")
+    stop("T1 is not NA or a data.frame")
   }
+
   result
 }
 
