@@ -115,7 +115,6 @@ final_models_info <- final_models %>%
 
 #### Healthcard Cleaning
 ```{r healthcard}
-
 # now we have to add the health card information. lets convert it to wide format
 # so that we can add it to the subject summary
 # create wave for health
@@ -307,7 +306,7 @@ source("R/t1.R")
 ```
 
 ```{r create table 1}
-final_models$t1_raw <- lapply(1:length(final_models$census), function(i) {
+final_models$t1_raw <- lapply(seq_along(final_models$census), function(i) {
   cat(i, "- ")
   t1 <- t1(final_models$census[[i]], columns = final_models$dummy[[i]])
   cat("\n")
@@ -322,7 +321,7 @@ source("R/chi_test.R")
 ```
 
 ```{r chi squred test}
-chi_results <- lapply(1:length(final_models$census), function(i) {
+chi_results <- lapply(seq_along(final_models$census), function(i) {
   cat(i, "- ")
   chi <- chi_test(final_models$census[[i]], columns = final_models$dummy[[i]])
   cat("\n")
@@ -340,7 +339,7 @@ source("R/clean_t1.R")
 ```
 
 ```{r clean t1}
-final_models$clean_t1 <- lapply(1:length(final_models$census), function(i) {
+final_models$clean_t1 <- lapply(seq_along(final_models$census), function(i) {
   cat(i, "- ")
   clean_t1 <- clean_t1(final_models$census[[i]],
     columns = final_models$dummy[[i]]
@@ -388,7 +387,6 @@ source("R/model_cox.R")
 ```
 
 ```{r cox models}
-
 x <- final_models
 final_models$cox_models <- lapply(seq_len(nrow(x)), function(i) {
   model_cox(
@@ -408,7 +406,6 @@ source("R/traj_plot.R")
 ```
 
 ```{r fixed effects}
-
 final_models$traj_pred <- lapply(1:nrow(final_models), function(i) {
   fixcov_names <- final_models$fixcov[[i]]
   fixcov <- rep(0, length(final_models$fixcov[[i]]))
@@ -486,7 +483,6 @@ source("R/plot_other.R")
 ```
 
 ```{r other metabolic outcomes}
-
 for (model in names(yaml_models$models)) {
   col_name <- paste0("plot_", model)
   a <- plot_other_apply(
@@ -495,7 +491,6 @@ for (model in names(yaml_models$models)) {
   )
   final_models[[col_name]] <- a
 }
-
 ```
 
 ### Fit other metabolic outcomes with LME
@@ -511,7 +506,6 @@ source("R/model_other.R")
 ```
 
 ```{r mixed effects}
-
 for (model in names(yaml_models$models)) {
   col_name <- paste0("model_", model)
   model_name <- yaml_models$models[[model]]
@@ -558,7 +552,6 @@ source("R/pred_class.R")
 ```
 
 ```{r create prediction results}
-
 # Get the names of the filtered data
 prediction_data_names <- NULL
 for (dataset in datasets) {
@@ -934,7 +927,6 @@ final_models$resampled_accuracy <- lapply(
     )
   }
 )
-
 ```
 
 #### Combine bootstraped accuracy for each simulation type
@@ -944,7 +936,6 @@ source("R/combine_boot_accuracy.R")
 ```
 
 ```{r combine accuracy}
-
 x <- final_models
 x$interval_accuracy_df <- combine_boot_accuracy_list(x$interval_accuracy)
 x$cumulative_accuracy_df <- combine_boot_accuracy_list(x$cumulative_accuracy)
@@ -1013,7 +1004,6 @@ source("R/plot_boot_accuracy.R")
 ```
 
 ```{r plot accuracy with bootstrapped confidence intervals}
-
 final_models$interval_boot_accuracy_plot <- lapply(
   seq_len(nrow(final_models)),
   function(i) {
@@ -1086,7 +1076,6 @@ final_models$resampled_boot_accuracy_plot
 
 ```{r source combined_class_cox, file = 'R/combined_class_cox.R'}
 source("R/combined_class_cox.R")
-
 ```
 
 ```{r combined survival}
@@ -1124,14 +1113,13 @@ for (name in names(combined_cox_models)) {
 
 ```{r test mortaility prediction using train test}
 
-
 ```
 
 
 ### Test Mortality Prediction of External Data
 
 ```{r test mortality prediction using external data}
- 
+
 ```
 ### Output CSV with idno's and class
 
