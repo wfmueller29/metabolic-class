@@ -5,21 +5,20 @@
 library(tidyverse)
 
 t1 <- function(df, columns, total = TRUE, surv = TRUE) {
-
   # number of unique classes
   no_class <- length(unique(df$class))
 
-#  if (no_class != 1) {
-    df_table <- create_count_columns(df, columns, total, surv)
+  #  if (no_class != 1) {
+  df_table <- create_count_columns(df, columns, total, surv)
 
-    df_freq <- create_freq_column(df_table)
+  df_freq <- create_freq_column(df_table)
 
-    df_final <- create_combo_column(df_table, df_freq)
-#  } else {
-#    cat("Only one class")
-#
-#    df_final <- NA
-#  }
+  df_final <- create_combo_column(df_table, df_freq)
+  #  } else {
+  #    cat("Only one class")
+  #
+  #    df_final <- NA
+  #  }
 
   # return df_final
   df_final
@@ -104,7 +103,7 @@ create_freq_column <- function(df_table) {
   if (length(df_table) != 1) {
     df_table$total <- rowSums(df_table[, ])
   } else {
-    df_table$total <- df_table[,1]
+    df_table$total <- df_table[, 1]
   }
   # set survival columns to NA
   df_table[grepl(rownames(df_table), pattern = "surv"), "total"] <- NA
