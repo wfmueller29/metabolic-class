@@ -6,62 +6,67 @@ clean_t1 <- function(census,
                      include_n = TRUE,
                      surv = TRUE,
                      total = TRUE) {
-
   # create t1
   df_table <- create_count_columns(census,
-                                   columns,
-                                    total = include_n,
-                                    surv = surv)
+    columns,
+    total = include_n,
+    surv = surv
+  )
   t1 <- t1(census, columns, total = include_n, surv = surv)
-  
-  if (!is.na(t1)) {
-    clean_t1 <- create_clean_t1(df_table,
-                                    t1,
-                                    census,
-                                    columns,
-                                    include_n,
-                                    surv,
-                                    total)
-  } else {
-    clean_t1 <- NA
-  }
-  
-  clean_t1
 
+  if (class(t1) == "data.frame") {
+    clean_t1 <- create_clean_t1(
+      df_table,
+      t1,
+      census,
+      columns,
+      include_n,
+      surv,
+      total
+    )
+  } else if (is.na(t1)) {
+    cat("T1 was NA \n")
+    clean_t1 <- NA
+  } else {
+    cat("T1 is not NA or a data.frame \n")
+    stop("T1 is not NA or a data.frame")
+  }
+
+  clean_t1
 }
 
 create_clean_t1 <- function(df_table,
-                                    t1,
-                                    census,
-                                    columns,
-                                    include_n,
-                                    surv,
-                                    total) {
-  
+                            t1,
+                            census,
+                            columns,
+                            include_n,
+                            surv,
+                            total) {
   total <- rowSums(df_table)
 
   t1 <- t1 %>%
-    select(ends_with("_final"))
+    dplyr::select(tidyselect::ends_with("_final"))
 
   # add total column
-  if (total) {
-    t1$total <-  total
-    if (surv) {
-      t1[grepl(rownames(t1), pattern = "surv"), "total"] <- NA
-    }
+  t1$total <- total
+  if (surv) {
+    t1[grepl(rownames(t1), pattern = "surv"), "total"] <- NA
   }
 
   # get chi squared results for t1
   chi_result <- chi_test(census, columns)
-  chi_tests <-  chi_result$tests
+  chi_tests <- chi_result$tests
 
   # create named list of pvals with column name
   pvals <- list()
+
   for (col in columns) {
-    if (is.na(chi_tests[[col]])) {
+    if (class(chi_tests[[col]]) == "htest") {
+      pvals[[col]] <- chi_tests[[col]]$p.value
+    } else if (is.na(chi_tests[[col]])) {
       pvals[[col]] <- NA
     } else {
-      pvals[[col]] <- chi_tests[[col]]$p.value
+      stop("chi_tests is not of class htest and is not NA")
     }
   }
 
@@ -73,5 +78,4 @@ create_clean_t1 <- function(df_table,
 
   # return cleaned t1
   t1
-  
 }
