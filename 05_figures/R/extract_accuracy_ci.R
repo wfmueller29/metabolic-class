@@ -4,8 +4,8 @@
 
 
 extract_accuracy_ci <- function(accuracy_df) {
-  data <- accuracy_df 
-  
+  data <- accuracy_df
+
   # filter out NA in boot_accuracy
   data <- data[!is.na(data$boot_accuracy), ]
 
@@ -27,10 +27,12 @@ extract_accuracy_ci <- function(accuracy_df) {
   })
 
   data$lower_ci <- lapply(data$ci, function(ci) {
-    if (!is.na(ci)) {
+    if ("matrix" %in% class(ci)) {
       lower_ci <- ci[[2]]
-    } else {
+    } else if (is.na(ci)) {
       lower_ci <- NA
+    } else {
+      stop("CI is not of class Matrix and is not NA")
     }
 
     lower_ci
@@ -39,14 +41,16 @@ extract_accuracy_ci <- function(accuracy_df) {
   data$lower_ci <- unlist(data$lower_ci, recursive = FALSE)
 
   data$upper_ci <- lapply(data$ci, function(ci) {
-      if (!is.na(ci)) {
-        upper_ci <- ci[[3]]
-      } else {
-        upper_ci <- NA
-      }
+    if ("matrix" %in% class(ci)) {
+      upper_ci <- ci[[3]]
+    } else if (is.na(ci)) {
+      upper_ci <- NA
+    } else {
+      stop("CI is not of class Matrix and is not NA")
+    }
 
-      upper_ci
-    })
+    upper_ci
+  })
 
   data$upper_ci <- unlist(data$upper_ci, recursive = FALSE)
 
