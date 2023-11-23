@@ -369,7 +369,7 @@ final_models$census <- lapply(final_models$census, function(df) {
   df
 })
 
-final_models$kap_plot <- lapply(1:nrow(final_models), function(i) {
+final_models$kap_plot <- lapply(seq_len(nrow(final_models)), function(i) {
   kap_plot <- kap_plot_all(final_models$census[[i]],
     var = "Class",
     ptitle = paste(final_models$oc_name[[i]],
@@ -412,7 +412,7 @@ source("R/traj_plot.R")
 ```
 
 ```{r fixed effects}
-final_models$traj_pred <- lapply(1:nrow(final_models), function(i) {
+final_models$traj_pred <- lapply(seq_len(nrow(final_models)), function(i) {
   fixcov_names <- final_models$fixcov[[i]]
   fixcov <- rep(0, length(final_models$fixcov[[i]]))
   names(fixcov) <- fixcov_names
@@ -533,7 +533,7 @@ source("R/plot_spag.R")
 ```
 
 ```{r spag plot}
-final_models$spag_plot <- lapply(1:nrow(final_models), function(i) {
+final_models$spag_plot <- lapply(seq_len(nrow(final_models)), function(i) {
   plot_spag(
     data = final_models$dfs[[i]],
     x = final_models$age_var[[i]],
@@ -544,8 +544,14 @@ final_models$spag_plot <- lapply(1:nrow(final_models), function(i) {
       "Spaghetti Plot",
       sep = " "
     ),
-    xlab = paste(final_models$age_var_name[[i]], final_models$age_var_units[[i]], sep = " "),
-    ylab = paste(final_models$oc_name[[i]], final_models$oc_units[[i]], sep = " ")
+    xlab = paste(final_models$age_var_name[[i]],
+      final_models$age_var_units[[i]],
+      sep = " "
+    ),
+    ylab = paste(final_models$oc_name[[i]],
+      final_models$oc_units[[i]],
+      sep = " "
+    )
   )
 })
 ```
