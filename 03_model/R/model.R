@@ -26,22 +26,69 @@ source("R/source/filter_group.R")
 
 if (!is.null(config$filters)) {
   datasets <- lapply(datasets, function(dataset) {
-    dataset$data <- filter_group(dataset$data, subsets = unlist(config$filters))
+    dataset$data <- filter_group(
+      dataset$data,
+      subsets = unlist(config$filters)
+    )
     dataset
   })
 }
 
 # sample df -------------------------------------------------------------------
-if (!is.null(config$sample_n) & !isFALSE(config$sample_n)) {
-  datasets <- lapply(datasets, function(dataset) {
-    dataset$data <- sample_df(
-      df = dataset$data,
-      id = dataset$id,
-      n = config$sample_n
+# for datasets such as train_test we want to ensure that they have the same
+# idno's removed
+
+# we need to check if there are train_test datasets in datasets our else the
+# code breaks. We also need to check if there is only one train_test dataset
+# because this might break the code
+
+# check if there are train test datasets
+
+source("R/source/sample_train_test.R")
+
+if (!is.null(config$sample_n) && !isFALSE(config$sample_n)) {
+  # check if there are train_test datasets
+  train_test_exists <- check_train_test_exists(datasets)
+  if (train_test_exists) {
+    train_test_sample <- create_train_test_sample(
+      datasets,
+      size = config$sample_n
     )
+  }
+
+  # sample datasets
+  datasets <- lapply(datasets, function(dataset) {
+    if (dataset$data_mod == "train_test") {
+      id_name <- dataset$id
+      index <- dataset$data[, id_name] %in% train_test_sample
+      dataset$data <- dataset$data[index, ]
+    } else {
+      dataset$data <- helphlme::sample_df(
+        df = dataset$data,
+        id = dataset$id,
+        n = config$sample_n
+      )
+    }
     dataset
   })
+
+  # check that the unique ids for each train_test dataset are all equal
+  train_test_ids <- list()
+  for (dataset in datasets) {
+    if (dataset$data_mod == "train_test") {
+      unique_ids <- unique(dataset$data[, dataset$id])
+      train_test_ids <- c(train_test_ids, list(ids))
+    }
+  }
+  all_equal <- do.call(all.equal, train_test_ids)
+  if (!isTRUE(all_equal)) {
+    stop("Train_test ids are not equal across datasets")
+  } else {
+    print("still in the clear")
+  }
 }
+
+
 
 # create call frame -----------------------------------------------------------
 cf_all <- data.frame()
