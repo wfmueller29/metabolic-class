@@ -8,6 +8,19 @@ check_train_test_exists <- function(datasets) {
   train_test_exists
 }
 
+check_complete_sample <- function(unique_train_test_ids, train_test_sample) {
+  # check that the sample is in all unique train_test idnos
+  for (id_list in unique_train_test_ids) {
+    inclusion_check <- train_test_sample %in% id_list
+    inclusion_check <- all(inclusion_check)
+    if (!inclusion_check) {
+      stop("id sample is not complete across train_test datasets")
+    } else {
+      print("We're in the clear")
+    }
+  }
+}
+
 create_train_test_sample <- function(datasets, size) {
   train_test_ids <- list()
   for (dataset in datasets) {
@@ -20,20 +33,12 @@ create_train_test_sample <- function(datasets, size) {
 
   unique_train_test_ids <- lapply(train_test_ids, unique)
 
-  # check that the sample is in all unique train_test idnos
-  for (id_list in unique_train_test_ids) {
-    inclusion_check <- train_test_sample %in% id_list
-    inclusion_check <- all(inclusion_check)
-    if (!inclusion_check) {
-      stop("id sample is not complete across train_test datasets")
-    } else {
-      print("We're in the clear")
-    }
-  }
-
   train_test_sample <- sample(
     x = unique_train_test_ids[[1]],
     size = size
   )
+
+  check_complete_sample(unique_train_test_ids, train_test_sample)
+
   train_test_sample
 }

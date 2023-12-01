@@ -62,6 +62,7 @@ if (!is.null(config$sample_n) && !isFALSE(config$sample_n)) {
       id_name <- dataset$id
       index <- dataset$data[, id_name] %in% train_test_sample
       dataset$data <- dataset$data[index, ]
+      dataset$unique_ids <- train_test_sample
     } else {
       dataset$data <- helphlme::sample_df(
         df = dataset$data,
