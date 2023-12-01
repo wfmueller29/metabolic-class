@@ -78,14 +78,15 @@ if (!is.null(config$sample_n) && !isFALSE(config$sample_n)) {
   for (dataset in datasets) {
     if (dataset$data_mod == "train_test") {
       unique_ids <- unique(dataset$data[, dataset$id])
-      train_test_ids <- c(train_test_ids, list(ids))
+      unique_ids <- sort(unique_ids)
+      train_test_ids <- c(train_test_ids, list(unique_ids))
     }
   }
   all_equal <- do.call(all.equal, train_test_ids)
   if (!isTRUE(all_equal)) {
     stop("Train_test ids are not equal across datasets")
   } else {
-    print("still in the clear")
+    print("Train_test ids appear to be equal across datasets")
   }
 }
 

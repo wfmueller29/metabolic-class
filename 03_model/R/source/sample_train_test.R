@@ -16,7 +16,7 @@ check_complete_sample <- function(unique_train_test_ids, train_test_sample) {
     if (!inclusion_check) {
       stop("id sample is not complete across train_test datasets")
     } else {
-      print("We're in the clear")
+      print("id sample appears to be complete across train_test datasets")
     }
   }
 }
