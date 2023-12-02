@@ -159,7 +159,7 @@ dvr <- cbind(dvr, dvr_cod_df)
 dvr <- dvr %>%
   mutate(cod_coded = ifelse(cod_coded == "Neoplastic", "N",
     ifelse(cod_coded == "Both Non-Neoplastic + Neoplastic", "NN + N",
-      ifelse(cod_code == "NN&NN Non-Neoplastic", "NN + NN",
+      ifelse(cod_coded == "NN&NN Non-Neoplastic", "NN + NN",
         ifelse(cod_coded == "Non-Neoplastic", "NN",
           ifelse(cod_coded == "N&N Neoplastic", "N + N",
             ifelse(cod_coded == "N+NN+N", "N + NN + N",
