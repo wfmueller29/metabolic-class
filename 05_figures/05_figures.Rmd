@@ -1127,12 +1127,6 @@ for (name in names(combined_cox_models)) {
 
 ```
 
-
-### Test Mortality Prediction of External Data
-
-```{r test mortality prediction using external data}
-
-```
 ### Output CSV with idno's and class
 
 ```{r idnos and class}
