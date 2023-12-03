@@ -1,11 +1,25 @@
 # Create filter interval for datasets
-filter_interval_dataset <- function(datasets) {
+filter_interval_dataset <- function(datasets, test_data = FALSE) {
   datasets <- lapply(datasets, function(dataset) {
-    intervals <- dataset$prediction_data$filter_interval$intervals
-    intervals <- lapply(intervals, unlist, use.names = TRUE)
-    data <- dataset$data
-    dataset$prediction_data$data$filter_interval_data <-
-      filter_interval_loop(data, intervals)
+    if (isFALSE(test_data)) {
+      intervals <- dataset$prediction_data$filter_interval$intervals
+      intervals <- lapply(intervals, unlist, use.names = TRUE)
+      data <- dataset$data
+      dataset$prediction_data$data$filter_interval_data <-
+        filter_interval_loop(data, intervals)
+    } else if (isTRUE(test_data)) {
+      data <- dataset$test_data
+      if (is.null(data)) {
+        dataset$prediction_test_data$data$filter_interval_data  <- NA
+      } else {
+        intervals <- dataset$prediction_data$filter_interval$intervals
+        intervals <- lapply(intervals, unlist, use.names = TRUE)
+        dataset$prediction_test_data$data$filter_interval_data <-
+          filter_interval_loop(data, intervals)
+      }
+    } else {
+      stop("test_data argument must be a boolean value")
+    }
     dataset
   })
 }

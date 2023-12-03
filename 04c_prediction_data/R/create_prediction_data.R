@@ -51,6 +51,7 @@ datasets <- filter_window_dataset(datasets, test_data = TRUE)
 source("R/source/filter_interval.R")
 
 datasets <- filter_interval_dataset(datasets)
+datasets <- filter_interval_dataset(datasets, test_data = TRUE)
 
 
 # Decrease sample frequency ---------------------------------------------------
