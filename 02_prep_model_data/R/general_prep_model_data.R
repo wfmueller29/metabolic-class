@@ -496,6 +496,15 @@ for (i in seq_along(datasets)) {
     center = config$center,
     scale = config$scale
   )
+  test_data <- datasets[[i]]$test_data
+  if (!is.null(test_data)) {
+    datasets[[i]]$test_data <- helphlme::prep_hlme(
+      df = datasets[[i]]$test_data,
+      vars = age_vars,
+      center = config$center,
+      scale = config$scale
+    )
+  }
 }
 
 # ensure all data is a data.frame object --------------------------------------
