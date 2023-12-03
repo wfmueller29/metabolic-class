@@ -85,6 +85,8 @@ filter_cumulative <- function(data_list, age_var, start_vector, end, step) {
           step
         )
     }
+  } else {
+    stop("test_data argument must be a boolean value")
   }
 
   dataset

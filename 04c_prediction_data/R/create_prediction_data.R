@@ -43,6 +43,7 @@ datasets <- filter_cumulative_dataset(datasets, test_data = TRUE)
 source("R/source/filter_window.R")
 
 datasets <- filter_window_dataset(datasets)
+datasets <- filter_window_dataset(datasets, test_data = TRUE)
 
 # filter by time interval -----------------------------------------------------
 
