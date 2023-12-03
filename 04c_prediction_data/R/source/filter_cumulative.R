@@ -1,4 +1,3 @@
-
 .filter_cumulative <- function(data, age_var, start, end, step) {
   upper_bound <- start + step
   lower_bound <- start
@@ -52,32 +51,53 @@ filter_cumulative <- function(data_list, age_var, start_vector, end, step) {
 
 # make these for datasets -----------------------------------------------------
 
-.filter_cumulative_across_dataset <- function(dataset) {
-  data <- dataset$data
-  age_var <- dataset$prediction_data$filter_cumulative$age_var
-  start_vector <- dataset$prediction_data$filter_cumulative$start_vector
-  end <- dataset$prediction_data$filter_cumulative$end
-  step <- dataset$prediction_data$filter_cumulative$step
-  dataset$prediction_data$data$filter_cumulative_data <-
-    .filter_cumulative_across(
-      data,
-      age_var,
-      start_vector,
-      end,
-      step
-    )
+.filter_cumulative_across_dataset <- function(dataset, test_data) {
+  if (isFALSE(test_data)) {
+    data <- dataset$data
+    age_var <- dataset$prediction_data$filter_cumulative$age_var
+    start_vector <- dataset$prediction_data$filter_cumulative$start_vector
+    end <- dataset$prediction_data$filter_cumulative$end
+    step <- dataset$prediction_data$filter_cumulative$step
+    dataset$prediction_data$data$filter_cumulative_data <-
+      .filter_cumulative_across(
+        data,
+        age_var,
+        start_vector,
+        end,
+        step
+      )
+  } else if (isTRUE(test_data)) {
+    data <- dataset$test_data
+    print(data)
+    if (is.null(data)) {
+      dataset$prediction_test_data$data$filter_cumulative_data <- NA
+    } else {
+      age_var <- dataset$prediction_data$filter_cumulative$age_var
+      start_vector <- dataset$prediction_data$filter_cumulative$start_vector
+      end <- dataset$prediction_data$filter_cumulative$end
+      step <- dataset$prediction_data$filter_cumulative$step
+      dataset$prediction_test_data$data$filter_cumulative_data <-
+        .filter_cumulative_across(
+          data,
+          age_var,
+          start_vector,
+          end,
+          step
+        )
+    }
+  }
 
   dataset
 }
 
-.filter_cumulative_across_dataset_apply <- function(datasets) {
-  datasets <- lapply(datasets, .filter_cumulative_across_dataset)
+.filter_cumulative_across_dataset_apply <- function(datasets, test_data) {
+  datasets <- lapply(datasets, .filter_cumulative_across_dataset, test_data)
 
   datasets
 }
 
-filter_cumulative_dataset <- function(datasets) {
-  datasets <- .filter_cumulative_across_dataset_apply(datasets)
+filter_cumulative_dataset <- function(datasets, test_data = FALSE) {
+  datasets <- .filter_cumulative_across_dataset_apply(datasets, test_data)
 
   datasets
 }

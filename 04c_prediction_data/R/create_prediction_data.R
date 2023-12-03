@@ -36,6 +36,7 @@ source("R/source/filter_utils.R")
 source("R/source/filter_cumulative.R")
 
 datasets <- filter_cumulative_dataset(datasets)
+datasets <- filter_cumulative_dataset(datasets, test_data = TRUE)
 
 # filter by time window -------------------------------------------------------
 
