@@ -113,6 +113,12 @@ cox_combine_class <- function(model_name_vector,
     censor
   )
 
+  if (nrow(merged_census) == 0) {
+    warning("There are no observations that intersect the censuses of interest")
+    warning("cox_combine_class will output an NA value")
+    return(NA)
+  }
+
   cox_model <- cox_merged_class(
     merged_census = merged_census,
     covariates = covariates,
