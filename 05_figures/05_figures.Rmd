@@ -567,7 +567,7 @@ source("R/pred_class.R")
 # Get the names of the filtered data
 prediction_data_names <- NULL
 for (dataset in datasets) {
-  new_prediction_data_names <- names(dataset$prediction$data)
+  new_prediction_data_names <- names(dataset$prediction_data$data)
   prediction_data_names <- c(prediction_data_names, new_prediction_data_names)
 }
 prediction_columns <- unique(prediction_data_names)
@@ -1121,10 +1121,219 @@ for (name in names(combined_cox_models)) {
 }
 ```
 
-### Test Mortality Prediction of Train Test Datasets
+### Determine get Hazard Predictions from test set
+
+#### Predict Class Assignement for Test Dataframe
+
+```{r source create prediction results, file = 'R/pred_class.R'}
+source("R/pred_class.R")
+```
+
+```{r create prediction results}
+# Get the names of the filtered data
+prediction_data_names <- NULL
+for (dataset in datasets) {
+  new_prediction_data_names <- names(dataset$prediction_test_data$data)
+  prediction_data_names <- c(prediction_data_names, new_prediction_data_names)
+}
+prediction_columns <- unique(prediction_data_names)
+
+# create a list of lists, where parent list is the filter applied, and the
+# daughter lists provides the filtered dataframes for the corresponding
+# row of final_models. This code does not take into account the case where
+# certain filters are applied to one row, but not another
+filter_list <- list()
+for (filter in prediction_columns) {
+  row_list <- list()
+  for (row_number in seq_len(nrow(final_models))) {
+    data_name <- final_models[row_number, "data"]
+    dataset <- datasets[[data_name]]
+    prediction_data <- dataset$prediction_test_data
+    row_list[[row_number]] <- prediction_data$data[[filter]]
+  }
+  filter_list[[filter]] <- row_list
+}
+
+for (filter in names(filter_list)) {
+  # we need a new name for test_data prediction data so as to not overlap
+  # with the nontest data prediction data
+  filter_name <- paste0(filter, "_test_data")
+  final_models[[filter_name]] <- filter_list[[filter]]
+}
+# add _test_data to prediction columns names
+prediction_columns <- paste0(prediction_columns, "_test_data")
+
+prediction_results_names <- paste(prediction_columns, "results", sep = "_")
+
+prediction_results <- lapply(prediction_columns, function(col) {
+  print(col)
+  predict_class_model_list(
+    nested_newdata_list = final_models[[col]],
+    model_list = final_models$final_model,
+    vars_list = final_models$data_age_vars,
+    center = TRUE,
+    scale = FALSE,
+    ref_data_list = final_models$dfs,
+    names = final_models$model_name
+  )
+})
+
+final_models[, prediction_results_names] <- prediction_results
+```
+
+#### Create new class numbering
+
+```{r class numbering}
+increment_class <- function(filtered_df, i = 0) {
+  filtered_df$new_class <- as.character(filtered_df$class + i)
+
+  # Create new prob based off of new_class
+  probs_index <- grepl("^prob", names(filtered_df))
+  probs <- names(filtered_df)[grepl("^prob", names(filtered_df))]
+  probs <- stringr::str_split(probs,
+    pattern = "prob",
+    simplify = TRUE
+  )
+  probs <- probs[, 2]
+  new_probs <- as.numeric(probs) + i
+  new_probs <- paste0("prob", new_probs)
+  names(filtered_df)[probs_index] <- new_probs
+
+  filtered_df
+}
+
+
+model_names <- yaml_models[[3]]$model_names
+filtered_df_name <- prediction_results_names[[1]]
+reorder_prediction_class <- function(final_models,
+                                     model_names,
+                                     filtered_df_name) {
+  i <- 0
+  for (model_name in model_names) {
+    index <- final_models$model_name == model_name
+    row <- final_models[index, ]
+    filtered_dfs <- row[, filtered_df_name]
+    filtered_dfs <- filtered_dfs[[1]]
+    if (is.list(filtered_dfs)) {
+      filtered_dfs_inced <- lapply(
+        filtered_dfs,
+        increment_class,
+        i
+      )
+    } else {
+      filtered_dfs_inced <- NA
+    }
+
+    column <- final_models[, filtered_df_name]
+    column[[which(index)]] <- filtered_dfs_inced
+    final_models[[filtered_df_name]] <- column
+    i <- as.numeric(row$ng) + i
+  }
+  final_models
+}
+
+for (group in yaml_models) {
+  for (filtered_df_name in prediction_results_names) {
+    final_models <- reorder_prediction_class(
+      final_models,
+      group$model_names,
+      filtered_df_name
+    )
+  }
+}
+```
+#### Merge test_data prediction dataframes based upon input yaml
+
+```{r merge prediction dataframes}
+# data_list_x <- final_models$filter_interval_data_test_data_results[[3]]
+# data_list_y <- final_models$filter_interval_data_test_data_results[[6]]
+# id_x <- final_models$subject[[3]]
+# id_y <- final_models$subject[[6]]
+# merge_prediction_data <- function(data_list_x, data_list_y, id_x, id_y) {
+#   # check that data_list_x and data_list_y are the same length
+#   l_x <- length(data_list_x)
+#   l_y <- length(data_list_y)
+#   if (l_x != l_y) stop("Data lists are not of the same length")
+#
+#   merged_datasets <- list()
+#   for (i in seq_len(l_x)) {
+#     merged_dataset <- base::merge(
+#       x = data_list_x,
+#       y = data_list_y,
+#       by.x = id_x,
+#       by.y = id_y
+#     )
+#     merged_datasets <- c(merged_datasets, list(merged_dataset))
+#   }
+#
+#
+#   merged_dataset <- merge(x = da)
+# }
+```
+#### Create test census dataframe
+
+```{r create test census}
+# make_census <- function(cf_row) {
+#   model <- unlist(cf_row$final_model, recursive = FALSE)
+#   class_df <- model$pprob
+#
+#   main <- datasets[[cf_row$data]]$data
+#
+#   # add class_df to main
+#   census <- main %>%
+#     mutate(idno = as.numeric(idno)) %>%
+#     left_join(class_df, by = "idno") %>%
+#     distinct(idno, .keep_all = T) %>%
+#     select(class, idno, cohort, starts_with("prob")) %>%
+#     filter(!is.na(class)) %>%
+#     mutate(idno = as.character(idno))
+#
+#   # add survival information to census
+#   census <- census %>%
+#     mutate(idno = as.numeric(idno)) %>%
+#     left_join(subject_sum, by = "idno") %>%
+#     mutate(
+#       age_wk_death = le_wk,
+#       dead_nat = dead_censor
+#     )
+#
+#   # return census
+#   census
+# }
+# make_test_census <- function(cf_row) {
+#   main <- datasets[[cf_row$data]]$test_data
+#
+#   if (is.null(main)) {
+#     return(NA)
+#   }
+#
+#   # add survival information to census
+#   census <- census %>%
+#     mutate(idno = as.numeric(idno)) %>%
+#     left_join(subject_sum, by = "idno") %>%
+#     mutate(
+#       age_wk_death = le_wk,
+#       dead_nat = dead_censor
+#     )
+#
+#   # return census
+#   census
+# }
+#
+# final_models$test_census <- lapply(seq_len(nrow(final_models)), function(i) {
+#   cf_row <- final_models[i, ]
+#   make_test_census(cf_row)
+# })
+```
 
 ```{r test mortaility prediction using train test}
-
+# # lets start simple, we need a cox model and a test dataset
+# cox_model <- final_models$cox_combined_models[[6]][[3]]
+# test_data <- final_models$test_census[[6]]
+# predicted <- predict(
+#   object = cox_model,
+#   new_data = test_data
+# )
 ```
 
 ### Output CSV with idno's and class
