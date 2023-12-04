@@ -35,6 +35,10 @@ predict_class_newdata_list <- function(newdata_list,
                                        center,
                                        scale,
                                        ref_data = NULL) {
+  if (!is.list(newdata_list)) {
+    warning("newdata_list is not a list; returning NA")
+    return(NA)
+  }
   subset_predictions <- lapply(newdata_list, function(newdata) {
     # check if there is actually data in the newdata
     if (nrow(newdata) >= 1) {
@@ -71,7 +75,7 @@ predict_class_model_list <- function(nested_newdata_list,
                                      ref_data_list,
                                      names = NULL) {
   pred_result <- lapply(seq_along(model_list), function(i) {
-                          print(i)
+    print(i)
     predict_class_newdata_list(
       newdata_list = nested_newdata_list[[i]],
       model = model_list[[i]],
