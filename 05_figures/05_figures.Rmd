@@ -1202,9 +1202,6 @@ increment_class <- function(filtered_df, i = 0) {
   filtered_df
 }
 
-
-model_names <- yaml_models[[3]]$model_names
-filtered_df_name <- prediction_results_names[[1]]
 reorder_prediction_class <- function(final_models,
                                      model_names,
                                      filtered_df_name) {
@@ -1245,30 +1242,87 @@ for (group in yaml_models) {
 #### Merge test_data prediction dataframes based upon input yaml
 
 ```{r merge prediction dataframes}
-# data_list_x <- final_models$filter_interval_data_test_data_results[[3]]
-# data_list_y <- final_models$filter_interval_data_test_data_results[[6]]
-# id_x <- final_models$subject[[3]]
-# id_y <- final_models$subject[[6]]
-# merge_prediction_data <- function(data_list_x, data_list_y, id_x, id_y) {
-#   # check that data_list_x and data_list_y are the same length
-#   l_x <- length(data_list_x)
-#   l_y <- length(data_list_y)
-#   if (l_x != l_y) stop("Data lists are not of the same length")
-#
-#   merged_datasets <- list()
-#   for (i in seq_len(l_x)) {
-#     merged_dataset <- base::merge(
-#       x = data_list_x,
-#       y = data_list_y,
-#       by.x = id_x,
-#       by.y = id_y
-#     )
-#     merged_datasets <- c(merged_datasets, list(merged_dataset))
-#   }
-#
-#
-#   merged_dataset <- merge(x = da)
-# }
+merge_prediction_data <- function(data_list_x,
+                                  data_list_y,
+                                  id_x,
+                                  id_y,
+                                  suffixes) {
+  # remake suffixes
+  suffixes <- paste0("_", suffixes)
+
+  # check that data_list_x and data_list_y are the same length
+  l_x <- length(data_list_x)
+  l_y <- length(data_list_y)
+  if (l_x != l_y) stop("Data lists are not of the same length")
+
+  merged_datasets <- list()
+  for (i in seq_len(l_x)) {
+    merged_dataset <- base::merge(
+      x = data_list_x[[i]],
+      y = data_list_y[[i]],
+      by.x = id_x,
+      by.y = id_y,
+      suffixes = suffixes
+    )
+    merged_datasets <- c(merged_datasets, list(merged_dataset))
+  }
+
+  merged_datasets
+}
+
+docall_merged_prediction_data <- function(
+    data_list_list,
+    id_list,
+    suffixes_list,
+    names) {
+  merged_census <- data_list_list[[1]]
+  for (i in seq_len(length(data_list_list) - 1)) {
+    merged_census <- merge_prediction_data(
+      data_list_x = merged_census,
+      data_list_y = data_list_list[[i + 1]],
+      id_x = id_list[[i]],
+      id_y = id_list[[i + 1]],
+      suffixes = suffixes_list[c(i, i + 1)]
+    )
+  }
+  names(merged_census) <- names
+  merged_census
+}
+
+merge_prediction_data_group <- function(
+    final_models,
+    model_names,
+    filtered_df_name) {
+  index <- final_models$model_name %in% model_names
+  desired_dfs <- final_models[index, filtered_df_name]
+  desired_ids <- final_models[index, "subject"]
+  desired_suffixes <- final_models[index, "oc"]
+
+  merged_data <- docall_merged_prediction_data(
+    data_list_list = desired_dfs,
+    id_list = desired_ids,
+    suffixes_list = desired_suffixes,
+    names = names(desired_dfs[[1]])
+  )
+
+  # create new column to store data
+  column <- final_models[, filtered_df_name]
+  for (row in which(index)) {
+    column[[row]] <- merged_data
+  }
+  new_column_name <- paste0(filtered_df_name, "_merged")
+  final_models[[new_column_name]] <- column
+}
+
+for (group in yaml_models) {
+  for (filtered_df_name in prediction_results_names) {
+    final_models <- merge_prediction_data_group(
+      final_models,
+      group$model_names,
+      filtered_df_name
+    )
+  }
+}
 ```
 #### Create test census dataframe
 
