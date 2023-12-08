@@ -1298,12 +1298,16 @@ merge_prediction_data_group <- function(
   desired_ids <- final_models[index, "subject"]
   desired_suffixes <- final_models[index, "oc"]
 
-  merged_data <- docall_merged_prediction_data(
-    data_list_list = desired_dfs,
-    id_list = desired_ids,
-    suffixes_list = desired_suffixes,
-    names = names(desired_dfs[[1]])
-  )
+  if (all(is.na(desired_dfs))) {
+    merged_data <- NA
+  } else {
+    merged_data <- docall_merged_prediction_data(
+      data_list_list = desired_dfs,
+      id_list = desired_ids,
+      suffixes_list = desired_suffixes,
+      names = names(desired_dfs[[1]])
+    )
+  }
 
   # create new column to store data
   column <- final_models[, filtered_df_name]
@@ -1312,6 +1316,7 @@ merge_prediction_data_group <- function(
   }
   new_column_name <- paste0(filtered_df_name, "_merged")
   final_models[[new_column_name]] <- column
+  final_models
 }
 
 for (group in yaml_models) {
