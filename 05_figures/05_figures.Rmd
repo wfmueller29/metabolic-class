@@ -452,7 +452,7 @@ source("R/plot_obs.R")
 ```
 
 ```{r observed plots}
-final_models$traj_obs <- lapply(1:nrow(final_models), function(i) {
+final_models$traj_obs <- lapply(seq_len(nrow(final_models)), function(i) {
   plot <- traj_obs(
     main = final_models$census[[i]],
     df = final_models$dfs[[i]],
@@ -1332,57 +1332,35 @@ for (group in yaml_models) {
 #### Create test census dataframe
 
 ```{r create test census}
-# make_census <- function(cf_row) {
-#   model <- unlist(cf_row$final_model, recursive = FALSE)
-#   class_df <- model$pprob
-#
-#   main <- datasets[[cf_row$data]]$data
-#
-#   # add class_df to main
-#   census <- main %>%
-#     mutate(idno = as.numeric(idno)) %>%
-#     left_join(class_df, by = "idno") %>%
-#     distinct(idno, .keep_all = T) %>%
-#     select(class, idno, cohort, starts_with("prob")) %>%
-#     filter(!is.na(class)) %>%
-#     mutate(idno = as.character(idno))
-#
-#   # add survival information to census
-#   census <- census %>%
-#     mutate(idno = as.numeric(idno)) %>%
-#     left_join(subject_sum, by = "idno") %>%
-#     mutate(
-#       age_wk_death = le_wk,
-#       dead_nat = dead_censor
-#     )
-#
-#   # return census
-#   census
-# }
-# make_test_census <- function(cf_row) {
-#   main <- datasets[[cf_row$data]]$test_data
-#
-#   if (is.null(main)) {
-#     return(NA)
-#   }
-#
-#   # add survival information to census
-#   census <- census %>%
-#     mutate(idno = as.numeric(idno)) %>%
-#     left_join(subject_sum, by = "idno") %>%
-#     mutate(
-#       age_wk_death = le_wk,
-#       dead_nat = dead_censor
-#     )
-#
-#   # return census
-#   census
-# }
-#
-# final_models$test_census <- lapply(seq_len(nrow(final_models)), function(i) {
-#   cf_row <- final_models[i, ]
-#   make_test_census(cf_row)
-# })
+# TODO: Refactor merge census, and code such that it is not dependent on dplyr
+
+# delete
+census3 <- final_models$census[[3]]
+prediction_df3 <- final_models$filter_cumulative_data_test_data_results_merged[[3]][[1]]
+
+
+# delete
+census1 <- final_models$census[[1]]
+prediction_df1 <- final_models$filter_cumulative_data_test_data_results_merged[[1]][[1]]
+
+census <- subject_sum
+data <- prediction_df3
+id <- "idno"
+
+merge_census <- function(data, census, id) {
+
+  data <- merge(
+    x = data,
+    y = census,
+    by = id
+  )
+
+  colnames(data)[colnames(data) == "le_wk"] <- "age_wk_death"
+  colnames(data)[colnames(data) == "dead_censor"] <- "dead_nat"
+
+  data
+
+}
 ```
 
 ```{r test mortaility prediction using train test}
