@@ -1364,8 +1364,6 @@ merge_census_apply <- function(data_list, census, id) {
   data_list
 }
 
-filtered_df_name <- merged_prediction_result_names[[1]]
-
 merge_census_apply_column <- function(final_models, filtered_df_name, census) {
   data_lol <- final_models[, filtered_df_name]
   ids <- final_models[, "subject"]
@@ -1374,6 +1372,8 @@ merge_census_apply_column <- function(final_models, filtered_df_name, census) {
   final_models[[filtered_df_name]] <- data_lol
   final_models
 }
+
+merged_prediction_result_names <- paste0(prediction_results_names, "_merged")
 
 for (filtered_df_name in merged_prediction_result_names) {
   final_models <- merge_census_apply_column(
@@ -1387,9 +1387,91 @@ for (filtered_df_name in merged_prediction_result_names) {
 #### We need to predict hazard ratios for our test sets
 
 ```{r test mortaility prediction using train test}
-# delete
-test_data <- 
+predict_cox <- function(test_data,
+                        model,
+                        type = c("lp", "risk"),
+                        suffix = "") {
+  for (t in type) {
+    name <- paste0(t, suffix)
+    test_data[[name]] <- predict(model, test_data, type = t)
+  }
+
+  test_data
+}
+
+predict_cox_apply <- function(test_data, model_list, type = c("lp", "risk")) {
+  for (i in seq_len(length(model_list))) {
+    test_data <- predict_cox(
+      test_data = test_data,
+      model = model_list[[i]],
+      type = type,
+      suffix = i
+    )
+  }
+
+  test_data
+}
+
+predict_cox_apply2 <- function(test_data_list,
+                               model_list,
+                               type = c("lp", "risk")) {
+  if (is.list(test_data_list)) {
+    test_data_list <- lapply(
+      X = test_data_list,
+      FUN = predict_cox_apply,
+      model_list = model_list,
+      type = type
+    )
+  } else {
+    test_data_list <- NA
+    warning("test_data_list is not a list, returning NA")
+  }
+
+  test_data_list
+}
+
+predict_cox_final_model <- function(final_models,
+                                    filtered_df_name,
+                                    type = c("lp", "risk")) {
+  test_data_lol <- final_models[, filtered_df_name]
+  model_lol <- final_models[, "cox_combined_models"]
+
+  test_data_lol <- lapply(seq_len(nrow(final_models)), function(row_no) {
+    test_data_list <- predict_cox_apply2(
+      test_data_list = test_data_lol[[row_no]],
+      model_list = model_lol[[row_no]],
+      type = type
+    )
+    test_data_list
+  })
+
+  final_models[[filtered_df_name]] <- test_data_lol
+  final_models
+}
+
+for (filtered_df_name in merged_prediction_result_names) {
+  final_models <- predict_cox_final_model(
+    final_models = final_models,
+    filtered_df_name = filtered_df_name,
+    type = c("lp", "risk")
+  )
+}
 ```
+
+#### Determine Calibration by Regressing PI on Test outcomes
+
+```{r create new dataframes from the predictions}
+surv_obj <- survival::Surv(
+  time = test_data$age_wk_death,
+  event = test_data$dead_nat
+)
+
+test_coxph <- survival::coxph(surv_obj ~ lp, data = test_data)
+
+predict(model, test_data, type = c("lp", "risl"))
+```
+
+#### Determine Descrimination using concordance
 
 ### Output CSV with idno's and class
 
