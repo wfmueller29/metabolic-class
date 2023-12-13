@@ -1092,6 +1092,7 @@ source("R/combined_class_cox.R")
 
 ```{r combined survival}
 # We can parameterize this later
+# TODO: paramterize these values
 covariates <- c("sex", "strain")
 age_death <- "age_wk_death"
 censor <- "dead_nat"
@@ -1461,17 +1462,118 @@ for (filtered_df_name in merged_prediction_result_names) {
 #### Determine Calibration by Regressing PI on Test outcomes
 
 ```{r create new dataframes from the predictions}
-surv_obj <- survival::Surv(
-  time = test_data$age_wk_death,
-  event = test_data$dead_nat
-)
+# TODO: Instead of building all the prediction dataframes beforehand,
+# why not just subset them from the original data as we are making the figures
+# this way we do not need to carry around a list of list of dataframes to
+# perform all these operations upon.
 
-test_coxph <- survival::coxph(surv_obj ~ lp, data = test_data)
+# TODO: Remove pre-data minpulation such as removing outliers
+# from the pipeline
 
-predict(model, test_data, type = c("lp", "risl"))
+test_data <- final_models[, merged_prediction_result_names[[1]]][[3]][[5]]
+age_death <- "age_wk_death"
+censor <- "dead_nat"
+
+get_slope_concord <- function(test_data, age_death, censor) {
+  surv_obj <- survival::Surv(
+    time = test_data[[age_death]],
+    event = test_data[[censor]]
+  )
+
+  col_names <- names(test_data)
+  # get columns that have lp in them (the linear predictor)
+  index <- grepl(pattern = "lp\\d", x = col_names)
+  lp_cols <- col_names[index]
+
+  sum_concord_list <- list()
+
+  for (lp in lp_cols) {
+    form <- paste0("surv_obj ~ ", lp)
+    form <- as.formula(form)
+    cox <- survival::coxph(formula = form, data = test_data)
+    sum <- summary(cox)$coefficients
+    sum <- as.data.frame(sum)
+    names(sum) <- c("coef", "exp_coef", "se_coef", "z", "p")
+    names(sum) <- paste(lp, names(sum), sep = "_")
+
+    concord <- summary(cox)$concordance
+    concord <- t(concord)
+    concord <- as.data.frame(concord)
+    names(concord) <- c("concord", "se_concord")
+    names(concord) <- paste(lp, names(concord), sep = "_")
+    sum_concord <- cbind(sum, concord)
+
+    sum_concord_list <- c(sum_concord_list, list(sum_concord))
+  }
+
+  sum_df_row <- do.call(what = cbind, args = sum_concord_list)
+
+  sum_df_row
+}
+
+get_slope_concord_apply <- function(test_data_list, age_death, censor) {
+  if (is.list(test_data_list)) {
+    test_data_df <- lapply(
+      X = test_data_list,
+      FUN = get_slope_concord,
+      age_death = age_death,
+      censor = censor
+    )
+
+    test_data_df <- do.call(
+      what = rbind,
+      args = test_data_df
+    )
+
+    test_data_df$subset_name <- names(test_data_list)
+  } else {
+    test_data_df <- NA
+    warning("test_data_list is not a list, returning NA")
+  }
+
+  test_data_df
+}
+
+get_slope_concord_final_models <- function(final_models,
+                                           filtered_df_name,
+                                           age_death,
+                                           censor) {
+  column <- final_models[, filtered_df_name]
+  column <- lapply(column,
+    get_slope_concord_apply,
+    age_death = age_death,
+    censor = censor
+  )
+
+  new_column_name <- paste0(filtered_df_name, "_summary")
+
+  final_models[[new_column_name]] <- column
+
+  final_models
+}
+
+# TODO: parameterize these values
+age_death <- "age_wk_death"
+censor <- "dead_nat"
+
+for (filtered_df_name in merged_prediction_result_names) {
+  final_models <- get_slope_concord_final_models(
+    final_models = final_models,
+    filtered_df_name = filtered_df_name,
+    age_death = age_death,
+    censor = censor
+  )
+}
 ```
 
-#### Determine Descrimination using concordance
+#### Create plots of concordances and regression on PI
+
+```{r create concordance plots}
+# TODO: Create plots of one combined cox model. 
+# The final goal is to have a 2x3 figure where the type
+# of data filter determines the columns and the concordance 
+# and correlation of PI form the two rows
+```
 
 ### Output CSV with idno's and class
 
