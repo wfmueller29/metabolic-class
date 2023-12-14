@@ -1566,13 +1566,66 @@ for (filtered_df_name in merged_prediction_result_names) {
 }
 ```
 
+#### Generated columns for prediction data plotting
+
+```{r prediction data renaming}
+
+# delete
+data <- final_models$filter_window_data_test_data_results_merged_summary[[3]]
+col_name <- "subset_name"
+
+name_window <- function(data, col_name) {
+  col <- data[[col_name]]
+  col_split <- strsplit(x = col, split = "\\[|,| |\\]")
+  lower_bound <- lapply(col_split, function(i) i[[2]])
+  lower_bound <- as.numeric(unlist(lower_bound))
+  upper_bound <- lapply(col_split, function(i) i[[4]])
+  upper_bound <- as.numeric(unlist(upper_bound))
+  window_size <- upper_bound - lower_bound
+
+  data[["upper_bound"]] <- upper_bound
+  data[["lower_bound"]] <- lower_bound
+  data[["window_size"]] <- window_size
+
+  data
+
+}
+
+# delete
+data <- final_models$filter_cumulative_data_test_data_results_merged_summary[[3]]
+col_name <- "subset_name"
+
+name_cumulative <- function(data, col_name) {
+  col <- data[[col_name]]
+  col_split <- strsplit(x = col, split = "\\[|,| |\\]")
+  lower_bound <- lapply(col_split, function(i) i[[2]])
+  lower_bound <- as.numeric(unlist(lower_bound))
+  upper_bound <- lapply(col_split, function(i) i[[4]])
+  upper_bound <- as.numeric(unlist(upper_bound))
+
+  data[["upper_bound"]] <- upper_bound
+  data[["lower_bound"]] <- lower_bound
+
+  data
+
+}
+
+# TODO: Remove the intervals, we are replacing with window
+
+# TODO: Apply the sample subset to the combined_cox_framework
+
+```
+
 #### Create plots of concordances and regression on PI
 
 ```{r create concordance plots}
-# TODO: Create plots of one combined cox model. 
+# TODO: Create plots of one combined cox model.
 # The final goal is to have a 2x3 figure where the type
-# of data filter determines the columns and the concordance 
+# of data filter determines the columns and the concordance
 # and correlation of PI form the two rows
+
+
+
 ```
 
 ### Output CSV with idno's and class

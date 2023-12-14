@@ -1,4 +1,4 @@
-# Purpose: To plot simulation prediction statistics
+# Purpose: To plot subsetted prediction statistics
 # Author: William Mueller
 
 name_interval <- function(interval_df) {
