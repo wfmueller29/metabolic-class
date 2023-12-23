@@ -1,6 +1,6 @@
 # This is where we are going to move the data modification yaml
 - name: "slam"
-  path: "../01_dataset/output/main_all2.RDATA"
+  path: "../00a_dataset/output/main_all2.RDATA"
   outcome: "bw"
   age_var: ["age_wk", "per_age_wk"] # we only want one age var per dataset
   id: "idno"
@@ -30,7 +30,7 @@
       - [age_wk: "[0, 120]"]
 
 - name: "slam"
-  path: "../01_dataset/output/main_all2.RDATA"
+  path: "../00a_dataset/output/main_all2.RDATA"
   outcome: "bw"
   age_var: ["age_wk", "per_age_wk"]
   id: "idno"
@@ -68,7 +68,7 @@
 
 
 - name: "slam"
-  path: "../01_dataset/output/main_all2.RDATA"
+  path: "../00a_dataset/output/main_all2.RDATA"
   outcome: "gluc"
   age_var: ["age_wk", "per_age_wk"]
   id: "idno"
