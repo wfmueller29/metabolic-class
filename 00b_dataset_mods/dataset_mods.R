@@ -8,11 +8,10 @@ library(tidyverse)
 args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) == 0) {
-  datasets <- yaml::read_yaml("yaml/test.yaml")
-} else {
-  datasets <- yaml::read_yaml(args[[1]])
+  args[[1]] <- "yaml/test.yaml"
 }
 
+datasets <- yaml::read_yaml(args[[1]])
 
 get_extension <- function(datasets) {
   datasets <- lapply(datasets, function(dataset) {
@@ -36,10 +35,10 @@ read_data <- function(datasets) {
   })
 }
 
-read_rdata <- function(fileName) {
+read_rdata <- function(file_name) {
   # loads an RData file, and returns it
-  load(fileName)
-  get(ls()[ls() != "fileName"])
+  load(file_name)
+  get(ls()[ls() != "file_name"])
 }
 
 datasets <- read_data(datasets)
@@ -149,7 +148,7 @@ for (i in seq_along(datasets)) {
 
 # resample datasets by subsets of the data ------------------------------------
 
-source("R/source/filter_group.R")
+source("R/filter_group.R")
 sample_subsets_datasets <- list()
 dataset_overwrite <- list()
 
@@ -196,7 +195,7 @@ datasets <- dataset_overwrite
 
 # calculate percent change from baseline --------------------------------------
 
-source("R/source/percent_change_baseline.R")
+source("R/percent_change_baseline.R")
 
 percent_change_datasets <- list()
 
@@ -245,7 +244,7 @@ datasets <- c(datasets, percent_change_datasets)
 
 # remove outliers base upon velocity ------------------------------------------
 
-source("R/source/remove_velocity_outliers.R")
+source("R/remove_velocity_outliers.R")
 
 remove_velocity_datasets <- list()
 
@@ -254,7 +253,7 @@ for (dataset in datasets) {
   # we only want to remove velocity outliers from the original dataset because
   # if we were to do this for already modified datasets we would produce a
   # Medusa head of datasets that would complicate our analysis exponentially.
-  if (dataset$remove_velocity_outliers$execute & original) {
+  if (dataset$remove_velocity_outliers$execute && original) {
     remove_velocity_dataset <- dataset
     remove_velocity_dataset$data <- remove_velocity_outliers(
       df = dataset$data,
@@ -289,7 +288,7 @@ datasets <- c(datasets, remove_velocity_datasets)
 # down sample age at to see how classes separate with limited data late in life
 # we will only down sample the original dataset
 
-source("R/source/filter_interval.R")
+source("R/filter_interval.R")
 
 sample_age_interval_datasets <- list()
 for (dataset in datasets) {
@@ -306,7 +305,7 @@ for (dataset in datasets) {
 
     # check if we want to execute info in the sample_age_interval
     # also check if the datsaet is an original
-    if (dataset$sample_age_interval$execute & original) {
+    if (dataset$sample_age_interval$execute && original) {
       sampled_data <- filter_interval_loop(
         dataset$data,
         intervals
@@ -344,3 +343,47 @@ for (dataset in datasets) {
 
 datasets <- c(datasets, sample_age_interval_datasets)
 
+# create data_id --------------------------------------------------------------
+for (i in seq_along(datasets)) {
+  # if no data mod, dataset is considered OG
+  if (is.null(datasets[[i]]$data_mod)) {
+    datasets[[i]]$data_mod <- "og"
+  } else {
+    datasets[[i]]$data_mod <- datasets[[i]]$data_mod
+  }
+
+  # create data name which combines name, outcome, and data mod
+
+  data_id <- paste(
+    datasets[[i]]$name,
+    datasets[[i]]$outcome,
+    datasets[[i]]$data_mod,
+    sep = "_"
+  )
+
+  if (!is.null(datasets[[i]]$data_subset)) {
+    data_subset_name <- paste(datasets[[i]]$data_subset, collapse = "_")
+    data_id <- paste(data_id, data_subset_name, sep = "_")
+  }
+
+  datasets[[i]]$data_id <- data_id
+  names(datasets)[[i]] <- data_id
+}
+
+# save all datsets as csv files in output/data --------------------------------
+for (dataset_name in names(datasets)) {
+  file_name <- file.path("output", "data", dataset_name)
+  file_name <- paste0(file_name, ".csv")
+  data <- datasets[[dataset_name]]$data
+  write.csv(data, file = file_name)
+}
+
+
+# create output file ----------------------------------------------------------
+file_names <- paste0(names(datasets), ".csv")
+file_names <- list(file_names)
+names(file_names) <- file.path(getwd(), "output", "data")
+
+output_name <- basename(args[[1]])
+output_path <- file.path("output", "out", output_name)
+yaml::write_yaml(x = file_names, file = output_path)

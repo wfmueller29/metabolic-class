@@ -1,6 +1,6 @@
 # Filter dataset over numeric variable
 
-source("R/source/filter_utils.R")
+source("R/filter_utils.R")
 
 # loop through filter_interval for list of intervals
 filter_interval_loop <- function(data, intervals) {
