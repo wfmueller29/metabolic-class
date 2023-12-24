@@ -153,44 +153,40 @@ sample_subsets_datasets <- list()
 dataset_overwrite <- list()
 
 for (dataset in datasets) {
-  if (!is.null(dataset$sample_subsets)) {
-    if (dataset$sample_subsets$execute) {
-      subsets <- lapply(dataset$sample_subsets$subsets,
-        unlist,
-        use.names = TRUE
+  if (isTRUE(dataset$sample_subsets$execute)) {
+    subsets <- lapply(dataset$sample_subsets$subsets,
+      unlist,
+      use.names = TRUE
+    )
+
+    sampled_data <- filter_loop(dataset$data, subsets = subsets)
+
+    new_datasets <- list()
+
+    subset_names <- names(sampled_data)
+    names(subsets) <- subset_names
+    for (subset in subset_names) {
+      new_datasets[[subset]] <- dataset
+      old_data_mod <- dataset$data_mod
+      new_datasets[[subset]]$data_subset <- subsets[[subset]]
+      new_datasets[[subset]]$labels$data_name <- paste(
+        new_datasets[[subset]]$labels$data_name,
+        paste(subsets[[subset]], collapse = " "),
+        sep = " "
       )
 
-      sampled_data <- filter_loop(dataset$data, subsets = subsets)
-
-      new_datasets <- list()
-
-      subset_names <- names(sampled_data)
-      names(subsets) <- subset_names
-      for (subset in subset_names) {
-        new_datasets[[subset]] <- dataset
-        old_data_mod <- dataset$data_mod
-        new_datasets[[subset]]$data_subset <- subsets[[subset]]
-        new_datasets[[subset]]$labels$data_name <- paste(
-          new_datasets[[subset]]$labels$data_name,
-          paste(subsets[[subset]], collapse = " "),
-          sep = " "
-        )
-
-        new_datasets[[subset]]$data <- sampled_data[[subset]]
-      }
-
-      new_datasets <- unname(new_datasets)
-      sample_subsets_datasets <- c(sample_subsets_datasets, new_datasets)
-      dataset_overwrite <- c(dataset_overwrite, sample_subsets_datasets)
-    } else {
-      dataset_overwrite <- c(dataset_overwrite, list(dataset))
+      new_datasets[[subset]]$data <- sampled_data[[subset]]
     }
+
+    new_datasets <- unname(new_datasets)
+    sample_subsets_datasets <- c(sample_subsets_datasets, new_datasets)
+    dataset_overwrite <- c(dataset_overwrite, sample_subsets_datasets)
   } else {
     dataset_overwrite <- c(dataset_overwrite, list(dataset))
   }
 }
 
-datasets <- dataset_overwrite
+datasets <- c(datasets, dataset_overwrite)
 
 
 # calculate percent change from baseline --------------------------------------
@@ -200,7 +196,7 @@ source("R/percent_change_baseline.R")
 percent_change_datasets <- list()
 
 for (dataset in datasets) {
-  if (dataset$percent_change_baseline$execute) {
+  if (isTRUE(dataset$percent_change_baseline$execute)) {
     percent_change_dataset <- dataset
     percent_change_dataset$data <- percent_change_baseline(
       df = dataset$data,
@@ -253,7 +249,7 @@ for (dataset in datasets) {
   # we only want to remove velocity outliers from the original dataset because
   # if we were to do this for already modified datasets we would produce a
   # Medusa head of datasets that would complicate our analysis exponentially.
-  if (dataset$remove_velocity_outliers$execute && original) {
+  if (isTRUE(dataset$remove_velocity_outliers$execute) && original) {
     remove_velocity_dataset <- dataset
     remove_velocity_dataset$data <- remove_velocity_outliers(
       df = dataset$data,

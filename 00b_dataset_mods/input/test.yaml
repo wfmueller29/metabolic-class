@@ -29,7 +29,7 @@
       - [age_wk: "[0, 110]"]
       - [age_wk: "[0, 120]"]
   sample_subsets:
-    execute: FALSE
+    execute: TRUE
     subsets:
       - [sex: M, strain: HET3]
       - [sex: F, strain: HET3]
@@ -66,7 +66,7 @@
       - [age_wk: "[0, 110]"]
       - [age_wk: "[0, 120]"]
   sample_subsets:
-    execute: FALSE
+    execute: TRUE
     subsets:
       - [sex: M, strain: HET3]
       - [sex: F, strain: HET3]
