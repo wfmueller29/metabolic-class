@@ -8,7 +8,7 @@ library(tidyverse)
 args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) == 0) {
-  args[[1]] <- "yaml/test.yaml"
+  args[[1]] <- "input/test.yaml"
 }
 
 datasets <- yaml::read_yaml(args[[1]])
@@ -371,8 +371,19 @@ for (i in seq_along(datasets)) {
 }
 
 # save all datsets as csv files in output/data --------------------------------
+output_name <- basename(args[[1]])
+output_name <- strsplit(x = output_name, split = "\\.")[[1]][[1]]
+file_path <- file.path("output", "data", output_name)
+if (dir.exists(file_path)) {
+  files <- list.files(file_path)
+  files <- file.path(file_path, files)
+  file.remove(files)
+} else {
+  dir.create(file_path, recursive = TRUE)
+}
+
 for (dataset_name in names(datasets)) {
-  file_name <- file.path("output", "data", dataset_name)
+  file_name <- file.path(file_path, dataset_name)
   file_name <- paste0(file_name, ".csv")
   data <- datasets[[dataset_name]]$data
   write.csv(data, file = file_name)
@@ -380,10 +391,11 @@ for (dataset_name in names(datasets)) {
 
 
 # create output file ----------------------------------------------------------
-file_names <- paste0("output", "data", names(datasets), ".csv")
+file_names <- names(datasets)
+file_names <- paste0(file_names, ".csv")
 file_names <- list(file_names)
-names(file_names) <- file.path(getwd())
+names(file_names) <- file.path(getwd(), "output", "data", output_name)
 
 output_name <- basename(args[[1]])
-output_path <- file.path("output", "out", output_name)
+output_path <- file.path("output", output_name)
 yaml::write_yaml(x = file_names, file = output_path)
