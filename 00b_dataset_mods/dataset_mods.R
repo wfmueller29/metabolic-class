@@ -380,9 +380,9 @@ for (dataset_name in names(datasets)) {
 
 
 # create output file ----------------------------------------------------------
-file_names <- paste0(names(datasets), ".csv")
+file_names <- paste0("output", "data", names(datasets), ".csv")
 file_names <- list(file_names)
-names(file_names) <- file.path(getwd(), "output", "data")
+names(file_names) <- file.path(getwd())
 
 output_name <- basename(args[[1]])
 output_path <- file.path("output", "out", output_name)
