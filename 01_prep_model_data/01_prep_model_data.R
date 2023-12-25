@@ -104,7 +104,7 @@ convert_age <- function(dataset) {
 
 datasets <- convert_variables(datasets)
 
-# filter out cases that have NA in the outcome variable
+# filter out cases that have NA in the outcome variable -----------------------
 
 filter_na <- function(dataset) {
   outcome_col <- dataset$outcome
@@ -159,7 +159,6 @@ harmonized_datasets <- lapply(datasets, function(dataset) {
 
 datasets <- harmonized_datasets
 
-
 # check if there is overlap in unique ID's for each dataset -------------------
 unique_id_list <- lapply(datasets, function(dataset) {
   id <- dataset$id
@@ -197,65 +196,60 @@ orphaned_ids <- as.vector(orphaned_ids)
 datasets <- new_datasets
 
 # training testing split ------------------------------------------------------
-# I need to figure a way to ensure that each dataset has the same subjects
-# removed from the training and testing sets
 
-train_test_datasets <- list()
-i <- 1
+# create strata variable when doing train_test split
+create_strata_vars <- function(dataset) {
+  cat_vars <- dataset$train_test$sample_by
+  data <- dataset$data
+  new_col <- apply(data[, cat_vars], 1, paste, collapse = "-")
+  data[, "sample_by"] <- new_col
+  dataset$data <- data
 
-for (dataset in datasets) {
-  # check if train_test is part of dataset commands
-  if (!is.null(dataset$train_test)) {
-    # to ensure that we want to excute train test split
-    if (dataset$train_test$execute) {
-      # first we need to make one categorical variable that encompasses all
-      # groups
-      cat_vars <- dataset$train_test$sample_by
-      data <- dataset$data
-      new_name <- paste(cat_vars, collapse = "-")
-      new_col <- apply(data[, cat_vars], 1, paste, collapse = "-")
-      data[, new_name] <- new_col
-      dataset$data <- data
-
-      # now we need to create a split determined by the split variable in the
-      # yaml file. This will split so that we have representative proportions
-      # of the original dataset in the initial split.
-
-      # we are adding this counter so that we have coherant train and test
-      # ids across outcome variables
-      if (i == 1) {
-        split_data <- rsample::group_initial_split(
-          data = dataset$data,
-          prop = dataset$train_test$split,
-          strata = new_name,
-          group = dataset$train_test$id
-        )
-
-        train_data <- rsample::training(split_data)
-        test_data <- rsample::testing(split_data)
-
-        # get ID's from previous train test
-        train_id <- train_data[[dataset$id]]
-        test_id <- test_data[[dataset$id]]
-      } else {
-        id_name <- dataset$id
-        train_data <- data[data[[id_name]] %in% train_id, ]
-        test_data <- data[data[[id_name]] %in% test_id, ]
-      }
-
-      i <- i + 1
-
-      dataset$data <- train_data
-      dataset$test_data <- test_data
-
-      dataset$data_mod <- "train_test"
-
-      train_test_datasets <- c(train_test_datasets, list(dataset))
-    } else {
-      train_data <- dataset$data
-    }
-  }
+  dataset
 }
+
+datasets <- lapply(datasets, create_strata_vars)
+
+# create determine training ids and testing ids 
+get_train_test_id <- function(datasets) {
+  split_data <- rsample::group_initial_split(
+    data = datasets[[1]]$data,
+    prop = datasets[[1]]$train_test$split,
+    strata = "sample_by",
+    group = datasets[[1]]$id
+  )
+
+  train_data <- rsample::training(split_data)
+  test_data <- rsample::testing(split_data)
+
+  # get ID's from previous train test
+  train_id <- train_data[[datasets[[1]]$id]]
+  test_id <- test_data[[datasets[[1]]$id]]
+
+  return(list(train_id = train_id, test_id = test_id))
+}
+
+train_test_ids <- get_train_test_id(datasets)
+train_ids <- train_test_ids$train_id
+test_ids <- train_test_ids$test_id
+
+# use train and test ids to make train and test datasets
+create_train_test <- function(dataset, train_id, test_id) {
+  data <- dataset$data
+  id_name <- dataset$id
+  train_data <- data[data[[id_name]] %in% train_id, ]
+  test_data <- data[data[[id_name]] %in% test_id, ]
+
+
+  dataset$data <- train_data
+  dataset$test_data <- test_data
+
+  dataset$data_mod <- "train_test"
+
+  dataset
+}
+
+train_test_datasets <- lapply(datasets, create_train_test, train_ids, test_ids)
 
 datasets <- c(datasets, train_test_datasets)
 
