@@ -12,10 +12,11 @@ library(rsample)
 args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) == 0) {
-  config <- yaml::read_yaml("yaml/test_local.yaml")
-} else {
-  config <- yaml::read_yaml(args[[1]])
+  args[[1]] <- "input/test_local.yaml"
+  warning("No input file provided, using: ", args[[1]])
 }
+
+config <- yaml::read_yaml(args[[1]])
 
 datasets <- yaml::read_yaml(config$dataset)
 
@@ -41,10 +42,10 @@ read_data <- function(datasets) {
   })
 }
 
-read_rdata <- function(fileName) {
+read_rdata <- function(file_name) {
   # loads an RData file, and returns it
-  load(fileName)
-  get(ls()[ls() != "fileName"])
+  load(file_name)
+  get(ls()[ls() != "file_name"])
 }
 
 datasets <- read_data(datasets)
@@ -137,12 +138,10 @@ for (i in seq_along(datasets)) {
 
 # harmonize the datasets for cohort -------------------------------------------
 
-source("R/source/harmonize.R")
+source("R/harmonize.R")
 
-harmonized_datasets <- list()
-
-for (dataset in datasets) {
-  if (dataset$harmonize$execute) {
+harmonized_datasets <- lapply(datasets, function(dataset) {
+  if (isTRUE(dataset$harmonize$execute)) {
     data_harmonized <- harmonize(
       data = dataset$data,
       formula = dataset$harmonize$formula,
@@ -152,57 +151,46 @@ for (dataset in datasets) {
 
     dataset$data <- data_harmonized
 
-    harmonized_datasets <- c(harmonized_datasets, list(dataset))
+    return(dataset)
+  } else {
+    return(NULL)
   }
-}
+})
 
 datasets <- harmonized_datasets
 
 
 # check if there is overlap in unique ID's for each dataset -------------------
-unique_id_list <- list()
-for (i in seq_along(datasets)) {
-  execute <- datasets[[i]]$train_test$execute
-  id <- datasets[[i]]$id
-  data <- datasets[[i]]$data
-  if (execute) {
-    unique_ids <- unique(data$id)
-    unique_id_list <- c(unique_id_list, list(unique_ids))
-  }
-}
+unique_id_list <- lapply(datasets, function(dataset) {
+  id <- dataset$id
+  data <- dataset$data
+  unique_ids <- unique(data[[id]])
+})
+
 
 # these are the id's that are common to all outcomes. This way we can exclude
 # the same ids from the training set for all outcome
 shared_unique_id <- Reduce(dplyr::intersect, unique_id_list)
 
 # keep ID's that have all outcomes --------------------------------------------
-new_datasets <- list()
-for (dataset in datasets) {
-  if (dataset$train_test$execute) {
-    data <- dataset$data
-    id <- dataset$id
-    missing_data <- data[!data$id %in% shared_unique_id, ]
-    data <- data[data$id %in% shared_unique_id, ]
-    dataset$data <- data
-    dataset$missing_data <- missing_data
-    new_datasets <- c(new_datasets, list(dataset))
-  } else {
-    new_datasets <- c(new_datasets, list(dataset))
-  }
-}
+new_datasets <- lapply(datasets, function(dataset) {
+  data <- dataset$data
+  id <- dataset$id
+  missing_data <- data[!data$id %in% shared_unique_id, ]
+  data <- data[data$id %in% shared_unique_id, ]
+  dataset$data <- data
+  dataset$missing_data <- missing_data
+  dataset
+})
 
 # Get orphaned ID numbers ------------------------------------------------------
 
-orphaned_ids <- list()
-
-for (dataset in new_datasets) {
-  if (dataset$train_test$execute) {
-    id <- dataset$id
-    data <- dataset$missing_data
-    new_orphaned_ids <- unique(data[[id]])
-    orphaned_ids <- c(orphaned_ids, new_orphaned_ids)
-  }
-}
+orphaned_ids <- lapply(datasets, function(dataset) {
+  id <- dataset$id
+  data <- dataset$missing_data
+  orphaned_ids <- unique(data[[id]])
+  orphaned_ids
+})
 
 orphaned_ids <- as.vector(orphaned_ids)
 
