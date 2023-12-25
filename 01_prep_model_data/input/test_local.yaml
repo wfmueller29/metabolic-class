@@ -4,4 +4,4 @@ plan:
 sample_n: 30
 center: TRUE
 scale: FALSE
-dataset: "yaml/datasets/test.yaml"
+dataset: "input/datasets/test.yaml"
