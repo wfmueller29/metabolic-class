@@ -91,17 +91,6 @@ convert_dummy <- function(dataset) {
   dataset
 }
 
-convert_age <- function(dataset) {
-  age_cols <- c(dataset$age_var)
-  age_cols2 <- paste0(age_cols, "2")
-
-  dataset$data[, age_cols2] <- lapply(age_cols, function(col) {
-    dataset$data[, col] * dataset$data[, col]
-  })
-
-  dataset
-}
-
 datasets <- convert_variables(datasets)
 
 # filter out cases that have NA in the outcome variable -----------------------
@@ -210,7 +199,7 @@ create_strata_vars <- function(dataset) {
 
 datasets <- lapply(datasets, create_strata_vars)
 
-# create determine training ids and testing ids 
+# create determine training ids and testing ids
 get_train_test_id <- function(datasets) {
   split_data <- rsample::group_initial_split(
     data = datasets[[1]]$data,
@@ -253,35 +242,32 @@ train_test_datasets <- lapply(datasets, create_train_test, train_ids, test_ids)
 
 datasets <- c(datasets, train_test_datasets)
 
-
-
 # use prep_hlme to center and scale the data ----------------------------------
 
-for (i in seq_along(datasets)) {
-  age_vars <- datasets[[i]]$age_var
-  age_vars2 <- paste0(age_vars, "2")
-  age_vars <- c(age_vars, age_vars2)
-  datasets[[i]]$data <- helphlme::prep_hlme(
-    df = datasets[[i]]$data,
-    vars = age_vars,
+datasets <- lapply(datasets, function(dataset) {
+  dataset$data <- helphlme::prep_hlme(
+    df = dataset$data,
+    vars = dataset$age_var,
     center = config$center,
     scale = config$scale
   )
-  test_data <- datasets[[i]]$test_data
+  test_data <- dataset$test_data
   if (!is.null(test_data)) {
-    datasets[[i]]$test_data <- helphlme::prep_hlme(
-      df = datasets[[i]]$test_data,
-      vars = age_vars,
+    dataset$test_data <- helphlme::prep_hlme(
+      df = dataset$test_data,
+      vars = dataset$age_var,
       center = config$center,
       scale = config$scale
     )
   }
-}
+})
+
 
 # ensure all data is a data.frame object --------------------------------------
-for (i in seq_along(datasets)) {
-  datasets[[i]]$data <- as.data.frame(datasets[[i]]$data)
-}
+datasets <- lapply(datasets, function(dataset) {
+  dataset$data <- as.data.frame(dataset$data)
+  dataset
+})
 
 # create data_id --------------------------------------------------------------
 for (i in seq_along(datasets)) {

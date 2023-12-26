@@ -1,7 +1,7 @@
 - name: "slam"
   path: "../00b_dataset_mods/output/data/test/slam_bw_og.csv"
   outcome: "bw"
-  age_var: "age_wk"
+  age_var: ["age_wk", "age_wk2"]
   id: "idno"
   dummy: ["sex", "strain"]
   numeric: ["bw", "idno", "le_wk"]
@@ -44,7 +44,7 @@
 - name: "slam"
   path: "../00b_dataset_mods/output/data/test/slam_fat_og.csv"
   outcome: "fat"
-  age_var: "age_wk"
+  age_var: ["age_wk", "age_wk2"]
   id: "idno"
   dummy: ["sex", "strain"]
   numeric: ["fat", "idno", "le_wk"]
@@ -94,7 +94,7 @@
 - name: "slam"
   path: "../00b_dataset_mods/output/data/test/slam_gluc_og.csv"
   outcome: "gluc"
-  age_var: "age_wk"
+  age_var: ["age_wk", "age_wk2"]
   id: "idno"
   dummy: ["sex", "strain"]
   numeric: ["gluc", "idno", "le_wk"]
