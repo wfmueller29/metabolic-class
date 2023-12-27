@@ -260,6 +260,7 @@ datasets <- lapply(datasets, function(dataset) {
       scale = config$scale
     )
   }
+  dataset
 })
 
 
@@ -271,7 +272,6 @@ datasets <- lapply(datasets, function(dataset) {
 
 # create data_id --------------------------------------------------------------
 datasets <- lapply(datasets, function(dataset) {
-
   if (is.null(dataset$data_mod)) {
     dataset$data_mod <- "og"
   } else {
@@ -293,45 +293,36 @@ datasets <- lapply(datasets, function(dataset) {
   }
 
   dataset$data_id <- data_id
-  names(dataset) <- data_id
 
   dataset
 })
 
+dataset_names <- lapply(datasets, function(dataset) {
+  dataset$data_id
+})
+
+names(datasets) <- dataset_names
+
 # save datasets as R object list, individual R objects, and csv's -------------
 path <- file.path("output", config$out_tag)
-dir.create(path)
-dir.create(file.path(path, "rdata"))
-dir.create(file.path(path, "csv"))
-save(datasets, file = file.path(path, "datasets.RDATA"))
-save(config, file = file.path(path, "config.RDATA"))
+datasets_path <- file.path(path, "datasets.RDATA")
+config_path <- file.path(path, "config.RDATA")
+output_yaml_path <- file.path("output", config$out_tag)
+output_yaml_path <- paste0(output_yaml_path, ".yaml")
 
-i <- 1
-for (dataset in datasets) {
-  data_mod <- dataset$data_mod
-  file_name <- paste(
-    i,
-    dataset$outcome,
-    data_mod,
-    sep = "_"
-  )
-  path_rdata <- file.path(
-    path,
-    "rdata",
-    paste0(
-      file_name,
-      ".RDATA"
-    )
-  )
-  path_csv <- file.path(
-    path,
-    "csv",
-    paste0(
-      file_name,
-      ".csv"
-    )
-  )
-  save(dataset, file = path_rdata)
-  write.csv(dataset$data, file = path_csv)
-  i <- 1 + i
-}
+dir.create(path)
+save(datasets, file = datasets_path)
+save(config, file = config_path)
+
+# create output yaml ----------------------------------------------------------
+output_list <- list(
+  data_time = format(Sys.time()),
+  working_directory = getwd(),
+  input_yaml_path = args[[1]],
+  config = config,
+  output_path = path,
+  datasets_path = datasets_path,
+  config_path = config_path
+)
+
+yaml::write_yaml(x = output_list, file = output_yaml_path)
