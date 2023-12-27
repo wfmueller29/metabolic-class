@@ -270,31 +270,33 @@ datasets <- lapply(datasets, function(dataset) {
 })
 
 # create data_id --------------------------------------------------------------
-for (i in seq_along(datasets)) {
-  # if no data mod, dataset is considered OG
-  if (is.null(datasets[[i]]$data_mod)) {
-    datasets[[i]]$data_mod <- "og"
+datasets <- lapply(datasets, function(dataset) {
+
+  if (is.null(dataset$data_mod)) {
+    dataset$data_mod <- "og"
   } else {
-    datasets[[i]]$data_mod <- datasets[[i]]$data_mod
+    dataset$data_mod <- dataset$data_mod
   }
 
   # create data name which combines name, outcome, and data mod
 
   data_id <- paste(
-    datasets[[i]]$name,
-    datasets[[i]]$outcome,
-    datasets[[i]]$data_mod,
+    dataset$name,
+    dataset$outcome,
+    dataset$data_mod,
     sep = "_"
   )
 
-  if (!is.null(datasets[[i]]$data_subset)) {
-    data_subset_name <- paste(datasets[[i]]$data_subset, collapse = "_")
+  if (!is.null(dataset$data_subset)) {
+    data_subset_name <- paste(dataset$data_subset, collapse = "_")
     data_id <- paste(data_id, data_subset_name, sep = "_")
   }
 
-  datasets[[i]]$data_id <- data_id
-  names(datasets)[[i]] <- data_id
-}
+  dataset$data_id <- data_id
+  names(dataset) <- data_id
+
+  dataset
+})
 
 # save datasets as R object list, individual R objects, and csv's -------------
 path <- file.path("output", config$out_tag)
