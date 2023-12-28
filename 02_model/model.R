@@ -15,22 +15,16 @@ args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) == 0) {
   input <- "../01_prep_model_data/output/test_local.yaml"
+  warning("Using default input file: ", input)
 } else {
   input <- args[[1]]
 }
 
-yaml::read_yaml(file = input)
-
-if (length(args) == 0) {
-  out_tag <- "test_local"
-} else {
-  out_tag <- args[[1]]
-}
+input <- yaml::read_yaml(file = input)
 
 # load in datasets and config -------------------------------------------------
-path <- file.path("..", "02_prep_model_data", "output", out_tag)
-load(file.path(path, "config.RDATA"))
-load(file.path(path, "datasets.RDATA"))
+load(file.path(input$working_directory, input$config_path))
+load(file.path(input$working_directory, input$datasets_path))
 
 # filter for each sex and strain
 source("R/source/filter_group.R")

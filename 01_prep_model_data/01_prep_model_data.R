@@ -56,7 +56,6 @@ datasets <- read_data(datasets)
 convert_variables <- function(datasets) {
   datasets <- lapply(datasets, function(dataset) {
     dataset <- convert_numeric(dataset)
-    dataset <- convert_age(dataset)
     dataset <- convert_dummy(dataset)
     dataset <- convert_factor(dataset)
     dataset
