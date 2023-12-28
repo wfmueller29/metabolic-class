@@ -7,11 +7,19 @@ library(callframe)
 library(tidyverse)
 library(future)
 
-# TODO: Read in the previous output file and determine the most effective way 
-# to pass output files from one script output as input 
+# TODO: Read in the previous output file and determine the most effective way
+# to pass output files from one script output as input
 
 # take command line arguments for output tag ----------------------------------
 args <- commandArgs(trailingOnly = TRUE)
+
+if (length(args) == 0) {
+  input <- "../01_prep_model_data/output/test_local.yaml"
+} else {
+  input <- args[[1]]
+}
+
+yaml::read_yaml(file = input)
 
 if (length(args) == 0) {
   out_tag <- "test_local"
