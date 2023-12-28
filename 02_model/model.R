@@ -7,9 +7,6 @@ library(callframe)
 library(tidyverse)
 library(future)
 
-# TODO: Read in the previous output file and determine the most effective way
-# to pass output files from one script output as input
-
 # take command line arguments for output tag ----------------------------------
 args <- commandArgs(trailingOnly = TRUE)
 
@@ -27,7 +24,7 @@ load(file.path(input$working_directory, input$config_path))
 load(file.path(input$working_directory, input$datasets_path))
 
 # filter for each sex and strain
-source("R/source/filter_group.R")
+source("R/filter_group.R")
 
 if (!is.null(config$filters)) {
   datasets <- lapply(datasets, function(dataset) {
@@ -49,7 +46,7 @@ if (!is.null(config$filters)) {
 
 # check if there are train test datasets
 
-source("R/source/sample_train_test.R")
+source("R/sample_train_test.R")
 
 if (!is.null(config$sample_n) && !isFALSE(config$sample_n)) {
   # check if there are train_test datasets
@@ -87,7 +84,12 @@ if (!is.null(config$sample_n) && !isFALSE(config$sample_n)) {
       train_test_ids <- c(train_test_ids, list(unique_ids))
     }
   }
-  all_equal <- do.call(all.equal, train_test_ids)
+
+  all_equal <- sapply(train_test_ids, function(ids) {
+    all.equal(ids, train_test_ids[[1]])
+  })
+  all_equal <- all(all_equal)
+
   if (!isTRUE(all_equal)) {
     stop("Train_test ids are not equal across datasets")
   } else {
