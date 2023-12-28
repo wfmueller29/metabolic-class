@@ -11,13 +11,13 @@ library(future)
 args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) == 0) {
-  input <- "../01_prep_model_data/output/test_local.yaml"
+  input_path <- "../01_prep_model_data/output/test_local.yaml"
   warning("Using default input file: ", input)
 } else {
-  input <- args[[1]]
+  input_path <- args[[1]]
 }
 
-input <- yaml::read_yaml(file = input)
+input <- yaml::read_yaml(file = input_path)
 
 # load in datasets and config -------------------------------------------------
 load(file.path(input$working_directory, input$config_path))
@@ -102,7 +102,7 @@ if (!is.null(config$sample_n) && !isFALSE(config$sample_n)) {
 # create call frame -----------------------------------------------------------
 cf_all <- data.frame()
 for (dataset in datasets) {
-  cf <- make_cf(
+  cf <- callframe::make_cf(
     `data|oc` = paste0(dataset$data_id, "|", dataset$outcome),
     fixed = dataset$model$fixed,
     random = dataset$model$random,
@@ -124,35 +124,6 @@ for (dataset in datasets) {
 
 cf <- cf_all
 
-get_dollar <- function(cf) {
-  dollar <- grepl(".*\\$.*", x = names(cf))
-  dollar_nms <- names(cf)[dollar]
-  dollar_nms
-}
-
-
-fill_dollar <- function(cf, dollar_nms) {
-  nms <- dollar_nms
-  nms <- paste0("\\", nms)
-  for (nm in nms) {
-    for (col in names(cf)) {
-      data.table::set(
-        cf,
-        i = NULL,
-        j = col,
-        value = stringr::str_replace_all(cf[[col]],
-          pattern = nm,
-          replacement = cf[[dollar_nms]]
-        )
-      )
-    }
-  }
-  cf <- data.table::setDT(cf)
-}
-
-dollar_names <- get_dollar(cf)
-cf <- fill_dollar(cf, dollar_names)
-
 # create new fixed
 cf <- data.table::set(cf,
   i = NULL,
@@ -164,14 +135,14 @@ cf <- data.table::set(cf,
 # if biowulf is in config file, allow for asyncronous eval
 if (!is.null(config$plan)) {
   if (config$plan == "cluster") {
-    ncpus <- availableCores()
-    cl <- makeClusterPSOCK(ncpus)
-    plan(cluster, workers = cl)
+    ncpus <- future::availableCores()
+    cl <- future::makeClusterPSOCK(ncpus)
+    future::plan(cluster, workers = cl)
   } else {
-    plan(config$plan)
+    future::plan(config$plan)
   }
 } else {
-  plan("default")
+  future::plan("default")
 }
 
 # create object variables for data because they are in list and need to be
@@ -181,7 +152,7 @@ for (dataset in datasets) {
   assign(x = dataset$data_id, value = dataset$data, envir = .GlobalEnv)
 }
 
-models <- pmap_cf(cf,
+models <- callframe::pmap_cf(cf,
   helphlme::hlme2,
   type = c(
     data = "sym",
@@ -199,7 +170,7 @@ models <- pmap_cf(cf,
 )
 
 # This is to close background workers
-plan(sequential)
+future::plan(sequential)
 
 # name datasets
 names(datasets) <- lapply(datasets, function(dataset) {
@@ -229,3 +200,17 @@ save(datasets, file = datasets_path)
 save(models, file = models_path)
 save(cf, file = cf_path)
 save(config, file = config_path)
+
+# create output file ----------------------------------------------------------
+output_list <- list(
+  data_time = format(Sys.time()),
+  working_directory = getwd(),
+  input_path = input_path,
+  datasets_path = datasets_path,
+  models_path = models_path,
+  cf_path = cf_path,
+  config_path = config_path
+)
+
+output_list_path <- paste0(file.path("output", config$out_tag), ".yaml")
+yaml::write_yaml(x = output_list, file = output_list_path)
