@@ -10,9 +10,9 @@
     sample_by: ["sex", "strain"]
     split: .8
   model:
-    fixed: "~ $age_var + $age_var2 + sex_F * strain_HET3" # remove $age_var
+    fixed: "~ age_wk + age_wk2 + sex_F * strain_HET3"
     fixcov: ["sex_F", "strain_HET3"]
-    mixture: "~ $age_var + $age_var2" 
+    mixture: "~ age_wk + age_wk2" 
     random: 
       - "~ 1"
     idiag: FALSE
@@ -53,8 +53,8 @@
     sample_by: ["sex", "strain"]
     split: .8
   model:
-    fixed: "~ $age_var + $age_var2"
-    mixture: "~ $age_var + $age_var2" 
+    fixed: "~ age_wk + age_wk2"
+    mixture: "~ age_wk + age_wk2" 
     random: 
       - "~ 1"
     idiag: FALSE
@@ -103,9 +103,9 @@
     sample_by: ["sex", "strain"]
     split: .8
   model:
-    fixed: "~ $age_var + $age_var2 + sex_F + strain_HET3" 
+    fixed: "~ age_wk + age_wk2 + sex_F + strain_HET3" 
     fixcov: ["sex_F", "strain_HET3"]
-    mixture: "~ $age_var + $age_var2" 
+    mixture: "~ age_wk + age_wk2" 
     random: 
       - "~ 1"
     idiag: FALSE
