@@ -6,7 +6,7 @@ output:
   html_document:
     df_print: paged
 params:
-  model_dir: "test_local"
+  input_dir: "../02_model/output/test_local.yaml"
 ---
 
 
@@ -31,30 +31,26 @@ knitr::opts_chunk$set(include = FALSE)
 knitr::opts_chunk$set(results = "asis")
 ```
 
-## Render
-```{r render, eval = FALSE}
-model_dir <- "20220510_124214_test"
-output_dir <- normalizePath(file.path("output", model_dir))
-rmarkdown::render(
-  input = "04_model_select.Rmd",
-  output_dir = output_dir,
-  params = list(model_dir = model_dir)
-)
+```{r read input yaml}
 
-model_dir <- "20220523_121216_test"
-output_dir <- normalizePath(file.path("output", model_dir))
-rmarkdown::render(
-  input = "04_model_select.Rmd",
-  output_dir = output_dir,
-  params = list(model_dir = model_dir)
-)
+# for the case when we are not running with RStudio
+if (!exists("params")) {
+  params <- list()
+  params$input_dir <- "../02_model/output/test_local.yaml"
+}
+
+input <- yaml::read_yaml(file = params$input_dir)
+
 ```
 
 ```{r load models}
-path <- normalizePath(file.path("..", "03_model", "output", params$model_dir))
 cf_path <- normalizePath(file.path(path, "cf.RDATA"))
 models_path <- normalizePath(file.path(path, "models.RDATA"))
 datasets_path <- normalizePath(file.path(path, "datasets.RDATA"))
+
+cf_path <- file.path(input$working_dir, input$cf_path)
+models_path <- file.path(input$working_dir, input$models_path)
+datasets_path <- file.path(input$working_idr, input$datasets_path)
 
 load(file = cf_path)
 load(file = models_path)
@@ -76,7 +72,7 @@ for (i in seq_len(nrow(cf_nest))) {
   models <- cf_nest$data[[i]]$final_model
   mo_eval <- helphlme::compare_models(models)
   print(kable(mo_eval$table, caption = names(models)) %>%
-    kable_styling("striped", full_width = F))
+    kable_styling("striped", full_width = FALSE))
   print(mo_eval$plot + labs(title = names(models)))
 }
 ```
