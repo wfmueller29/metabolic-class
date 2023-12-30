@@ -12,7 +12,7 @@ args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) == 0) {
   input_path <- "../01_prep_model_data/output/test_local.yaml"
-  warning("Using default input file: ", input)
+  warning("Using default input file: ", input_path)
 } else {
   input_path <- args[[1]]
 }
@@ -97,39 +97,38 @@ if (!is.null(config$sample_n) && !isFALSE(config$sample_n)) {
   }
 }
 
+# create dataset id number ----------------------------------------------------
 
+datasets <- lapply(seq_len(length(datasets)), function(i) {
+  datasets[[i]]$data_id_no <- i
+  datasets[[i]]
+})
 
+expand.grid
 # create call frame -----------------------------------------------------------
-cf_all <- data.frame()
-for (dataset in datasets) {
-  cf <- callframe::make_cf(
-    `data|oc` = paste0(dataset$data_id, "|", dataset$outcome),
-    fixed = dataset$model$fixed,
-    random = dataset$model$random,
-    idiag = dataset$model$idiag,
-    nwg = dataset$model$nwg,
-    ng = 1:dataset$model$ng_max,
-    subject = dataset$id,
-    `$age_var` = dataset$age_var
-  )
-  # create mixed column
-  cf <- data.table::set(cf,
-    i = NULL,
-    j = "mixture",
-    value = dataset$model$mixture
+create_callframe <- function(dataset) {
+  cf <- expand.grid(
+    list(
+      data_id_no = dataset$data_id_no,
+      data = dataset$data_id,
+      fixed = dataset$model$fixed,
+      random = dataset$model$random,
+      idiag = dataset$model$idiag,
+      nwg = dataset$model$nwg,
+      ng = seq_len(dataset$model$ng_max),
+      subject = dataset$id
+    ),
+    stringsAsFactors = FALSE
   )
 
-  cf_all <- rbind(cf_all, cf)
+  cf$mixture <- dataset$model$mixture
+  cf$fixed <- paste0(cf[["oc"]], cf[["fixed"]], sep = " ")
+
+  cf
 }
 
-cf <- cf_all
-
-# create new fixed
-cf <- data.table::set(cf,
-  i = NULL,
-  j = "fixed",
-  value = paste0(cf[["oc"]], cf[["fixed"]], sep = " ")
-)
+cfs <- lapply(datasets, create_callframe)
+cf <- do.call(what = rbind, args = cfs)
 
 ## ----pmap_cf----------------------------------------------------------------
 # if biowulf is in config file, allow for asyncronous eval
