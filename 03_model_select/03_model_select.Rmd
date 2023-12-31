@@ -79,7 +79,6 @@ for (i in seq_len(number_of_datasets)) {
 ```
 
 ```{r model eval, include = TRUE, results = 'asis'}
-i <- 1
 for (i in seq_len(number_of_datasets)) {
   cf <- cf_nest$data[[i]]
   dataset_id_no <- cf_nest$data_id_no[[i]]
@@ -100,8 +99,6 @@ for (i in seq_len(number_of_datasets)) {
     age_vars = age_vars,
     fixcov = fixcov
   )
-
-  a <- predictY(cf$final_model[[1]], pred, var.time = "age_wk_ns")
 
   age_var <- age_vars[[1]]
   outcome <- dataset$outcome
