@@ -33,8 +33,8 @@
   labels:
     oc_name: "Body Weight"
     oc_units: "(g)"
-    age_var_name: ["Age", "Relative Age"]
-    age_var_units: ["(weeks)", "(%)"]
+    age_var_name: "Age"
+    age_var_units: "(weeks)"
     data_name: "SLAM Body Weight"
   harmonize:
     execute: TRUE
