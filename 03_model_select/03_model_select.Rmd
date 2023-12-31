@@ -59,7 +59,7 @@ cf <- as.data.frame(cf)
 number_of_datasets <- length(unique(cf$data_id_no))
 cf_nest <- list(data_id_no = unique(cf$data_id_no))
 
-cf_nest$data <- lapply(seq_len(number_of_datasets), function(i) {
+cf_nest$cf <- lapply(seq_len(number_of_datasets), function(i) {
   row_index <- cf$data_id_no == i
   cf[row_index, ]
 })
@@ -67,9 +67,9 @@ cf_nest$data <- lapply(seq_len(number_of_datasets), function(i) {
 
 ```{r step1 mo_eval output, include = TRUE, fig.height=7, fig.width=12}
 for (i in seq_len(number_of_datasets)) {
-  data_id <- unique(cf_nest$data[[i]]$data)
+  data_id <- unique(cf_nest$cf[[i]]$data)
   cat("\n\n", data_id, "\n\n")
-  models <- cf_nest$data[[i]]$final_model
+  models <- cf_nest$cf[[i]]$final_model
   mo_eval <- helphlme::compare_models(models)
   table <- kableExtra::kable(mo_eval$table, caption = names(models))
   table <- kableExtra::kable_styling(table, "striped", full_width = FALSE)
@@ -80,7 +80,7 @@ for (i in seq_len(number_of_datasets)) {
 
 ```{r model eval, include = TRUE, results = 'asis'}
 for (i in seq_len(number_of_datasets)) {
-  cf <- cf_nest$data[[i]]
+  cf <- cf_nest$cf[[i]]
   dataset_id_no <- cf_nest$data_id_no[[i]]
   dataset <- datasets[[dataset_id_no]]
 
@@ -122,35 +122,52 @@ for (i in seq_len(number_of_datasets)) {
 ```
 
 ```{r select model in nest}
-final_models <- data.frame()
-for (i in seq_len(nrow(cf_nest))) {
-  age_var <- cf_nest$`$age_var`[[i]]
-  data_oc <- cf_nest$`data|oc`[[i]]
-  cf <- cf_nest$data[[i]]
-  data_id <- cf$data[[1]]
+selected_models <- lapply(cf_nest$cf, function(cf) {
+  data_id <- unique(cf$data)
   models <- cf$final_model
   mo_eval_table <- helphlme::compare_models(models)$table
-  cf <- cbind(cf, mo_eval_table) %>%
-    mutate(smallest_greater_5 = ifelse(`Smallest Class (%)` >= 5, 1, 0)) %>%
-    arrange(-smallest_greater_5, eval(as.symbol("BIC")))
-  final_model_df_row <- as.data.frame(cf)[1, ]
-  final_model_df_row$dummy <- list(datasets[[data_id]]$dummy)
-  final_model_df_row$fixcov <- list(datasets[[data_id]]$model$fixcov)
-  final_model_df_row$data_id <- datasets[[data_id]]$data_id
-  final_model_df_row$data_age_vars <- list(datasets[[data_id]]$age_var)
-  final_model_df_row$age_var <- age_var
-  final_model_df_row$data_oc <- data_oc
-  final_model_df_row$model_name <- paste(data_oc, age_var, sep = "_")
+
+  cf <- cbind(cf, mo_eval_table)
+
+  cf$smallest_greater_5 <- ifelse(cf[["Smallest Class (%)"]] >= 5, 1, 0)
+  cf <- cf[order(-cf$smallest_greater_5, cf$BIC), ]
+
+  selected_model <- cf[1, ]
+})
+
+selected_models <- do.call(rbind, selected_models)
+
+```
+
+```{r create final_models}
+# here we are going to transfer information from dataset to final_models
+final_model_rows <- lapply(seq_len(nrow(selected_models)), function(row_no) {
+  row <- selected_models[row_no, ]
+  data_id_no <- row$data_id_no
+  dataset <- datasets[[data_id_no]]
+
+  age_var <- dataset$age_var[[1]]
+  data_oc <- paste(dataset$data_id, dataset$outcome, sep = "_")
+
+  row$dummy <- list(dataset$dummy)
+  row$fixcov <- list(dataset$model$fixcov)
+  row$data_id <- dataset$data_id
+  row$data_age_vars <- list(dataset$age_var)
+  row$age_var <- age_var
+  row$data_oc <- data_oc
+  row$model_name <- paste(data_oc, age_var, sep = "_")
 
   # we want to add labels as well from datasets
-  final_model_df_row$oc_name <- datasets[[data_id]]$labels$oc_name
-  final_model_df_row$oc_units <- datasets[[data_id]]$labels$oc_units
-  which_age_var <- which(datasets[[data_id]]$age_var %in% final_model_df_row$age_var)
-  final_model_df_row$age_var_name <- datasets[[data_id]]$labels$age_var_name[[which_age_var]]
-  final_model_df_row$age_var_units <- datasets[[data_id]]$labels$age_var_units[[which_age_var]]
-  final_model_df_row$data_name <- datasets[[data_id]]$labels$data_name
-  final_models <- rbind(final_models, final_model_df_row)
-}
+  row$oc_name <- dataset$labels$oc_name
+  row$oc_units <- dataset$labels$oc_units
+  row$age_var_name <- dataset$labels$age_var_name
+  row$age_var_units <- dataset$labels$age_var_units
+  row$data_name <- dataset$labels$data_name
+
+  row
+})
+
+final_models <- do.call(rbind, final_model_rows)
 ```
 
 ```{r create final model csv}
