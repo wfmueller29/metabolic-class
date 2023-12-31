@@ -122,7 +122,7 @@ create_callframe <- function(dataset) {
   )
 
   cf$mixture <- dataset$model$mixture
-  cf$fixed <- paste0(cf[["oc"]], cf[["fixed"]], sep = " ")
+  cf$fixed <- paste0(dataset$outcome, cf[["fixed"]], sep = " ")
 
   cf
 }
