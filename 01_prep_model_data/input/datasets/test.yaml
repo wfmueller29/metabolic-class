@@ -1,7 +1,7 @@
 - name: "slam"
   path: "../00b_dataset_mods/output/data/test/slam_bw_og.csv"
   outcome: "bw"
-  age_var: ["age_wk", "age_wk2"]
+  age_var: ["age_wk", "age_wk2"] # these must be in increasing polynomial order
   id: "idno"
   dummy: ["sex", "strain"]
   numeric: ["bw", "idno", "le_wk"]
