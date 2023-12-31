@@ -32,7 +32,6 @@ knitr::opts_chunk$set(results = "asis")
 ```
 
 ```{r read input yaml}
-
 # for the case when we are not running with RStudio
 if (!exists("params")) {
   params <- list()
@@ -40,17 +39,12 @@ if (!exists("params")) {
 }
 
 input <- yaml::read_yaml(file = params$input_dir)
-
 ```
 
 ```{r load models}
-cf_path <- normalizePath(file.path(path, "cf.RDATA"))
-models_path <- normalizePath(file.path(path, "models.RDATA"))
-datasets_path <- normalizePath(file.path(path, "datasets.RDATA"))
-
 cf_path <- file.path(input$working_dir, input$cf_path)
 models_path <- file.path(input$working_dir, input$models_path)
-datasets_path <- file.path(input$working_idr, input$datasets_path)
+datasets_path <- file.path(input$working_dir, input$datasets_path)
 
 load(file = cf_path)
 load(file = models_path)
@@ -62,55 +56,70 @@ cf$final_model <- models
 
 cf <- as.data.frame(cf)
 
-cf_nest <- cf %>% nest_by(`data|oc`, `$age_var`)
+number_of_datasets <- length(unique(cf$data_id_no))
+cf_nest <- list(data_id_no = unique(cf$data_id_no))
+
+cf_nest$data <- lapply(seq_len(number_of_datasets), function(i) {
+  row_index <- cf$data_id_no == i
+  cf[row_index, ]
+})
 ```
 
-
-```{r step1 mo_eval output, include = TRUE, eval = params$eval_step1, fig.height=7, fig.width=12}
-for (i in seq_len(nrow(cf_nest))) {
-  cat("\n\n", cf_nest$`data|oc`[[i]], "\n\n")
+```{r step1 mo_eval output, include = TRUE, fig.height=7, fig.width=12}
+for (i in seq_len(number_of_datasets)) {
+  data_id <- unique(cf_nest$data[[i]]$data)
+  cat("\n\n", data_id, "\n\n")
   models <- cf_nest$data[[i]]$final_model
   mo_eval <- helphlme::compare_models(models)
-  print(kable(mo_eval$table, caption = names(models)) %>%
-    kable_styling("striped", full_width = FALSE))
+  table <- kableExtra::kable(mo_eval$table, caption = names(models))
+  table <- kableExtra::kable_styling(table, "striped", full_width = FALSE)
+  print(table)
   print(mo_eval$plot + labs(title = names(models)))
 }
 ```
 
 ```{r model eval, include = TRUE, results = 'asis'}
-for (i in seq_len(nrow(cf_nest))) {
+i <- 1
+for (i in seq_len(number_of_datasets)) {
   cf <- cf_nest$data[[i]]
-  outcome <- cf$oc[[1]]
-  df <- datasets[[cf$data[[1]]]]$data
-  fixcov_names <- datasets[[cf$data[[1]]]]$model$fixcov
+  dataset_id_no <- cf_nest$data_id_no[[i]]
+  dataset <- datasets[[dataset_id_no]]
+
+  data_id <- dataset$data_id
+  header <- paste("Data ID =", data_id, sep = " ")
+  cat("\n\n#### ", header, "\n\n")
+
+  df <- dataset$data
+  age_vars <- as.character(dataset$age_var)
+  fixcov_names <- dataset$model$fixcov
   fixcov <- rep(0, length(fixcov_names))
   names(fixcov) <- fixcov_names
-  ylim <- c(min(df[[outcome]]), max(df[[outcome]]))
-  data_oc <- cf_nest$`data|oc`[[i]]
-  age_var <- cf_nest$`$age_var`[[i]]
-  header <- paste("Data|Outcome =",
-    data_oc,
-    "; Age Variable =",
-    age_var,
-    sep = " "
-  )
-  cat("\n\n#### ", header, "\n\n")
+
   pred <- helphlme::create_pred_df(
     df = df,
-    age_vars = paste(age_var, c("", "2"), sep = ""),
+    age_vars = age_vars,
     fixcov = fixcov
   )
+
+  a <- predictY(cf$final_model[[1]], pred, var.time = "age_wk_ns")
+
+  age_var <- age_vars[[1]]
+  outcome <- dataset$outcome
+  ylim <- c(min(df[[outcome]]), max(df[[outcome]]))
   helphlme::display_classes(
     df = pred,
-    cf$final_model,
-    age_var,
+    x = cf$final_model[[1]],
+    age = age_var,
     main = header,
     xlab = age_var,
     ylab = outcome,
     ylim = ylim
   )
+
   mo_eval <- helphlme::compare_models(cf$final_model)
-  print(kable(mo_eval$table) %>% kable_styling("striped", full_width = F))
+  table <- kableExtra::kable(mo_eval$table)
+  table <- kableExtra::kable_styling(table, "striped", full_width = FALSE)
+  print(table)
   print(mo_eval$plot)
 }
 ```
