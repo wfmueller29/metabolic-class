@@ -6,7 +6,7 @@ output:
   html_document:
     df_print: paged
 params:
-  input_dir: "../02_model/output/test_local.yaml"
+  input_path: "../02_model/output/test_local.yaml"
 ---
 
 
@@ -35,16 +35,16 @@ knitr::opts_chunk$set(results = "asis")
 # for the case when we are not running with RStudio
 if (!exists("params")) {
   params <- list()
-  params$input_dir <- "../02_model/output/test_local.yaml"
+  params$input_path <- "../02_model/output/test_local.yaml"
 }
 
-input <- yaml::read_yaml(file = params$input_dir)
+input <- yaml::read_yaml(file = params$input_path)
 ```
 
 ```{r load models}
-cf_path <- file.path(input$working_dir, input$cf_path)
-models_path <- file.path(input$working_dir, input$models_path)
-datasets_path <- file.path(input$working_dir, input$datasets_path)
+cf_path <- input$cf_path
+models_path <- input$models_path
+datasets_path <- input$datasets_path
 
 load(file = cf_path)
 load(file = models_path)
@@ -136,7 +136,6 @@ selected_models <- lapply(cf_nest$cf, function(cf) {
 })
 
 selected_models <- do.call(rbind, selected_models)
-
 ```
 
 ```{r create final_models}
@@ -171,25 +170,43 @@ final_models <- do.call(rbind, final_model_rows)
 ```
 
 ```{r create final model csv}
-final_model_csv <- final_models %>%
-  select(
-    model_name, everything(), -final_model,
-    -dummy, -fixcov, -data_age_vars
-  )
+column_select <- unique(c("model_name", names(final_models)))
+drop_columns <- c("final_model", "dummy", "fixcov", "data_age_vars")
+column_select_index <- !(column_select %in% drop_columns)
+column_select <- column_select[column_select_index]
+
+final_models_csv <- final_models[, column_select]
 ```
 
 ```{r save final models}
-output_path <- normalizePath(file.path("output", params$model_dir))
+config_path <- input$config_path
+load(file = config_path)
 
-R.utils::copyDirectory(from = path, output_path)
+output_path <- normalizePath(file.path("output", config$out_tag))
+dir.create(output_path)
 
-final_model_path <- file.path(output_path, "final_models.RDATA")
+final_models_path <- file.path(output_path, "final_models.RDATA")
 datasets_path <- file.path(output_path, "datasets.RDATA")
 csv_path <- file.path(output_path, "final_models.csv")
 
-write.csv(final_model_csv, csv_path)
-
-save(final_models, file = final_model_path)
+write.csv(x = final_models_csv, file = csv_path)
+save(final_models, file = final_models_path)
 save(datasets, file = datasets_path)
-```
 
+# create output file ----------------------------------------------------------
+output_list <- list(
+  data_time = format(Sys.time()),
+  working_directory = getwd(),
+  input_path = params$input_path,
+  output_dir_path = output_path,
+  datasets_path = datasets_path,
+  models_path = input$models_path,
+  cf_path = input$cf_path,
+  config_path = config_path,
+  final_models_path = final_models_path,
+  csv_path = csv_path
+)
+
+output_list_path <- paste0(file.path("output", config$out_tag), ".yaml")
+yaml::write_yaml(x = output_list, file = output_list_path)
+```
