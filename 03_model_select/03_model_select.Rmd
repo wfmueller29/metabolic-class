@@ -186,12 +186,10 @@ output_path <- normalizePath(file.path("output", config$out_tag))
 dir.create(output_path)
 
 final_models_path <- file.path(output_path, "final_models.RDATA")
-datasets_path <- file.path(output_path, "datasets.RDATA")
 csv_path <- file.path(output_path, "final_models.csv")
 
 write.csv(x = final_models_csv, file = csv_path)
 save(final_models, file = final_models_path)
-save(datasets, file = datasets_path)
 
 # create output file ----------------------------------------------------------
 output_list <- list(
@@ -199,7 +197,7 @@ output_list <- list(
   working_directory = getwd(),
   input_path = params$input_path,
   output_dir_path = output_path,
-  datasets_path = datasets_path,
+  datasets_path = input$datasets_path,
   models_path = input$models_path,
   cf_path = input$cf_path,
   config_path = config_path,
