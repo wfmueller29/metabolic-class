@@ -16,7 +16,9 @@ if (length(args) == 0) {
   warning("No input file provided, using: ", args[[1]])
 }
 
-config <- yaml::read_yaml(args[[1]])
+input_path <- args[[1]]
+
+config <- yaml::read_yaml(input_path)
 
 datasets <- yaml::read_yaml(config$dataset)
 
@@ -303,25 +305,26 @@ dataset_names <- lapply(datasets, function(dataset) {
 names(datasets) <- dataset_names
 
 # save datasets as R object list, individual R objects, and csv's -------------
-path <- file.path("output", config$out_tag)
-datasets_path <- file.path(path, "datasets.RDATA")
-config_path <- file.path(path, "config.RDATA")
-output_yaml_path <- file.path("output", config$out_tag)
-output_yaml_path <- paste0(output_yaml_path, ".yaml")
+input_path <- normalizePath(input_path)
+output_dir_path <- normalizePath(file.path("output", config$out_tag))
+datasets_path <- normalizePath(file.path(output_dir_path, "datasets.RDATA"))
+config_path <- normalizePath(file.path(output_dir_path, "config.RDATA"))
 
-dir.create(path)
+dir.create(output_dir_path)
 save(datasets, file = datasets_path)
 save(config, file = config_path)
 
 # create output yaml ----------------------------------------------------------
+
 output_list <- list(
   data_time = format(Sys.time()),
   working_directory = getwd(),
-  input_yaml_path = args[[1]],
-  config = config,
-  output_path = path,
+  input_yaml_path = input_path,
+  output_dir_path = output_dir_path,
   datasets_path = datasets_path,
   config_path = config_path
 )
 
+output_yaml_path <- normalizePath(file.path("output", config$out_tag))
+output_yaml_path <- paste0(output_yaml_path, ".yaml")
 yaml::write_yaml(x = output_list, file = output_yaml_path)
