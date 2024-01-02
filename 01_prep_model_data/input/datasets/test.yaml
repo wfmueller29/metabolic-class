@@ -20,15 +20,18 @@
     ng_max: 3
   prediction_data:
     filter_window:
+      age_var: "age_wk"
       start: 0
       end: 165
       window_size_vector: [25, 50]
       step: 10
     filter_cumulative:
+      age_var: "age_wk"
       start_vector: [0,25,50,75]
       end: 165
       step: 25
     resample:
+      age_var: "age_wk"
       fraction_vector: [.75, .667, .5, .337, .25]
   labels:
     oc_name: "Body Weight"
@@ -70,15 +73,18 @@
         - [age_wk_ns: "[57.50,103.50]"]
       names:
     filter_window:
+      age_var: "age_wk"
       start: 0
       end: 165
       window_size_vector: [25, 50]
       step: 10
     filter_cumulative:
+      age_var: "age_wk"
       start_vector: [0,25,50,75]
       end: 165
       step: 25
     resample:
+      age_var: "age_wk"
       fraction_vector: [.75, .667, .5, .337, .25]
   labels:
     oc_name: "Body Fat"
@@ -121,15 +127,18 @@
         - [age_wk_ns: "[57.50,103.50]"]
       names:
     filter_window:
+      age_var: "age_wk"
       start: 0
       end: 165
       window_size_vector: [25, 50]
       step: 10
     filter_cumulative:
+      age_var: "age_wk"
       start_vector: [0,25,50,75]
       end: 165
       step: 25
     resample:
+      age_var: "age_wk"
       fraction_vector: [.75, .667, .5, .337, .25]
   labels:
     oc_name: "Glucose"
