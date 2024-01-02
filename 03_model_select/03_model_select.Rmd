@@ -180,7 +180,7 @@ final_models_csv <- final_models[, column_select]
 
 ```{r save final models}
 config_path <- input$config_path
-load(file = config_path)
+config <- yaml::read_yaml(file = config_path)
 
 output_path <- normalizePath(file.path("output", config$out_tag))
 dir.create(output_path)
@@ -195,12 +195,12 @@ save(final_models, file = final_models_path)
 output_list <- list(
   data_time = format(Sys.time()),
   working_directory = getwd(),
+  config_path = config_path,
   input_path = params$input_path,
   output_dir_path = output_path,
   datasets_path = input$datasets_path,
   models_path = input$models_path,
   cf_path = input$cf_path,
-  config_path = config_path,
   final_models_path = final_models_path,
   csv_path = csv_path
 )
