@@ -9,7 +9,7 @@ library(tidyverse)
 args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) == 0) {
-  input_path <-  "../03_model_select/output/test_local.yaml"
+  input_path <- "../03_model_select/output/test_local.yaml"
   warning("Using default input file: ", input_path)
 } else {
   input_path <- args[[1]]
@@ -19,10 +19,6 @@ input <- yaml::read_yaml(file = input_path)
 
 # load in datasets and config -------------------------------------------------
 load(input$datasets_path)
-path <- file.path("..", "02_prep_model_data", "output", out_tag)
-
-config <- yaml::read_yaml("yaml/default.yaml")
-
 
 # create df_list --------------------------------------------------------------
 
@@ -64,8 +60,29 @@ source("R/resample_frequency.R")
 datasets <- resample_frequency_dataset(datasets)
 
 # save our datasets -----------------------------------------------------------
+load(input$config_path)
 
-out_dir <- file.path("output", out_tag)
-dir.create(out_dir)
-path <- file.path(out_dir, "datasets.RDATA")
-save(datasets, file = path)
+output_dir_path <- normalizePath(file.path("output", config$out_tag))
+dir.create(output_dir_path)
+datasets_path <- file.path(output_dir_path, "datasets.RDATA")
+
+save(datasets, file = datasets_path)
+
+# create output file ----------------------------------------------------------
+input_path <- normalizePath(input_path)
+
+output_list <- list(
+  data_time = format(Sys.time()),
+  working_directory = getwd(),
+  input_path = input_path,
+  output_dir_path = output_dir_path,
+  datasets_path = datasets_path,
+  models_path = input$models_path,
+  cf_path = input$cf_path,
+  config_path = input$config_path,
+  final_models_path = input$final_models_path,
+  csv_path = input$csv_path
+)
+
+output_list_path <- paste0(file.path("output", config$out_tag), ".yaml")
+yaml::write_yaml(x = output_list, file = output_list_path)
