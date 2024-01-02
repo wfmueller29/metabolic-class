@@ -6,8 +6,7 @@ output:
   html_document:
     df_print: paged
 params:
-  model_dir: "test_local"
-  yaml: "yaml/test.yaml"
+  input_path: "../04_prediction_data/output/test_local.yaml"
 ---
 
 ```{r setup, warning=FALSE, message=FALSE, echo=FALSE, eval = TRUE}
@@ -35,33 +34,25 @@ mega_pal <- rep(palette(), 40)
 
 ## Analysis
 
+### Load Input File
+
+```{r read input yaml}
+# for the case when we are not running with RStudio
+if (!exists("params")) {
+  params <- list()
+  params$input_path <- "../04_prediction_data/output/test_local.yaml"
+}
+
+input <- yaml::read_yaml(file = params$input_path)
+```
+
 ### Load Models
 
 ```{r load models}
-load_output <- function(path, file_name) {
-  file_path <- normalizePath(file.path(path, paste0(file_name, ".RDATA")))
-  load(file = file_path, envir = .GlobalEnv)
-}
-
-path_04 <- normalizePath(file.path(
-  "..",
-  "04_model_select",
-  "output",
-  params$model_dir
-))
-
-path_04c <- normalizePath(file.path(
-  "..",
-  "04c_prediction_data",
-  "output",
-  params$model_dir
-))
-
-load_output(path_04, "cf")
-load_output(path_04c, "datasets")
-load_output(path_04, "final_models")
-load_output(path_04, "config")
-
+load(input$cf_path)
+load(input$datasets_path)
+load(input$final_models_path)
+config <- yaml::read_yaml(input$config_path)
 
 # load in main_cat_surv
 load(file = "../04b_healthcard_cod/output/main_cat_surv.RDATA")
