@@ -70,38 +70,37 @@ final_models$dfs <- lapply(final_models$data, function(name) {
 ```{r census data frame}
 # will number classes so that all classes of list given to function
 # are labelled uniquely
-make_census <- function(cf_row) {
+make_census <- function(cf_row, dataset) {
   model <- unlist(cf_row$final_model, recursive = FALSE)
   class_df <- model$pprob
 
-  main <- datasets[[cf_row$data]]$data
+  data <- dataset$data
+  id <- dataset$id
 
   # add class_df to main
-  census <- main %>%
-    mutate(idno = as.numeric(idno)) %>%
-    left_join(class_df, by = "idno") %>%
-    distinct(idno, .keep_all = T) %>%
-    select(class, idno, cohort, starts_with("prob")) %>%
-    filter(!is.na(class)) %>%
-    mutate(idno = as.character(idno))
+  census <- data[!duplicated(data[[id]]), ]
+  census_cols <- dataset[c("id", "dummy", "factor")]
+  census_cols <- unlist(census_cols, use.names = FALSE)
+  census <- census[, census_cols]
+  census <- merge(x = census, y = class_df, by = id)
 
   # add survival information to census
-  census <- census %>%
-    mutate(idno = as.numeric(idno)) %>%
-    left_join(subject_sum, by = "idno") %>%
-    mutate(
-      age_wk_death = le_wk,
-      dead_nat = dead_censor
-    )
+  age_death <- config$survival_dataset$age_death
+  censor <- config$survival_dataset$censor
+  surv_id <- config$survival_dataset$id
 
-  # return census
+  census <- merge(x = census, y = main_cat_surv, by.x = id, by.y = surv_id)
+  census[["age_death"]] <- age_death
+  census[["censor"]] <- censor
+
   census
 }
 
 
 final_models$census <- lapply(seq_len(nrow(final_models)), function(i) {
   cf_row <- final_models[i, ]
-  make_census(cf_row)
+  dataset <- datasets[[cf_row$dataset_index]]
+  make_census(cf_row, dataset)
 })
 ```
 
@@ -135,9 +134,11 @@ reorder_class <- function(final_models, mo_names) {
   x
 }
 
-for (group in yaml_models) {
-  final_models <- reorder_class(final_models, group$model_names)
-}
+# get model_names that are not train_test
+renumber_index <- !(final_models$data_mod == "train_test")
+renumber_model_names <- final_models[renumber_index, "model_name"]
+
+final_models <- reorder_class(final_models, renumber_model_names)
 
 look <- final_models[, c("model_name", "census")]
 ```
@@ -1405,7 +1406,6 @@ for (filtered_df_name in merged_prediction_result_names) {
 #### Generated columns for prediction data plotting
 
 ```{r prediction data renaming}
-
 # delete
 data <- final_models$filter_window_data_test_data_results_merged_summary[[3]]
 col_name <- "subset_name"
@@ -1424,7 +1424,6 @@ name_window <- function(data, col_name) {
   data[["window_size"]] <- window_size
 
   data
-
 }
 
 # delete
@@ -1443,13 +1442,11 @@ name_cumulative <- function(data, col_name) {
   data[["lower_bound"]] <- lower_bound
 
   data
-
 }
 
 # TODO: Remove the intervals, we are replacing with window
 
 # TODO: Apply the sample subset to the combined_cox_framework
-
 ```
 
 #### Create plots of concordances and regression on PI
@@ -1459,9 +1456,6 @@ name_cumulative <- function(data, col_name) {
 # The final goal is to have a 2x3 figure where the type
 # of data filter determines the columns and the concordance
 # and correlation of PI form the two rows
-
-
-
 ```
 
 ### Output CSV with idno's and class
