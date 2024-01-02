@@ -54,17 +54,10 @@ load(input$datasets_path)
 load(input$final_models_path)
 config <- yaml::read_yaml(input$config_path)
 
-# load in main_cat_surv
-load(file = "../04b_healthcard_cod/output/main_cat_surv.RDATA")
-main_cat_surv <- as.data.frame(main_cat_surv)
-# load(file = "../01_dataset/output/main_cat_surv.RDATA")
-# load in health
-load(file = "../04b_healthcard_cod/output/health.RDATA")
-# load in dvr
-load(file = "../04b_healthcard_cod/output/dvr.RDATA")
 
-# load in prediction data
-# load(file = "../04c_prediction_data/output/dfs_prediction.RDATA")
+# load in main_cat_surv
+main_cat_surv <- read.csv(file = config$survival_dataset$path)
+main_cat_surv <- as.data.frame(main_cat_surv)
 
 final_models$dfs <- lapply(final_models$data, function(name) {
   datasets[[name]]$data
@@ -74,19 +67,6 @@ final_models$dfs <- lapply(final_models$data, function(name) {
 ### Read Yaml
 ```{r load yaml}
 yaml_models <- yaml::read_yaml(params$yaml)
-```
-
-### Drop all models that will not be used
-The models that are used for figure generation are defined in the yaml file
-```{r drop useless}
-model_keep <- character()
-for (group in yaml_models) {
-  model_keep <- c(model_keep, group$model_names)
-}
-final_models <- final_models[final_models$model_name %in% model_keep, ]
-
-# Make rownames null so that the rownumbers are correct
-rownames(final_models) <- NULL
 ```
 
 ```{r read in census}
