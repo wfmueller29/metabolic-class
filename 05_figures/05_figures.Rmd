@@ -64,27 +64,6 @@ final_models$dfs <- lapply(final_models$data, function(name) {
 })
 ```
 
-### Read Yaml
-```{r load yaml}
-yaml_models <- yaml::read_yaml(params$yaml)
-```
-
-```{r read in census}
-census <- read.csv(file = "../01_dataset/data/census.csv") %>%
-  select(cohort, tag, sex, strain, idno) %>%
-  filter(cohort <= 10)
-```
-#### Name Model Variables
-
-```{r source naming, file = 'R/name_model_args.R'}
-source("R/name_model_args.R")
-```
-
-```{r naming}
-final_models_info <- final_models %>%
-  select(-final_model)
-```
-
 ### Class Analysis
 
 #### Create Census Dataframe
