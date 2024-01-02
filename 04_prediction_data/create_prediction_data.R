@@ -60,7 +60,7 @@ source("R/resample_frequency.R")
 datasets <- resample_frequency_dataset(datasets)
 
 # save our datasets -----------------------------------------------------------
-load(input$config_path)
+config <- yaml::read_yaml(file = input$config_path)
 
 output_dir_path <- normalizePath(file.path("output", config$out_tag))
 dir.create(output_dir_path)
@@ -74,12 +74,12 @@ input_path <- normalizePath(input_path)
 output_list <- list(
   data_time = format(Sys.time()),
   working_directory = getwd(),
+  config_path = input$config_path,
   input_path = input_path,
   output_dir_path = output_dir_path,
   datasets_path = datasets_path,
   models_path = input$models_path,
   cf_path = input$cf_path,
-  config_path = input$config_path,
   final_models_path = input$final_models_path,
   csv_path = input$csv_path
 )
