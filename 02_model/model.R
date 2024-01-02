@@ -21,7 +21,8 @@ input <- yaml::read_yaml(file = input_path)
 
 # load in datasets and config -------------------------------------------------
 load(input$datasets_path)
-load(input$config_path)
+config <- yaml::read_yaml(file = input$config_path)
+
 
 # filter for each sex and strain
 source("R/filter_group.R")
@@ -193,26 +194,24 @@ input_yaml_path <- normalizePath(input_path)
 datasets_path <- normalizePath(file.path(out_path, "datasets.RDATA"))
 models_path <- normalizePath(file.path(out_path, "models.RDATA"))
 cf_path <- normalizePath(file.path(out_path, "cf.RDATA"))
-config_path <- normalizePath(file.path(out_path, "config.RDATA"))
 
 # save objects
 dir.create(out_path)
 save(datasets, file = datasets_path)
 save(models, file = models_path)
 save(cf, file = cf_path)
-save(config, file = config_path)
 
 # create output file ----------------------------------------------------------
 
 output_list <- list(
   data_time = format(Sys.time()),
   working_directory = getwd(),
+  config_path = input$config_path,
   input_yaml_path = input_yaml_path,
   output_dir_path = out_path,
   datasets_path = datasets_path,
   models_path = models_path,
-  cf_path = cf_path,
-  config_path = config_path
+  cf_path = cf_path
 )
 
 output_list_path <- paste0(file.path("output", config$out_tag), ".yaml")
