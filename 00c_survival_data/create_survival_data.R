@@ -3,6 +3,13 @@
 
 load("../00a_dataset/output/main_cat_surv.RDATA")
 
-dir.create("output")
+keep_cols <- c(
+  "idno", "dead_censor", "fu_age_wk", "le_wk", "cod",
+  "lastdate", "maxdate", "tod"
+)
 
+main_cat_surv <- main_cat_surv[keep_cols]
+
+
+dir.create("output")
 write.csv(x = main_cat_surv, file = "output/main_cat_surv.csv")
