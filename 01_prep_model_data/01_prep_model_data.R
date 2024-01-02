@@ -20,7 +20,7 @@ input_path <- args[[1]]
 
 config <- yaml::read_yaml(input_path)
 
-datasets <- yaml::read_yaml(config$dataset)
+datasets <- config$datasets
 
 get_extension <- function(datasets) {
   datasets <- lapply(datasets, function(dataset) {
@@ -308,21 +308,19 @@ names(datasets) <- dataset_names
 input_path <- normalizePath(input_path)
 output_dir_path <- normalizePath(file.path("output", config$out_tag))
 datasets_path <- normalizePath(file.path(output_dir_path, "datasets.RDATA"))
-config_path <- normalizePath(file.path(output_dir_path, "config.RDATA"))
 
 dir.create(output_dir_path)
 save(datasets, file = datasets_path)
-save(config, file = config_path)
 
 # create output yaml ----------------------------------------------------------
 
 output_list <- list(
   data_time = format(Sys.time()),
   working_directory = getwd(),
+  config_path = input_path,
   input_yaml_path = input_path,
   output_dir_path = output_dir_path,
-  datasets_path = datasets_path,
-  config_path = config_path
+  datasets_path = datasets_path
 )
 
 output_yaml_path <- normalizePath(file.path("output", config$out_tag))
