@@ -101,7 +101,7 @@ if (!is.null(config$sample_n) && !isFALSE(config$sample_n)) {
 # create dataset id number ----------------------------------------------------
 
 datasets <- lapply(seq_len(length(datasets)), function(i) {
-  datasets[[i]]$data_id_no <- i
+  datasets[[i]]$dataset_index <- i
   datasets[[i]]
 })
 
@@ -110,7 +110,7 @@ expand.grid
 create_callframe <- function(dataset) {
   cf <- expand.grid(
     list(
-      data_id_no = dataset$data_id_no,
+      dataset_index = dataset$dataset_index,
       data = dataset$data_id,
       fixed = dataset$model$fixed,
       random = dataset$model$random,

@@ -56,11 +56,11 @@ cf$final_model <- models
 
 cf <- as.data.frame(cf)
 
-number_of_datasets <- length(unique(cf$data_id_no))
-cf_nest <- list(data_id_no = unique(cf$data_id_no))
+number_of_datasets <- length(unique(cf$dataset_index))
+cf_nest <- list(dataset_index = unique(cf$dataset_index))
 
 cf_nest$cf <- lapply(seq_len(number_of_datasets), function(i) {
-  row_index <- cf$data_id_no == i
+  row_index <- cf$dataset_index == i
   cf[row_index, ]
 })
 ```
@@ -81,7 +81,7 @@ for (i in seq_len(number_of_datasets)) {
 ```{r model eval, include = TRUE, results = 'asis'}
 for (i in seq_len(number_of_datasets)) {
   cf <- cf_nest$cf[[i]]
-  dataset_id_no <- cf_nest$data_id_no[[i]]
+  dataset_id_no <- cf_nest$dataset_index[[i]]
   dataset <- datasets[[dataset_id_no]]
 
   data_id <- dataset$data_id
@@ -142,8 +142,8 @@ selected_models <- do.call(rbind, selected_models)
 # here we are going to transfer information from dataset to final_models
 final_model_rows <- lapply(seq_len(nrow(selected_models)), function(row_no) {
   row <- selected_models[row_no, ]
-  data_id_no <- row$data_id_no
-  dataset <- datasets[[data_id_no]]
+  dataset_index <- row$dataset_index
+  dataset <- datasets[[dataset_index]]
 
   age_var <- dataset$age_var[[1]]
   data_oc <- paste(dataset$data_id, dataset$outcome, sep = "_")
@@ -162,6 +162,7 @@ final_model_rows <- lapply(seq_len(nrow(selected_models)), function(row_no) {
   row$age_var_name <- dataset$labels$age_var_name
   row$age_var_units <- dataset$labels$age_var_units
   row$data_name <- dataset$labels$data_name
+  row$data_mod <- dataset$data_mod
 
   row
 })
