@@ -185,11 +185,11 @@ source("R/clean_t1.R")
 
 ```{r clean t1}
 final_models$clean_t1 <- lapply(seq_along(final_models$census), function(i) {
-  cat(i, "- ")
   clean_t1 <- clean_t1(final_models$census[[i]],
-    columns = final_models$dummy[[i]]
+    columns = final_models$dummy[[i]],
+    age_death = config$survival_dataset$age_death,
+    event = config$survival_dataset$event
   )
-  cat("\n")
 
   clean_t1
 })

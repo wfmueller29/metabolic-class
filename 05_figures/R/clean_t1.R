@@ -3,16 +3,15 @@ source("R/t1.R")
 
 clean_t1 <- function(census,
                      columns,
-                     include_n = TRUE,
-                     surv = TRUE,
-                     total = TRUE) {
+                     age_death,
+                     event) {
   # create t1
   df_table <- create_count_columns(census,
     columns,
-    total = include_n,
-    surv = surv
+    age_death = age_death,
+    event = event
   )
-  t1 <- t1(census, columns, total = include_n, surv = surv)
+  t1 <- t1(census, columns, age_death = age_death, event = event)
 
   if (class(t1) == "data.frame") {
     clean_t1 <- create_clean_t1(
@@ -20,9 +19,8 @@ clean_t1 <- function(census,
       t1,
       census,
       columns,
-      include_n,
-      surv,
-      total
+      age_death,
+      event
     )
   } else if (is.na(t1)) {
     cat("T1 was NA \n")
@@ -39,22 +37,18 @@ create_clean_t1 <- function(df_table,
                             t1,
                             census,
                             columns,
-                            include_n,
-                            surv,
-                            total) {
+                            age_death,
+                            event) {
   total <- rowSums(df_table)
 
-  t1 <- t1 %>%
-    dplyr::select(tidyselect::ends_with("_final"))
+  t1 <- t1[, grepl("_final", colnames(t1)), drop = FALSE]
 
   # add total column
   t1$total <- total
-  if (surv) {
-    t1[grepl(rownames(t1), pattern = "surv"), "total"] <- NA
-  }
+  t1[grepl(rownames(t1), pattern = "surv"), "total"] <- NA
 
   # get chi squared results for t1
-  chi_result <- chi_test(census, columns)
+  chi_result <- chi_test(census, columns, age_death, event)
   chi_tests <- chi_result$tests
 
   # create named list of pvals with column name

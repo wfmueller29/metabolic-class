@@ -78,8 +78,8 @@ create_combo_column <- function(df_table, df_freq) {
 
 create_count_columns <- function(df,
                                  columns,
-                                 age_death = NULL,
-                                 event = NULL) {
+                                 age_death,
+                                 event) {
   df_main <- df
 
   df_total <- aggregate(df_main[, "new_class"],
@@ -115,11 +115,7 @@ create_count_columns <- function(df,
   names(df_table) <- as.character(unlist(df_table[1, ]))
 
   # for edge case when there is one class, we need to store names and reassign
-  row_names <- row.names(df_table)[-1]
-  col_names <- colnames(df_table)
-  df_table <- data.frame(df_table[-1, ])
-  row.names(df_table) <- row_names
-  colnames(df_table) <- col_names
+  df_table <- df_table[-1, , drop = FALSE]
 
   df_table[is.na(df_table)] <- 0
   names(df_table) <- paste0("class_", names(df_table))
