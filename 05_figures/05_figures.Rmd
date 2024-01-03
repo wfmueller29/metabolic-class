@@ -147,15 +147,16 @@ source("R/t1.R")
 ```
 
 ```{r create table 1}
-df <- final_models$census[[1]]
-columns <- final_models$dummy[[1]]
-total <- TRUE
-surv <- TRUE
+age_death <- config$survival_dataset$age_death
+event <- config$survival_dataset$event
 
 final_models$t1_raw <- lapply(seq_along(final_models$census), function(i) {
-  cat(i, "- ")
-  t1 <- t1(final_models$census[[i]], columns = final_models$dummy[[i]])
-  cat("\n")
+  t1 <- t1(
+    df = final_models$census[[i]],
+    columns = final_models$dummy[[i]],
+    age_death = age_death,
+    event = event
+  )
 
   t1
 })
