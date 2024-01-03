@@ -235,7 +235,7 @@ source("R/model_cox.R")
 
 ```{r cox models}
 # TODO: Remove the dummy variables from config. User should have the variables
-# already made as dummy's before they enter the pipeline. Make the dummy 
+# already made as dummy's before they enter the pipeline. Make the dummy
 # variable a covariates variable instead
 final_models$cox_models <- lapply(seq_len(nrow(final_models)), function(i) {
   model_cox(

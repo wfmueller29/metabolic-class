@@ -153,6 +153,7 @@ final_model_rows <- lapply(seq_len(nrow(selected_models)), function(row_no) {
   row$data_id <- dataset$data_id
   row$data_age_vars <- list(dataset$age_var)
   row$age_var <- age_var
+  row$oc <- dataset$outcome
   row$data_oc <- data_oc
   row$model_name <- paste(data_oc, age_var, sep = "_")
 
