@@ -3,11 +3,12 @@
 # Author: William Mueller
 
 model_cox <- function(census, var, covariates, age_death, censor) {
-
   # Trying to deal with the case when length class == 1 (not sure how this will
   # work)
   len_var <- length(unique(census[[var]]))
-  if (len_var == 1) census[[var]] <- as.numeric(census[[var]])
+  if (len_var == 1) {
+    census[[var]] <- as.numeric(census[[var]])
+  }
 
   keep_covariates <- lapply(covariates, function(cov) {
     l <- length(unique(census[[cov]]))
@@ -35,8 +36,9 @@ model_cox <- function(census, var, covariates, age_death, censor) {
   model_list <- lapply(f_list, function(form) {
     form <- paste("surv_object", form, sep = " ~ ")
     form <- as.formula(form)
-    surv_object <- Surv(time = census[[age_death]], event = census[[censor]])
-    coxph(form, data = census)
+    surv_object <- survival::Surv(time = census[[age_death]],
+                                  event = census[[censor]])
+    survival::coxph(form, data = census)
   })
 
   model_list

@@ -203,14 +203,16 @@ source("R/surv.R")
 
 ```{r surv analysis}
 final_models$census <- lapply(final_models$census, function(df) {
-  df <- df %>%
-    mutate(Class = new_class)
+  df$Class <- df$new_class
   df
 })
 
 final_models$kap_plot <- lapply(seq_len(nrow(final_models)), function(i) {
-  kap_plot <- kap_plot_all(final_models$census[[i]],
+  kap_plot <- kap_plot_all(
+    df = final_models$census[[i]],
     var = "Class",
+    age_death = config$survival_dataset$age_death,
+    event = config$survival_dataset$event,
     ptitle = paste(final_models$oc_name[[i]],
       final_models$age_var_name[[i]],
       "KM",
@@ -232,14 +234,16 @@ source("R/model_cox.R")
 ```
 
 ```{r cox models}
-x <- final_models
-final_models$cox_models <- lapply(seq_len(nrow(x)), function(i) {
+# TODO: Remove the dummy variables from config. User should have the variables
+# already made as dummy's before they enter the pipeline. Make the dummy 
+# variable a covariates variable instead
+final_models$cox_models <- lapply(seq_len(nrow(final_models)), function(i) {
   model_cox(
-    census = x$census[[i]],
+    census = final_models$census[[i]],
     var = "Class",
-    covariates = c("sex", "strain"),
-    age_death = "age_wk_death",
-    censor = "dead_nat"
+    covariates = final_models$dummy[[i]],
+    age_death = config$survival_dataset$age_death,
+    censor = config$survival_dataset$event
   )
 })
 ```
