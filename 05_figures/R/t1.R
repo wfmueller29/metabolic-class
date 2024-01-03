@@ -130,7 +130,7 @@ create_count_columns <- function(df,
   df_table
 }
 
-t1 <- function(df, columns, age_death = NULL, event = NULL) {
+t1 <- function(df, columns, age_death, event) {
   # number of unique classes
   no_class <- length(unique(df$class))
 
