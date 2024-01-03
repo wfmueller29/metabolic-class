@@ -127,7 +127,7 @@ t1 <- function(df, columns, age_death = NULL, event = NULL) {
   # number of unique classes
   no_class <- length(unique(df$class))
 
-  df_table <- create_count_columns(df, columns, total, surv, age_death, event)
+  df_table <- create_count_columns(df, columns, age_death, event)
 
   df_freq <- create_freq_column(df_table)
 
