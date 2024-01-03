@@ -79,7 +79,7 @@ make_census <- function(cf_row, dataset) {
 
   # add class_df to main
   census <- data[!duplicated(data[[id]]), ]
-  census_cols <- dataset[c("id", "dummy", "factor")]
+  census_cols <- dataset[c("id", "covariates", "factor")]
   census_cols <- unlist(census_cols, use.names = FALSE)
   census <- census[, census_cols]
   census <- merge(x = census, y = class_df, by = id)
@@ -150,7 +150,7 @@ source("R/t1.R")
 final_models$t1_raw <- lapply(seq_along(final_models$census), function(i) {
   t1 <- t1(
     df = final_models$census[[i]],
-    columns = final_models$dummy[[i]],
+    columns = final_models$covariates[[i]],
     age_death = config$survival_dataset$age_death,
     event = config$survival_dataset$event
   )
@@ -167,7 +167,7 @@ source("R/chi_test.R")
 ```{r chi squred test}
 chi_results <- lapply(seq_along(final_models$census), function(i) {
   chi <- chi_test(final_models$census[[i]],
-    columns = final_models$dummy[[i]],
+    columns = final_models$covariates[[i]],
     age_death = config$survival_dataset$age_death,
     event = config$survival_dataset$event
   )
@@ -186,7 +186,7 @@ source("R/clean_t1.R")
 ```{r clean t1}
 final_models$clean_t1 <- lapply(seq_along(final_models$census), function(i) {
   clean_t1 <- clean_t1(final_models$census[[i]],
-    columns = final_models$dummy[[i]],
+    columns = final_models$covariates[[i]],
     age_death = config$survival_dataset$age_death,
     event = config$survival_dataset$event
   )
@@ -234,14 +234,11 @@ source("R/model_cox.R")
 ```
 
 ```{r cox models}
-# TODO: Remove the dummy variables from config. User should have the variables
-# already made as dummy's before they enter the pipeline. Make the dummy
-# variable a covariates variable instead
 final_models$cox_models <- lapply(seq_len(nrow(final_models)), function(i) {
   model_cox(
     census = final_models$census[[i]],
     var = "Class",
-    covariates = final_models$dummy[[i]],
+    covariates = final_models$covariates[[i]],
     age_death = config$survival_dataset$age_death,
     censor = config$survival_dataset$event
   )

@@ -58,7 +58,6 @@ datasets <- read_data(datasets)
 convert_variables <- function(datasets) {
   datasets <- lapply(datasets, function(dataset) {
     dataset <- convert_numeric(dataset)
-    dataset <- convert_dummy(dataset)
     dataset <- convert_factor(dataset)
     dataset
   })
@@ -82,13 +81,6 @@ convert_factor <- function(dataset) {
     as.factor(dataset$data[, col])
   })
 
-  dataset
-}
-
-convert_dummy <- function(dataset) {
-  dummy_cols <- c(dataset$dummy)
-
-  dataset$data <- fastDummies::dummy_cols(dataset$data, dummy_cols)
   dataset
 }
 

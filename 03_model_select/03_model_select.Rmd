@@ -148,7 +148,7 @@ final_model_rows <- lapply(seq_len(nrow(selected_models)), function(row_no) {
   age_var <- dataset$age_var[[1]]
   data_oc <- paste(dataset$data_id, dataset$outcome, sep = "_")
 
-  row$dummy <- list(dataset$dummy)
+  row$covariates <- list(dataset$covariates)
   row$fixcov <- list(dataset$model$fixcov)
   row$data_id <- dataset$data_id
   row$data_age_vars <- list(dataset$age_var)
@@ -173,7 +173,7 @@ final_models <- do.call(rbind, final_model_rows)
 
 ```{r create final model csv}
 column_select <- unique(c("model_name", names(final_models)))
-drop_columns <- c("final_model", "dummy", "fixcov", "data_age_vars")
+drop_columns <- c("final_model", "covariates", "fixcov", "data_age_vars")
 column_select_index <- !(column_select %in% drop_columns)
 column_select <- column_select[column_select_index]
 
