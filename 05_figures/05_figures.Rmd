@@ -165,10 +165,6 @@ source("R/chi_test.R")
 ```
 
 ```{r chi squred test}
-age_death <- config$survival_dataset$age_death
-event <- config$survival_dataset$event
-
-# TODO: chi squared calls t1, whose arguments have changed
 chi_results <- lapply(seq_along(final_models$census), function(i) {
   chi <- chi_test(final_models$census[[i]],
     columns = final_models$dummy[[i]],
