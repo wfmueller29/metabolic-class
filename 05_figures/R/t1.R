@@ -78,19 +78,15 @@ create_combo_column <- function(df_table, df_freq) {
 
 create_count_columns <- function(df,
                                  columns,
-                                 total = TRUE,
-                                 surv = TRUE,
                                  age_death = NULL,
                                  event = NULL) {
   df_main <- df
 
-  if (total) {
-    df_total <- aggregate(df_main[, "new_class"],
-      by = list(new_class = df_main[["new_class"]]),
-      FUN = length
-    )
-    names(df_total)[names(df_total) == "x"] <- "n"
-  }
+  df_total <- aggregate(df_main[, "new_class"],
+    by = list(new_class = df_main[["new_class"]]),
+    FUN = length
+  )
+  names(df_total)[names(df_total) == "x"] <- "n"
 
   df_list_count_by_class <- lapply(
     columns,
@@ -98,27 +94,21 @@ create_count_columns <- function(df,
     df = df, group = "new_class"
   )
 
-  if (surv) {
-    obj <- survival::Surv(time = df_main[[age_death]], event = df_main[[event]])
-    surv_fit <- survival::survfit(data = df_main, obj ~ factor(new_class))
+  obj <- survival::Surv(time = df_main[[age_death]], event = df_main[[event]])
+  surv_fit <- survival::survfit(data = df_main, obj ~ factor(new_class))
 
-    df_surv <- survminer::surv_median(surv_fit)
-    names(df_surv)[names(df_surv) == "strata"] <- "new_class"
-    names(df_surv)[names(df_surv) == "median"] <- "median_surv"
-    df_surv <- df_surv[, !(colnames(df_surv) == c("lower", "upper"))]
+  df_surv <- survminer::surv_median(surv_fit)
+  names(df_surv)[names(df_surv) == "strata"] <- "new_class"
+  names(df_surv)[names(df_surv) == "median"] <- "median_surv"
+  df_surv <- df_surv[, !(colnames(df_surv) == c("lower", "upper"))]
 
-    df_surv$new_class <- sort(unique(df_main$new_class))
-  }
+  df_surv$new_class <- sort(unique(df_main$new_class))
 
   dfs <- df_list_count_by_class
 
-  if (total) {
-    dfs <- c(list(df_total), dfs)
-  }
+  dfs <- c(list(df_total), dfs)
 
-  if (surv) {
-    dfs <- c(dfs, list(df_surv))
-  }
+  dfs <- c(dfs, list(df_surv))
 
   df_table <- Reduce(function(x, y) merge(x, y, by = "new_class"), dfs)
   df_table <- data.frame(t(df_table))
@@ -133,8 +123,7 @@ create_count_columns <- function(df,
   df_table
 }
 
-t1 <- function(df, columns, total = TRUE, surv = TRUE, age_death = NULL,
-               event = NULL) {
+t1 <- function(df, columns, age_death = NULL, event = NULL) {
   # number of unique classes
   no_class <- length(unique(df$class))
 
