@@ -8,8 +8,8 @@ survival_dataset:
   path: "../00c_survival_data/output/main_cat_surv.csv"
   id: "idno"
   age_death: "le_wk"
+  event: "dead_censor"
   tod: "tod"
-  censor: "dead_censor"
 datasets:
 - name: "slam"
   path: "../00b_dataset_mods/output/data/test/slam_bw_og.csv"
