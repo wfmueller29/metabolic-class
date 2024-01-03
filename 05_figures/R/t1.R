@@ -4,97 +4,18 @@
 
 library(tidyverse)
 
-t1 <- function(df, columns, total = TRUE, surv = TRUE) {
-  # number of unique classes
-  no_class <- length(unique(df$class))
-
-  #  if (no_class != 1) {
-  df_table <- create_count_columns(df, columns, total, surv)
-
-  df_freq <- create_freq_column(df_table)
-
-  df_final <- create_combo_column(df_table, df_freq)
-  #  } else {
-  #    cat("Only one class")
-  #
-  #    df_final <- NA
-  #  }
-
-  # return df_final
-  df_final
-}
-
-create_count_columns <- function(df, columns, total = TRUE, surv = TRUE) {
-  df_main <- df
-
-  if (total) {
-    df_total <- df_main %>%
-      group_by(new_class) %>%
-      summarise(n = n()) %>%
-      select(new_class, n, everything())
-  }
-
-  df_list_count_by_class <- lapply(
-    columns,
-    count_column_by_class,
-    df = df, group = "new_class"
-  )
-
-  if (surv) {
-    surv_fit <- survfit(
-      data = df_main,
-      Surv(time = age_wk_death, event = dead_nat) ~ factor(new_class)
-    )
-    df_surv <- surv_median(surv_fit) %>%
-      rename(
-        new_class = strata,
-        median_surv = median
-      ) %>%
-      select(-lower, -upper)
-
-    df_surv$new_class <- sort(unique(df_main$new_class))
-  }
-
-  dfs <- df_list_count_by_class
-
-  if (total) {
-    dfs <- c(list(df_total), dfs)
-  }
-
-  if (surv) {
-    dfs <- c(dfs, list(df_surv))
-  }
-
-
-  df_table <- dfs %>%
-    reduce(left_join, by = "new_class")
-
-  df_table <- df_table %>%
-    t() %>%
-    data.frame() %>%
-    mutate_all(function(x) as.numeric(x)) %>%
-    round() %>%
-    janitor::row_to_names(1)
-
-  df_table[is.na(df_table)] <- 0
-
-  names(df_table) <- paste0("class_", names(df_table))
-
-
-  df_table
-}
-
 count_column_by_class <- function(df, group, column) {
-  df <- eval(call("group_by", df, as.symbol(group)))
-  df <- eval(call("count", df, as.symbol(column)))
-  df <- df %>%
-    ungroup()
-  spread_call <- call("spread", as.symbol("df"),
-    key = as.symbol(column),
-    value = as.symbol("n"),
+  by_list <- list(df[[group]], df[[column]])
+  names(by_list) <- c(group, "group_column")
+  df_count <- aggregate(x = df[, 1], by = by_list, FUN = length)
+  names(df_count)[names(df_count) == "x"] <- column
+  df_count <- reshape(df_count,
+    direction = "wide",
+    timevar = "group_column",
+    idvar = "new_class",
     sep = "_"
   )
-  df_count <- eval(spread_call)
+
   df_count
 }
 
@@ -153,4 +74,76 @@ create_combo_column <- function(df_table, df_freq) {
   names(df_table) <- all_col_names
 
   df_table
+}
+
+create_count_columns <- function(df,
+                                 columns,
+                                 total = TRUE,
+                                 surv = TRUE,
+                                 age_death = NULL,
+                                 event = NULL) {
+  df_main <- df
+
+  if (total) {
+    df_total <- aggregate(df_main[, "new_class"],
+      by = list(new_class = df_main[["new_class"]]),
+      FUN = length
+    )
+    names(df_total)[names(df_total) == "x"] <- "n"
+  }
+
+  df_list_count_by_class <- lapply(
+    columns,
+    count_column_by_class,
+    df = df, group = "new_class"
+  )
+
+  if (surv) {
+    obj <- survival::Surv(time = df_main[[age_death]], event = df_main[[event]])
+    surv_fit <- survival::survfit(data = df_main, obj ~ factor(new_class))
+
+    df_surv <- survminer::surv_median(surv_fit)
+    names(df_surv)[names(df_surv) == "strata"] <- "new_class"
+    names(df_surv)[names(df_surv) == "median"] <- "median_surv"
+    df_surv <- df_surv[, !(colnames(df_surv) == c("lower", "upper"))]
+
+    df_surv$new_class <- sort(unique(df_main$new_class))
+  }
+
+  dfs <- df_list_count_by_class
+
+  if (total) {
+    dfs <- c(list(df_total), dfs)
+  }
+
+  if (surv) {
+    dfs <- c(dfs, list(df_surv))
+  }
+
+  df_table <- Reduce(function(x, y) merge(x, y, by = "new_class"), dfs)
+  df_table <- data.frame(t(df_table))
+  names(df_table) <- as.character(unlist(df_table[1, ]))
+  df_table <- df_table[-1, ]
+  df_table[is.na(df_table)] <- 0
+  names(df_table) <- paste0("class_", names(df_table))
+  seq_cols <- seq_along(df_table)
+  df_table[, seq_cols] <- lapply(df_table[, seq_cols], as.numeric)
+  df_table <- round(df_table)
+
+  df_table
+}
+
+t1 <- function(df, columns, total = TRUE, surv = TRUE, age_death = NULL,
+               event = NULL) {
+  # number of unique classes
+  no_class <- length(unique(df$class))
+
+  df_table <- create_count_columns(df, columns, total, surv, age_death, event)
+
+  df_freq <- create_freq_column(df_table)
+
+  df_final <- create_combo_column(df_table, df_freq)
+
+  # return df_final
+  df_final
 }
