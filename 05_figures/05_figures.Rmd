@@ -85,13 +85,9 @@ make_census <- function(cf_row, dataset) {
   census <- merge(x = census, y = class_df, by = id)
 
   # add survival information to census
-  age_death <- config$survival_dataset$age_death
-  censor <- config$survival_dataset$censor
   surv_id <- config$survival_dataset$id
 
   census <- merge(x = census, y = main_cat_surv, by.x = id, by.y = surv_id)
-  census[["age_death"]] <- age_death
-  census[["censor"]] <- censor
 
   census
 }
@@ -135,10 +131,12 @@ reorder_class <- function(final_models, mo_names) {
 }
 
 # get model_names that are not train_test
-renumber_index <- !(final_models$data_mod == "train_test")
-renumber_model_names <- final_models[renumber_index, "model_name"]
+train_test_index <- (final_models$data_mod == "train_test")
+renumber_train_test <- final_models[train_test_index, "model_name"]
+renumber_rest <- final_models[!train_test_index, "model_name"]
 
-final_models <- reorder_class(final_models, renumber_model_names)
+final_models <- reorder_class(final_models, renumber_train_test)
+final_models <- reorder_class(final_models, renumber_rest)
 
 look <- final_models[, c("model_name", "census")]
 ```
@@ -149,6 +147,11 @@ source("R/t1.R")
 ```
 
 ```{r create table 1}
+df <- final_models$census[[1]]
+columns <- final_models$dummy[[1]]
+total <- TRUE
+surv <- TRUE
+
 final_models$t1_raw <- lapply(seq_along(final_models$census), function(i) {
   cat(i, "- ")
   t1 <- t1(final_models$census[[i]], columns = final_models$dummy[[i]])
