@@ -113,7 +113,14 @@ create_count_columns <- function(df,
   df_table <- Reduce(function(x, y) merge(x, y, by = "new_class"), dfs)
   df_table <- data.frame(t(df_table))
   names(df_table) <- as.character(unlist(df_table[1, ]))
-  df_table <- df_table[-1, ]
+
+  # for edge case when there is one class, we need to store names and reassign
+  row_names <- row.names(df_table)[-1]
+  col_names <- colnames(df_table)
+  df_table <- data.frame(df_table[-1, ])
+  row.names(df_table) <- row_names
+  colnames(df_table) <- col_names
+
   df_table[is.na(df_table)] <- 0
   names(df_table) <- paste0("class_", names(df_table))
   seq_cols <- seq_along(df_table)
