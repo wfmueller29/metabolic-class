@@ -7,7 +7,7 @@ create_combined_df <- function(census, census_id, outcome_df, outcome_id) {
   combined_df
 }
 
-plot_other <- function(census, t1, outcome_df, outcome, age, census_id, outcome_id, title, xlab, ylab) {
+plot_combined <- function(census, t1, outcome_df, outcome, age, census_id, outcome_id, title, xlab, ylab) {
   lej <- create_legend(t1)
 
   combined_df <- create_combined_df(census, census_id, outcome_df, outcome_id)
@@ -48,14 +48,14 @@ plot_other <- function(census, t1, outcome_df, outcome, age, census_id, outcome_
 }
 
 
-plot_other_apply <- function(final_models, model_name) {
+plot_combined_across <- function(final_models, model_name) {
   final_models_row <- final_models[final_models$model_name == model_name, ]
   outcome_df <- final_models_row$dfs[[1]]
   other_name <- final_models_row$oc_name
   outcome <- final_models_row$oc
   outcome_id <- final_models_row$subject
   plots <- lapply(seq_len(nrow(final_models)), function(i) {
-    plot_other(
+    plot_combined(
       census = final_models$census[[i]],
       t1 = final_models$t1_raw[[i]],
       outcome_df = outcome_df,

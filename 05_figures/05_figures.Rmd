@@ -326,13 +326,13 @@ lapply(final_models$traj_obs, print)
 ### Create Plots for Other Metabolic Outcomes by Class
 
 ```{r source other plot, file = 'R/plot_other.R'}
-source("R/plot_other.R")
+source("R/plot_combined.R")
 ```
 
 ```{r other metabolic outcomes}
 for (model_name in final_models$model_name) {
   col_name <- paste0("plot_", model_name, "_across")
-  a <- plot_other_apply(
+  a <- plot_combined_across(
     final_models,
     model_name
   )
