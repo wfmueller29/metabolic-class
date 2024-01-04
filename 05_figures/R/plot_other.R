@@ -1,80 +1,81 @@
 # Purpose: Function to plot other metabolic outcomes by class
 # Author: William Mueller
 
-plot_other <- function(census, t1, other_df, oc, age_var, title, xlab, ylab) {
+create_combined_df <- function(census, census_id, outcome_df, outcome_id) {
+  census <- census[, c(census_id, "new_class")]
+  combined_df <- merge(outcome_df, census, by.x = outcome_id, by.y = census_id)
+  combined_df
+}
+
+plot_other <- function(census, t1, outcome_df, outcome, age, census_id, outcome_id, title, xlab, ylab) {
   lej <- create_legend(t1)
 
-  other_plot <- create_other_plot_df(census, other_df)
+  combined_df <- create_combined_df(census, census_id, outcome_df, outcome_id)
 
-  plot <- ggplot(
-    data = other_plot,
-    aes(
-      x = eval(as.symbol(age_var)),
-      y = eval(as.symbol(oc)),
+  plot <- ggplot2::ggplot(
+    data = combined_df,
+    ggplot2::aes(
+      x = eval(as.symbol(age)),
+      y = eval(as.symbol(outcome)),
       color = factor(new_class)
     )
   ) +
-    geom_point(alpha = .1) +
-    geom_smooth(
+    ggplot2::geom_point(alpha = .1) +
+    ggplot2::geom_smooth(
       method = "gam",
       formula = y ~ s(x, bs = "cs"),
       span = .7,
       inherit.aes = TRUE
     ) +
-    scale_color_manual(values = lej$col) +
-    labs(
+    ggplot2::scale_color_manual(values = lej$col) +
+    ggplot2::labs(
       color = "Class",
       y = ylab,
       x = xlab,
       title = title
     ) +
-    theme(
-      plot.title = element_text(
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(
         face = "bold",
         color = "black",
         size = 16,
         hjust = .5
       ),
-      plot.margin = unit(c(10, 4, 25, 2), "pt")
+      plot.margin = ggplot2::unit(c(10, 4, 25, 2), "pt")
     )
 
   plot
 }
 
-create_other_plot_df <- function(census, other_df) {
-  census <- census %>%
-    select(idno, new_class)
-
-  other_plot_data <- other_df %>%
-    left_join(census, by = "idno") %>%
-    filter(!is.na(new_class))
-
-  other_plot_data
-}
 
 plot_other_apply <- function(final_models, model_name) {
-  x <- final_models
-  other_df <- x[x$model_name == model_name, ]$dfs[[1]]
-  other_name <- x[x$model_name == model_name, ]$oc_name
-  oc <- x[x$model_name == model_name, ]$oc
-  plots <- lapply(seq_len(nrow(x)), function(i) {
+  final_models_row <- final_models[final_models$model_name == model_name, ]
+  outcome_df <- final_models_row$dfs[[1]]
+  other_name <- final_models_row$oc_name
+  outcome <- final_models_row$oc
+  outcome_id <- final_models_row$subject
+  plots <- lapply(seq_len(nrow(final_models)), function(i) {
     plot_other(
-      census = x$census[[i]],
-      t1 = x$t1_raw[[i]],
-      other_df = other_df,
-      oc = oc,
-      age_var = x$age_var[[i]],
+      census = final_models$census[[i]],
+      t1 = final_models$t1_raw[[i]],
+      outcome_df = outcome_df,
+      outcome = outcome,
+      age = final_models$age_var[[i]],
+      census_id = final_models$subject[[i]],
+      outcome_id = outcome_id,
       title = paste(
         other_name,
         "across",
-        x$age_var_name[[i]],
+        final_models$age_var_name[[i]],
         "by",
-        x$oc_name[[i]],
+        final_models$oc_name[[i]],
         "Class",
         sep = " "
       ),
-      xlab = paste(x$age_var_name[[i]], x$age_var_units[[i]], sep = " "),
-      ylab = paste(x$oc_name[[i]], x$oc_name_units[[i]], sep = " ")
+      xlab = paste(final_models$age_var_name[[i]],
+                   final_models$age_var_units[[i]], sep = " "),
+      ylab = paste(final_models$oc_name[[i]],
+                   final_models$oc_name_units[[i]], sep = " ")
     )
   })
   plots

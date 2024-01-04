@@ -330,14 +330,16 @@ source("R/plot_other.R")
 ```
 
 ```{r other metabolic outcomes}
-for (model in names(yaml_models$models)) {
-  col_name <- paste0("plot_", model)
+for (model_name in final_models$model_name) {
+  col_name <- paste0("plot_", model_name, "_across")
   a <- plot_other_apply(
     final_models,
-    yaml_models$models[[model]]
+    model_name
   )
   final_models[[col_name]] <- a
+  print(a)
 }
+
 ```
 
 ### Fit other metabolic outcomes with LME
@@ -353,9 +355,8 @@ source("R/model_other.R")
 ```
 
 ```{r mixed effects}
-for (model in names(yaml_models$models)) {
-  col_name <- paste0("model_", model)
-  model_name <- yaml_models$models[[model]]
+for (model_name in final_models$model_name) {
+  col_name <- paste0("model_", model_name, "_across")
   fixcovs <- final_models[final_models$model_name == model_name, ]$fixcov[[1]]
   a <- model_other_apply(
     final_models,
