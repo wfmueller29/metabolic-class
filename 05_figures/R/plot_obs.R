@@ -21,6 +21,14 @@ traj_obs <- function(main,
 
   ## join main and df
   main_obs <- merge(x = main, y = df, by = id_var)
+  main_obs$n <- ave(main_obs[[1]], main_obs[["new_class"]], FUN = length)
+
+  aes_smooth <- ggplot2::aes(
+    x = eval(as.symbol((age_var))),
+    y = eval(as.symbol(y_var)),
+    color = factor(new_class),
+    size = n
+  )
 
   p <- ggplot2::ggplot(
     data = main_obs,
@@ -35,7 +43,7 @@ traj_obs <- function(main,
       method = "gam",
       formula = y ~ s(x, bs = "cs"),
       span = .7,
-      inherit.aes = TRUE
+      mapping = aes_smooth
     ) +
     ggplot2::scale_color_manual(values = lej$col) +
     ggplot2::labs(
