@@ -1,36 +1,36 @@
+get_abr_freq <- function(df, row_name, class_no, n) {
+  split <- unlist(strsplit(row_name, split = "_"))
+  abr <- split[length(split)]
+  freq <- round(as.numeric(df[row_name, 1:class_no]) / n * 100)
+
+  list(row_name = row_name, abr = abr, freq = freq)
+}
+
 create_legend <- function(df) {
-  l <- (length(df)) / 3
-  n <- as.numeric(df["n", 1:l])
-  sex_name <- rownames(df)[grepl("sex", rownames(df))][1]
-  sex_abr <- unlist(strsplit(sex_name, split = "_"))[[2]]
-  sex_freq <- round(as.numeric(df[sex_name, 1:l]) / n * 100)
-  strain_name <- rownames(df)[grepl("strain", rownames(df))][1]
-  strain_abr <- unlist(strsplit(strain_name, split = "_"))[[2]]
-  strain_freq <- round(as.numeric(df[strain_name, 1:l]) / n * 100)
-  med_surv <- as.numeric(df["median_surv", 1:l])
+  class_no <- (length(df)) / 3
+  n <- as.numeric(df["n", 1:class_no])
+
+  row_names <- rownames(df)[-c(1, length(rownames(df)))]
+  abr_freq <- lapply(
+    row_names, get_abr_freq,
+    df = df, class_no = class_no, n = n
+  )
+
+  med_surv <- as.numeric(df["median_surv", 1:class_no])
   legend <- vector()
   col <- vector()
-  for (i in 1:l) {
-    name <- unlist(str_split(names(df)[i], "_"))[2]
+  for (i in 1:class_no) {
+    abr_freq_i <- lapply(abr_freq, function(abr_freq) {
+      paste(abr_freq$freq[[i]], abr_freq$abr, sep = "%")
+    })
+    abr_freq_i <- paste(unlist(abr_freq_i), collapse = ", ")
     legend[i] <- paste0(
-      "Class ",
-      name,
-      ":",
-      " n=",
-      n[i],
-      ", ",
-      sex_freq[i],
-      "%",
-      sex_abr,
-      ", ",
-      strain_freq[i],
-      "%",
-      strain_abr,
-      ", MLE=",
-      med_surv[i],
-      " weeks"
+      "Class ", i, ":",
+      " n=", n[i], ", ",
+      abr_freq_i,
+      ", MLE=", med_surv[i], " weeks"
     )
-    col[i] <- mega_pal[as.numeric(name)]
+    col[i] <- mega_pal[as.numeric(i)]
   }
   return(list(legend = legend, col = col))
 }
@@ -75,10 +75,7 @@ traj_plot <- function(df,
     lej_pos <- "topleft"
   }
   ## Set graphical parameters
-  par(
-    mar = c(4, 4, 2, 2),
-    mgp = c(2, 1, 0)
-  )
+  par(mar = c(4, 4, 2, 2), mgp = c(2, 1, 0))
 
   ## Create Plot
   helphlme::plot_hlme(
