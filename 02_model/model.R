@@ -47,47 +47,33 @@ if (!is.null(config$filters)) {
 
 # check if there are train test datasets
 
-source("R/sample_train_test.R")
+source("R/sample_ubiquitous.R")
 
 if (!is.null(config$sample_n) && !isFALSE(config$sample_n)) {
   # check if there are train_test datasets
-  train_test_exists <- check_train_test_exists(datasets)
-  if (train_test_exists) {
-    train_test_sample <- create_train_test_sample(
-      datasets,
-      size = config$sample_n
-    )
-  }
+  ubiquitous_sample <- create_ubiquitous_sample(
+    datasets,
+    size = config$sample_n
+  )
 
-  # sample datasets
+  # sample all datasets based upon train_test_sample
   datasets <- lapply(datasets, function(dataset) {
-    if (dataset$data_mod == "train_test") {
-      id_name <- dataset$id
-      index <- dataset$data[, id_name] %in% train_test_sample
-      dataset$data <- dataset$data[index, ]
-      dataset$unique_ids <- train_test_sample
-    } else {
-      dataset$data <- helphlme::sample_df(
-        df = dataset$data,
-        id = dataset$id,
-        n = config$sample_n
-      )
-    }
+    id_name <- dataset$id
+    index <- dataset$data[, id_name] %in% ubiquitous_sample
+    dataset$data <- dataset$data[index, ]
+    dataset$unique_ids <- ubiquitous_sample
     dataset
   })
 
   # check that the unique ids for each train_test dataset are all equal
-  train_test_ids <- list()
-  for (dataset in datasets) {
-    if (dataset$data_mod == "train_test") {
-      unique_ids <- unique(dataset$data[, dataset$id])
-      unique_ids <- sort(unique_ids)
-      train_test_ids <- c(train_test_ids, list(unique_ids))
-    }
-  }
+  ubiquitous_ids <- lapply(datasets, function(dataset) {
+    unique_ids <- unique(dataset$data[, dataset$id])
+    unique_ids <- sort(unique_ids)
+    unique_ids
+  })
 
-  all_equal <- sapply(train_test_ids, function(ids) {
-    all.equal(ids, train_test_ids[[1]])
+  all_equal <- sapply(ubiquitous_ids, function(ids) {
+    all.equal(ids, ubiquitous_ids[[1]])
   })
   all_equal <- all(all_equal)
 
