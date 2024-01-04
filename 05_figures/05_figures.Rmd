@@ -299,6 +299,7 @@ final_models$traj_obs <- lapply(seq_len(nrow(final_models)), function(i) {
     t1 = final_models$t1_raw[[i]],
     age_var = final_models$age_var[[i]],
     y_var = final_models$oc[[i]],
+    id_var = final_models$subject[[i]],
     title = paste("Observed",
       final_models$oc_name[[i]],
       "Trajectory with",
