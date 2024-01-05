@@ -357,11 +357,10 @@ source("R/model_other.R")
 ```{r mixed effects}
 for (model_name in final_models$model_name) {
   col_name <- paste0("model_", model_name, "_across")
-  fixcovs <- final_models[final_models$model_name == model_name, ]$fixcov[[1]]
   a <- model_other_apply(
     final_models,
+    datasets,
     model_name,
-    fixcovs = fixcovs,
     class = "new_class"
   )
   final_models[[col_name]] <- a
