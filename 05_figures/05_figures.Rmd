@@ -351,13 +351,13 @@ for (model_name in final_models$model_name) {
 - Model3 (Sex and Strain interacted controlled): $outcome = (Age + Age^2) * Class + (Age + Age^2) * Sex * Strain + (Age + Age^2 | Subject)$
 
 ```{r source mixed effects, file = 'R/model_other.R'}
-source("R/model_other.R")
+source("R/model_combined.R")
 ```
 
 ```{r mixed effects}
 for (model_name in final_models$model_name) {
   col_name <- paste0("model_", model_name, "_across")
-  a <- model_other_apply(
+  a <- model_combined_across(
     final_models,
     datasets,
     model_name,

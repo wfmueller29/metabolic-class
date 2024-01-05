@@ -70,8 +70,8 @@ model_combined <- function(census,
 }
 
 
-model_other_apply <- function(final_models, datasets,
-                              model_name, fixcovs, class) {
+model_combined_across <- function(final_models, datasets,
+                                  model_name, fixcovs, class) {
   final_models_row <- final_models[final_models$model_name == model_name, ]
   outcome_df <- final_models_row$dfs[[1]]
   outcome_id <- final_models_row$subject
