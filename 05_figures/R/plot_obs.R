@@ -20,8 +20,8 @@ traj_obs <- function(main,
   age_var <- paste0(age_var, "_ns")
 
   ## join main and df
+  main$n <- ave(main[[1]], main[["new_class"]], FUN = length)
   main_obs <- merge(x = main, y = df, by = id_var)
-  main_obs$n <- ave(main_obs[[1]], main_obs[["new_class"]], FUN = length)
 
   aes_smooth <- ggplot2::aes(
     x = eval(as.symbol((age_var))),
