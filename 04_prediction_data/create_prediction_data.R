@@ -45,14 +45,6 @@ source("R/filter_window.R")
 datasets <- filter_window_dataset(datasets)
 datasets <- filter_window_dataset(datasets, test_data = TRUE)
 
-# filter by time interval -----------------------------------------------------
-
-# Filter by time interval
-source("R/filter_interval.R")
-
-datasets <- filter_interval_dataset(datasets)
-datasets <- filter_interval_dataset(datasets, test_data = TRUE)
-
 
 # Decrease sample frequency ---------------------------------------------------
 source("R/resample_frequency.R")
