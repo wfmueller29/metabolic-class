@@ -436,7 +436,7 @@ for (filter in names(filter_list)) {
 prediction_results_names <- paste(prediction_columns, "results", sep = "_")
 
 prediction_results <- lapply(prediction_columns, function(col) {
-  print(col)
+print(col)
   predict_class_model_list(
     nested_newdata_list = final_models[[col]],
     model_list = final_models$final_model,
@@ -531,11 +531,6 @@ source("R/rename_pred.R")
 ```{r prepare prediction dataframe}
 # TODO: We are getting an error in this chunk
 # I think it is because we are missing interval filters for some datasets
-
-final_models$filter_interval_data_results_df <- lapply(
-  final_models$filter_interval_data_results_df,
-  name_interval
-)
 
 final_models$filter_cumulative_data_results_df <- lapply(
   final_models$filter_cumulative_data_results_df,
