@@ -531,6 +531,11 @@ source("R/rename_pred.R")
 # TODO: We are getting an error in this chunk
 # I think it is because we are missing interval filters for some datasets
 
+final_models$filter_interval_data_results_df <- lapply(
+  final_models$filter_interval_data_results_df,
+  name_interval
+)
+
 final_models$filter_cumulative_data_results_df <- lapply(
   final_models$filter_cumulative_data_results_df,
   name_threshold

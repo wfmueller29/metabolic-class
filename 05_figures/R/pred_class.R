@@ -41,7 +41,7 @@ predict_class_newdata_list <- function(newdata_list,
   }
   subset_predictions <- lapply(newdata_list, function(newdata) {
     # check if there is actually data in the newdata
-    if (nrow(newdata) >= 2) {
+    if (nrow(newdata) >= 1) {
       class_result <- predict_class(
         newdata = newdata,
         model = model,
