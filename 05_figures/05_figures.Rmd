@@ -339,7 +339,6 @@ for (model_name in final_models$model_name) {
   final_models[[col_name]] <- a
   print(a)
 }
-
 ```
 
 ### Fit other metabolic outcomes with LME
@@ -436,7 +435,7 @@ for (filter in names(filter_list)) {
 prediction_results_names <- paste(prediction_columns, "results", sep = "_")
 
 prediction_results <- lapply(prediction_columns, function(col) {
-print(col)
+  print(col)
   predict_class_model_list(
     nested_newdata_list = final_models[[col]],
     model_list = final_models$final_model,
@@ -555,27 +554,6 @@ source("R/plot_pred.R")
 ```
 
 ```{r plot pred_results, fig.height=10, fig.width=5}
-final_models$interval_plots <- lapply(
-  seq_along(final_models$filter_interval_data_results_df),
-  function(i) {
-    plot_interval(final_models$filter_interval_data_results_df[[i]],
-      cols = c("Sensitivity", "Specificity", "PPV", "NPV"),
-      title = paste(final_models$data_name[[i]],
-        final_models$age_var_name[[i]],
-        sep = " "
-      ),
-      y = "Value",
-      x = paste(final_models$age_var_name[[i]],
-        final_models$age_var_units[[i]],
-        "Interval",
-        sep = " "
-      )
-    )
-  }
-)
-
-final_models$interval_plots
-
 final_models$cumulative_plots <- lapply(
   seq_along(final_models$filter_cumulative_data_results_df),
   function(i) {
