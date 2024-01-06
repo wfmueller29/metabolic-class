@@ -441,8 +441,8 @@ prediction_results <- lapply(prediction_columns, function(col) {
     nested_newdata_list = final_models[[col]],
     model_list = final_models$final_model,
     vars_list = final_models$data_age_vars,
-    center = TRUE,
-    scale = FALSE,
+    center = config$center,
+    scale = config$scale,
     ref_data_list = final_models$dfs,
     names = final_models$model_name
   )
@@ -529,6 +529,9 @@ source("R/rename_pred.R")
 ```
 
 ```{r prepare prediction dataframe}
+# TODO: We are getting an error in this chunk
+# I think it is because we are missing interval filters for some datasets
+
 final_models$filter_interval_data_results_df <- lapply(
   final_models$filter_interval_data_results_df,
   name_interval

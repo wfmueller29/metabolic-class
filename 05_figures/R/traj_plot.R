@@ -9,6 +9,7 @@ get_abr_freq <- function(df, row_name, class_no, n) {
 create_legend <- function(df) {
   class_no <- (length(df)) / 3
   n <- as.numeric(df["n", 1:class_no])
+  class_start <- as.numeric(strsplit(colnames(df)[1], "_")[[1]][2]) - 1
 
   row_names <- rownames(df)[-c(1, length(rownames(df)))]
   abr_freq <- lapply(
@@ -25,12 +26,12 @@ create_legend <- function(df) {
     })
     abr_freq_i <- paste(unlist(abr_freq_i), collapse = ", ")
     legend[i] <- paste0(
-      "Class ", i, ":",
+      "Class ", i + class_start, ":",
       " n=", n[i], ", ",
       abr_freq_i,
       ", MLE=", med_surv[i], " weeks"
     )
-    col[i] <- mega_pal[as.numeric(i)]
+    col[i] <- mega_pal[as.numeric(i + class_start)]
   }
   return(list(legend = legend, col = col))
 }
@@ -68,12 +69,6 @@ traj_plot <- function(df,
     ymin <- pred_min
   }
 
-  ## Determine legend position
-  if (age_var == "age_wk") {
-    lej_pos <- "topright"
-  } else {
-    lej_pos <- "topleft"
-  }
   ## Set graphical parameters
   par(mar = c(4, 4, 2, 2), mgp = c(2, 1, 0))
 
@@ -93,13 +88,13 @@ traj_plot <- function(df,
     col = lej$col
   )
   legend(
-    x = lej_pos,
+    x = "topright",
     legend = lej$legend,
     col = lej$col,
     horiz = FALSE,
     lwd = 3,
     lty = c(1, 1),
-    cex = .85,
+    cex = .70,
     bty = "n"
   )
 }
