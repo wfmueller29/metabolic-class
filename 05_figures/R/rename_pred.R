@@ -3,8 +3,7 @@
 
 name_interval <- function(interval_df) {
   if (length(interval_df) == 0) {
-    interval_df <- NA
-    warning("Dataframe is of length 0, cannot rename it; Returning NA")
+    warning("Dataframe is of length 0, cannot rename it; Returning empty df")
     return(interval_df)
   }
 
@@ -39,6 +38,8 @@ name_new_interval <- function(new_interval_df) {
   new_interval_df$lower_bound <- as.numeric(splits[, 2])
   new_interval_df$window_size <- new_interval_df$upper_bound -
     new_interval_df$lower_bound
+  average <- new_interval_df$lower_bound + new_interval_df$window_size / 2
+  new_interval_df$average <- average
 
   new_interval_df
 }
