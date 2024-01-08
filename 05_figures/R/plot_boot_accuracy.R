@@ -5,7 +5,12 @@ plot_boot_accuracy_interval <- function(accuracy_interval_df,
                                         xlab = "",
                                         ylab = "",
                                         title = "") {
-  # if accuracy is constant we do no want to plot. This covers case where all 
+  if (nrow(accuracy_interval_df) == 0) {
+    plot <- NA
+    warning("accuracy_interval_df has 0 rows so cannot plot; returning NA")
+    return(plot)
+  }
+  # if accuracy is constant we do no want to plot. This covers case where all
   # predictions are completely accurate
   uni_accuracy <- length(unique(accuracy_interval_df$accuracy))
 
@@ -18,24 +23,25 @@ plot_boot_accuracy_interval <- function(accuracy_interval_df,
   if (uni_accuracy != 1) {
     comparisons <- interval_comparisons(accuracy_interval_df)
 
-    plot <- ggplot(
+    plot <- ggplot2::ggplot(
       data = accuracy_interval_df,
-      mapping = aes(x = data_name, y = as.numeric(accuracy))
+      mapping = ggplot2::aes(x = data_name, y = as.numeric(accuracy))
     ) +
-      geom_bar(stat = "identity") +
-      geom_errorbar(aes(x = data_name, ymin = lower_ci, ymax = upper_ci),
+      ggplot2::geom_bar(stat = "identity") +
+      ggplot2::geom_errorbar(
+        ggplot2::aes(x = data_name, ymin = lower_ci, ymax = upper_ci),
         stat = "identity",
         width = 0.4
       ) +
-      geom_signif(
+      ggplot2::geom_signif(
         comparisons = comparisons, annotations = "*", margin_top = .1,
         step_increase = .35
-      ) + 
-    labs(
-      y = ylab,
-      x = xlab,
-      title = title
-    )
+      ) +
+      ggplot2::labs(
+        y = ylab,
+        x = xlab,
+        title = title
+      )
   } else {
     plot <- NA
   }
@@ -43,24 +49,27 @@ plot_boot_accuracy_interval <- function(accuracy_interval_df,
 }
 
 plot_boot_accuracy_window <- function(accuracy_window_df,
-                                        xlab = "",
-                                        ylab = "",
-                                        title = "",
-                                        legend_title = "Window Size") {
+                                      xlab = "",
+                                      ylab = "",
+                                      title = "",
+                                      legend_title = "Window Size") {
   uni_accuracy <- length(unique(accuracy_window_df$accuracy))
   if (uni_accuracy != 1) {
-    plot <- ggplot(
+    plot <- ggplot2::ggplot(
       data = accuracy_window_df,
-      mapping = aes(x = upper_bound,
-                    y = as.numeric(accuracy),
-                    color = factor(window_size))
+      mapping = ggplot2::aes(
+        x = average,
+        y = as.numeric(accuracy),
+        color = factor(window_size)
+      )
     ) +
-      geom_line(stat = "identity") +
-      geom_errorbar(aes(x = upper_bound, ymin = lower_ci, ymax = upper_ci),
+      ggplot2::geom_line(stat = "identity") +
+      ggplot2::geom_errorbar(
+        ggplot2::aes(x = upper_bound, ymin = lower_ci, ymax = upper_ci),
         stat = "identity",
         width = 0.4
       ) +
-      labs(
+      ggplot2::labs(
         y = ylab,
         x = xlab,
         title = title,
@@ -80,21 +89,22 @@ plot_boot_accuracy_threshold <- function(accuracy_threshold_df,
   uni_accuracy <- length(unique(accuracy_threshold_df$accuracy))
 
   if (uni_accuracy != 1) {
-    plot <- ggplot(
+    plot <- ggplot2::ggplot(
       data = accuracy_threshold_df,
-      mapping = aes(
+      mapping = ggplot2::aes(
         x = upper_bound,
         y = accuracy,
         color = factor(lower_bound)
       )
     ) +
-      geom_line(stat = "identity") +
-      geom_point(stat = "identity") +
-      geom_errorbar(aes(x = upper_bound, ymin = lower_ci, ymax = upper_ci),
+      ggplot2::geom_line(stat = "identity") +
+      ggplot2::geom_point(stat = "identity") +
+      ggplot2::geom_errorbar(
+        ggplot2::aes(x = upper_bound, ymin = lower_ci, ymax = upper_ci),
         stat = "identity",
         width = 4
       ) +
-      labs(
+      ggplot2::labs(
         y = ylab,
         x = xlab,
         title = title,
@@ -113,17 +123,18 @@ plot_boot_accuracy_sample <- function(accuracy_sample_df,
   uni_accuracy <- length(unique(accuracy_sample_df$accuracy))
 
   if (uni_accuracy != 1) {
-    plot <- ggplot(
+    plot <- ggplot2::ggplot(
       data = accuracy_sample_df,
-      mapping = aes(x = sample_per_id, y = accuracy)
+      mapping = ggplot2::aes(x = sample_per_id, y = accuracy)
     ) +
-      geom_line(stat = "identity") +
-      geom_point(stat = "identity") +
-      geom_errorbar(aes(x = sample_per_id, ymin = lower_ci, ymax = upper_ci),
+      ggplot2::geom_line(stat = "identity") +
+      ggplot2::geom_point(stat = "identity") +
+      ggplot2::geom_errorbar(
+        ggplot2::aes(x = sample_per_id, ymin = lower_ci, ymax = upper_ci),
         stat = "identity",
         width = .2
       ) +
-      labs(
+      ggplot2::labs(
         y = ylab,
         x = xlab,
         title = title
@@ -169,20 +180,21 @@ plot_boot_accuracy_interval_old <- function(accuracy_interval_df,
   if (uni_accuracy != 1) {
     comparisons <- interval_comparisons(accuracy_interval_df)
 
-    plot <- ggplot(
+    plot <- ggplot2::ggplot(
       data = accuracy_interval_df,
-      mapping = aes(x = data_name, y = as.numeric(accuracy))
+      mapping = ggplot2::aes(x = data_name, y = as.numeric(accuracy))
     ) +
-      geom_bar(stat = "identity") +
-      geom_errorbar(aes(x = data_name, ymin = lower_ci, ymax = upper_ci),
+      ggplot2::geom_bar(stat = "identity") +
+      ggplot2::geom_errorbar(
+        ggplot2::aes(x = data_name, ymin = lower_ci, ymax = upper_ci),
         stat = "identity",
         width = 0.4
       ) +
-      geom_signif(
+      ggplot2::geom_signif(
         comparisons = comparisons, annotations = "*", margin_top = .1,
         step_increase = .35
       ) +
-      labs(
+      ggplot2::labs(
         y = ylab,
         x = xlab,
         title = title
