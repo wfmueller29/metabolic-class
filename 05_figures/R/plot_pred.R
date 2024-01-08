@@ -9,6 +9,11 @@ plot_interval <- function(interval_df,
                           xlab = "",
                           subtitle = "",
                           error_bars = NULL) {
+  if (length(interval_df) == 0) {
+    interval_df <- NA
+    warning("Dataframe is of length 0, cannot rename it; Returning NA")
+    return(interval_df)
+  }
   interval_df <- pivot_longer(interval_df, cols = all_of(cols)) %>%
     filter(class == "all")
 
