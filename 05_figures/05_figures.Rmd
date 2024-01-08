@@ -934,13 +934,6 @@ source("R/combined_class_cox.R")
 ```
 
 ```{r combined survival}
-# We can parameterize this later
-# TODO: paramterize these values
-covariates <- c("sex", "strain")
-age_death <- "age_wk_death"
-censor <- "dead_nat"
-
-
 model_name_list <- unlist(yaml_models, recursive = FALSE)
 
 combined_cox_models <- lapply(
@@ -948,9 +941,9 @@ combined_cox_models <- lapply(
   cox_combine_class,
   final_models,
   datasets,
-  covariates,
-  age_death,
-  censor
+  config$covariates,
+  config$survival_dataset$age_death,
+  config$survival_dataset$event
 )
 
 names(combined_cox_models) <- lapply(model_name_list, paste, collapse = "-")
