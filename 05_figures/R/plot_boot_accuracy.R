@@ -33,7 +33,7 @@ plot_boot_accuracy_interval <- function(accuracy_interval_df,
         stat = "identity",
         width = 0.4
       ) +
-      ggplot2::geom_signif(
+      ggsignif::geom_signif(
         comparisons = comparisons, annotations = "*", margin_top = .1,
         step_increase = .35
       ) +
@@ -169,38 +169,3 @@ interval_comparisons <- function(accuracy_interval_df) {
   new_comparisons <- comparisons[sig]
 }
 
-
-# Archive old function
-
-plot_boot_accuracy_interval_old <- function(accuracy_interval_df,
-                                            xlab = "",
-                                            ylab = "",
-                                            title = "") {
-  uni_accuracy <- length(unique(accuracy_interval_df$accuracy))
-  if (uni_accuracy != 1) {
-    comparisons <- interval_comparisons(accuracy_interval_df)
-
-    plot <- ggplot2::ggplot(
-      data = accuracy_interval_df,
-      mapping = ggplot2::aes(x = data_name, y = as.numeric(accuracy))
-    ) +
-      ggplot2::geom_bar(stat = "identity") +
-      ggplot2::geom_errorbar(
-        ggplot2::aes(x = data_name, ymin = lower_ci, ymax = upper_ci),
-        stat = "identity",
-        width = 0.4
-      ) +
-      ggplot2::geom_signif(
-        comparisons = comparisons, annotations = "*", margin_top = .1,
-        step_increase = .35
-      ) +
-      ggplot2::labs(
-        y = ylab,
-        x = xlab,
-        title = title
-      )
-  } else {
-    plot <- NA
-  }
-  plot
-}
