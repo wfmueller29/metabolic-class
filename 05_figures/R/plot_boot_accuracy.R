@@ -65,7 +65,7 @@ plot_boot_accuracy_window <- function(accuracy_window_df,
     ) +
       ggplot2::geom_line(stat = "identity") +
       ggplot2::geom_errorbar(
-        ggplot2::aes(x = upper_bound, ymin = lower_ci, ymax = upper_ci),
+        ggplot2::aes(x = average, ymin = lower_ci, ymax = upper_ci),
         stat = "identity",
         width = 0.4
       ) +
@@ -168,4 +168,3 @@ interval_comparisons <- function(accuracy_interval_df) {
 
   new_comparisons <- comparisons[sig]
 }
-
