@@ -7,34 +7,34 @@ name_interval <- function(interval_df) {
     warning("Dataframe is of length 0, cannot rename it; Returning NA")
     return(interval_df)
   }
-  interval_df <- interval_df %>%
-    mutate(data_name = ifelse(dataset == "(0, 57.50)", "Early Life",
-      ifelse(dataset == "[57.50,86.25)", "Midlife",
-        ifelse(dataset == "[86.25,103.50)", "Late life",
-          ifelse(dataset == "[103.50,Inf)", "Oldest in Life",
-            ifelse(dataset == "[57.50,103.50]", "Midlife and Late life",
-              dataset
-            )
+
+  col <- interval_df[, "dataset"]
+  new_col <- ifelse(col == "(0, 57.50)", "Early Life",
+    ifelse(col == "[57.50,86.25)", "Midlife",
+      ifelse(col == "[86.25,103.50)", "Late life",
+        ifelse(col == "[103.50,Inf)", "Oldest in Life",
+          ifelse(col == "[57.50,103.50]", "Midlife and Late life",
+            col
           )
         )
       )
-    )) %>%
-    mutate(data_name = factor(data_name, levels = c(
-      "Early Life",
-      "Midlife",
-      "Late life",
-      "Midlife and Late life",
-      "Oldest in Life"
-    )))
+    )
+  )
+  interval_df[, "data_name"] <- factor(new_col, levels = c(
+    "Early Life",
+    "Midlife",
+    "Late life",
+    "Midlife and Late life",
+    "Oldest in Life"
+  ))
 
   interval_df
 }
 
 name_new_interval <- function(new_interval_df) {
-  splits <- str_split_fixed(new_interval_df$dataset,
-    pattern = "\\[|,|\\]",
-    n = Inf
-  )
+  splits <- do.call(rbind, strsplit(new_interval_df$dataset,
+    split = "\\(|\\[|,|\\)|\\]"
+  ))
   new_interval_df$upper_bound <- as.numeric(splits[, 3])
   new_interval_df$lower_bound <- as.numeric(splits[, 2])
   new_interval_df$window_size <- new_interval_df$upper_bound -
@@ -44,26 +44,19 @@ name_new_interval <- function(new_interval_df) {
 }
 
 name_threshold <- function(threshold_df) {
-  splits <- str_split_fixed(threshold_df$dataset,
-    pattern = "\\(|\\[|,|\\)|\\]",
-    n = Inf
-  )
+  splits <- do.call(rbind, strsplit(threshold_df$dataset,
+    split = "\\(|\\[|,|\\)|\\]"
+  ))
   threshold_df$upper_bound <- as.numeric(splits[, 3])
   threshold_df$lower_bound <- as.numeric(splits[, 2])
 
   threshold_df
 }
 
-name_sample <- function(sample_df) {
-  sample_df <- sample_df %>%
-    mutate(sample_per_id = as.numeric(dataset))
-}
-
 name_window <- function(window_df) {
-  splits <- str_split_fixed(window_df$dataset,
-    pattern = "\\[|,|\\]",
-    n = Inf
-  )
+  splits <- do.call(rbind, strsplit(window_df$dataset,
+    split = "\\(|\\[|,|\\)|\\]"
+  ))
   window_df$upper_bound <- as.numeric(splits[, 3])
   window_df$lower_bound <- as.numeric(splits[, 2])
 
@@ -71,6 +64,6 @@ name_window <- function(window_df) {
 }
 
 name_sample <- function(sample_df) {
-  sample_df <- sample_df %>%
-    mutate(sample_per_id = as.numeric(dataset))
+  sample_df[, "sample_per_id"] <- as.numeric(sample_df[, "dataset"])
+  sample_df
 }
