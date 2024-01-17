@@ -528,9 +528,6 @@ source("R/rename_pred.R")
 ```
 
 ```{r prepare prediction dataframe}
-# TODO: We are getting an error in this chunk
-# I think it is because we are missing interval filters for some datasets
-
 final_models$filter_interval_data_results_df <- lapply(
   final_models$filter_interval_data_results_df,
   name_interval
@@ -953,7 +950,7 @@ combined_cox_models <- lapply(
 names(combined_cox_models) <- lapply(model_name_list, paste, collapse = "-")
 
 for (name in names(combined_cox_models)) {
-  name_vector <- stringr::str_split(name, pattern = "-")[[1]]
+  name_vector <- strsplit(x = name, split = "-")[[1]]
   model_index <- final_models$model_name %in% name_vector
   model_index <- match(name_vector, final_models$model_name)
   for (i in model_index) {
