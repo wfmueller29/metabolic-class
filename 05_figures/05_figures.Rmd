@@ -405,28 +405,24 @@ source("R/pred_class.R")
 
 ```{r create prediction results}
 # Get the names of the filtered data
-prediction_data_names <- NULL
-for (dataset in datasets) {
-  new_prediction_data_names <- names(dataset$prediction_data$data)
-  prediction_data_names <- c(prediction_data_names, new_prediction_data_names)
-}
+prediction_data_names <- lapply(datasets, function(dataset) {
+  names(dataset$prediction_data$data)
+})
+prediction_data_names <- unlist(prediction_data_names, use.names = FALSE)
 prediction_columns <- unique(prediction_data_names)
 
 # create a list of lists, where parent list is the filter applied, and the
 # daughter lists provides the filtered dataframes for the corresponding
 # row of final_models. This code does not take into account the case where
 # certain filters are applied to one row, but not another
-filter_list <- list()
-for (filter in prediction_columns) {
-  row_list <- list()
-  for (row_number in seq_len(nrow(final_models))) {
+filter_list <- lapply(prediction_columns, function(filter) {
+  row_list <- lapply(seq_len(nrow(final_models)), function(row_number) {
     data_name <- final_models[row_number, "data"]
-    dataset <- datasets[[data_name]]
-    prediction_data <- dataset$prediction_data
-    row_list[[row_number]] <- prediction_data$data[[filter]]
-  }
-  filter_list[[filter]] <- row_list
-}
+    datasets[[data_name]]$prediction_data$data[[filter]]
+  })
+  row_list
+})
+names(filter_list) <- prediction_columns
 
 for (filter in names(filter_list)) {
   final_models[[filter]] <- filter_list[[filter]]
@@ -968,29 +964,25 @@ source("R/pred_class.R")
 ```
 
 ```{r create prediction results}
-# Get the names of the filtered data
-prediction_data_names <- NULL
-for (dataset in datasets) {
-  new_prediction_data_names <- names(dataset$prediction_test_data$data)
-  prediction_data_names <- c(prediction_data_names, new_prediction_data_names)
-}
+# get names of filtered data
+prediction_data_names <- lapply(datasets, function(dataset) {
+  names(dataset$prediction_test_data$data)
+})
+prediction_data_names <- unlist(prediction_data_names, use.names = FALSE)
 prediction_columns <- unique(prediction_data_names)
 
 # create a list of lists, where parent list is the filter applied, and the
 # daughter lists provides the filtered dataframes for the corresponding
 # row of final_models. This code does not take into account the case where
 # certain filters are applied to one row, but not another
-filter_list <- list()
-for (filter in prediction_columns) {
-  row_list <- list()
-  for (row_number in seq_len(nrow(final_models))) {
+filter_list <- lapply(prediction_columns, function(filter) {
+  row_list <- lapply(seq_len(nrow(final_models)), function(row_number) {
     data_name <- final_models[row_number, "data"]
-    dataset <- datasets[[data_name]]
-    prediction_data <- dataset$prediction_test_data
-    row_list[[row_number]] <- prediction_data$data[[filter]]
-  }
-  filter_list[[filter]] <- row_list
-}
+    datasets[[data_name]]$prediction_test_data$data[[filter]]
+  })
+  row_list
+})
+names(filter_list) <- prediction_columns
 
 for (filter in names(filter_list)) {
   # we need a new name for test_data prediction data so as to not overlap
@@ -1066,6 +1058,14 @@ reorder_prediction_class <- function(final_models,
   }
   final_models
 }
+# get model_names that are not train_test
+train_test_index <- (final_models$data_mod == "train_test")
+renumber_train_test <- final_models[train_test_index, "model_name"]
+renumber_rest <- final_models[!train_test_index, "model_name"]
+
+final_models <- reorder_class(final_models, renumber_train_test)
+final_models <- reorder_class(final_models, renumber_rest)
+
 
 for (group in yaml_models) {
   for (filtered_df_name in prediction_results_names) {
