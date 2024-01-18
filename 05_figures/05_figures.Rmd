@@ -1058,25 +1058,28 @@ reorder_prediction_class <- function(final_models,
   }
   final_models
 }
+
+
 # get model_names that are not train_test
 train_test_index <- (final_models$data_mod == "train_test")
-renumber_train_test <- final_models[train_test_index, "model_name"]
-renumber_rest <- final_models[!train_test_index, "model_name"]
-
-final_models <- reorder_class(final_models, renumber_train_test)
-final_models <- reorder_class(final_models, renumber_rest)
+train_test_names <- final_models[train_test_index, "model_name"]
+rest_names <- final_models[!train_test_index, "model_name"]
 
 
-for (group in yaml_models) {
-  for (filtered_df_name in prediction_results_names) {
-    final_models <- reorder_prediction_class(
-      final_models,
-      group$model_names,
-      filtered_df_name
-    )
-  }
+for (filtered_df_name in prediction_results_names) {
+  final_models <- reorder_prediction_class(
+    final_models,
+    train_test_names,
+    filtered_df_name
+  )
+  final_models <- reorder_prediction_class(
+    final_models,
+    rest_names,
+    filtered_df_name
+  )
 }
 ```
+
 #### Merge test_data prediction dataframes based upon input yaml
 
 ```{r merge prediction dataframes}
