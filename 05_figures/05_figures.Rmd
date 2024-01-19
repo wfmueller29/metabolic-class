@@ -411,6 +411,9 @@ prediction_data_names <- lapply(datasets, function(dataset) {
 prediction_data_names <- unlist(prediction_data_names, use.names = FALSE)
 prediction_columns <- unique(prediction_data_names)
 
+prediction_names <- lapply(prediction_columns, strsplit, split = "_data")
+prediction_names <- unlist(prediction_names)
+
 # create a list of lists, where parent list is the filter applied, and the
 # daughter lists provides the filtered dataframes for the corresponding
 # row of final_models. This code does not take into account the case where
@@ -428,7 +431,7 @@ for (filter in names(filter_list)) {
   final_models[[filter]] <- filter_list[[filter]]
 }
 
-prediction_results_names <- paste(prediction_columns, "results", sep = "_")
+prediction_results_names <- paste(prediction_names, "results", sep = "_")
 
 prediction_results <- lapply(prediction_columns, function(col) {
   print(col)
@@ -480,21 +483,17 @@ source("R/pred_table.R")
 ```
 
 ```{r prediciton tables}
-prediction_results_table_names <- paste(prediction_results_names,
+prediction_table_names <- paste(prediction_names,
   "table",
   sep = "_"
 )
 
-prediction_results_tables <- lapply(
-  prediction_results_names,
-  function(subset) {
-    create_pred_table_subset(subset,
-      subject = "idno"
-    )
-  }
-)
+# TODO: Remove "idno" as subject, this is a paramterized value
+prediction_results_tables <- lapply(prediction_results_names, function(subset) {
+  create_pred_table_subset(final_models, subset, subject = "idno")
+})
 
-final_models[, prediction_results_table_names] <- prediction_results_tables
+final_models[, prediction_table_names] <- prediction_results_tables
 ```
 
 #### Dataframe for each subset type with prediction statistics
@@ -1092,9 +1091,9 @@ merge_prediction_data <- function(data_list_x,
   suffixes <- paste0("_", suffixes)
 
   # check that data_list_x and data_list_y are the same length
-  l_x <- length(data_list_x)
-  l_y <- length(data_list_y)
-  if (l_x != l_y) stop("Data lists are not of the same length")
+  # l_x <- length(data_list_x)
+  # l_y <- length(data_list_y)
+  # if (l_x != l_y) stop("Data lists are not of the same length")
 
   merged_datasets <- list()
   for (i in seq_len(l_x)) {
@@ -1118,6 +1117,7 @@ docall_merged_prediction_data <- function(
     names) {
   merged_census <- data_list_list[[1]]
   for (i in seq_len(length(data_list_list) - 1)) {
+    print(i)
     merged_census <- merge_prediction_data(
       data_list_x = merged_census,
       data_list_y = data_list_list[[i + 1]],
@@ -1160,15 +1160,33 @@ merge_prediction_data_group <- function(
   final_models
 }
 
-for (group in yaml_models) {
-  for (filtered_df_name in prediction_results_names) {
-    final_models <- merge_prediction_data_group(
-      final_models,
-      group$model_names,
-      filtered_df_name
-    )
-  }
+train_test_index <- (final_models$data_mod == "train_test")
+train_test_names <- final_models[train_test_index, "model_name"]
+rest_names <- final_models[!train_test_index, "model_name"]
+
+
+for (filtered_df_name in prediction_results_names) {
+  final_models <- merge_prediction_data_group(
+    final_models = final_models,
+    model_names = train_test_names,
+    filtered_df_name = filtered_df_name
+  )
+  final_models <- merge_prediction_data_group(
+    final_models,
+    rest_names,
+    filtered_df_name
+  )
 }
+
+# for (group in yaml_models) {
+#   for (filtered_df_name in prediction_results_names) {
+#     final_models <- merge_prediction_data_group(
+#       final_models,
+#       group$model_names,
+#       filtered_df_name
+#     )
+#   }
+# }
 ```
 #### Create test census dataframe
 

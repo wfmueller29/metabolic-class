@@ -52,7 +52,7 @@ predict_class_newdata_list <- function(newdata_list,
       )
     } else {
       # if there is no data in newdata make class_result be null
-      class_result <- NA
+      class_result <- data.frame()
     }
 
     class_result

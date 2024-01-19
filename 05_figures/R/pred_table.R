@@ -4,7 +4,6 @@
 # Author: William Mueller
 
 create_pred_table <- function(pred_df, og_df, subject) {
-
   # new_df has predicted class, og class, idno, and tp (True Positive), dummy
   # specificying if predicted class equals og class
   new_df <- make_new_df(pred_df, og_df, subject)
@@ -54,7 +53,7 @@ make_final_table <- function(new_df, og_df, pred_df, subject) {
     final_table["PPV", class] <- tp / pred_class
     final_table["NPV", class] <- (n - og_class - pred_class + tp) /
       (n - pred_class)
-    final_table["Accuracy", class] <- (2*tp + n - og_class - pred_class) /
+    final_table["Accuracy", class] <- (2 * tp + n - og_class - pred_class) /
       n
     final_table["n", class] <- og_class
   }
@@ -89,22 +88,26 @@ create_total <- function(pred_table) {
 
 create_pred_table_list <- function(pred_df_list, og_df, subject) {
   table_list <- lapply(pred_df_list, function(pred_df) {
-    create_pred_table(
-      pred_df = pred_df,
-      og_df = og_df,
-      subject = subject
-    )
+    if (nrow(pred_df) == 0) {
+      warning("0 rows in our prediction dataframe, returning NA for table")
+      table <- NA
+    } else {
+      table <- create_pred_table(
+        pred_df = pred_df, og_df = og_df, subject = subject
+      )
+    }
+    table
   })
   names(table_list) <- names(pred_df_list)
   table_list
 }
 
-create_pred_table_subset <- function(subset, subject) {
+create_pred_table_subset <- function(final_models, subset, subject) {
   lapply(seq_len(nrow(final_models)), function(i) {
     pred_table_list <- create_pred_table_list(
       pred_df_list = final_models[[subset]][[i]],
       og_df = final_models$census[[i]],
-      subject = "idno"
+      subject = final_models$subject[[i]]
     )
     pred_table_list
   })
