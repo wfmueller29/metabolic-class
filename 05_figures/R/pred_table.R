@@ -102,7 +102,7 @@ create_pred_table_list <- function(pred_df_list, og_df, subject) {
   table_list
 }
 
-create_pred_table_subset <- function(final_models, subset, subject) {
+create_pred_table_subset <- function(final_models, subset) {
   lapply(seq_len(nrow(final_models)), function(i) {
     pred_table_list <- create_pred_table_list(
       pred_df_list = final_models[[subset]][[i]],

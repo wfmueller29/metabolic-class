@@ -488,9 +488,8 @@ prediction_table_names <- paste(prediction_names,
   sep = "_"
 )
 
-# TODO: Remove "idno" as subject, this is a paramterized value
 prediction_results_tables <- lapply(prediction_results_names, function(subset) {
-  create_pred_table_subset(final_models, subset, subject = "idno")
+  create_pred_table_subset(final_models, subset)
 })
 
 final_models[, prediction_table_names] <- prediction_results_tables
