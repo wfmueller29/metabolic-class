@@ -959,12 +959,15 @@ source("R/pred_class.R")
 ```
 
 ```{r create prediction results}
-# get names of filtered data
+# Get the names of the filtered data
 prediction_data_names <- lapply(datasets, function(dataset) {
   names(dataset$prediction_test_data$data)
 })
 prediction_data_names <- unlist(prediction_data_names, use.names = FALSE)
 prediction_columns <- unique(prediction_data_names)
+
+prediction_names <- lapply(prediction_columns, strsplit, split = "_data")
+prediction_names <- unlist(prediction_names)
 
 # create a list of lists, where parent list is the filter applied, and the
 # daughter lists provides the filtered dataframes for the corresponding
@@ -980,15 +983,11 @@ filter_list <- lapply(prediction_columns, function(filter) {
 names(filter_list) <- prediction_columns
 
 for (filter in names(filter_list)) {
-  # we need a new name for test_data prediction data so as to not overlap
-  # with the nontest data prediction data
-  filter_name <- paste0(filter, "_test_data")
-  final_models[[filter_name]] <- filter_list[[filter]]
+  final_models[[filter]] <- filter_list[[filter]]
 }
-# add _test_data to prediction columns names
-prediction_columns <- paste0(prediction_columns, "_test_data")
 
-prediction_results_names <- paste(prediction_columns, "results", sep = "_")
+prediction_names <- paste0(prediction_names, "_test")
+prediction_results_names <- paste(prediction_names, "results", sep = "_")
 
 prediction_results <- lapply(prediction_columns, function(col) {
   print(col)
@@ -996,8 +995,8 @@ prediction_results <- lapply(prediction_columns, function(col) {
     nested_newdata_list = final_models[[col]],
     model_list = final_models$final_model,
     vars_list = final_models$data_age_vars,
-    center = TRUE,
-    scale = FALSE,
+    center = config$center,
+    scale = config$scale,
     ref_data_list = final_models$dfs,
     names = final_models$model_name
   )
@@ -1013,6 +1012,11 @@ final_models[, prediction_results_names] <- prediction_results
 # use some serious refactoring
 
 increment_class <- function(filtered_df, i = 0) {
+  if (nrow(filtered_df) == 0) {
+    warning("The dataset we want to increment has no observations, returning \
+            empty data.frame")
+    return(data.frame())
+  }
   filtered_df$new_class <- as.character(filtered_df$class + i)
 
   # Create new prob based off of new_class
@@ -1033,12 +1037,13 @@ increment_class <- function(filtered_df, i = 0) {
 reorder_prediction_class <- function(final_models,
                                      model_names,
                                      filtered_df_name) {
+  print(filtered_df_name) # delete
   i <- 0
   for (model_name in model_names) {
+    print(model_name) # delete
     index <- final_models$model_name == model_name
     row <- final_models[index, ]
-    filtered_dfs <- row[, filtered_df_name]
-    filtered_dfs <- filtered_dfs[[1]]
+    filtered_dfs <- row[, filtered_df_name][[1]]
     if (is.list(filtered_dfs)) {
       filtered_dfs_inced <- lapply(
         filtered_dfs,
@@ -1057,18 +1062,16 @@ reorder_prediction_class <- function(final_models,
   final_models
 }
 
-
 # get model_names that are not train_test
 train_test_index <- (final_models$data_mod == "train_test")
 train_test_names <- final_models[train_test_index, "model_name"]
 rest_names <- final_models[!train_test_index, "model_name"]
 
-
 for (filtered_df_name in prediction_results_names) {
   final_models <- reorder_prediction_class(
-    final_models,
-    train_test_names,
-    filtered_df_name
+    final_models = final_models,
+    model_names = train_test_names,
+    filtered_df_name = filtered_df_name
   )
   final_models <- reorder_prediction_class(
     final_models,
