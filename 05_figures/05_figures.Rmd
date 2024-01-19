@@ -518,23 +518,23 @@ source("R/rename_pred.R")
 ```
 
 ```{r prepare prediction dataframe}
-final_models$filter_interval_data_results_df <- lapply(
-  final_models$filter_interval_data_results_df,
+final_models$filter_interval_df <- lapply(
+  final_models$filter_interval_df,
   name_interval
 )
 
-final_models$filter_cumulative_data_results_df <- lapply(
-  final_models$filter_cumulative_data_results_df,
+final_models$filter_cumulative_df <- lapply(
+  final_models$filter_cumulative_df,
   name_threshold
 )
 
-final_models$resampled_data_results_df <- lapply(
-  final_models$resampled_data_results_df,
+final_models$resampled_df <- lapply(
+  final_models$resampled_df,
   name_sample
 )
 
-final_models$filter_window_data_results_df <- lapply(
-  final_models$filter_window_data_results_df,
+final_models$filter_window_df <- lapply(
+  final_models$filter_window_df,
   name_threshold
 )
 ```
@@ -547,9 +547,9 @@ source("R/plot_pred.R")
 
 ```{r plot pred_results, fig.height=10, fig.width=5}
 final_models$interval_plots <- lapply(
-  seq_along(final_models$filter_interval_data_results_df),
+  seq_along(final_models$filter_interval_df),
   function(i) {
-    plot_interval(final_models$filter_interval_data_results_df[[i]],
+    plot_interval(final_models$filter_interval_df[[i]],
       cols = c("Sensitivity", "Specificity", "PPV", "NPV"),
       title = paste(final_models$data_name[[i]],
         final_models$age_var_name[[i]],
@@ -568,9 +568,9 @@ final_models$interval_plots <- lapply(
 final_models$interval_plots
 
 final_models$cumulative_plots <- lapply(
-  seq_along(final_models$filter_cumulative_data_results_df),
+  seq_along(final_models$filter_cumulative_df),
   function(i) {
-    plot_threshold(final_models$filter_cumulative_data_results_df[[i]],
+    plot_threshold(final_models$filter_cumulative_df[[i]],
       cols = c("Sensitivity", "Specificity", "PPV", "NPV"),
       title = paste(final_models$data_name[[i]],
         final_models$age_var_name[[i]],
@@ -589,9 +589,9 @@ final_models$cumulative_plots <- lapply(
 final_models$cumulative_plots
 
 final_models$resampled_plots <- lapply(
-  seq_along(final_models$resampled_data_results_df),
+  seq_along(final_models$resampled_df),
   function(i) {
-    plot_sample(final_models$resampled_data_results_df[[i]],
+    plot_sample(final_models$resampled_df[[i]],
       cols = c("Sensitivity", "Specificity", "PPV", "NPV"),
       title = paste(final_models$data_name[[i]],
         final_models$age_var_name[[i]],
@@ -610,9 +610,9 @@ final_models$resampled_plots <- lapply(
 final_models$resampled_plots
 
 final_models$window_plots <- lapply(
-  seq_along(final_models$filter_window_data_results_df),
+  seq_along(final_models$filter_window_df),
   function(i) {
-    plot_window(final_models$filter_window_data_results_df[[i]],
+    plot_window(final_models$filter_window_df[[i]],
       cols = c("Sensitivity", "Specificity", "PPV", "NPV"),
       title = paste(final_models$data_name[[i]],
         final_models$age_var_name[[i]],
@@ -635,9 +635,9 @@ final_models$window_plots
 
 ```{r plot accuracy}
 final_models$interval_accuracy_plots <- lapply(
-  seq_along(final_models$filter_interval_data_results_df),
+  seq_along(final_models$filter_interval_df),
   function(i) {
-    plot_interval(final_models$filter_interval_data_results_df[[i]],
+    plot_interval(final_models$filter_interval_df[[i]],
       cols = "Accuracy",
       title = paste(final_models$data_name[[i]],
         final_models$age_var_name[[i]],
@@ -656,9 +656,9 @@ final_models$interval_accuracy_plots <- lapply(
 final_models$interval_accuracy_plots
 
 final_models$cumulative_accuracy_plots <- lapply(
-  seq_along(final_models$filter_cumulative_data_results_df),
+  seq_along(final_models$filter_cumulative_df),
   function(i) {
-    plot_threshold(final_models$filter_cumulative_data_results_df[[i]],
+    plot_threshold(final_models$filter_cumulative_df[[i]],
       cols = "Accuracy",
       title = paste(final_models$data_name[[i]],
         final_models$age_var_name[[i]],
@@ -677,9 +677,9 @@ final_models$cumulative_accuracy_plots <- lapply(
 final_models$cumulative_accuracy_plots
 
 final_models$resampled_accuracy_plots <- lapply(
-  seq_along(final_models$resampled_data_results_df),
+  seq_along(final_models$resampled_df),
   function(i) {
-    plot_sample(final_models$resampled_data_results_df[[i]],
+    plot_sample(final_models$resampled_df[[i]],
       cols = "Accuracy",
       title = paste(final_models$data_name[[i]],
         final_models$age_var_name[[i]],
@@ -698,9 +698,9 @@ final_models$resampled_accuracy_plots <- lapply(
 final_models$resampled_accuracy_plots
 
 final_models$window_accuracy_plots <- lapply(
-  seq_along(final_models$filter_window_data_results_df),
+  seq_along(final_models$filter_window_df),
   function(i) {
-    plot_window(final_models$filter_window_data_results_df[[i]],
+    plot_window(final_models$filter_window_df[[i]],
       cols = "Accuracy",
       title = paste(final_models$data_name[[i]],
         final_models$age_var_name[[i]],
