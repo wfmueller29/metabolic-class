@@ -502,17 +502,13 @@ source("R/combine_pred_df.R")
 ```
 
 ```{r create prediciton dataframe for plotting}
-prediction_results_df_names <- paste(prediction_results_names,
-  "df",
-  sep = "_"
-)
+prediction_df_names <- paste(prediction_names, "df", sep = "_")
 pred_results <- lapply(
-  prediction_results_table_names,
-  combine_pred_df_subset
+  prediction_table_names, combine_pred_df_subset, final_models = final_models
 )
 
-names(pred_results) <- prediction_results_df_names
-final_models[, prediction_results_df_names] <- pred_results
+names(pred_results) <- prediction_df_names
+final_models[, prediction_df_names] <- pred_results
 ```
 
 #### Prepare prediciton dataframe for plotting

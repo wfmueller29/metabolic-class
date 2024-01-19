@@ -90,7 +90,7 @@ create_pred_table_list <- function(pred_df_list, og_df, subject) {
   table_list <- lapply(pred_df_list, function(pred_df) {
     if (nrow(pred_df) == 0) {
       warning("0 rows in our prediction dataframe, returning NA for table")
-      table <- NA
+      table <- NULL
     } else {
       table <- create_pred_table(
         pred_df = pred_df, og_df = og_df, subject = subject

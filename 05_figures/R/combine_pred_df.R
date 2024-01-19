@@ -3,6 +3,7 @@
 # into one dataframe
 # Author: William Mueller
 combine_pred_df <- function(pred_df_list) {
+  pred_df_list <- pred_df_list[!is.na(pred_df_list)]
   pred_df_list <- lapply(lapply(pred_df_list, t), as.data.frame)
 
   pred_df_list <- lapply(pred_df_list, function(data) {
@@ -21,7 +22,7 @@ combine_pred_df <- function(pred_df_list) {
   pred_df
 }
 
-combine_pred_df_subset <- function(subset) {
+combine_pred_df_subset <- function(final_models, subset) {
   lapply(seq_len(nrow(final_models)), function(i) {
     combine_pred_df(pred_df_list = final_models[[subset]][[i]])
   })
