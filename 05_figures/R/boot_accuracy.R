@@ -4,6 +4,13 @@
 # for make_new_df function we must source
 source("R/pred_table.R")
 boot_accuracy <- function(pred_df, og_df, subject) {
+
+  if (nrow(pred_df) == 0) {
+    warning("pred_df has 0 rows, cannot make_new_df, returning NA")
+    return(NA)
+
+  }
+
   new_df <- make_new_df(pred_df, og_df, subject)
 
   if (nrow(new_df) == 0) {

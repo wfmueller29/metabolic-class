@@ -730,7 +730,7 @@ final_models$interval_accuracy <- lapply(
   seq_len(nrow(final_models)),
   function(i) {
     boot_accuracy_list(
-      pred_df_list = final_models$filter_interval_data_results[[i]],
+      pred_df_list = final_models$filter_interval_results[[i]],
       og_df = final_models$census[[i]],
       subject = final_models$subject[[i]]
     )
@@ -741,7 +741,7 @@ final_models$cumulative_accuracy <- lapply(
   seq_len(nrow(final_models)),
   function(i) {
     boot_accuracy_list(
-      pred_df_list = final_models$filter_cumulative_data_results[[i]],
+      pred_df_list = final_models$filter_cumulative_results[[i]],
       og_df = final_models$census[[i]],
       subject = final_models$subject[[i]]
     )
@@ -752,7 +752,7 @@ final_models$window_accuracy <- lapply(
   seq_len(nrow(final_models)),
   function(i) {
     boot_accuracy_list(
-      pred_df_list = final_models$filter_window_data_results[[i]],
+      pred_df_list = final_models$filter_window_results[[i]],
       og_df = final_models$census[[i]],
       subject = final_models$subject[[i]]
     )
@@ -763,7 +763,7 @@ final_models$resampled_accuracy <- lapply(
   seq_len(nrow(final_models)),
   function(i) {
     boot_accuracy_list(
-      pred_df_list = final_models$resampled_data_results[[i]],
+      pred_df_list = final_models$resampled_results[[i]],
       og_df = final_models$census[[i]],
       subject = final_models$subject[[i]]
     )
@@ -779,10 +779,10 @@ source("R/combine_boot_accuracy.R")
 
 ```{r combine accuracy}
 x <- final_models
-x$interval_accuracy_df <- combine_boot_accuracy_list(x$interval_accuracy)
-x$cumulative_accuracy_df <- combine_boot_accuracy_list(x$cumulative_accuracy)
-x$resampled_accuracy_df <- combine_boot_accuracy_list(x$resampled_accuracy)
-x$window_accuracy_df <- combine_boot_accuracy_list(x$window_accuracy)
+x$interval_accuracy_df <- combine_boot_accuracies(x$interval_accuracy)
+x$cumulative_accuracy_df <- combine_boot_accuracies(x$cumulative_accuracy)
+x$resampled_accuracy_df <- combine_boot_accuracies(x$resampled_accuracy)
+x$window_accuracy_df <- combine_boot_accuracies(x$window_accuracy)
 final_models <- x
 ```
 

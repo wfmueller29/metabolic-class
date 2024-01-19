@@ -12,15 +12,16 @@ create_pred_table <- function(pred_df, og_df, subject) {
 }
 
 make_new_df <- function(pred_df, og_df, subject) {
-  pred_df <- pred_df %>%
-    select(!!sym(subject), class)
-  og_df <- og_df %>%
-    select(!!sym(subject), class)
 
-  new_df <- pred_df %>%
-    left_join(og_df, by = subject, suffix = c(".pred", ".og")) %>%
-    mutate(tp = ifelse(class.pred == class.og, 1, 0)) %>%
-    filter(!is.na(class.og))
+  pred_df <- pred_df[, c(subject, "class")]
+  og_df <- og_df[, c(subject, "class")]
+
+  new_df <- merge(pred_df, og_df, by = subject, suffix = c(".pred", ".og"))
+  new_df$tp <- ifelse(new_df$class.pred == new_df$class.og, 1, 0)
+  new_df <- new_df[!is.na(new_df$class.og), ]
+
+  new_df
+
 }
 
 make_final_table <- function(new_df, og_df, pred_df, subject) {
