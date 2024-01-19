@@ -1008,9 +1008,6 @@ final_models[, prediction_results_names] <- prediction_results
 #### Create new class numbering
 
 ```{r class numbering}
-# TODO: I am pretty sure this is where I left off. The code in this chunk could
-# use some serious refactoring
-
 increment_class <- function(filtered_df, i = 0) {
   if (nrow(filtered_df) == 0) {
     warning("The dataset we want to increment has no observations, returning \
@@ -1022,11 +1019,7 @@ increment_class <- function(filtered_df, i = 0) {
   # Create new prob based off of new_class
   probs_index <- grepl("^prob", names(filtered_df))
   probs <- names(filtered_df)[grepl("^prob", names(filtered_df))]
-  probs <- stringr::str_split(probs,
-    pattern = "prob",
-    simplify = TRUE
-  )
-  probs <- probs[, 2]
+  probs <- unlist(lapply(strsplit(probs, split = "prob"), `[`, 2))
   new_probs <- as.numeric(probs) + i
   new_probs <- paste0("prob", new_probs)
   names(filtered_df)[probs_index] <- new_probs
@@ -1084,6 +1077,8 @@ for (filtered_df_name in prediction_results_names) {
 #### Merge test_data prediction dataframes based upon input yaml
 
 ```{r merge prediction dataframes}
+# TODO: We need to make is such that resampling for prediction data is equal
+# for all outcomes
 merge_prediction_data <- function(data_list_x,
                                   data_list_y,
                                   id_x,
@@ -1093,9 +1088,9 @@ merge_prediction_data <- function(data_list_x,
   suffixes <- paste0("_", suffixes)
 
   # check that data_list_x and data_list_y are the same length
-  # l_x <- length(data_list_x)
-  # l_y <- length(data_list_y)
-  # if (l_x != l_y) stop("Data lists are not of the same length")
+  l_x <- length(data_list_x)
+  l_y <- length(data_list_y)
+  if (l_x != l_y) stop("Data lists are not of the same length")
 
   merged_datasets <- list()
   for (i in seq_len(l_x)) {
@@ -1194,9 +1189,6 @@ for (filtered_df_name in prediction_results_names) {
 
 ```{r create test census}
 # TODO: Refactor merge census, and code such that it is not dependent on dplyr
-# TODO: Remove nonsense entries from census
-# TODO: Refactor all the datasets such that all the outliers ect. would be
-# part of their own run
 merge_census <- function(data, census, id) {
   if (is.data.frame(data)) {
     data <- merge(
