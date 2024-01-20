@@ -32,6 +32,14 @@ datasets:
     nwg: FALSE
     ng_max: 3
   prediction_data:
+    filter_interval:
+      intervals:
+        - [age_wk_ns: "(0, 57.50)"]
+        - [age_wk_ns: "[57.50,86.25)"]
+        - [age_wk_ns: "[86.25,103.50)"]
+        - [age_wk_ns: "[103.50,Inf)"]
+        - [age_wk_ns: "[57.50,103.50]"]
+      names:
     filter_window:
       age_var: "age_wk"
       start: 0
