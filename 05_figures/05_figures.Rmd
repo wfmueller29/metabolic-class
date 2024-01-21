@@ -1066,66 +1066,52 @@ for (filtered_df_name in prediction_results_names) {
     model_names = train_test_names,
     filtered_df_name = filtered_df_name
   )
-  final_models <- reorder_prediction_class(
-    final_models,
-    rest_names,
-    filtered_df_name
-  )
 }
 ```
 
-#### Merge test_data prediction dataframes based upon input yaml
+#### Merge test_data prediction dataframes
 
 ```{r merge prediction dataframes}
 # TODO: We need to make is such that resampling for prediction data is equal
 # for all outcomes
-merge_prediction_data <- function(data_list_x,
-                                  data_list_y,
-                                  id_x,
-                                  id_y,
-                                  suffixes) {
-  # remake suffixes
-  suffixes <- paste0("_", suffixes)
 
-  # check that data_list_x and data_list_y are the same length
-  l_x <- length(data_list_x)
-  l_y <- length(data_list_y)
-  if (l_x != l_y) stop("Data lists are not of the same length")
-
-  merged_datasets <- list()
-  for (i in seq_len(l_x)) {
-    merged_dataset <- base::merge(
-      x = data_list_x[[i]],
-      y = data_list_y[[i]],
-      by.x = id_x,
-      by.y = id_y,
-      suffixes = suffixes
-    )
-    merged_datasets <- c(merged_datasets, list(merged_dataset))
+modified_merge <- function(x, y, by.x, by.y, suffixes) {
+  if (nrow(x) == 0) {
+    warning("x data.frame has 0 observations")
+    return(y)
+  }
+  if (nrow(y) == 0) {
+    warning("y data.frame has 0 observations")
+    return(x)
   }
 
-  merged_datasets
+  merge(x = x, y = y, by.x = by.x, by.y = by.y, suffixes = suffixes)
 }
 
-docall_merged_prediction_data <- function(
-    data_list_list,
-    id_list,
-    suffixes_list,
-    names) {
-  merged_census <- data_list_list[[1]]
-  for (i in seq_len(length(data_list_list) - 1)) {
-    print(i)
-    merged_census <- merge_prediction_data(
-      data_list_x = merged_census,
-      data_list_y = data_list_list[[i + 1]],
-      id_x = id_list[[i]],
-      id_y = id_list[[i + 1]],
-      suffixes = suffixes_list[c(i, i + 1)]
-    )
+merge_prediction_data <- function(x, y) {
+  print(y$suffix)
+  # if (length(x$data_list) == 0) {
+  #   warning()
+  #   return(y)
+  # }
+  # if (length(y$data_list) == 0) {
+  #   return(x)
+  # }
+  if (length(x$data_list) != length(y$data_list)) {
+    stop("Data lists are not of the same length, cannot merge them")
   }
-  names(merged_census) <- names
-  merged_census
+  z <- list()
+  z$data_list <- mapply(modified_merge,
+    x = x$data_list, y = y$data_list,
+    MoreArgs = list(by.x = x$id, by.y = y$id, suffixes = c(x$suffix, y$suffix)),
+    SIMPLIFY = FALSE
+  )
+  z$id <- x$id
+  z$suffix <- ""
+
+  z
 }
+
 
 merge_prediction_data_group <- function(
     final_models,
@@ -1134,17 +1120,28 @@ merge_prediction_data_group <- function(
   index <- final_models$model_name %in% model_names
   desired_dfs <- final_models[index, filtered_df_name]
   desired_ids <- final_models[index, "subject"]
-  desired_suffixes <- final_models[index, "oc"]
+  desired_suffixes <- paste0("_", final_models[index, "oc"])
 
   if (all(is.na(desired_dfs))) {
     merged_data <- NA
   } else {
-    merged_data <- docall_merged_prediction_data(
-      data_list_list = desired_dfs,
-      id_list = desired_ids,
-      suffixes_list = desired_suffixes,
-      names = names(desired_dfs[[1]])
-    )
+    reduce_list <- lapply(seq_len(length(desired_dfs)), function(i) {
+      list(
+        data_list = desired_dfs[[i]],
+        id = desired_ids[[i]],
+        suffix = desired_suffixes[[i]]
+      )
+    })
+    merged_data <- Reduce(f = merge_prediction_data, x = reduce_list)$data_list
+
+    # the last element name improperly following reduce function, thus:
+    merged_data <- lapply(merged_data, function(data) {
+      last_class_name <- paste0("class", tail(desired_suffixes, n = 1))
+      last_new_class_name <- paste0("new_class", tail(desired_suffixes, n = 1))
+      colnames(data)[colnames(data) == "class"] <- last_class_name
+      colnames(data)[colnames(data) == "new_class"] <- last_new_class_name
+      data
+    })
   }
 
   # create new column to store data
@@ -1159,32 +1156,18 @@ merge_prediction_data_group <- function(
 
 train_test_index <- (final_models$data_mod == "train_test")
 train_test_names <- final_models[train_test_index, "model_name"]
-rest_names <- final_models[!train_test_index, "model_name"]
 
 
+filtered_df_name <- prediction_results_names[[3]]
 for (filtered_df_name in prediction_results_names) {
   final_models <- merge_prediction_data_group(
     final_models = final_models,
     model_names = train_test_names,
     filtered_df_name = filtered_df_name
   )
-  final_models <- merge_prediction_data_group(
-    final_models,
-    rest_names,
-    filtered_df_name
-  )
 }
-
-# for (group in yaml_models) {
-#   for (filtered_df_name in prediction_results_names) {
-#     final_models <- merge_prediction_data_group(
-#       final_models,
-#       group$model_names,
-#       filtered_df_name
-#     )
-#   }
-# }
 ```
+
 #### Create test census dataframe
 
 ```{r create test census}
