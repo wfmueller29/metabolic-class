@@ -1072,9 +1072,6 @@ for (filtered_df_name in prediction_results_names) {
 #### Merge test_data prediction dataframes
 
 ```{r merge prediction dataframes}
-# TODO: We need to make is such that resampling for prediction data is equal
-# for all outcomes
-
 modified_merge <- function(x, y, by.x, by.y, suffixes) {
   if (nrow(x) == 0) {
     warning("x data.frame has 0 observations")
@@ -1090,13 +1087,6 @@ modified_merge <- function(x, y, by.x, by.y, suffixes) {
 
 merge_prediction_data <- function(x, y) {
   print(y$suffix)
-  # if (length(x$data_list) == 0) {
-  #   warning()
-  #   return(y)
-  # }
-  # if (length(y$data_list) == 0) {
-  #   return(x)
-  # }
   if (length(x$data_list) != length(y$data_list)) {
     stop("Data lists are not of the same length, cannot merge them")
   }
@@ -1157,8 +1147,6 @@ merge_prediction_data_group <- function(
 train_test_index <- (final_models$data_mod == "train_test")
 train_test_names <- final_models[train_test_index, "model_name"]
 
-
-filtered_df_name <- prediction_results_names[[3]]
 for (filtered_df_name in prediction_results_names) {
   final_models <- merge_prediction_data_group(
     final_models = final_models,
@@ -1171,22 +1159,15 @@ for (filtered_df_name in prediction_results_names) {
 #### Create test census dataframe
 
 ```{r create test census}
+# FIX: This is where I left off from saturday 01/20/23
 # TODO: Refactor merge census, and code such that it is not dependent on dplyr
 merge_census <- function(data, census, id) {
-  if (is.data.frame(data)) {
-    data <- merge(
-      x = data,
-      y = census,
-      by = id
-    )
-
-    colnames(data)[colnames(data) == "le_wk"] <- "age_wk_death"
-    colnames(data)[colnames(data) == "dead_censor"] <- "dead_nat"
-  } else {
-    data <- NA
-    warning("data is not a data.frame, returning NA")
+  if (nrow(data) == 0) {
+    return(NA)
+    warning("data has 0 rows; cannot merge with census; returning NA")
   }
 
+  data <- merge(x = data, y = census, by = id)
   data
 }
 
@@ -1195,14 +1176,15 @@ merge_census_apply <- function(data_list, census, id) {
     data_list <- NA
     warning("data_list is all NA, returning NA")
   } else {
-    data_list <- lapply(data_list, merge_census, census = census, id = id)
+    data_list <- mapply(merge_census, data = data_list, census = census, id = id)
   }
   data_list
 }
 
-merge_census_apply_column <- function(final_models, filtered_df_name, census) {
+merge_census_apply_column <- function(final_models, filtered_df_name) {
   data_lol <- final_models[, filtered_df_name]
   ids <- final_models[, "subject"]
+  census <- final_models[, "census"]
   data_lol <- lapply(data_lol, merge_census_apply, census = census, id = ids)
 
   final_models[[filtered_df_name]] <- data_lol
@@ -1211,11 +1193,12 @@ merge_census_apply_column <- function(final_models, filtered_df_name, census) {
 
 merged_prediction_result_names <- paste0(prediction_results_names, "_merged")
 
+filtered_df_name <- merged_prediction_result_names[[1]] # delete
 for (filtered_df_name in merged_prediction_result_names) {
+  print(filtered_df_name)
   final_models <- merge_census_apply_column(
     final_models = final_models,
-    filtered_df_name = filtered_df_name,
-    census = subject_sum
+    filtered_df_name = filtered_df_name
   )
 }
 ```
