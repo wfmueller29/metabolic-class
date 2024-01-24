@@ -51,8 +51,9 @@ predict_class_newdata_list <- function(newdata_list,
         ref_data = ref_data
       )
     } else {
-      # if there is no data in newdata make class_result be null
-      class_result <- data.frame()
+      col_names <- names(model$pprob)
+      class_result <- data.frame(matrix(nrow = 0, ncol = length(col_names)))
+      names(class_result) <- col_names
     }
 
     class_result

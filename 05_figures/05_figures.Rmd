@@ -1009,11 +1009,6 @@ final_models[, prediction_results_names] <- prediction_results
 
 ```{r class numbering}
 increment_class <- function(filtered_df, i = 0) {
-  if (nrow(filtered_df) == 0) {
-    warning("The dataset we want to increment has no observations, returning \
-            empty data.frame")
-    return(data.frame())
-  }
   filtered_df$new_class <- as.character(filtered_df$class + i)
 
   # Create new prob based off of new_class
@@ -1072,26 +1067,13 @@ for (filtered_df_name in prediction_results_names) {
 #### Merge test_data prediction dataframes
 
 ```{r merge prediction dataframes}
-modified_merge <- function(x, y, by.x, by.y, suffixes) {
-  if (nrow(x) == 0) {
-    warning("x data.frame has 0 observations")
-    return(y)
-  }
-  if (nrow(y) == 0) {
-    warning("y data.frame has 0 observations")
-    return(x)
-  }
-
-  merge(x = x, y = y, by.x = by.x, by.y = by.y, suffixes = suffixes)
-}
-
 merge_prediction_data <- function(x, y) {
   print(y$suffix)
   if (length(x$data_list) != length(y$data_list)) {
     stop("Data lists are not of the same length, cannot merge them")
   }
   z <- list()
-  z$data_list <- mapply(modified_merge,
+  z$data_list <- mapply(merge,
     x = x$data_list, y = y$data_list,
     MoreArgs = list(by.x = x$id, by.y = y$id, suffixes = c(x$suffix, y$suffix)),
     SIMPLIFY = FALSE
@@ -1189,29 +1171,12 @@ final_models$test_census <- lapply(seq_len(nrow(final_models)), function(i) {
 ```
 
 ```{r merge test census}
-# INFO: The issue is that the census that we are providing does not contain
-# information for the test set
-
-# we need ot merge the test_results with census information. We can use the "og"
-# census information
-
-merge_test_census <- function(data, census, id) {
-  if (nrow(data) == 0) {
-    warning("data has 0 rows; cannot merge with census; \
-            returning emmpty data.frame")
-    return(data.frame())
-  }
-
-  data <- merge(x = data, y = census, by = id)
-  data
-}
-
 merge_test_census_apply <- function(data_list, census, id) {
   if (all(is.na(data_list))) {
     data_list <- NA
     warning("data_list is all NA, returning NA")
   } else {
-    data_list <- lapply(data_list, merge_test_census, census = census, id = id)
+    data_list <- lapply(data_list, merge, y = census, by = id)
   }
   data_list
 }
@@ -1247,6 +1212,7 @@ predict_cox <- function(test_data,
                         model,
                         type = c("lp", "risk"),
                         suffix = "") {
+  print(nrow(test_data))
   if (nrow(test_data) == 0) {
     warning("test_data has 0 observations, cannot prediction; returning NA")
     return(NA)
@@ -1297,6 +1263,7 @@ predict_cox_final_model <- function(final_models,
   model_lol <- final_models[, "cox_combined_models"]
 
   test_data_lol <- lapply(seq_len(nrow(final_models)), function(row_no) {
+    print(row_no)
     test_data_list <- predict_cox_apply2(
       test_data_list = test_data_lol[[row_no]],
       model_list = model_lol[[row_no]],
@@ -1309,10 +1276,12 @@ predict_cox_final_model <- function(final_models,
   final_models
 }
 
+final_models_test <- final_models[final_models$data_mod == "train_test", ]
+
 for (filtered_df_name in merged_prediction_result_names) {
-  print(filtered_df_name) # delete
-  final_models <- predict_cox_final_model(
-    final_models = final_models,
+  print(filtered_df_name)
+  final_models_test <- predict_cox_final_model(
+    final_models = final_models_test,
     filtered_df_name = filtered_df_name,
     type = c("lp", "risk")
   )
@@ -1322,14 +1291,6 @@ for (filtered_df_name in merged_prediction_result_names) {
 #### Determine Calibration by Regressing PI on Test outcomes
 
 ```{r create new dataframes from the predictions}
-# TODO: Instead of building all the prediction dataframes beforehand,
-# why not just subset them from the original data as we are making the figures
-# this way we do not need to carry around a list of list of dataframes to
-# perform all these operations upon.
-
-# TODO: Remove pre-data minpulation such as removing outliers
-# from the pipeline
-
 test_data <- final_models[, merged_prediction_result_names[[1]]][[3]][[5]]
 age_death <- "age_wk_death"
 censor <- "dead_nat"
