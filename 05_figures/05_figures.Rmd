@@ -1406,7 +1406,7 @@ name_window <- function(data, col_name) {
   data[["upper_bound"]] <- upper_bound
   data[["lower_bound"]] <- lower_bound
   data[["window_size"]] <- window_size
-  data[["midpoint"]] <- window_size / 2
+  data[["midpoint"]] <- window_size / 2 + lower_bound
 
   data
 }
@@ -1425,7 +1425,7 @@ name_cumulative <- function(data, col_name) {
 
   data[["upper_bound"]] <- upper_bound
   data[["lower_bound"]] <- lower_bound
-  data[["midpoint"]] <- (upper_bound - lower_bound) / 2
+  data[["midpoint"]] <- (upper_bound - lower_bound) / 2 + lower_bound
 
   data
 }
@@ -1451,7 +1451,36 @@ final_models$filter_window_test_summary <- lapply(
 # of data filter determines the columns and the concordance
 # and correlation of PI form the two rows
 
+# TODO: We need to adjust the our combined_cox_models to account for comparing
+# absolute vs. class vs. class + absolute
 
+data <- final_models$filter_window_test_summary[[4]]
+
+outcome <- "lp1_exp_coef"
+window_size <- "window_size"
+midpoint <- "midpoint"
+se <- "lp1_se_coef"
+
+plot_window_concord_lp <- function(data, outcome, window_size, midpoint, se) {
+  ggplot2::ggplot(
+    data = data,
+    mapping = ggplot2::aes(
+      x = as.numeric(.data[[midpoint]]),
+      y = as.numeric(.data[[outcome]]),
+      color = factor(.data[[window_size]])
+    )
+  ) +
+    ggplot2::geom_line(stat = "identity") +
+    ggplot2::geom_errorbar(
+      ggplot2::aes(
+        x = .data[[midpoint]],
+        ymin = .data[[outcome]] - 1.96 * .data[[se]],
+        ymax = .data[[outcome]] + 1.96 * .data[[se]],
+        stat = "identity",
+        width = 0.4
+      )
+    )
+}
 ```
 
 ### Output CSV with idno's and class
