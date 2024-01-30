@@ -17,8 +17,12 @@ extract_accuracy_ci <- function(accuracy_df) {
 
   data$ci <- lapply(data$boot_accuracy, function(boot) {
     # boot.ci will bug if population value is 0 or 1
-    if ((boot$t0 != 1) & (boot$t0 != 0)) {
-      ci <- boot::boot.ci(boot)
+    if (is.na(boot$t0)) {
+      warning("The bootstrapped statistic is NA; returning NA")
+      return(NA)
+    }
+    if ((boot$t0 != 1) && (boot$t0 != 0)) {
+      ci <- boot::boot.ci(boot, type = "norm")
       ci <- ci$normal
     } else {
       ci <- NA
