@@ -10,6 +10,7 @@ survival_dataset:
   age_death: "le_wk"
   event: "dead_censor"
   tod: "tod"
+  covariates: "sex_M + strain_HET3"
 datasets:
 - name: "slam"
   path: "../00b_dataset_mods/output/data/test/slam_bw_og.csv"
