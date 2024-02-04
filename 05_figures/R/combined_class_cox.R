@@ -1,22 +1,101 @@
 # This file is going to combine metabolic classes to create one mortality
 # prediction
+surv_tmerge <- function(data, id, age, age_death, outcomes) {
+  # Create baseline data -------------------------------------------------------
+
+  # Reoder Dataset by Id and Age
+  data_baseline <- data[order(data[[id]], data[[age]]), , drop = FALSE]
+
+  ## take first observation for each id
+  data_baseline <- data_baseline[!duplicated(data_baseline[[id]]), , drop = FALSE]
+
+  # First tmerge ---------------------------------------------------------------
+  # Create call for first tmerge
+  cl_tmerge1 <- rlang::call2("tmerge",
+    data1 = as.symbol("data_baseline"),
+    data2 = as.symbol("data_baseline"),
+    id = as.symbol(id),
+    tstart = as.symbol(age),
+    tstop = as.symbol(age_death),
+    .ns = "survival"
+  )
+
+  # Call first tmerge, this will create a tstart, tstop, and death column
+  # tstart is the time of first observation
+  # tstop is the time of last observation
+  # death is weather or not the individual died following the time of last observation
+  data1 <- eval(cl_tmerge1)
+
+  # Second tmerge --------------------------------------------------------------
+  # Create call for second tmerge,
+  # This will fill in all the times between the first and last observation for each subject
+  # and make death column 0
+  # Create tmerge ... arguments and store them as args. age is included so it will
+  # be constant
+  args <- lapply(c(outcomes, age), function(outcome) {
+    call("tdc", as.symbol(age), as.symbol(outcome))
+  })
+  # name args
+  names(args) <- outcomes
+  # Create call
+  cl_tmerge2 <- rlang::call2("tmerge",
+    data1 = as.symbol("data1"),
+    data2 = as.symbol("data"),
+    id = as.symbol(id),
+    !!!args,
+    .ns = "survival"
+  )
+
+  # Call second tmerge
+  data2 <- eval(cl_tmerge2)
+
+  return(data2)
+}
+
+surv_cox <- function(data, covariates, time, time2 = NULL, death, tt = NULL, type = c("right", "left", "interval", "counting", "interval2", "mstate")) {
+  if (is.null(time2)) {
+    surv_object <- survival::Surv(time = data[[time]], event = data[[death]], type = type)
+  } else {
+    surv_object <- survival::Surv(time = data[[time]], time2 = data[[time2]], event = data[[death]])
+  }
+  cox.form <- stats::as.formula(paste0("surv_object", deparse1(covariates)))
+
+  if (is.null(tt)) {
+    fit <- survival::coxph(cox.form, data = data)
+  } else {
+    fit <- survival::coxph(cox.form, data = data, tt = tt)
+  }
+  return(fit)
+}
 
 
-# we are going to merge the census of the models specificied by each model
-# list in the yaml configuration file.
-combine_census <- function(model_name_vector,
-                           final_model_object,
-                           dead_censor,
-                           age_death,
-                           covariates) {
-  # rename inputs
-  final_models <- final_model_object
+combine_data <- function(data, ids, age_vars, outcomes) {
+  data <- mapply(
+    function(data, outcome, age_var, id) {
+      data <- data[, c(outcome, age_var, id)]
+      list(data = data, id = id, age_var = age_var)
+    },
+    data = data, outcome = outcomes, age_var = age_vars, id = ids,
+    SIMPLIFY = FALSE
+  )
 
-  # get list of censuses
-  model_index <- final_models$model_name %in% model_name_vector
-  censuses <- final_models[model_index, ]$census
-  ids <- final_models[model_index, "subject"]
+  merged_data <- Reduce(function(x, y) {
+    data <- merge(
+      x = x$data, y = y$data,
+      by.x = c(x$id, x$age_var), by.y = c(y$id, y$age_var), all = TRUE
+    )
+    list(data = data, id = x$id, age_var = x$age_var)
+  }, data)
 
+  merged_data$data <- merge(
+    x = merged_data$data, y = merged_census,
+    by.x = merged_data$id, by.y = census_id
+  )
+
+  merged_data
+}
+
+combine_census <- function(censuses, ids) {
   # Select probability of class membership and id's
   censuses_bare <- mapply(function(census, id) {
     # get prob column names
@@ -64,40 +143,60 @@ combine_census <- function(model_name_vector,
   census
 }
 
-
-# Next we are going to construct the cox model.
-
-cox_merged_class <- function(merged_census,
-                             covariates,
-                             age_death,
-                             censor) {
-  # make var from merged_census
-  vars <- names(merged_census)[grepl("^prob", names(merged_census))]
-  var <- paste(vars, collapse = " + ")
-
-  cox_model <- model_cox(
-    census = merged_census,
-    var = var,
-    covariates = covariates,
+create_combined_cox <- function(data,
+                         id,
+                         age,
+                         age_death,
+                         death_censor,
+                         outcomes,
+                         covariates) {
+  tmerged_data <- surv_tmerge(
+    data = data,
+    id = id,
+    age = age,
     age_death = age_death,
-    censor = censor
+    outcomes = outcomes
   )
 
-  cox_model
+  prob_cols <- names(tmerged_data)[grepl("^prob", names(tmerged_data))]
+  prob_cols_drop <- sapply(prob_cols, function(name) {
+    all(tmerged_data[[name]] == 1)
+  })
+  prob_cols <- prob_cols[!prob_cols_drop]
+
+  tmerged_data[, prob_cols] <- lapply(tmerged_data[, prob_cols],
+    log,
+    base = 1.1
+  )
+  form <- as.formula(paste0(
+    "~ ", paste(outcomes, collapse = "+"), "+",
+    paste(prob_cols, collapse = "+"), "+", covariates
+  ))
+
+  cox_output <- surv_cox(
+    data = tmerged_data,
+    covariates = form,
+    time = "tstart",
+    time2 = "tstop",
+    death = death_censor
+  )
+
+  cox_output
 }
 
-cox_combine_class <- function(model_name_vector,
+cox_combine <- function(model_name_vector,
                               final_model_object,
                               covariates,
                               age_death,
                               censor) {
-  merged_census <- combine_census(
-    model_name_vector,
-    final_model_object,
-    covariates,
-    age_death,
-    censor
-  )
+  # rename inputs
+  final_models <- final_model_object
+
+  model_index <- final_models$model_name %in% model_name_vector
+  censuses <- final_models[model_index, ]$census
+  ids <- final_models[model_index, "subject"]
+
+  merged_census <- combine_census(censuses = censuses, ids = ids)
 
   if (nrow(merged_census) == 0) {
     warning("There are no observations that intersect the censuses of interest")
@@ -105,11 +204,22 @@ cox_combine_class <- function(model_name_vector,
     return(NA)
   }
 
-  cox_model <- cox_merged_class(
-    merged_census = merged_census,
-    covariates = covariates,
+  data <- final_models[model_index, "dfs"]
+  age_vars <- final_models[model_index, "age_var"]
+  outcomes <- final_models[model_index, "oc"]
+
+  merged_data <- combine_data(
+    data = data, ids = ids, age_vars = age_vars, outcomes = outcomes
+  )
+
+  cox_model <- create_combined_cox(
+    data = merged_data$data,
+    id = merged_data$id,
+    age = merged_data$age_var,
     age_death = age_death,
-    censor = censor
+    death_censor = censor,
+    outcomes = outcomes,
+    covariates = covariates
   )
 
   cox_model
