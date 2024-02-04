@@ -922,6 +922,8 @@ source("R/combined_class_cox.R")
 ```
 
 ```{r combined survival}
+# FIX: Left off here 02/03/2024 (workspace is loaded up until this point)
+
 # get model_names that are not train_test
 train_test_index <- (final_models$data_mod == "train_test")
 train_test_names <- final_models[train_test_index, "model_name"]
@@ -931,9 +933,9 @@ model_name_list <- list(rest_names, train_test_names)
 
 combined_cox_models <- lapply(
   model_name_list,
-  cox_combine_class,
+  cox_combine,
   final_model_object = final_models,
-  covariates = config$covariates,
+  covariates = config$survival_dataset$covariates,
   age_death = config$survival_dataset$age_death,
   censor = config$survival_dataset$event
 )
