@@ -69,7 +69,7 @@ surv_cox <- function(data, covariates, time, time2 = NULL, death, tt = NULL, typ
 }
 
 
-combine_data <- function(data, ids, age_vars, outcomes) {
+combine_data <- function(data, ids, age_vars, outcomes, census, census_id) {
   data <- mapply(
     function(data, outcome, age_var, id) {
       data <- data[, c(outcome, age_var, id)]
@@ -88,7 +88,7 @@ combine_data <- function(data, ids, age_vars, outcomes) {
   }, data)
 
   merged_data$data <- merge(
-    x = merged_data$data, y = merged_census,
+    x = merged_data$data, y = census,
     by.x = merged_data$id, by.y = census_id
   )
 
@@ -140,16 +140,16 @@ combine_census <- function(censuses, ids) {
 
   census <- censuses[[1]]
 
-  census
+  list(census = census, id = merged_census_id)
 }
 
 create_combined_cox <- function(data,
-                         id,
-                         age,
-                         age_death,
-                         death_censor,
-                         outcomes,
-                         covariates) {
+                                id,
+                                age,
+                                age_death,
+                                death_censor,
+                                outcomes,
+                                covariates) {
   tmerged_data <- surv_tmerge(
     data = data,
     id = id,
@@ -185,10 +185,10 @@ create_combined_cox <- function(data,
 }
 
 cox_combine <- function(model_name_vector,
-                              final_model_object,
-                              covariates,
-                              age_death,
-                              censor) {
+                        final_model_object,
+                        covariates,
+                        age_death,
+                        censor) {
   # rename inputs
   final_models <- final_model_object
 
@@ -197,8 +197,10 @@ cox_combine <- function(model_name_vector,
   ids <- final_models[model_index, "subject"]
 
   merged_census <- combine_census(censuses = censuses, ids = ids)
+  census_id <- merged_census$id
+  census <- merged_census$census
 
-  if (nrow(merged_census) == 0) {
+  if (nrow(census) == 0) {
     warning("There are no observations that intersect the censuses of interest")
     warning("cox_combine_class will output an NA value")
     return(NA)
@@ -209,7 +211,8 @@ cox_combine <- function(model_name_vector,
   outcomes <- final_models[model_index, "oc"]
 
   merged_data <- combine_data(
-    data = data, ids = ids, age_vars = age_vars, outcomes = outcomes
+    data = data, ids = ids, age_vars = age_vars, outcomes = outcomes,
+    census = census, census_id = census_id
   )
 
   cox_model <- create_combined_cox(
