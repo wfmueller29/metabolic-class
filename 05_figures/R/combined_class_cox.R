@@ -95,6 +95,35 @@ combine_data <- function(data, ids, age_vars, outcomes, census, census_id) {
   merged_data
 }
 
+tmerge_prediction_data <- function(data, id, age, age_death, outcomes) {
+  print(nrow(data))
+  if (nrow(data) == 0) {
+    warning("Cannot perform surv_tmerge, 0 nrows in data")
+    return(data)
+  }
+
+  tmerged_data <- surv_tmerge(
+    data = data,
+    id = id,
+    age = age,
+    age_death = age_death,
+    outcomes = outcomes
+  )
+
+  prob_cols <- names(tmerged_data)[grepl("^prob", names(tmerged_data))]
+  prob_cols_drop <- sapply(prob_cols, function(name) {
+    all(tmerged_data[[name]] == 1)
+  })
+  prob_cols <- prob_cols[!prob_cols_drop]
+
+  tmerged_data[, prob_cols] <- lapply(tmerged_data[, prob_cols],
+    log,
+    base = 1.1
+  )
+
+  tmerged_data
+}
+
 combine_census <- function(censuses, ids) {
   # Select probability of class membership and id's
   censuses_bare <- mapply(function(census, id) {
@@ -168,20 +197,26 @@ create_combined_cox <- function(data,
     log,
     base = 1.1
   )
-  form <- as.formula(paste0(
-    "~ ", paste(outcomes, collapse = "+"), "+",
-    paste(prob_cols, collapse = "+"), "+", covariates
-  ))
 
-  cox_output <- surv_cox(
+  form1 <- paste0("~", paste(outcomes, collapse = "+"))
+  form2 <- paste0("~", paste(prob_cols, collapse = "+"))
+  form3 <- paste0(form1, "+", paste(prob_cols, collapse = "+"))
+
+  form1 <- paste0(form1)
+
+  forms <- list(form1, form2, form3)
+  forms <- lapply(forms, paste, paste0("+", covariates), collapse = "+")
+  forms <- lapply(forms, as.formula)
+
+
+  cox_outputs <- mapply(surv_cox, covariates = forms, MoreArgs = list(
     data = tmerged_data,
-    covariates = form,
     time = "tstart",
     time2 = "tstop",
     death = death_censor
-  )
+  ))
 
-  cox_output
+  cox_outputs
 }
 
 cox_combine <- function(model_name_vector,
