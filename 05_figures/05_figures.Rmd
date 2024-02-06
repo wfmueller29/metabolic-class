@@ -79,7 +79,7 @@ make_census <- function(cf_row, dataset) {
 
   # add class_df to main
   census <- data[!duplicated(data[[id]]), ]
-  census_cols <- dataset[c("id", "covariates", "factor")]
+  census_cols <- dataset[c("id", "covariates", "factor", "covariates_dummy")]
   census_cols <- unlist(census_cols, use.names = FALSE)
   census <- census[, census_cols]
   census <- merge(x = census, y = class_df, by = id)
@@ -924,6 +924,10 @@ source("R/combined_class_cox.R")
 ```{r combined survival}
 # FIX: Left off here 02/03/2024 (workspace is loaded up until this point)
 
+# TODO: Make it so that age_var, id, covariates, ect. are shared amongst all
+# datasets, because the covariates in the survival dataset will at least need
+# to be the same
+
 # get model_names that are not train_test
 train_test_index <- (final_models$data_mod == "train_test")
 train_test_names <- final_models[train_test_index, "model_name"]
@@ -1153,7 +1157,7 @@ make_test_census <- function(cf_row, dataset) {
 
   # create census from data
   census <- data[!duplicated(data[[id]]), ]
-  census_cols <- dataset[c("id", "covariates", "factor")]
+  census_cols <- dataset[c("id", "covariates", "factor", "covariates_dummy")]
   census_cols <- unlist(census_cols, use.names = FALSE)
 
   census <- census[, census_cols]
@@ -1203,6 +1207,110 @@ merged_prediction_names <- paste0(prediction_names, "_merged")
 for (filtered_df_name in merged_prediction_names) {
   final_models <- merge_test_census_column(
     final_models = final_models,
+    filtered_df_name = filtered_df_name
+  )
+}
+```
+
+```{r add prediction data to census}
+invert_list <- function(list) {
+  list_matrix <- do.call(rbind, list)
+  output <- apply(list_matrix, 2, as.list)
+  output
+}
+
+tmerge_prediction_data <- function(data, id, age, age_death, outcomes) {
+  print(nrow(data))
+  if (nrow(data) == 0 ) {
+    warning("Cannot perform surv_tmerge, 0 nrows in data")
+    return(data)
+  }
+
+  tmerged_data <- surv_tmerge(
+    data = data,
+    id = id,
+    age = age,
+    age_death = age_death,
+    outcomes = outcomes
+  )
+
+  prob_cols <- names(tmerged_data)[grepl("^prob", names(tmerged_data))]
+  prob_cols_drop <- sapply(prob_cols, function(name) {
+    all(tmerged_data[[name]] == 1)
+  })
+  prob_cols <- prob_cols[!prob_cols_drop]
+
+  tmerged_data[, prob_cols] <- lapply(tmerged_data[, prob_cols],
+    log,
+    base = 1.1
+  )
+
+  tmerged_data
+}
+
+add_prediction_data <- function(final_models, datasets, filtered_df_name) {
+  test_index <- final_models$data_mod == "train_test"
+  final_models_test <- final_models[test_index, ]
+
+  age_vars <- final_models_test[, "age_var"]
+  outcomes <- final_models_test[, "oc"]
+  ids <- final_models_test[, "subject"]
+
+  censuses_name <- paste0(filtered_df_name, "_merged")
+  censuses_lol <- final_models_test[, censuses_name]
+
+  filter <- gsub("_test", "_data", filtered_df_name)
+  datasets_index <- final_models_test[, "dataset_index"]
+  desired_data <- lapply(datasets_index, function(i) {
+    datasets[[i]][["prediction_test_data"]][[1]][[filter]]
+  })
+
+
+  desired_data <- invert_list(desired_data)
+  censuses_lol <- invert_list(censuses_lol)
+  censuses_lol <- lapply(censuses_lol, `[[`, 1)
+
+
+  combined_data_lol <- mapply(
+    combine_data,
+    data = desired_data,
+    census = censuses_lol,
+    MoreArgs = list(
+      ids = ids,
+      age_vars = age_vars,
+      outcomes = outcomes,
+      census_id = ids[[1]]
+    ),
+    SIMPLIFY = FALSE
+  )
+
+
+  data_lol <- lapply(combined_data_lol, `[[`, "data")
+  id_lol <- lapply(combined_data_lol, `[[`, "id")
+  age_var_lol <- lapply(combined_data_lol, `[[`, "age_var")
+
+  tmerged_data <- mapply(tmerge_prediction_data,
+    data = data_lol,
+    id = id_lol,
+    age = age_var_lol,
+    MoreArgs = list(
+      age_death = config$survival_dataset$age_death,
+      outcomes = outcomes
+    )
+  )
+
+  output_name <- paste0(filtered_df_name, "_tmerged")
+  column <- rep(list(NA), nrow(final_models))
+  column[test_index] <- rep(list(tmerged_data), times = nrow(final_models_test))
+  final_models[[output_name]] <- column
+
+  final_models
+}
+
+for (filtered_df_name in prediction_names) {
+  final_models <- add_prediction_data(
+    final_models = final_models,
+    datasets = datasets,
     filtered_df_name = filtered_df_name
   )
 }
