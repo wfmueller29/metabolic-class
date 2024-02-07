@@ -922,8 +922,6 @@ source("R/combined_class_cox.R")
 ```
 
 ```{r combined survival}
-# FIX: Left off here 02/03/2024 (workspace is loaded up until this point)
-
 # TODO: Make it so that age_var, id, covariates, ect. are shared amongst all
 # datasets, because the covariates in the survival dataset will at least need
 # to be the same
@@ -1221,7 +1219,7 @@ invert_list <- function(list) {
 
 tmerge_prediction_data <- function(data, id, age, age_death, outcomes) {
   print(nrow(data))
-  if (nrow(data) == 0 ) {
+  if (nrow(data) == 0) {
     warning("Cannot perform surv_tmerge, 0 nrows in data")
     return(data)
   }
@@ -1296,7 +1294,8 @@ add_prediction_data <- function(final_models, datasets, filtered_df_name) {
     MoreArgs = list(
       age_death = config$survival_dataset$age_death,
       outcomes = outcomes
-    )
+    ),
+    SIMPLIFY = FALSE
   )
 
   output_name <- paste0(filtered_df_name, "_tmerged")
@@ -1328,6 +1327,7 @@ predict_cox <- function(test_data,
     warning("test_data has 0 obs, cannot predict; returning itself")
     return(test_data)
   }
+
   for (t in type) {
     name <- paste0(t, suffix)
     test_data[[name]] <- predict(model, test_data, type = t)
@@ -1336,71 +1336,76 @@ predict_cox <- function(test_data,
   test_data
 }
 
-predict_cox_apply <- function(test_data, model_list, type = c("lp", "risk")) {
-  for (i in seq_len(length(model_list))) {
-    test_data <- predict_cox(
-      test_data = test_data,
-      model = model_list[[i]],
-      type = type,
-      suffix = i
-    )
-  }
-
-  test_data
-}
-
-predict_cox_apply2 <- function(test_data_list,
-                               model_list,
-                               type = c("lp", "risk")) {
-  if (is.list(test_data_list)) {
-    test_data_list <- lapply(
-      X = test_data_list,
-      FUN = predict_cox_apply,
-      model_list = model_list,
-      type = type
-    )
-  } else {
-    test_data_list <- NA
-    warning("test_data_list is not a list, returning NA")
-  }
-
-  test_data_list
-}
-
 predict_cox_final_model <- function(final_models,
-                                    filtered_df_name,
+                                    prediction_name,
                                     type = c("lp", "risk")) {
-  test_data_lol <- final_models[, filtered_df_name]
-  model_lol <- final_models[, "cox_combined_models"]
-  data_mods <- final_models[, "data_mod"]
+  train_test_index <- final_models[, "data_mod"] == "train_test"
+  tmerged_df_name <- paste0(prediction_name, "_tmerged")
+  test_data_lol <- final_models[train_test_index, tmerged_df_name]
+  model_lol <- final_models[train_test_index, "cox_combined_models"]
 
-  test_data_lol <- lapply(seq_len(nrow(final_models)), function(row_no) {
-    print(row_no)
-    data_mod <- data_mods[[row_no]]
-    if (data_mod == "train_test") {
-      test_data_list <- predict_cox_apply2(
-        test_data_list = test_data_lol[[row_no]],
-        model_list = model_lol[[row_no]],
-        type = type
-      )
-    } else {
-      test_data_list <- test_data_lol[[row_no]]
-    }
+  equal_across_rows <- function(objects) {
+    equal <- lapply(objects, function(x) all.equal(x, objects[[1]]))
+    equal <- do.call(all.equal, equal)
+    equal
+  }
 
-    test_data_list
+  # test data and models for all outcomes should be equal; they were combined
+  test_data_equal <- equal_across_rows(test_data_lol)
+  model_equal <- equal_across_rows(model_lol)
+
+  if (!(isTRUE(test_data_equal) && isTRUE(model_equal))) {
+    stop("test_data and/or models are not equal")
+  }
+
+  test_data_lol <- test_data_lol[[1]]
+  model_lol <- model_lol[[1]]
+  names(model_lol) <- seq_along(model_lol)
+
+  grid <- expand.grid(
+    test_data = test_data_lol,
+    model = model_lol,
+    stringsAsFactors = FALSE
+  )
+
+  prediction_data <- do.call(
+    mapply,
+    c(list(FUN = predict_cox, SIMPLIFY = FALSE), grid)
+  )
+
+  unique_model <- length(unique(names(grid$model)))
+  unique_test_data <- length(unique(names(grid$test_data)))
+
+  prediction_data <- matrix(prediction_data,
+    nrow = unique_test_data,
+    ncol = unique_model
+  )
+
+  prediction_data <- apply(prediction_data, MARGIN = 1, c)
+  prediction_data <- lapply(prediction_data, function(data) {
+    names(data) <- paste0("model_", names(model_lol))
+    data
   })
+  names(prediction_data) <- names(test_data_lol)
 
-  final_models[[filtered_df_name]] <- test_data_lol
+  column <- rep(list(NA), times = length(train_test_index))
+  column[train_test_index] <- rep(list(prediction_data),
+    times = length(train_test_index[train_test_index])
+  )
+
+  column_name <- paste0(tmerged_df_name, "_prediction")
+  final_models[[column_name]] <- column
   final_models
 }
 
 final_models_test <- final_models[final_models$data_mod == "train_test", ]
 
-for (filtered_df_name in merged_prediction_names) {
-  print(filtered_df_name)
+prediction_name <- "filter_interval_test"
+for (prediction_name in prediction_names) {
+  print(prediction_name)
   final_models <- predict_cox_final_model(
     final_models = final_models,
-    filtered_df_name = filtered_df_name,
+    prediction_name = prediction_name,
     type = c("lp", "risk")
   )
 }
