@@ -1708,17 +1708,3 @@ output_list <- list(
 output_list_path <- paste0(file.path("output", config$out_tag), ".yaml")
 yaml::write_yaml(x = output_list, file = output_list_path)
 ```
-
-
-
-```{r save R objects}
-setwd(file.path("output", params$model_dir))
-dir.create("data")
-setwd("data")
-
-save(cf, file = "cf.RDATA")
-save(final_models, file = "final_models.RDATA")
-save(config, file = "config.RDATA")
-save(df_list, file = "df_list.RDATA")
-save(dfs_prediction, file = "dfs_prediction.RDATA")
-```

@@ -1,9 +1,0 @@
-- model_names:
-  - slam_bw_og|bw_age_wk
-  - slam_gluc_og|gluc_age_wk
-- model_names:
-  - slam_bw_og|bw_per_age_wk
-  - slam_gluc_og|gluc_per_age_wk
-- model_names:
-  - slam_bw_train_test|bw_age_wk
-  - slam_gluc_train_test|gluc_age_wk
