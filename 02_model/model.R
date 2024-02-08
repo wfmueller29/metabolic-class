@@ -125,7 +125,11 @@ if (!is.null(config$plan)) {
     cl <- future::makeClusterPSOCK(ncpus)
     future::plan(cluster, workers = cl)
   } else {
-    future::plan(config$plan)
+    if (is.null(config$ncpus)) {
+      future::plan(config$plan)
+    } else {
+      future::plan(config$plan, workers = config$ncpus)
+    }
   }
 } else {
   future::plan("default")
