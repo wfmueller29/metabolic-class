@@ -325,7 +325,7 @@ lapply(final_models$traj_obs, print)
 
 ### Create Plots for Other Metabolic Outcomes by Class
 
-```{r source other plot, file = 'R/plot_other.R'}
+```{r source other plot, file = 'R/plot_combined.R'}
 source("R/plot_combined.R")
 ```
 
@@ -349,7 +349,7 @@ for (model_name in final_models$model_name) {
 - Model2 (Sex and Strain additive controlled) : $outcome = (Age + Age^2) * Class + Sex * Strain + (Age + Age^2 | Subject)$
 - Model3 (Sex and Strain interacted controlled): $outcome = (Age + Age^2) * Class + (Age + Age^2) * Sex * Strain + (Age + Age^2 | Subject)$
 
-```{r source mixed effects, file = 'R/model_other.R'}
+```{r source mixed effects, file = 'R/model_combined.R'}
 source("R/model_combined.R")
 ```
 
@@ -958,11 +958,11 @@ for (name in names(combined_cox_models)) {
 
 #### Predict Class Assignement for Test Dataframe
 
-```{r source create prediction results, file = 'R/pred_class.R'}
+```{r source create test prediction results, file = 'R/pred_class.R'}
 source("R/pred_class.R")
 ```
 
-```{r create prediction results}
+```{r create test prediction results}
 # Get the names of the filtered data
 prediction_data_names <- lapply(datasets, function(dataset) {
   names(dataset$prediction_test_data$data)
@@ -1009,9 +1009,9 @@ prediction_results <- lapply(prediction_columns, function(col) {
 final_models[, prediction_results_names] <- prediction_results
 ```
 
-#### Create new class numbering
+#### Create new test class numbering
 
-```{r class numbering}
+```{r test class numbering}
 increment_class <- function(filtered_df, i = 0) {
   filtered_df$new_class <- as.character(filtered_df$class + i)
 
@@ -1402,7 +1402,6 @@ for (prediction_name in prediction_names) {
 #### Determine Calibration by Regressing PI on Test outcomes
 
 ```{r create new dataframes from the predictions}
-# FIX: This is where I left off 02/07/2024
 get_slope_concord <- function(test_data, age_death, censor) {
   surv_obj <- survival::Surv(
     time = test_data[[age_death]], event = test_data[[censor]]
@@ -1649,25 +1648,6 @@ for (prediction_name in head(prediction_names, -1)) {
 }
 ```
 
-### Output CSV with idno's and class
-
-```{r idnos and class}
-# we want to output class, idno, tag to a csv so that collaborators can easily
-# work with the data
-
-setwd(file.path("output", params$model_dir))
-dir.create("csv")
-setwd("csv")
-
-for (model in seq_len(nrow(final_models))) {
-  census <- final_models$census[[model]]
-  model_name <- final_models$model_name[[model]]
-  census <- census[, c("class", "idno", "tag", "sex", "strain", "cohort.y")]
-  file_name <- paste0(model_name, ".csv")
-  write.csv(census, file = file_name)
-}
-```
-
 ### Save R Objects
 
 #### Prune Final Models Before Saving 
@@ -1687,10 +1667,49 @@ drop_patterns <- c(
 
 drop_columns <- do.call(c, lapply(drop_patterns, grep, names(final_models)))
 
-final_models_pruned <- final_models[, !drop_columns]
+final_models_pruned <- final_models[, -drop_columns]
+
+dif_size <- object.size(final_models) - object.size(final_models_pruned)
+percent_drop <- as.numeric(dif_size / object.size(final_models)) * 100
+
+cat("Percent memory pruned: ", percent_drop, "\n", sep = "")
+
+final_models <- final_models_pruned
+rm(final_models_pruned)
 ```
 
 #### Save 
+
+```{r save final models}
+config_path <- input$config_path
+config <- yaml::read_yaml(file = config_path)
+
+output_path <- normalizePath(file.path("output", config$out_tag))
+dir.create(output_path)
+
+final_models_path <- file.path(output_path, "final_models.RDATA")
+
+save(final_models, file = final_models_path)
+
+# create output file ----------------------------------------------------------
+output_list <- list(
+  data_time = format(Sys.time()),
+  working_directory = getwd(),
+  config_path = config_path,
+  input_path = params$input_path,
+  output_dir_path = output_path,
+  datasets_path = input$datasets_path,
+  models_path = input$models_path,
+  cf_path = input$cf_path,
+  final_models_path = final_models_path,
+  csv_path = input$csv_path
+)
+
+output_list_path <- paste0(file.path("output", config$out_tag), ".yaml")
+yaml::write_yaml(x = output_list, file = output_list_path)
+```
+
+
 
 ```{r save R objects}
 setwd(file.path("output", params$model_dir))
