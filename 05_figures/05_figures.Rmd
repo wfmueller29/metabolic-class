@@ -1673,33 +1673,21 @@ for (model in seq_len(nrow(final_models))) {
 #### Prune Final Models Before Saving 
 
 ```{r prune}
-final_models <- final_models %>%
-  select(
-    -c(
-      interval_accuracy_plots,
-      threshold_accuracy_plots,
-      sample_accuracy_plots
-    ),
-    -c(
-      ends_with("results_table"),
-      ends_with("accuracy")
-    ),
-    -c(final_model)
-  )
+drop_patterns <- c(
+  "_tmerge",
+  "_test_merged",
+  "_test_results",
+  "_accuracy_df",
+  "_accuracy$",
+  "_table$",
+  "_data$",
+  "_df$",
+  "_results$"
+)
 
-final_models <- final_models %>%
-  select(-c(
-    ends_with("_df"),
-    ends_with("_results")
-  ))
+drop_columns <- do.call(c, lapply(drop_patterns, grep, names(final_models)))
 
-final_models <- final_models %>%
-  select(-interval, -subset, -threshold, -sample)
-
-final_models <- final_models %>%
-  filter(model_name == "bw_main|bw_age_wk" |
-    model_name == "fat_main|fat_age_wk" |
-    model_name == "gluc_main|gluc_age_wk")
+final_models_pruned <- final_models[, !drop_columns]
 ```
 
 #### Save 
