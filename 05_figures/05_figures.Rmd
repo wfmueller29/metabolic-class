@@ -1371,8 +1371,8 @@ predict_cox_final_model <- function(final_models,
                                     type = c("lp", "risk")) {
   train_test_index <- final_models[, "data_mod"] == "train_test"
   tmerged_df_name <- paste0(prediction_name, "_tmerged")
-  test_data_lol <- final_models[train_test_index, tmerged_df_name]
-  model_lol <- final_models[train_test_index, "cox_combined_models"]
+  test_data_lol <- final_models[, tmerged_df_name]
+  model_lol <- final_models[, "cox_combined_models"]
 
   test_data_lol <- lapply(seq_along(test_data_lol), function(row_no) {
     print(row_no)
@@ -1384,12 +1384,12 @@ predict_cox_final_model <- function(final_models,
     test_data_list
   })
 
-  final_models[[filtered_df_name]] <- test_data_lol
+  output_name <- paste0(prediction_name, "_tmerged_prediction")
+  final_models[[output_name]] <- test_data_lol
   final_models
 }
 
-prediction_name <- "filter_cumulative_test"
-for (filtered_df_name in prediction_names) {
+for (prediction_name in prediction_names) {
   print(filtered_df_name)
   final_models <- predict_cox_final_model(
     final_models = final_models,
@@ -1399,10 +1399,10 @@ for (filtered_df_name in prediction_names) {
 }
 ```
 
-
 #### Determine Calibration by Regressing PI on Test outcomes
 
 ```{r create new dataframes from the predictions}
+# FIX: This is where I left off 02/07/2024
 get_slope_concord <- function(test_data, age_death, censor) {
   surv_obj <- survival::Surv(
     time = test_data[[age_death]], event = test_data[[censor]]
@@ -1459,10 +1459,12 @@ get_slope_concord_apply <- function(test_data_list, age_death, censor) {
 }
 
 get_slope_concord_final_models <- function(final_models,
-                                           filtered_df_name,
+                                           prediction_name,
                                            age_death,
                                            censor) {
-  column <- final_models[, filtered_df_name]
+
+  column_name <- paste0(prediction_name, "_tmerged_prediction")
+  column <- final_models[, column_name]
   train_test_index <- final_models$data_mod == "train_test"
   column[train_test_index] <- lapply(column[train_test_index],
     get_slope_concord_apply,
@@ -1470,21 +1472,18 @@ get_slope_concord_final_models <- function(final_models,
   )
   column[!train_test_index] <- NA
 
-  new_column_name <- gsub("_merged$", "", filtered_df_name)
-  new_column_name <- paste0(new_column_name, "_summary")
+  new_column_name <- paste0(prediction_name, "_tmerged_summary")
 
   final_models[[new_column_name]] <- column
 
   final_models
 }
 
-filtered_df_name <- merged_prediction_names[[1]]
-
-for (filtered_df_name in merged_prediction_names) {
-  print(filtered_df_name)
+for (prediction_name in prediction_names) {
+  print(prediction_name)
   final_models <- get_slope_concord_final_models(
     final_models = final_models,
-    filtered_df_name = filtered_df_name,
+    prediction_name = prediction_name,
     age_death = config$survival_dataset$age_death,
     censor = config$survival_dataset$event
   )
