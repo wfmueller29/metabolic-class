@@ -2,7 +2,7 @@ out_tag: all
 tag_time: FALSE
 plan: multicore
 ncpus: 6
-sample_n: 100
+sample_n: 200
 center: TRUE
 scale: FALSE
 survival_dataset:
@@ -31,9 +31,11 @@ datasets:
     mixture: "~ age_wk + age_wk2" 
     random: 
       - "~ 1"
+      - "~ age_wk"
+      - "~ age_wk + age_wk2"
     idiag: FALSE
     nwg: FALSE
-    ng_max: 3
+    ng_max: 5
   prediction_data:
     filter_interval:
       intervals:
@@ -85,9 +87,11 @@ datasets:
     mixture: "~ age_wk + age_wk2" 
     random: 
       - "~ 1"
+      - "~ age_wk"
+      - "~ age_wk + age_wk2"
     idiag: FALSE
     nwg: FALSE
-    ng_max: 3
+    ng_max: 5
   prediction_data:
     filter_interval:
       intervals:
@@ -140,9 +144,11 @@ datasets:
     mixture: "~ age_wk + age_wk2" 
     random: 
       - "~ 1"
+      - "~ age_wk"
+      - "~ age_wk + age_wk2"
     idiag: FALSE
     nwg: FALSE
-    ng_max: 3
+    ng_max: 5
   prediction_data:
     filter_interval:
       intervals:
