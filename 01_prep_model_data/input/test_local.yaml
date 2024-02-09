@@ -1,7 +1,8 @@
 out_tag: test_local
 tag_time: FALSE
-plan: 
-sample_n: 30
+plan: multisession 
+sample_n: 100
+ncpus: 2
 center: TRUE
 scale: FALSE
 survival_dataset:
