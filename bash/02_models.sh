@@ -4,7 +4,7 @@
 module load R/4.1 || echo WARNING: Could not load R module, continuing anyway
 
 # change dir
-cd 03_model/
+cd 02_model/
 
 if [ -z "$1" ]
     then
@@ -18,7 +18,7 @@ echo Target Output Directory: $OUT_TAG
 if [ -z $OUT_TAG ]
     then 
         echo WARNING: No output directory provided
-        Rscript R/model.R
+        Rscript model.R
     else 
-        Rscript R/model.R $OUT_TAG 
+        Rscript model.R $OUT_TAG 
 fi
