@@ -8,11 +8,16 @@ if (length(args) == 0) {
 }
 
 args[[1]] <- normalizePath(args[[1]])
+cat("This is our input file:", args[[1]], "\n")
+
+# 01 -------------------------------------------------------------------------
 
 setwd("01_prep_model_data")
 config <- yaml::read_yaml(args[[1]])
 system2("Rscript", args = c("01_prep_model_data.R", args[[1]]))
 setwd("..")
+
+# 02 -------------------------------------------------------------------------
 
 input_02 <- normalizePath(
   paste0(file.path("01_prep_model_data/output", config$out_tag), ".yaml")
@@ -20,4 +25,17 @@ input_02 <- normalizePath(
 
 setwd("02_model")
 system2("Rscript", args = c("model.R", input_02))
+setwd("..")
+
+# 03 -------------------------------------------------------------------------
+
+input_03 <- normalizePath(
+  paste0(file.path("02_model/output", config$out_tag), ".yaml")
+)
+
+setwd("03_model_select")
+output_dir <- normalizePath(file.path("output", config$out_tag))
+rmarkdown::render("03_model_select.Rmd",
+  output_dir = output_dir, params = list(input_path = input_03)
+)
 setwd("..")
