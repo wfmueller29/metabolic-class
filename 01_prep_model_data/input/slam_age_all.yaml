@@ -1,8 +1,8 @@
 out_tag: all
 tag_time: FALSE
 plan: multicore
-ncpus: 6
-sample_n: 200
+ncpus: 8
+sample_n: FALSE
 center: TRUE
 scale: FALSE
 survival_dataset:
