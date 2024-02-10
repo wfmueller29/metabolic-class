@@ -67,7 +67,7 @@ plot_boot_accuracy_window <- function(accuracy_window_df,
       ggplot2::geom_errorbar(
         ggplot2::aes(x = average, ymin = lower_ci, ymax = upper_ci),
         stat = "identity",
-        width = 0.4
+        width = 4
       ) +
       ggplot2::labs(
         y = ylab,
@@ -132,7 +132,7 @@ plot_boot_accuracy_sample <- function(accuracy_sample_df,
       ggplot2::geom_errorbar(
         ggplot2::aes(x = sample_per_id, ymin = lower_ci, ymax = upper_ci),
         stat = "identity",
-        width = .2
+        width = .05
       ) +
       ggplot2::labs(
         y = ylab,
