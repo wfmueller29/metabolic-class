@@ -54,7 +54,7 @@ filter_cumulative <- function(data_list, age_var, start_vector, end, step) {
 .filter_cumulative_across_dataset <- function(dataset, test_data) {
   if (isFALSE(test_data)) {
     data <- dataset$data
-    age_var <- dataset$prediction_data$filter_cumulative$age_var
+    age_var <- paste0(dataset$prediction_data$filter_cumulative$age_var, "_ns")
     start_vector <- dataset$prediction_data$filter_cumulative$start_vector
     end <- dataset$prediction_data$filter_cumulative$end
     step <- dataset$prediction_data$filter_cumulative$step
@@ -72,7 +72,10 @@ filter_cumulative <- function(data_list, age_var, start_vector, end, step) {
     if (is.null(data)) {
       dataset$prediction_test_data$data$filter_cumulative_data <- NA
     } else {
-      age_var <- dataset$prediction_data$filter_cumulative$age_var
+      age_var <- paste0(
+        dataset$prediction_data$filter_cumulative$age_var,
+        "_ns"
+      )
       start_vector <- dataset$prediction_data$filter_cumulative$start_vector
       end <- dataset$prediction_data$filter_cumulative$end
       step <- dataset$prediction_data$filter_cumulative$step

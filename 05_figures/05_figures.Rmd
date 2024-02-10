@@ -847,6 +847,8 @@ source("R/plot_boot_accuracy.R")
 ```
 
 ```{r plot accuracy with bootstrapped confidence intervals}
+# TODO: We have to remove the window size vector and start vector
+# FIX: This is where I left off 02/09/2024
 final_models$interval_boot_accuracy_plot <- lapply(
   seq_len(nrow(final_models)),
   function(i) {

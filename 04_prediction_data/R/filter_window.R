@@ -75,7 +75,7 @@ filter_window <- function(data_list,
 .filter_window_across_dataset <- function(dataset, test_data) {
   if (isFALSE(test_data)) {
     data <- dataset$data
-    age_var <- dataset$prediction_data$filter_window$age_var
+    age_var <- paste0(dataset$prediction_data$filter_window$age_var, "_ns")
     end <- dataset$prediction_data$filter_window$end
     start <- dataset$prediction_data$filter_window$start
     window_size_vector <- dataset$prediction_data$filter_window$window_size_vector
@@ -94,7 +94,7 @@ filter_window <- function(data_list,
     if (is.null(data)) {
       dataset$prediction_test_data$data$filter_window_data <- NA
     } else {
-      age_var <- dataset$prediction_data$filter_window$age_var
+      age_var <- paste0(dataset$prediction_data$filter_window$age_var, "_ns")
       end <- dataset$prediction_data$filter_window$end
       start <- dataset$prediction_data$filter_window$start
       window_size_vector <- dataset$prediction_data$filter_window$window_size_vector
