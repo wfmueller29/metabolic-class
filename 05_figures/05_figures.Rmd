@@ -431,21 +431,17 @@ for (filter in names(filter_list)) {
   final_models[[filter]] <- filter_list[[filter]]
 }
 
-prediction_results_names <- paste(prediction_names, "results", sep = "_")
 
 prediction_results <- lapply(prediction_columns, function(col) {
   print(col)
   predict_class_model_list(
     nested_newdata_list = final_models[[col]],
     model_list = final_models$final_model,
-    vars_list = final_models$data_age_vars,
-    center = config$center,
-    scale = config$scale,
-    ref_data_list = final_models$dfs,
     names = final_models$model_name
   )
 })
 
+prediction_results_names <- paste(prediction_names, "results", sep = "_")
 final_models[, prediction_results_names] <- prediction_results
 ```
 
@@ -1000,10 +996,6 @@ prediction_results <- lapply(prediction_columns, function(col) {
   predict_class_model_list(
     nested_newdata_list = final_models[[col]],
     model_list = final_models$final_model,
-    vars_list = final_models$data_age_vars,
-    center = config$center,
-    scale = config$scale,
-    ref_data_list = final_models$dfs,
     names = final_models$model_name
   )
 })
@@ -1627,8 +1619,6 @@ for (prediction_name in head(prediction_names, -1)) {
     legend_title = "Model"
   )
 
-  lp_plots
-
   output_name <- paste0(prediction_name, "_lp_plot")
   column <- rep(list(NA), times = length(train_test_index))
   column[train_test_index] <- lp_plots
@@ -1645,13 +1635,22 @@ for (prediction_name in head(prediction_names, -1)) {
     legend_title = "Model"
   )
 
-  concord_plots
-
   output_name <- paste0(prediction_name, "_concord_plot")
   column <- rep(list(NA), times = length(train_test_index))
   column[train_test_index] <- concord_plots
   final_models[[output_name]] <- column
 }
+
+for(prediction_name in head(prediction_names, -1)) {
+
+  concord <- paste0(prediction_name, "_concord_plot")
+  lp <- paste0(prediction_name, "_lp_plot")
+
+  print(final_models[, lp])
+  print(final_models[, concord])
+}
+final_models$filter_cumulative_test_lp_plot
+final_models$filter_cumulative_test_concord_plot
 ```
 
 ### Save R Objects
