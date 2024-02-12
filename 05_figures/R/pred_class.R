@@ -5,18 +5,7 @@
 
 # Function that will predict given a single model and single data.frame
 predict_class <- function(newdata,
-                          model,
-                          vars,
-                          center,
-                          scale,
-                          ref_data = NULL) {
-  newdata <- helphlme::prep_hlme(
-    df = newdata,
-    vars = vars,
-    center = center,
-    scale = scale,
-    ref_data = ref_data
-  )
+                          model) {
   model$call[[1]] <- "hlme"
 
   prediction <- lcmm::predictClass(
@@ -29,12 +18,7 @@ predict_class <- function(newdata,
 
 # Function that will predict given a single model, but a list of prediction
 # data.frames
-predict_class_newdata_list <- function(newdata_list,
-                                       model,
-                                       vars,
-                                       center,
-                                       scale,
-                                       ref_data = NULL) {
+predict_class_newdata_list <- function(newdata_list, model) {
   if (!is.list(newdata_list)) {
     warning("newdata_list is not a list; returning NA")
     return(NA)
@@ -44,11 +28,7 @@ predict_class_newdata_list <- function(newdata_list,
     if (nrow(newdata) >= 2) {
       class_result <- predict_class(
         newdata = newdata,
-        model = model,
-        vars = vars,
-        center = center,
-        scale = scale,
-        ref_data = ref_data
+        model = model
       )
     } else {
       col_names <- names(model$pprob)
@@ -68,22 +48,12 @@ predict_class_newdata_list <- function(newdata_list,
   subset_predictions
 }
 
-predict_class_model_list <- function(nested_newdata_list,
-                                     model_list,
-                                     vars_list,
-                                     center,
-                                     scale,
-                                     ref_data_list,
-                                     names = NULL) {
+predict_class_model_list <- function(nested_newdata_list, model_list, names) {
   pred_result <- lapply(seq_along(model_list), function(i) {
     print(i)
     predict_class_newdata_list(
       newdata_list = nested_newdata_list[[i]],
-      model = model_list[[i]],
-      vars = vars_list[[i]],
-      center = center,
-      scale = scale,
-      ref_data = ref_data_list[[i]]
+      model = model_list[[i]]
     )
   })
 
