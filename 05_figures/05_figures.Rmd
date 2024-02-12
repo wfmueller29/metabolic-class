@@ -1627,6 +1627,8 @@ for (prediction_name in head(prediction_names, -1)) {
     legend_title = "Model"
   )
 
+  lp_plots
+
   output_name <- paste0(prediction_name, "_lp_plot")
   column <- rep(list(NA), times = length(train_test_index))
   column[train_test_index] <- lp_plots
@@ -1642,6 +1644,8 @@ for (prediction_name in head(prediction_names, -1)) {
     title = "",
     legend_title = "Model"
   )
+
+  concord_plots
 
   output_name <- paste0(prediction_name, "_concord_plot")
   column <- rep(list(NA), times = length(train_test_index))
