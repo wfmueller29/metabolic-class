@@ -206,6 +206,7 @@ create_combined_cox <- function(data,
 
   forms <- list(form1, form2, form3)
   forms <- lapply(forms, paste, paste0("+", covariates), collapse = "+")
+  forms <- lapply(forms, paste, age, sep = "+")
   forms <- lapply(forms, as.formula)
 
 
@@ -243,6 +244,7 @@ cox_combine <- function(model_name_vector,
 
   data <- final_models[model_index, "dfs"]
   age_vars <- final_models[model_index, "age_var"]
+  age_vars <- paste0(age_vars, "_ns")
   outcomes <- final_models[model_index, "oc"]
 
   merged_data <- combine_data(
