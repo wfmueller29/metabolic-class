@@ -60,7 +60,7 @@ plot_combined_across <- function(final_models, model_name) {
       t1 = final_models$t1_raw[[i]],
       outcome_df = outcome_df,
       outcome = outcome,
-      age = final_models$age_var[[i]],
+      age = paste0(final_models$age_var[[i]], "_ns"),
       census_id = final_models$subject[[i]],
       outcome_id = outcome_id,
       title = paste(
