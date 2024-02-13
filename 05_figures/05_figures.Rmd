@@ -41,6 +41,7 @@ mega_pal <- rep(palette(), 40)
 if (!exists("params")) {
   params <- list()
   params$input_path <- "../04_prediction_data/output/test_local.yaml"
+  # params$input_path <- "../04_prediction_data/output/all.yaml"
 }
 
 input <- yaml::read_yaml(file = params$input_path)
@@ -222,6 +223,8 @@ final_models$kap_plot <- lapply(seq_len(nrow(final_models)), function(i) {
 
   kap_plot
 })
+
+final_models$kap_plot
 ```
 
 ### Create Cox Models
