@@ -6,12 +6,7 @@ output:
   html_document:
     df_print: paged
 params:
-  sup: FALSE
-  all_dir: "20220618_104254_all"
-  mb6_dir: "20220617_045809_mb6"
-  fb6_dir: "20220617_072941_fb6"
-  mhet3_dir: "20220617_052502_mhet3"
-  fhet3_dir: "20220617_033852_fhet3"
+  input_path: "../05_figures/output/test_local.yaml"
 ---
 
 ```{r setup, warning=FALSE, message=FALSE, echo=FALSE}
@@ -35,6 +30,38 @@ knitr::opts_chunk$set(cache = FALSE)
 
 
 ## Analysis
+
+### Load Input File
+
+```{r read input yaml}
+# for the case when we are not running with RStudio
+if (!exists("params")) {
+  params <- list()
+  params$input_path <- "../04_prediction_data/output/test_local.yaml"
+}
+
+input <- yaml::read_yaml(file = params$input_path)
+```
+
+### Load Models
+
+```{r load models}
+load(input$cf_path)
+load(input$datasets_path)
+load(input$final_models_path)
+config <- yaml::read_yaml(input$config_path)
+
+
+# load in main_cat_surv
+main_cat_surv <- read.csv(file = config$survival_dataset$path)
+main_cat_surv <- as.data.frame(main_cat_surv)
+
+final_models$dfs <- lapply(final_models$data, function(name) {
+  datasets[[name]]$data
+})
+```
+
+
 
 ### Load Models
 

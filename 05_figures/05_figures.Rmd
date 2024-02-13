@@ -1577,7 +1577,8 @@ final_models$filter_window_test_tmerged_summary <- lapply(
 #### Create plots of concordances and regression on PI
 
 ```{r create concordance plots}
-plot_cumulative_concord_lp <- function(data, outcome, color, upper_bound, se,
+plot_cumulative_concord_lp <- function(data, outcome, color,
+                                       lower_bound, upper_bound, se,
                                        ylab, xlab, title, legend_title) {
   ggplot2::ggplot(
     data = data,
@@ -1602,10 +1603,12 @@ plot_cumulative_concord_lp <- function(data, outcome, color, upper_bound, se,
       x = xlab,
       title = title,
       color = legend_title
-    )
+    ) +
+    ggplot2::facet_wrap(c(lower_bound), ncol = 1)
 }
 
-plot_window_concord_lp <- function(data, outcome, color, midpoint, se,
+plot_window_concord_lp <- function(data, outcome, color,
+                                   window_size, midpoint, se,
                                    ylab, xlab, title, legend_title) {
   ggplot2::ggplot(
     data = data,
@@ -1630,7 +1633,8 @@ plot_window_concord_lp <- function(data, outcome, color, midpoint, se,
       x = xlab,
       title = title,
       color = legend_title
-    )
+    ) +
+    ggplot2::facet_wrap(~ c(window_size), ncol = 1)
 }
 
 prediction_name <- "filter_window_test"
@@ -1642,6 +1646,7 @@ data <- final_models[train_test_index, data_name]
 lp_plots <- lapply(data, plot_window_concord_lp,
   outcome = "coef",
   color = "model",
+  window_size = "window_size",
   midpoint = "midpoint",
   se = "se_coef",
   ylab = "Linear Predictor Coeffecient",
@@ -1658,6 +1663,7 @@ final_models[[output_name]] <- column
 concord_plots <- lapply(data, plot_window_concord_lp,
   outcome = "concord",
   color = "model",
+  window_size = "window_size",
   midpoint = "midpoint",
   se = "se_concord",
   ylab = "Concordance",
@@ -1682,6 +1688,7 @@ data <- final_models[train_test_index, data_name]
 lp_plots <- lapply(data, plot_cumulative_concord_lp,
   outcome = "coef",
   color = "model",
+  lower_bound = "lower_bound",
   upper_bound = "upper_bound",
   se = "se_coef",
   ylab = "Linear Predictor Coeffecient",
@@ -1698,6 +1705,7 @@ final_models[[output_name]] <- column
 concord_plots <- lapply(data, plot_cumulative_concord_lp,
   outcome = "concord",
   color = "model",
+  lower_bound = "lower_bound",
   upper_bound = "upper_bound",
   se = "se_concord",
   ylab = "Concordance",
