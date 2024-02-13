@@ -5,14 +5,15 @@
   while (upper_bound <= end) {
     keep <- (data[[age_var]] > lower_bound) & (data[[age_var]] < upper_bound)
     data_new <- data[keep, ]
-    if (nrow(data_new) > 0) {
-      new_name <- paste0("[", lower_bound, ", ", upper_bound, "]")
-      new_names <- c(names(sampled_data_list), new_name)
-      sampled_data_list <- c(sampled_data_list, list(data_new))
-      names(sampled_data_list) <- new_names
-    } else {
-      sampled_data_list <- sampled_data_list
-    }
+    # if (nrow(data_new) > 0) {
+    new_name <- paste0("[", lower_bound, ", ", upper_bound, "]")
+    new_names <- c(names(sampled_data_list), new_name)
+    sampled_data_list <- c(sampled_data_list, list(data_new))
+    names(sampled_data_list) <- new_names
+    # } else {
+    #   browser()
+    #   sampled_data_list <- sampled_data_list
+    # }
     upper_bound <- upper_bound + step
     lower_bound <- lower_bound
   }
@@ -68,7 +69,6 @@ filter_cumulative <- function(data_list, age_var, start_vector, end, step) {
       )
   } else if (isTRUE(test_data)) {
     data <- dataset$test_data
-    print(data)
     if (is.null(data)) {
       dataset$prediction_test_data$data$filter_cumulative_data <- NA
     } else {
