@@ -1245,6 +1245,7 @@ add_prediction_data <- function(final_models, datasets, filtered_df_name) {
   final_models_test <- final_models[test_index, ]
 
   age_vars <- final_models_test[, "age_var"]
+  age_vars <- paste0(age_vars, "_ns")
   outcomes <- final_models_test[, "oc"]
   ids <- final_models_test[, "subject"]
 
@@ -1573,6 +1574,34 @@ final_models$filter_window_test_tmerged_summary <- lapply(
 #### Create plots of concordances and regression on PI
 
 ```{r create concordance plots}
+plot_cumulative_concord_lp <- function(data, outcome, color, upper_bound, se,
+                                       ylab, xlab, title, legend_title) {
+  ggplot2::ggplot(
+    data = data,
+    mapping = ggplot2::aes(
+      x = as.numeric(.data[[upper_bound]]),
+      y = as.numeric(.data[[outcome]]),
+      color = factor(.data[[color]])
+    )
+  ) +
+    ggplot2::geom_line(stat = "identity") +
+    ggplot2::geom_errorbar(
+      ggplot2::aes(
+        x = .data[[upper_bound]],
+        ymin = .data[[outcome]] - 1.96 * .data[[se]],
+        ymax = .data[[outcome]] + 1.96 * .data[[se]]
+      ),
+      stat = "identity",
+      width = 0.8
+    ) +
+    ggplot2::labs(
+      y = ylab,
+      x = xlab,
+      title = title,
+      color = legend_title
+    )
+}
+
 plot_window_concord_lp <- function(data, outcome, color, midpoint, se,
                                    ylab, xlab, title, legend_title) {
   ggplot2::ggplot(
@@ -1601,48 +1630,85 @@ plot_window_concord_lp <- function(data, outcome, color, midpoint, se,
     )
 }
 
+prediction_name <- "filter_window_test"
+data_name <- paste0(prediction_name, "_tmerged_summary")
+train_test_index <- final_models$data_mod == "train_test"
+
+data <- final_models[train_test_index, data_name]
+
+lp_plots <- lapply(data, plot_window_concord_lp,
+  outcome = "coef",
+  color = "model",
+  midpoint = "midpoint",
+  se = "se_coef",
+  ylab = "Linear Predictor Coeffecient",
+  xlab = "Age (weeks)",
+  title = "",
+  legend_title = "Model"
+)
+
+output_name <- paste0(prediction_name, "_lp_plot")
+column <- rep(list(NA), times = length(train_test_index))
+column[train_test_index] <- lp_plots
+final_models[[output_name]] <- column
+
+concord_plots <- lapply(data, plot_window_concord_lp,
+  outcome = "concord",
+  color = "model",
+  midpoint = "midpoint",
+  se = "se_concord",
+  ylab = "Concordance",
+  xlab = "Age (weeks)",
+  title = "",
+  legend_title = "Model"
+)
+
+output_name <- paste0(prediction_name, "_concord_plot")
+column <- rep(list(NA), times = length(train_test_index))
+column[train_test_index] <- concord_plots
+final_models[[output_name]] <- column
+
+
+
+prediction_name <- "filter_cumulative_test"
+data_name <- paste0(prediction_name, "_tmerged_summary")
+train_test_index <- final_models$data_mod == "train_test"
+
+data <- final_models[train_test_index, data_name]
+
+lp_plots <- lapply(data, plot_cumulative_concord_lp,
+  outcome = "coef",
+  color = "model",
+  upper_bound = "upper_bound",
+  se = "se_coef",
+  ylab = "Linear Predictor Coeffecient",
+  xlab = "Age (weeks)",
+  title = "",
+  legend_title = "Model"
+)
+
+output_name <- paste0(prediction_name, "_lp_plot")
+column <- rep(list(NA), times = length(train_test_index))
+column[train_test_index] <- lp_plots
+final_models[[output_name]] <- column
+
+concord_plots <- lapply(data, plot_cumulative_concord_lp,
+  outcome = "concord",
+  color = "model",
+  upper_bound = "upper_bound",
+  se = "se_concord",
+  ylab = "Concordance",
+  xlab = "Age (weeks)",
+  title = "",
+  legend_title = "Model"
+)
+
+output_name <- paste0(prediction_name, "_concord_plot")
+column <- rep(list(NA), times = length(train_test_index))
+column[train_test_index] <- concord_plots
+final_models[[output_name]] <- column
 
 for (prediction_name in head(prediction_names, -1)) {
-  data_name <- paste0(prediction_name, "_tmerged_summary")
-  train_test_index <- final_models$data_mod == "train_test"
-
-  data <- final_models[train_test_index, data_name]
-
-  lp_plots <- lapply(data, plot_window_concord_lp,
-    outcome = "coef",
-    color = "model",
-    midpoint = "midpoint",
-    se = "se_coef",
-    ylab = "Linear Predictor Coeffecient",
-    xlab = "Age (weeks)",
-    title = "",
-    legend_title = "Model"
-  )
-
-  output_name <- paste0(prediction_name, "_lp_plot")
-  column <- rep(list(NA), times = length(train_test_index))
-  column[train_test_index] <- lp_plots
-  final_models[[output_name]] <- column
-
-  concord_plots <- lapply(data, plot_window_concord_lp,
-    outcome = "concord",
-    color = "model",
-    midpoint = "midpoint",
-    se = "se_concord",
-    ylab = "Concordance",
-    xlab = "Age (weeks)",
-    title = "",
-    legend_title = "Model"
-  )
-
-  output_name <- paste0(prediction_name, "_concord_plot")
-  column <- rep(list(NA), times = length(train_test_index))
-  column[train_test_index] <- concord_plots
-  final_models[[output_name]] <- column
-}
-
-for(prediction_name in head(prediction_names, -1)) {
-
   concord <- paste0(prediction_name, "_concord_plot")
   lp <- paste0(prediction_name, "_lp_plot")
 
@@ -1651,6 +1717,8 @@ for(prediction_name in head(prediction_names, -1)) {
 }
 final_models$filter_cumulative_test_lp_plot
 final_models$filter_cumulative_test_concord_plot
+final_models$filter_window_test_lp_plot
+final_models$filter_window_test_concord_plot
 ```
 
 ### Save R Objects
