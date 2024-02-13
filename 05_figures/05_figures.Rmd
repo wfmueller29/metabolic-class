@@ -1708,13 +1708,6 @@ column <- rep(list(NA), times = length(train_test_index))
 column[train_test_index] <- concord_plots
 final_models[[output_name]] <- column
 
-for (prediction_name in head(prediction_names, -1)) {
-  concord <- paste0(prediction_name, "_concord_plot")
-  lp <- paste0(prediction_name, "_lp_plot")
-
-  print(final_models[, lp])
-  print(final_models[, concord])
-}
 final_models$filter_cumulative_test_lp_plot
 final_models$filter_cumulative_test_concord_plot
 final_models$filter_window_test_lp_plot
