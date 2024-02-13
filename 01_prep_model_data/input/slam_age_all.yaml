@@ -49,11 +49,11 @@ datasets:
       age_var: "age_wk"
       start: 0
       end: 165
-      window_size_vector: [50, 75]
+      window_size_vector: 52.1429
       step: 10
     filter_cumulative:
       age_var: "age_wk"
-      start_vector: [0,50]
+      start_vector: 0
       end: 165
       step: 10
     resample:
@@ -105,11 +105,11 @@ datasets:
       age_var: "age_wk"
       start: 0
       end: 165
-      window_size_vector: [50, 75]
+      window_size_vector: 52.1429
       step: 10
     filter_cumulative:
       age_var: "age_wk"
-      start_vector: [0,50]
+      start_vector: 0
       end: 165
       step: 10
     resample:
@@ -162,11 +162,11 @@ datasets:
       age_var: "age_wk"
       start: 0
       end: 165
-      window_size_vector: [50, 75]
+      window_size_vector: 52.1429
       step: 10
     filter_cumulative:
       age_var: "age_wk"
-      start_vector: [0,50]
+      start_vector: 0
       end: 165
       step: 10
     resample:
