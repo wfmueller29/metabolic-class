@@ -1725,6 +1725,84 @@ final_models$filter_window_test_lp_plot
 final_models$filter_window_test_concord_plot
 ```
 
+#### Waved Combined Cox
+
+```{r source wave combined_class_cox, file = 'R/pred_class_waved.R'}
+source("R/pred_class_waved.R")
+```
+
+```{r combined waved survival}
+# get model_names that are not train_test
+train_test_index <- (final_models$data_mod == "train_test")
+train_test_names <- final_models[train_test_index, "model_name"]
+data_list <- final_models[train_test_index, "dfs"]
+models <- final_models[train_test_index, "final_model"]
+age_vars <- final_models[train_test_index, "age_var"]
+age_vars <- paste0(age_vars, "_ns")
+outcomes <- final_models[train_test_index, "oc"]
+ids <- final_models[train_test_index, "subject"]
+
+waved_pred_data <- mapply(predict_waved_class,
+  newdata = data_list, model = models, age = age_vars, id = ids
+)
+
+increment_class <- function(filtered_df, i = 0) {
+  filtered_df$new_class <- as.character(filtered_df$class + i)
+
+  # Create new prob based off of new_class
+  probs_index <- grepl("^prob", names(filtered_df))
+  probs <- names(filtered_df)[grepl("^prob", names(filtered_df))]
+  probs <- unlist(lapply(strsplit(probs, split = "prob"), `[`, 2))
+  new_probs <- as.numeric(probs) + i
+  new_probs <- paste0("prob", new_probs)
+  names(filtered_df)[probs_index] <- new_probs
+
+  filtered_df
+}
+
+i <- 0
+for (j in seq_along(waved_pred_data)) {
+  data <- waved_pred_data[[j]]
+  prob_names <- names(data)[grepl("prob\\d", names(data))]
+  waved_pred_data[[j]] <- increment_class(data, i)
+  i <- i + length(prob_names)
+}
+
+
+combine_data <- function(data, ids, age_vars, outcomes) { # , census, census_id) {
+
+  prob_names <- lapply(data, function(data) {
+    names(data)[grepl("prob\\d", names(data))]
+  })
+  outcomes <- mapply(c, prob_names, outcomes,
+                     MoreArgs = list("class", "new_class"))
+  data <- mapply(
+    function(data, outcome, age_var, id) {
+      data <- data[, c(outcome, age_var, id)]
+      list(data = data, id = id, age_var = age_var)
+    },
+    data = data, outcome = outcomes, age_var = age_vars, id = ids,
+    SIMPLIFY = FALSE
+  )
+
+  merged_data <- Reduce(function(x, y) {
+    data <- merge(
+      x = x$data, y = y$data,
+      by.x = c(x$id, x$age_var), by.y = c(y$id, y$age_var), all = TRUE
+    )
+    list(data = data, id = x$id, age_var = x$age_var)
+  }, data)
+
+  merged_data
+}
+
+# TODO: Add age_wk2 and sex and strain to this dataset
+# FIX: This is hwere I left off 02/13
+combined_data <- combine_data(waved_pred_data, ids, age_vars, outcomes)
+peek(combined_data)
+
+```
+
 ### Save R Objects
 
 #### Prune Final Models Before Saving 
