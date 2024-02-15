@@ -49,7 +49,7 @@ predict_waved_class_newdata_list <- function(newdata_list, model, age, id) {
         id = id
       )
     } else {
-      col_names <- names(model$pprob)
+      col_names <- names(newdata)
       class_result <- data.frame(matrix(nrow = 0, ncol = length(col_names)))
       names(class_result) <- col_names
     }
