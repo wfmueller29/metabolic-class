@@ -1774,8 +1774,7 @@ combine_data <- function(data, ids, age_vars, outcomes) { # , census, census_id)
   prob_names <- lapply(data, function(data) {
     names(data)[grepl("prob\\d", names(data))]
   })
-  outcomes <- mapply(c, prob_names, outcomes,
-                     MoreArgs = list("class", "new_class"))
+  outcomes <- mapply(c, prob_names, outcomes)
   data <- mapply(
     function(data, outcome, age_var, id) {
       data <- data[, c(outcome, age_var, id)]
@@ -1798,9 +1797,34 @@ combine_data <- function(data, ids, age_vars, outcomes) { # , census, census_id)
 
 # TODO: Add age_wk2 and sex and strain to this dataset
 # FIX: This is hwere I left off 02/13
-combined_data <- combine_data(waved_pred_data, ids, age_vars, outcomes)
-peek(combined_data)
+combined_data_list <- combine_data(waved_pred_data, ids, age_vars, outcomes)
+combined_data <- combined_data_list$data
+combined_id <- combined_data_list$id
+combined_age <- combined_data_list$age_var
 
+census <- final_models[train_test_index, "census"][[1]]
+census <- census[, !grepl("prob\\d|.*class|.*Class", names(census))]
+
+combined_data <- merge(combined_data, census,
+  by.x = combined_id, by.y = ids[[1]]
+)
+
+prob_names_index <- grepl("prob\\d|.*class|.*Class", names(combined_data))
+prob_names <- names(combined_data)[prob_names_index]
+outcomes <- c(outcomes, prob_names)
+
+source("R/combined_class_cox.R")
+
+combined_cox <- create_combined_cox(combined_data,
+  combined_id,
+  combined_age,
+  age_death = config$survival_dataset$age_death,
+  death_censor = config$survival_dataset$event,
+  outcomes = outcomes,
+  covariates = config$survival_dataset$covariates
+)
+
+lapply(combined_cox, `[[`, "formula")
 ```
 
 ### Save R Objects
