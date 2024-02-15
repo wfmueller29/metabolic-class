@@ -198,6 +198,9 @@ create_combined_cox <- function(data,
     base = 1.1
   )
 
+  # drop any prob_cols from outcomes
+  outcomes <- outcomes[!outcomes %in% prob_cols]
+
   form1 <- paste0("~", paste(outcomes, collapse = "+"))
   form2 <- paste0("~", paste(prob_cols, collapse = "+"))
   form3 <- paste0(form1, "+", paste(prob_cols, collapse = "+"))
@@ -215,7 +218,7 @@ create_combined_cox <- function(data,
     time = "tstart",
     time2 = "tstop",
     death = death_censor
-  ))
+  ), SIMPLIFY = FALSE)
 
   cox_outputs
 }
