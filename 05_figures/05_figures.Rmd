@@ -1945,8 +1945,6 @@ for (filtered_df_name in prediction_results_names) {
 #### Merge test_data prediction dataframes
 
 ```{r merge prediction dataframes}
-
-# FIX: Everything above this is working so far; going to commit now
 merge_prediction_data <- function(x, y) {
   print(y$suffix)
   if (length(x$data_list) != length(y$data_list)) {
@@ -1964,8 +1962,8 @@ merge_prediction_data <- function(x, y) {
   z
 }
 
-combine_data <- function(data, ids, age_vars, outcomes) { # , census, census_id) {
-
+combine_data <- function(data, ids, age_vars, outcomes, census = NULL,
+                         census_id = NULL) {
   prob_names <- lapply(data, function(data) {
     names(data)[grepl("prob\\d", names(data))]
   })
@@ -1987,13 +1985,14 @@ combine_data <- function(data, ids, age_vars, outcomes) { # , census, census_id)
     list(data = data, id = x$id, age_var = x$age_var)
   }, data)
 
+  if (!is.null(census) && !is.null(census_id)) {
+    merged_data$data <- merge(merged_data$data, census,
+      by.x = merged_data$id, by.y = census_id
+    )
+  }
+
   merged_data
 }
-
-# TODO: Add age_wk2 and sex and strain to this dataset
-# FIX: This is hwere I left off 02/13
-combined_data_list <- combine_data(waved_pred_data, ids, age_vars, outcomes)
-
 
 merge_prediction_data_group <- function(
     final_models,
@@ -2002,28 +2001,27 @@ merge_prediction_data_group <- function(
   index <- final_models$model_name %in% model_names
   desired_dfs <- final_models[index, filtered_df_name]
   desired_ids <- final_models[index, "subject"]
-  desired_suffixes <- paste0("_", final_models[index, "oc"])
+  desired_age_vars <- paste0(final_models[index, "age_var"], "_ns")
+  desired_outcomes <- final_models[index, "oc"]
+  desired_census <- final_models[index, "test_census"]
 
   if (all(is.na(desired_dfs))) {
     merged_data <- NA
   } else {
-    reduce_list <- lapply(seq_len(length(desired_dfs)), function(i) {
-      list(
-        data_list = desired_dfs[[i]],
-        id = desired_ids[[i]],
-        suffix = desired_suffixes[[i]]
-      )
-    })
-    merged_data <- Reduce(f = merge_prediction_data, x = reduce_list)$data_list
-
-    # the last element name improperly following reduce function, thus:
-    merged_data <- lapply(merged_data, function(data) {
-      last_class_name <- paste0("class", tail(desired_suffixes, n = 1))
-      last_new_class_name <- paste0("new_class", tail(desired_suffixes, n = 1))
-      colnames(data)[colnames(data) == "class"] <- last_class_name
-      colnames(data)[colnames(data) == "new_class"] <- last_new_class_name
-      data
-    })
+    invert_list <- function(list) {
+      list_matrix <- do.call(rbind, list)
+      output <- apply(list_matrix, 2, as.list)
+      output
+    }
+    desired_dfs <- invert_list(desired_dfs)
+    merged_data <- mapply(combine_data, data = desired_dfs, MoreArgs = list(
+      ids = desired_ids,
+      age_vars = desired_age_vars,
+      outcomes = desired_outcomes,
+      census = desired_census[[1]],
+      census_id = ids[[1]]
+    ), SIMPLIFY = FALSE)
+    merged_data <- lapply(merged_data, `[[`, "data")
   }
 
   # create new column to store data
@@ -2052,6 +2050,7 @@ for (filtered_df_name in prediction_results_names) {
 #### Create test census dataframe
 
 ```{r create test census dataframe}
+# FIX: Everything above this is working so far; going to commit now
 make_test_census <- function(cf_row, dataset) {
   if (is.null(dataset$test_data)) {
     return(NA)
