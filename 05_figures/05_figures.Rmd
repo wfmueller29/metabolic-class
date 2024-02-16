@@ -1795,8 +1795,6 @@ combine_data <- function(data, ids, age_vars, outcomes) { # , census, census_id)
   merged_data
 }
 
-# TODO: Add age_wk2 and sex and strain to this dataset
-# FIX: This is hwere I left off 02/13
 combined_data_list <- combine_data(waved_pred_data, ids, age_vars, outcomes)
 combined_data <- combined_data_list$data
 combined_id <- combined_data_list$id
@@ -1815,7 +1813,7 @@ outcomes <- c(outcomes, prob_names)
 
 source("R/combined_class_cox.R")
 
-combined_cox <- create_combined_cox(combined_data,
+combined_wave_cox <- create_combined_cox(combined_data,
   combined_id,
   combined_age,
   age_death = config$survival_dataset$age_death,
@@ -1824,7 +1822,11 @@ combined_cox <- create_combined_cox(combined_data,
   covariates = config$survival_dataset$covariates
 )
 
-lapply(combined_cox, `[[`, "formula")
+lapply(combined_wave_cox, `[[`, "formula")
+
+column <- rep(list(NA), times = length(train_test_index))
+column[train_test_index] <- combined_wave_cox
+final_models[, "combined_wave_cox"] <- combined_wave_cox
 ```
 
 ### Determine get Hazard Predictions from test set
@@ -1866,7 +1868,7 @@ for (filter in names(filter_list)) {
   final_models[[filter]] <- filter_list[[filter]]
 }
 
-prediction_names <- paste0(prediction_names, "_test")
+prediction_names <- paste0(prediction_names, "_test_wave")
 prediction_results_names <- paste(prediction_names, "results", sep = "_")
 
 prediction_results <- lapply(prediction_columns, function(col) {
@@ -1977,6 +1979,48 @@ combine_data <- function(data, ids, age_vars, outcomes, census = NULL,
   merged_data
 }
 
+tmerge_prediction_data <- function(data, id, age, age_death, outcomes) {
+  print(nrow(data))
+  if (nrow(data) == 0) {
+    warning("Cannot perform surv_tmerge, 0 nrows in data")
+    return(data)
+  }
+
+  form_age <- as.formula(paste0(age, "~", id))
+  form_age_death <- as.formula(paste0(age_death, "~", id))
+  min_age <- aggregate(form_age, data, FUN = min)
+  max_age_death <- aggregate(form_age_death, data, FUN = max)
+  min_max_df <- merge(min_age, max_age_death, by = id)
+  min_max_test <- all((min_max_df[[age]] < min_max_df[[age_death]]))
+
+  if (isFALSE(min_max_test)) {
+    warning("Tstart is not less than tstop, returning empty data.frame")
+    return(data[0, ])
+  }
+
+
+  tmerged_data <- surv_tmerge(
+    data = data,
+    id = id,
+    age = age,
+    age_death = age_death,
+    outcomes = outcomes
+  )
+
+  prob_cols <- names(tmerged_data)[grepl("^prob", names(tmerged_data))]
+  prob_cols_drop <- sapply(prob_cols, function(name) {
+    all(tmerged_data[[name]] == 1)
+  })
+  prob_cols <- prob_cols[!prob_cols_drop]
+
+  tmerged_data[, prob_cols] <- lapply(tmerged_data[, prob_cols],
+    log,
+    base = 1.1
+  )
+
+  tmerged_data
+}
+
 merge_prediction_data_group <- function(
     final_models,
     model_names,
@@ -1997,14 +2041,37 @@ merge_prediction_data_group <- function(
       output
     }
     desired_dfs <- invert_list(desired_dfs)
-    merged_data <- mapply(combine_data, data = desired_dfs, MoreArgs = list(
-      ids = desired_ids,
-      age_vars = desired_age_vars,
-      outcomes = desired_outcomes,
-      census = desired_census[[1]],
-      census_id = ids[[1]]
-    ), SIMPLIFY = FALSE)
-    merged_data <- lapply(merged_data, `[[`, "data")
+    merged_data_list <- mapply(combine_data,
+      data = desired_dfs,
+      MoreArgs = list(
+        ids = desired_ids,
+        age_vars = desired_age_vars,
+        outcomes = desired_outcomes,
+        census = desired_census[[1]],
+        census_id = ids[[1]]
+      ), SIMPLIFY = FALSE
+    )
+    merged_data <- lapply(merged_data_list, `[[`, "data")
+    merged_ids <- lapply(merged_data_list, `[[`, "id")
+    merged_age_vars <- lapply(merged_data_list, `[[`, "age_var")
+
+    prob_names <- lapply(merged_data, function(data) {
+      names(data)[grepl("prob\\d", names(data))]
+    })
+    prob_names <- unique(unlist(prob_names))
+    outcomes <- c(desired_outcomes, prob_names)
+
+    merged_data <- mapply(tmerge_prediction_data,
+      data = merged_data,
+      id = merged_ids,
+      age = merged_age_vars,
+      MoreArgs = list(
+        age_death = config$survival_dataset$age_death,
+        outcomes = outcomes
+      )
+    )
+
+    merged_data
   }
 
   # create new column to store data
@@ -2033,6 +2100,7 @@ for (filtered_df_name in prediction_results_names) {
 #### We need to predict hazard ratios for our test sets
 
 ```{r test mortaility prediction using train test}
+# FIX: We run up to here. Workspace loaded. 02/015/2024
 predict_cox <- function(test_data,
                         model,
                         type = c("lp", "risk"),
