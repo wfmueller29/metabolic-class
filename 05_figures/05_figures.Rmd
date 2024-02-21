@@ -1651,7 +1651,7 @@ lp_plots <- lapply(data, plot_window_concord_lp,
   se = "se_coef",
   ylab = "Linear Predictor Coeffecient",
   xlab = "Age (weeks)",
-  title = "",
+  title = "Window LP",
   legend_title = "Model"
 )
 
@@ -1668,7 +1668,7 @@ concord_plots <- lapply(data, plot_window_concord_lp,
   se = "se_concord",
   ylab = "Concordance",
   xlab = "Age (weeks)",
-  title = "",
+  title = "Window Concordance",
   legend_title = "Model"
 )
 
@@ -1693,7 +1693,7 @@ lp_plots <- lapply(data, plot_cumulative_concord_lp,
   se = "se_coef",
   ylab = "Linear Predictor Coeffecient",
   xlab = "Age (weeks)",
-  title = "",
+  title = "Cumulative LP",
   legend_title = "Model"
 )
 
@@ -1710,7 +1710,7 @@ concord_plots <- lapply(data, plot_cumulative_concord_lp,
   se = "se_concord",
   ylab = "Concordance",
   xlab = "Age (weeks)",
-  title = "",
+  title = "Cumulative Concordance",
   legend_title = "Model"
 )
 
@@ -1829,9 +1829,9 @@ column[train_test_index] <- list(combined_wave_cox)
 final_models[["combined_wave_cox"]] <- column
 ```
 
-### Determine get Hazard Predictions from test set
+### Determine get Hazard Predictions from test set using waved predicions
 
-#### Predict Class Assignement for Test Dataframe
+#### Predict Class Assignement for Test Dataframe using waved predictions
 
 ```{r source create wave test prediction results, file = 'R/pred_class.R'}
 source("R/pred_class.R")
@@ -1885,7 +1885,7 @@ prediction_results <- lapply(prediction_columns, function(col) {
 final_models[, prediction_results_names] <- prediction_results
 ```
 
-#### Create new test class numbering
+#### Create new test class numbering using waved predictions
 
 ```{r test wave class numbering}
 increment_class <- function(filtered_df, i = 0) {
@@ -1944,7 +1944,7 @@ for (filtered_df_name in prediction_results_names) {
 }
 ```
 
-#### Merge test_data prediction dataframes
+#### Merge test_data prediction dataframes using waved predictions
 
 ```{r merge wave prediction dataframes}
 combine_data <- function(data, ids, age_vars, outcomes, census = NULL,
@@ -2068,7 +2068,8 @@ merge_prediction_data_group <- function(
       MoreArgs = list(
         age_death = config$survival_dataset$age_death,
         outcomes = outcomes
-      )
+      ),
+      SIMPLIFY = FALSE
     )
 
     merged_data
@@ -2097,10 +2098,9 @@ for (filtered_df_name in prediction_results_names) {
 }
 ```
 
-#### We need to predict hazard ratios for our test sets
+#### We need to predict hazard ratios for our test sets using waved predictions
 
 ```{r test mortaility prediction using train test waved}
-# FIX: We run up to here. Workspace loaded. 02/015/2024
 predict_cox <- function(test_data,
                         model,
                         type = c("lp", "risk"),
@@ -2182,7 +2182,7 @@ for (prediction_name in prediction_names) {
 }
 ```
 
-#### Determine Calibration by Regressing PI on Test outcomes
+#### Determine Calibration by Regressing PI on Test outcomes for waved predictions
 
 ```{r create new dataframes from the predictions waved}
 get_slope_concord <- function(test_data, age_death, censor) {
@@ -2271,7 +2271,7 @@ for (prediction_name in prediction_names) {
 }
 ```
 
-#### Convert from short to long for lp1, lp2, lp3
+#### Convert from short to long for lp1, lp2, lp3 for waved predictions
 
 ```{r short to long for lp1 waved}
 reshape_summary <- function(data) {
@@ -2303,7 +2303,7 @@ for (prediction_name in prediction_names) {
 }
 ```
 
-#### Generated columns for prediction data plotting
+#### Generated columns for prediction data plotting for waved predictions
 
 ```{r prediction data renaming waved}
 name_window <- function(data, col_name) {
@@ -2359,7 +2359,7 @@ final_models$filter_window_test_wave_tmerged_summary <- lapply(
 )
 ```
 
-#### Create plots of concordances and regression on PI
+#### Create plots of concordances and regression on PI using waved predictions
 
 ```{r create concordance plots waved}
 plot_cumulative_concord_lp <- function(data, outcome, color,
@@ -2436,7 +2436,7 @@ lp_plots <- lapply(data, plot_window_concord_lp,
   se = "se_coef",
   ylab = "Linear Predictor Coeffecient",
   xlab = "Age (weeks)",
-  title = "",
+  title = "Window LP Waved",
   legend_title = "Model"
 )
 
@@ -2453,7 +2453,7 @@ concord_plots <- lapply(data, plot_window_concord_lp,
   se = "se_concord",
   ylab = "Concordance",
   xlab = "Age (weeks)",
-  title = "",
+  title = "Window Concordance Waved",
   legend_title = "Model"
 )
 
@@ -2478,7 +2478,7 @@ lp_plots <- lapply(data, plot_cumulative_concord_lp,
   se = "se_coef",
   ylab = "Linear Predictor Coeffecient",
   xlab = "Age (weeks)",
-  title = "",
+  title = "Cumulative LP Waved",
   legend_title = "Model"
 )
 
@@ -2495,7 +2495,7 @@ concord_plots <- lapply(data, plot_cumulative_concord_lp,
   se = "se_concord",
   ylab = "Concordance",
   xlab = "Age (weeks)",
-  title = "",
+  title = "Cumulative Concordance Waved",
   legend_title = "Model"
 )
 
@@ -2504,10 +2504,15 @@ column <- rep(list(NA), times = length(train_test_index))
 column[train_test_index] <- concord_plots
 final_models[[output_name]] <- column
 
-final_models$filter_cumulative_test_wave_lp_plot
-final_models$filter_cumulative_test_wave_concord_plot
-final_models$filter_window_test_wave_lp_plot
-final_models$filter_window_test_wave_concord_plot
+i <- which(train_test_index)[[1]]
+final_models$filter_cumulative_test_wave_lp_plot[[i]]
+final_models$filter_cumulative_test_lp_plot[[i]]
+final_models$filter_cumulative_test_wave_concord_plot[[i]]
+final_models$filter_cumulative_test_concord_plot[[i]]
+final_models$filter_window_test_wave_lp_plot[[i]]
+final_models$filter_window_test_lp_plot[[i]]
+final_models$filter_window_test_wave_concord_plot[[i]]
+final_models$filter_window_test_concord_plot[[i]]
 ```
 
 ### Save R Objects
