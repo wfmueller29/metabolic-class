@@ -1825,22 +1825,22 @@ combined_wave_cox <- create_combined_cox(combined_data,
 lapply(combined_wave_cox, `[[`, "formula")
 
 column <- rep(list(NA), times = length(train_test_index))
-column[train_test_index] <- combined_wave_cox
-final_models[, "combined_wave_cox"] <- combined_wave_cox
+column[train_test_index] <- list(combined_wave_cox)
+final_models[["combined_wave_cox"]] <- column
 ```
 
 ### Determine get Hazard Predictions from test set
 
 #### Predict Class Assignement for Test Dataframe
 
-```{r source create test prediction results, file = 'R/pred_class.R'}
+```{r source create wave test prediction results, file = 'R/pred_class.R'}
 source("R/pred_class.R")
 ```
 ```{r source create test waved prediction results, file = 'R/pred_class_waved.R'}
 source("R/pred_class_waved.R")
 ```
 
-```{r create test prediction results}
+```{r create test wave prediction results}
 # Get the names of the filtered data
 prediction_data_names <- lapply(datasets, function(dataset) {
   names(dataset$prediction_test_data$data)
@@ -1887,7 +1887,7 @@ final_models[, prediction_results_names] <- prediction_results
 
 #### Create new test class numbering
 
-```{r test class numbering}
+```{r test wave class numbering}
 increment_class <- function(filtered_df, i = 0) {
   filtered_df$new_class <- as.character(filtered_df$class + i)
 
@@ -1946,7 +1946,7 @@ for (filtered_df_name in prediction_results_names) {
 
 #### Merge test_data prediction dataframes
 
-```{r merge prediction dataframes}
+```{r merge wave prediction dataframes}
 combine_data <- function(data, ids, age_vars, outcomes, census = NULL,
                          census_id = NULL) {
   prob_names <- lapply(data, function(data) {
@@ -2099,7 +2099,7 @@ for (filtered_df_name in prediction_results_names) {
 
 #### We need to predict hazard ratios for our test sets
 
-```{r test mortaility prediction using train test}
+```{r test mortaility prediction using train test waved}
 # FIX: We run up to here. Workspace loaded. 02/015/2024
 predict_cox <- function(test_data,
                         model,
@@ -2153,9 +2153,9 @@ predict_cox_final_model <- function(final_models,
                                     prediction_name,
                                     type = c("lp", "risk")) {
   train_test_index <- final_models[, "data_mod"] == "train_test"
-  tmerged_df_name <- paste0(prediction_name, "_tmerged")
+  tmerged_df_name <- paste0(prediction_name, "_merged")
   test_data_lol <- final_models[, tmerged_df_name]
-  model_lol <- final_models[, "cox_combined_models"]
+  model_lol <- final_models[, "combined_wave_cox"]
 
   test_data_lol <- lapply(seq_along(test_data_lol), function(row_no) {
     print(row_no)
@@ -2184,7 +2184,7 @@ for (prediction_name in prediction_names) {
 
 #### Determine Calibration by Regressing PI on Test outcomes
 
-```{r create new dataframes from the predictions}
+```{r create new dataframes from the predictions waved}
 get_slope_concord <- function(test_data, age_death, censor) {
   surv_obj <- survival::Surv(
     time = test_data[[age_death]], event = test_data[[censor]]
@@ -2273,7 +2273,7 @@ for (prediction_name in prediction_names) {
 
 #### Convert from short to long for lp1, lp2, lp3
 
-```{r short to long for lp1}
+```{r short to long for lp1 waved}
 reshape_summary <- function(data) {
   names(data) <- gsub("(lp\\d)_(.*)", "\\2_\\1", names(data))
   varying_vars <- names(data)[grepl("_lp\\d", names(data))]
@@ -2305,7 +2305,7 @@ for (prediction_name in prediction_names) {
 
 #### Generated columns for prediction data plotting
 
-```{r prediction data renaming}
+```{r prediction data renaming waved}
 name_window <- function(data, col_name) {
   if (all(is.na(data))) {
     warning("data is NA, returning data")
@@ -2346,14 +2346,14 @@ name_cumulative <- function(data, col_name) {
   data
 }
 
-final_models$filter_cumulative_test_tmerged_summary <- lapply(
-  final_models$filter_cumulative_test_tmerged_summary,
+final_models$filter_cumulative_test_wave_tmerged_summary <- lapply(
+  final_models$filter_cumulative_test_wave_tmerged_summary,
   name_cumulative,
   col_name = "subset_name"
 )
 
-final_models$filter_window_test_tmerged_summary <- lapply(
-  final_models$filter_window_test_tmerged_summary,
+final_models$filter_window_test_wave_tmerged_summary <- lapply(
+  final_models$filter_window_test_wave_tmerged_summary,
   name_window,
   col_name = "subset_name"
 )
@@ -2361,7 +2361,7 @@ final_models$filter_window_test_tmerged_summary <- lapply(
 
 #### Create plots of concordances and regression on PI
 
-```{r create concordance plots}
+```{r create concordance plots waved}
 plot_cumulative_concord_lp <- function(data, outcome, color,
                                        lower_bound, upper_bound, se,
                                        ylab, xlab, title, legend_title) {
@@ -2422,7 +2422,7 @@ plot_window_concord_lp <- function(data, outcome, color,
     ggplot2::facet_wrap(~ c(window_size), ncol = 1)
 }
 
-prediction_name <- "filter_window_test"
+prediction_name <- "filter_window_test_wave"
 data_name <- paste0(prediction_name, "_tmerged_summary")
 train_test_index <- final_models$data_mod == "train_test"
 
@@ -2464,7 +2464,7 @@ final_models[[output_name]] <- column
 
 
 
-prediction_name <- "filter_cumulative_test"
+prediction_name <- "filter_cumulative_test_wave"
 data_name <- paste0(prediction_name, "_tmerged_summary")
 train_test_index <- final_models$data_mod == "train_test"
 
@@ -2504,10 +2504,10 @@ column <- rep(list(NA), times = length(train_test_index))
 column[train_test_index] <- concord_plots
 final_models[[output_name]] <- column
 
-final_models$filter_cumulative_test_lp_plot
-final_models$filter_cumulative_test_concord_plot
-final_models$filter_window_test_lp_plot
-final_models$filter_window_test_concord_plot
+final_models$filter_cumulative_test_wave_lp_plot
+final_models$filter_cumulative_test_wave_concord_plot
+final_models$filter_window_test_wave_lp_plot
+final_models$filter_window_test_wave_concord_plot
 ```
 
 ### Save R Objects
