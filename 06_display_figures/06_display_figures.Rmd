@@ -37,7 +37,7 @@ knitr::opts_chunk$set(cache = FALSE)
 # for the case when we are not running with RStudio
 if (!exists("params")) {
   params <- list()
-  params$input_path <- "../04_prediction_data/output/test_local.yaml"
+  params$input_path <- "../05_figures/output/test_local.yaml"
 }
 
 input <- yaml::read_yaml(file = params$input_path)
@@ -46,7 +46,6 @@ input <- yaml::read_yaml(file = params$input_path)
 ### Load Models
 
 ```{r load models}
-load(input$cf_path)
 load(input$datasets_path)
 load(input$final_models_path)
 config <- yaml::read_yaml(input$config_path)
@@ -61,53 +60,16 @@ final_models$dfs <- lapply(final_models$data, function(name) {
 })
 ```
 
-
-
-### Load Models
-
-```{r load models}
-output_path <- file.path("..", "05_figures", "output")
-
-load_models <- function(subgroup, envir = .GlobalEnv) {
-  subgroup_param <- paste(subgroup, "dir", sep = "_")
-  subgroup_path <- params[[subgroup_param]]
-  path <- file.path(
-    output_path,
-    subgroup_path,
-    "data",
-    "final_models.RDATA"
-  )
-  env_name <- paste(subgroup, "env", sep = "_")
-  assign(env_name, rlang::env(), envir = envir)
-  load(path, eval(as.symbol(env_name)))
-}
-
-subgroups <- c("all", "mb6", "fb6", "mhet3", "fhet3")
-
-for (subgroup in subgroups) {
-  load_models(subgroup)
-}
-
-# Add subgroup name to env
-all_env$subgroup <- "All Mice"
-mb6_env$subgroup <- "Male B6"
-fb6_env$subgroup <- "Female B6"
-mhet3_env$subgroup <- "Male HET3"
-fhet3_env$subgroup <- "Female HET3"
-```
-
 ## Create Figures
 
 ### Dispaly How latent class models work
 
 ```{r how they work, fig.height=5, fig.width=10}
-x <- all_env$final_models
-p1 <- x[x$model_name == "bw_main|bw_age_wk", "spag_plot"][[1]]
-p2 <- ggplot()
-p3 <- x[x$model_name == "bw_main|bw_age_wk", "traj_obs"][[1]]
-
+p1 <- final_models[, "spag_plot"][[1]]
+p3 <- final_models[, "traj_obs"][[1]]
 
 fig1 <- cowplot::plot_grid(p1, p3, nrow = 1)
+fig1
 ```
 
 ### Dispaly predicted and observed
@@ -115,51 +77,29 @@ fig1 <- cowplot::plot_grid(p1, p3, nrow = 1)
 - Supplement will include sex strain strata 
 
 ```{r pred_obs_panel, fig.height= 16, fig.width=12}
+og_index <- final_models$data_mod == "og"
+pred_plots <- final_models[og_index, "traj_pred"]
+obs_plots <- final_models[og_index, "traj_obs"]
 
-create_pred_obs_panel <- function(env) {
-  x <- env$final_models
-  bw_pred <- x[x$model_name == "bw_main|bw_age_wk", "traj_pred"][[1]]
-  bw_obs <- x[x$model_name == "bw_main|bw_age_wk", "traj_obs"][[1]]
-  gluc_pred <- x[x$model_name == "gluc_main|gluc_age_wk", "traj_pred"][[1]]
-  gluc_obs <- x[x$model_name == "gluc_main|gluc_age_wk", "traj_obs"][[1]]
-  fat_pred <- x[x$model_name == "fat_main|fat_age_wk", "traj_pred"][[1]]
-  fat_obs <- x[x$model_name == "fat_main|fat_age_wk", "traj_obs"][[1]]
+pred_plots <- lapply(pred_plots, ggdraw, clip = "on")
 
-  bw_pred <- ggdraw(bw_pred, clip = "on")
-  gluc_pred <- ggdraw(gluc_pred, clip = "on")
-  fat_pred <- ggdraw(fat_pred, clip = "on")
+title_theme <- ggdraw() +
+  draw_label("Predicted and Observed Metabolic Life Course Trajectories")
 
-  title_theme <- ggdraw() +
-    draw_label(paste(env$subgroup,
-      "Predicted and Observed Metabolic Life Course Trajectories",
-      sep = " "
-    ))
-
-  pred_obs_panel <- cowplot::plot_grid(bw_pred, bw_obs,
-    gluc_pred, gluc_obs,
-    fat_pred, fat_obs,
-    nrow = 3,
-    greedy = FALSE,
-    labels = "AUTO"
-  )
-
-  env$pred_obs_panel <- cowplot::plot_grid(title_theme, pred_obs_panel,
-    rel_heights = c(.05, 1),
-    ncol = 1
-  )
-
-  env
-}
-
-env_list <- list(all_env, mb6_env, fb6_env, mhet3_env, fhet3_env)
-
-env_list <- lapply(env_list, create_pred_obs_panel)
+plot_list <- c(pred_plots, obs_plots)
+pred_obs_panel <- cowplot::plot_grid(plotlist = plot_list,
+  nrow = 3, byrow = FALSE, 
+  greedy = FALSE, labels = "AUTO"
+)
+cowplot::plot_grid(title_theme, pred_obs_panel,
+  rel_heights = c(.05, 1),
+  ncol = 1
+)
 ```
 
 ### Table Who's in what class
 
 ```{r table class demographics, results='asis'}
-
 mo_names <- c("bw_main|bw_age_wk", "gluc_main|gluc_age_wk", "fat_main|fat_age_wk")
 create_t1 <- function(env, mo_names) {
   x <- env$final_models
@@ -208,7 +148,6 @@ env_list <- lapply(env_list, function(env) {
 - Supplement will include same figures but for each sex strain strata
 
 ```{r mortality outcomes by class, fig.height= 16, fig.width=12}
-
 create_mortality_panel <- function(env) {
   x <- env$final_models
   bw_obs <- x[x$model_name == "bw_main|bw_age_wk", "traj_obs"][[1]]
@@ -369,7 +308,6 @@ env_list <- lapply(env_list, create_hr_table, mo_names = mo_names, c(1, 2, 3))
 - Supplement will show the same figures but fore each sex strain combo
 
 ```{r metabolic outcomes by class, fig.height=16, fig.width=24}
-
 create_other_met_panel <- function(env) {
   x <- env$final_models
   bw_pred <- x[x$model_name == "bw_main|bw_age_wk", "traj_pred"][[1]]
@@ -425,7 +363,6 @@ env_list <- lapply(env_list, create_other_met_panel)
 - Model4 (Sex and Strain additive controlled) : $outcome = (Age + Age^2) * Class + Female * HET3 + (Age + Age^2 | Subject)$
 - Model5 (Sex and Strain interacted controlled): $outcome = (Age + Age^2) * Class + (Age + Age^2) * Female * HET3 + (Age + Age^2 | Subject)$
 ```{r table lme, results = 'asis'}
-
 tab_lme <- function(env, mo_names) {
   x <- env$final_models
   row <- x[x$model_name %in% mo_names, ]
