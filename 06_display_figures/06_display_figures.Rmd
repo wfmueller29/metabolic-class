@@ -288,7 +288,7 @@ other_met_panel <- cowplot::plot_grid(
 
 
 title_theme <- ggdraw() +
-  draw_label(paste(env$subgroup,
+  draw_label(paste(
     "Cross-reference Other Metabolic Parameters by Each Metabolic Class",
     sep = " "
   ))
@@ -385,7 +385,6 @@ lme_table <- lapply(seq_along(model_list), function(i) {
 })
 
 lme_table
-
 ```
 
 ### Class Prediction Panel
@@ -395,45 +394,30 @@ lme_table
 ```{r class prediction panel, fig.height=16, fig.width=16}
 mo_names <- c("bw_main|bw_age_wk", "gluc_main|gluc_age_wk", "fat_main|fat_age_wk")
 
-create_class_prediction_panel <- function(env, mo_names) {
-  x <- env$final_models
-  rows <- list()
-  for (model_name in mo_names) {
-    interval <- x[x$model_name == model_name, ]$interval_boot_accuracy_plot[[1]]
-    threshold <- x[x$model_name == model_name, ]$threshold_boot_accuracy_plot[[1]] +
-      theme(
-        legend.title = element_text(size = 7),
-        legend.text = element_text(size = 7)
-      )
-    sample <- x[x$model_name == model_name, ]$sample_boot_accuracy_plot[[1]]
+interval_plots <- final_models[og_index, "interval_boot_accuracy_plot"]
+window_plots <- final_models[og_index, "window_boot_accuracy_plot"]
+cumulative_plots <- final_models[og_index, "cumulative_boot_accuracy_plot"]
+resampled_plots <- final_models[og_index, "resampled_boot_accuracy_plot"]
 
-    rows[[model_name]] <- list(interval, threshold, sample)
-  }
+plot_list <- c(interval_plots, window_plots, cumulative_plots, resampled_plots)
 
-  rows <- do.call(c, rows)
+title <- paste("Classification Accuracy")
 
-  title <- paste(env$subgroup, "Classification Accuracy")
+title_theme <- ggdraw() +
+  draw_label(title)
 
-  title_theme <- ggdraw() +
-    draw_label(title)
+class_prediction_panel <- cowplot::plot_grid(
+  plotlist = plot_list,
+  ncol = 4,
+  labels = "AUTO"
+)
 
-
-  class_prediction_panel <- cowplot::plot_grid(
-    plotlist = rows,
-    ncol = 3,
-    labels = "AUTO"
-  )
-  env$class_prediction_panel <- cowplot::plot_grid(title_theme,
-    class_prediction_panel,
-    rel_heights = c(.05, 1),
-    ncol = 1
-  )
-
-
-  env
-}
-
-env_list <- lapply(env_list, create_class_prediction_panel, mo_names = mo_names)
+class_prediction_panel <- cowplot::plot_grid(title_theme,
+  class_prediction_panel,
+  rel_heights = c(.05, 1),
+  ncol = 1,
+  byrow = FALSE
+)
 ```
 
 
@@ -447,12 +431,9 @@ fig1
 
 ### Figure 2: Predicted Observed
 ```{r figure 2, fig.height=18, fig.width=12}
-if (!params$sup) {
-  all_env$pred_obs_panel
-} else {
-  lapply(env_list[-1], `[[`, "pred_obs_panel")
-}
+pred_obs_panel
 ```
+
 ### Table 1: Whos in each Class
 ```{r table 1, results = 'asis'}
 print_table <- function(env, table_name, title) {
@@ -471,54 +452,28 @@ print_table <- function(env, table_name, title) {
   print(table)
 }
 
-if (!params$sup) {
-  print_table(all_env,
-    table_name = "t1_df",
-    title = "Demographics by Metabolic Index and Class"
-  )
-} else {
-  lapply(env_list[-1],
-    print_table,
-    table_name = "t1_df",
-    title = "Demographics by Metabolic Index and Class"
-  )
-}
+print_table(.GlobalEnv,
+  table_name = "t1_df",
+  title = "Demographics by Metabolic Index and Class"
+)
 ```
 
 ### Figure 3: Metabolic Classes with Other Metabolic Metrics
 
 ```{r figure 3, fig.height=18, fig.width=24}
-if (!params$sup) {
-  all_env$other_met_panel
-} else {
-  lapply(env_list[-1], `[[`, "other_met_panel")
-}
+other_met_panel
 ```
 
 ### Table 2: Metabolic Classes Predict other Metabolic Metrics
 
 ```{r table 2, results = 'asis'}
-if (!params$sup) {
-  lapply(all_env$lme_table, function(table) {
-    cat(table$knitr)
-  })
-} else {
-  for (env in env_list[-1]) {
-    lapply(env$lme_table, function(table) {
-      cat(table$knitr)
-    })
-  }
-}
+lme_table$knitr
 ```
 
 ### Figure 4: Mortality and Class
 
 ```{r figure 4, fig.height=18, fig.width=12}
-if (!params$sup) {
-  all_env$mortality_panel
-} else {
-  lapply(env_list[-1], `[[`, "mortality_panel")
-}
+mortality_panel
 ```
 
 ### Table 3: Hazard Ratios
@@ -528,26 +483,20 @@ if (!params$sup) {
 - Model 3: $ Surv ~ Class + Sex * Strain$
 
 ```{r table 3, results = 'asis'}
-if (!params$sup) {
-  print_table(all_env,
-    table_name = "hr_table",
-    title = "Table of Hazard Ratios by Metabolic Indices"
-  )
-} else {
-  lapply(env_list[-1],
-    print_table,
-    table_name = "t1_df",
-    title = "Table of Hazard Ratios by Metabolic Indices"
-  )
-}
+print_table(.GlobalEnv,
+  table_name = "hr_table",
+  title = "Table of Hazard Ratios by Metabolic Indices"
+)
 ```
 
 ### Figure 5: Class Prediction Panel
 
 ```{r figure 5, fig.width=18, fig.height=18}
-if (!params$sup) {
-  all_env$class_prediction_panel
-} else {
-  lapply(env_list[-1], `[[`, "class_prediction_panel")
-}
+class_prediction_panel
+```
+
+### Figure 6: Internal Validation (Preliminary)
+
+```{r figure 6}
+
 ```
