@@ -274,52 +274,29 @@ hr_table <- combine_cox_table(final_models, model_names, c(1, 2, 3))
 - Supplement will show the same figures but fore each sex strain combo
 
 ```{r metabolic outcomes by class, fig.height=16, fig.width=24}
-create_other_met_panel <- function(env) {
-  x <- env$final_models
-  bw_pred <- x[x$model_name == "bw_main|bw_age_wk", "traj_pred"][[1]]
-  gluc_pred <- x[x$model_name == "gluc_main|gluc_age_wk", "traj_pred"][[1]]
-  fat_pred <- x[x$model_name == "fat_main|fat_age_wk", "traj_pred"][[1]]
+og_plots_index <- grepl("^plot.*_og_.*across$", names(final_models))
 
-  bw_pred <- ggdraw(bw_pred, clip = "on")
-  gluc_pred <- ggdraw(gluc_pred, clip = "on")
-  fat_pred <- ggdraw(fat_pred, clip = "on")
+og_plots <- unlist(final_models[og_index, og_plots_index], recursive = FALSE)
 
-  bw_bw <- x[x$model_name == "bw_main|bw_age_wk", "plot_bw"][[1]]
-  gluc_bw <- x[x$model_name == "gluc_main|gluc_age_wk", "plot_bw"][[1]]
-  fat_bw <- x[x$model_name == "fat_main|fat_age_wk", "plot_bw"][[1]]
-
-  bw_gluc <- x[x$model_name == "bw_main|bw_age_wk", "plot_gluc"][[1]]
-  gluc_gluc <- x[x$model_name == "gluc_main|gluc_age_wk", "plot_gluc"][[1]]
-  fat_gluc <- x[x$model_name == "fat_main|fat_age_wk", "plot_gluc"][[1]]
-
-  bw_fat <- x[x$model_name == "bw_main|bw_age_wk", "plot_fat"][[1]]
-  gluc_fat <- x[x$model_name == "gluc_main|gluc_age_wk", "plot_fat"][[1]]
-  fat_fat <- x[x$model_name == "fat_main|fat_age_wk", "plot_fat"][[1]]
-
-  other_met_panel <- cowplot::plot_grid(bw_pred, bw_bw, bw_gluc, bw_fat,
-    gluc_pred, gluc_bw, gluc_gluc, gluc_fat,
-    fat_pred, fat_bw, fat_gluc, fat_fat,
-    nrow = 3,
-    greedy = FALSE,
-    labels = "AUTO"
-  )
-
-  title_theme <- ggdraw() +
-    draw_label(paste(env$subgroup,
-      "Cross-reference Other Metabolic Parameters by Each Metabolic Class",
-      sep = " "
-    ))
-
-  env$other_met_panel <- cowplot::plot_grid(title_theme, other_met_panel,
-    rel_heights = c(.05, 1),
-    ncol = 1
-  )
-
-  env
-}
+other_met_panel <- cowplot::plot_grid(
+  plotlist = og_plots,
+  nrow = length(which(og_index)),
+  byrow = FALSE,
+  greedy = FALSE,
+  labels = "AUTO"
+)
 
 
-env_list <- lapply(env_list, create_other_met_panel)
+title_theme <- ggdraw() +
+  draw_label(paste(env$subgroup,
+    "Cross-reference Other Metabolic Parameters by Each Metabolic Class",
+    sep = " "
+  ))
+
+other_met_panel <- cowplot::plot_grid(title_theme, other_met_panel,
+  rel_heights = c(.05, 1),
+  ncol = 1
+)
 ```
 
 ### Table of lme models
@@ -329,95 +306,86 @@ env_list <- lapply(env_list, create_other_met_panel)
 - Model4 (Sex and Strain additive controlled) : $outcome = (Age + Age^2) * Class + Female * HET3 + (Age + Age^2 | Subject)$
 - Model5 (Sex and Strain interacted controlled): $outcome = (Age + Age^2) * Class + (Age + Age^2) * Female * HET3 + (Age + Age^2 | Subject)$
 ```{r table lme, results = 'asis'}
-tab_lme <- function(env, mo_names) {
-  x <- env$final_models
-  row <- x[x$model_name %in% mo_names, ]
+rows <- final_models[og_index, ]
 
-  age_var <- row$age_var[[1]]
-  age_var_name <- row$age_var_name[[1]]
-  age_var_units <- row$age_var_units[[1]]
+age_var <- rows$age_var[[1]]
+age_var_name <- rows$age_var_name[[1]]
+age_var_units <- rows$age_var_units[[1]]
 
-  age_var2_name <- paste(age_var_name, "2</sup>", sep = "<sup>")
-  age_var2_units <- paste(age_var_units, "2</sup>", sep = "<sup>")
+age_var2_name <- paste(age_var_name, "2</sup>", sep = "<sup>")
+age_var2_units <- paste(age_var_units, "2</sup>", sep = "<sup>")
 
-  age_var2 <- paste(age_var, 2, sep = "")
-  age_var_ns <- paste(age_var, "ns", sep = "_")
-  age_var2_ns <- paste(age_var2, "ns", sep = "_")
-  class_names <- paste("Class", seq_len(100))
-  names(class_names) <- paste0("new_class", seq_len(100))
-  age_names <- paste(age_var_name, age_var_units)
-  names(age_names) <- age_var_ns
-  age2_names <- paste(age_var2_name, age_var2_units)
-  names(age2_names) <- age_var2_ns
-  age_interaction_names <- paste(age_names, class_names, sep = ":")
-  names(age_interaction_names) <- paste(names(age_names),
-    names(class_names),
-    sep = ":"
-  )
-  age2_interaction_names <- paste(age2_names, class_names, sep = ":")
-  names(age2_interaction_names) <- paste(names(age2_names), names(class_names), sep = ":")
-  fixcov_names <- c("female" = "Female", "het3" = "HET3")
-  fixcov_names_interacted <- paste(fixcov_names, collapse = ":")
-  names(fixcov_names_interacted) <- paste(names(fixcov_names), collapse = ":")
+age_var2 <- paste(age_var, 2, sep = "")
+age_var_ns <- paste(age_var, "ns", sep = "_")
+age_var2_ns <- paste(age_var2, "ns", sep = "_")
+class_names <- paste("Class", seq_len(100))
+names(class_names) <- paste0("new_class", seq_len(100))
+age_names <- paste(age_var_name, age_var_units)
+names(age_names) <- age_var_ns
+age2_names <- paste(age_var2_name, age_var2_units)
+names(age2_names) <- age_var2_ns
+age_interaction_names <- paste(age_names, class_names, sep = ":")
+names(age_interaction_names) <- paste(names(age_names),
+  names(class_names),
+  sep = ":"
+)
+age2_interaction_names <- paste(age2_names, class_names, sep = ":")
+names(age2_interaction_names) <- paste(names(age2_names), names(class_names), sep = ":")
+fixcov_names <- c("female" = "Female", "het3" = "HET3")
+fixcov_names_interacted <- paste(fixcov_names, collapse = ":")
+names(fixcov_names_interacted) <- paste(names(fixcov_names), collapse = ":")
 
-  all_names <- c(
-    class_names,
-    age_names,
-    age2_names,
-    age_interaction_names,
-    age2_interaction_names,
-    fixcov_names,
-    fixcov_names_interacted
-  )
+all_names <- c(
+  class_names,
+  age_names,
+  age2_names,
+  age_interaction_names,
+  age2_interaction_names,
+  fixcov_names,
+  fixcov_names_interacted
+)
 
-  lmes_bw <- row$model_bw
-  lmes_gluc <- row$model_gluc
-  lmes_fat <- row$model_fat
+lmes_index <- grepl("^model.*_og_.*across$", names(final_models))
+lmes_list <- final_models[og_index, lmes_index]
 
-  model_list <- list()
-  oc_names_list <- list()
+model_list <- lapply(lmes_list, function(row) {
+  lapply(row, `[[`, 4)
+})
 
-  for (i in seq_len(nrow(row))) {
-    model_list[[i]] <- list(
-      lmes_bw[[i]][[4]],
-      lmes_gluc[[i]][[4]],
-      lmes_fat[[i]][[4]]
-    )
-    oc_names_list[[i]] <- c(
-      "Body Weight",
-      "Glucose",
-      "Body Fat"
-    )
-  }
-  # model_list <- do.call(c, model_list)
-  # oc_names_list <- do.call(c, oc_names_list)
-  lme_table_list <- list()
-  title_list <- c("Body Weight Class", "Glucose Class", "Body Fat Class")
-  for (i in seq_along(model_list)) {
-    title <- paste(env$subgroup, title_list[[i]], "Mixed Effects Models")
-    lme_table <- tab_model(model_list[[i]],
-      show.ci = FALSE,
-      show.re.var = FALSE,
-      pred.labels = all_names,
-      show.reflvl = TRUE,
-      wrap.labels = 50,
-      show.icc = FALSE,
-      show.r2 = FALSE,
-      show.ngroups = FALSE,
-      show.obs = FALSE,
-      dv.labels = oc_names_list[[i]],
-      title = title
-    )
-    lme_table_list[[i]] <- lme_table
-  }
-
-
-  env$lme_table <- lme_table_list
-
-  env
+invert_list <- function(list) {
+  list_matrix <- do.call(rbind, list)
+  output <- apply(list_matrix, 2, as.list)
+  output
 }
+model_list <- invert_list(model_list)
 
-env_list <- lapply(env_list, tab_lme, mo_names = mo_names)
+
+
+oc_names_list <- rep(list(rows$oc_name), times = length(lmes_list))
+
+lme_table_list <- list()
+title_list <- paste(rows$oc_name, "Class")
+
+lme_table <- lapply(seq_along(model_list), function(i) {
+  title <- paste(title_list[[i]], "Mixed Effects Models")
+  lme_table <- tab_model(model_list[[i]],
+    show.ci = FALSE,
+    show.re.var = FALSE,
+    pred.labels = all_names,
+    show.reflvl = TRUE,
+    wrap.labels = 50,
+    show.icc = FALSE,
+    show.r2 = FALSE,
+    show.ngroups = FALSE,
+    show.obs = FALSE,
+    dv.labels = oc_names_list[[i]],
+    title = title
+  )
+  lme_table
+})
+
+lme_table
+
 ```
 
 ### Class Prediction Panel
