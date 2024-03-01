@@ -1,7 +1,7 @@
 out_tag: all
 tag_time: FALSE
 plan: multicore
-ncpus: 8
+ncpus: 10
 sample_n: FALSE
 center: TRUE
 scale: FALSE
@@ -33,8 +33,8 @@ datasets:
       - "~ 1"
       - "~ age_wk"
       - "~ age_wk + age_wk2"
-    idiag: FALSE
-    nwg: FALSE
+    idiag: [FALSE, TRUE]
+    nwg: [FALSE, TRUE]
     ng_max: 5
   prediction_data:
     filter_interval:
@@ -89,8 +89,8 @@ datasets:
       - "~ 1"
       - "~ age_wk"
       - "~ age_wk + age_wk2"
-    idiag: FALSE
-    nwg: FALSE
+    idiag: [FALSE, TRUE]
+    nwg: [FALSE, TRUE]
     ng_max: 5
   prediction_data:
     filter_interval:
@@ -146,8 +146,8 @@ datasets:
       - "~ 1"
       - "~ age_wk"
       - "~ age_wk + age_wk2"
-    idiag: FALSE
-    nwg: FALSE
+    idiag: [FALSE, TRUE]
+    nwg: [FALSE, TRUE]
     ng_max: 5
   prediction_data:
     filter_interval:
