@@ -408,14 +408,14 @@ title_theme <- ggdraw() +
 class_prediction_panel <- cowplot::plot_grid(
   plotlist = plot_list,
   ncol = 4,
-  labels = "AUTO"
+  labels = "AUTO",
+  byrow = FALSE
 )
 
 class_prediction_panel <- cowplot::plot_grid(title_theme,
   class_prediction_panel,
   rel_heights = c(.05, 1),
-  ncol = 1,
-  byrow = FALSE
+  ncol = 1
 )
 ```
 
@@ -448,7 +448,7 @@ print_table <- function(env, table_name, title) {
     collapse_rows(columns = 1, valign = "middle") %>%
     kable_styling(bootstrap_options = "striped")
 
-  print(table)
+  return(table)
 }
 
 print_table(.GlobalEnv,
@@ -466,7 +466,9 @@ other_met_panel
 ### Table 2: Metabolic Classes Predict other Metabolic Metrics
 
 ```{r table 2, results = 'asis'}
-lme_table$knitr
+for(table in lme_table) {
+  cat(table$knitr)
+}
 ```
 
 ### Figure 4: Mortality and Class
