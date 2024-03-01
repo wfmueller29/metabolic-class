@@ -25,3 +25,15 @@ rmarkdown::render("05_figures.Rmd",
   output_dir = output_dir, params = list(input_path = input_05)
 )
 setwd("..")
+
+# 06 --------------------------------------------------------------------------
+input_06 <- normalizePath(
+  paste0(file.path("05_figures/output", config$out_tag), ".yaml")
+)
+
+setwd("06_display_figures")
+output_dir <- normalizePath(file.path("output", config$out_tag))
+rmarkdown::render("06_display_figures.Rmd",
+  output_dir = output_dir, params = list(input_path = input_06)
+)
+setwd("..")
