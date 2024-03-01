@@ -499,5 +499,12 @@ class_prediction_panel
 ### Figure 6: Internal Validation (Preliminary)
 
 ```{r figure 6}
-
+final_models[!og_index, ]$filter_window_test_lp_plot[[1]]
+final_models[!og_index, ]$filter_window_test_concord[[1]]
+final_models[!og_index, ]$filter_window_test_wave_lp_plot[[1]]
+final_models[!og_index, ]$filter_window_test_wave_concord[[1]]
+final_models[!og_index, ]$filter_cumulative_test_lp_plot[[1]]
+final_models[!og_index, ]$filter_cumulative_test_concord[[1]]
+final_models[!og_index, ]$filter_cumulative_test_wave_lp_plot[[1]]
+final_models[!og_index, ]$filter_cumulative_test_wave_concord[[1]]
 ```
