@@ -69,7 +69,6 @@ p1 <- final_models[, "spag_plot"][[1]]
 p3 <- final_models[, "traj_obs"][[1]]
 
 fig1 <- cowplot::plot_grid(p1, p3, nrow = 1)
-fig1
 ```
 
 ### Dispaly predicted and observed
