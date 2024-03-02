@@ -1,6 +1,19 @@
 # this is for running 4-5
 
-config$out_tag <- "all" # delete this
+config$out_tag <- "all_realtive_age" # delete this
+
+# 03 -------------------------------------------------------------------------
+
+input_03 <- normalizePath(
+  paste0(file.path("02_model/output", config$out_tag), ".yaml")
+)
+
+setwd("03_model_select")
+output_dir <- normalizePath(file.path("output", config$out_tag))
+rmarkdown::render("03_model_select.Rmd",
+  output_dir = output_dir, params = list(input_path = input_03)
+)
+setwd("..")
 
 # 04 -------------------------------------------------------------------------
 
