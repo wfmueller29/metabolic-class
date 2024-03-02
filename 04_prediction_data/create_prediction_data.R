@@ -62,8 +62,9 @@ datasets <- resample_frequency_dataset(datasets)
 # save our datasets -----------------------------------------------------------
 config <- yaml::read_yaml(file = input$config_path)
 
-output_dir_path <- normalizePath(file.path("output", config$out_tag))
+output_dir_path <- file.path("output", config$out_tag)
 dir.create(output_dir_path)
+output_dir_path <- normalizePath(output_dir_path)
 datasets_path <- file.path(output_dir_path, "datasets.RDATA")
 
 save(datasets, file = datasets_path)

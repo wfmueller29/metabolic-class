@@ -1,4 +1,4 @@
-out_tag: all_realtive_age
+out_tag: all_relative_age
 tag_time: FALSE
 plan: multicore
 ncpus: 10

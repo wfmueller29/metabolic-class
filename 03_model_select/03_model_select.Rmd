@@ -184,8 +184,9 @@ final_models_csv <- final_models[, column_select]
 config_path <- input$config_path
 config <- yaml::read_yaml(file = config_path)
 
-output_path <- normalizePath(file.path("output", config$out_tag))
+output_path <- file.path("output", config$out_tag)
 dir.create(output_path)
+output_path <- normalizePath(output_path)
 
 final_models_path <- file.path(output_path, "final_models.RDATA")
 csv_path <- file.path(output_path, "final_models.csv")

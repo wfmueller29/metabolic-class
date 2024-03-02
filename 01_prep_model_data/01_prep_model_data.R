@@ -298,10 +298,11 @@ names(datasets) <- dataset_names
 
 # save datasets as R object list, individual R objects, and csv's -------------
 input_path <- normalizePath(input_path)
-output_dir_path <- normalizePath(file.path("output", config$out_tag))
+output_dir_path <- file.path("output", config$out_tag)
+dir.create(output_dir_path)
+output_dir_path <- normalizePath(output_dir_path)
 datasets_path <- normalizePath(file.path(output_dir_path, "datasets.RDATA"))
 
-dir.create(output_dir_path)
 save(datasets, file = datasets_path)
 
 # create output yaml ----------------------------------------------------------

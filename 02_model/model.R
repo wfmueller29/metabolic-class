@@ -177,8 +177,10 @@ if (config$tag_time) {
   out_dir <- paste(config$out_tag)
 }
 
-out_path <- normalizePath(file.path("output", out_dir))
 input_yaml_path <- normalizePath(input_path)
+out_path <- file.path("output", out_dir)
+dir.create(out_path)
+out_path <- normalizePath(out_path)
 
 # Create file paths
 datasets_path <- normalizePath(file.path(out_path, "datasets.RDATA"))
@@ -186,7 +188,6 @@ models_path <- normalizePath(file.path(out_path, "models.RDATA"))
 cf_path <- normalizePath(file.path(out_path, "cf.RDATA"))
 
 # save objects
-dir.create(out_path)
 save(datasets, file = datasets_path)
 save(models, file = models_path)
 save(cf, file = cf_path)
