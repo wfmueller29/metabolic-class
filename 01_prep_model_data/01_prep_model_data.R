@@ -241,7 +241,7 @@ datasets <- c(datasets, train_test_datasets)
 datasets <- lapply(datasets, function(dataset) {
   prediction_data_age_vars <- lapply(dataset$prediction_data, `[[`, "age_var")
   prediction_data_age_vars <- unlist(prediction_data_age_vars)
-  prep_age_vars <- unique(prediction_data_age_vars, dataset$age_var)
+  prep_age_vars <- unique(c(prediction_data_age_vars, dataset$age_var))
   dataset$data <- helphlme::prep_hlme(
     df = dataset$data,
     vars = prep_age_vars,
