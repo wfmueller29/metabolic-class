@@ -2,7 +2,7 @@ out_tag: all_relative_age
 tag_time: FALSE
 plan: multicore
 ncpus: 10
-sample_n: 50
+sample_n: FALSE
 center: TRUE
 scale: FALSE
 survival_dataset:
