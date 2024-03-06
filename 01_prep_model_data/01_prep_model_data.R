@@ -237,10 +237,14 @@ datasets <- c(datasets, train_test_datasets)
 
 # use prep_hlme to center and scale the data ----------------------------------
 
+
 datasets <- lapply(datasets, function(dataset) {
+  prediction_data_age_vars <- lapply(dataset$prediction_data, `[[`, "age_var")
+  prediction_data_age_vars <- unlist(prediction_data_age_vars)
+  prep_age_vars <- unique(prediction_data_age_vars, dataset$age_var)
   dataset$data <- helphlme::prep_hlme(
     df = dataset$data,
-    vars = dataset$age_var,
+    vars = prep_age_vars,
     center = config$center,
     scale = config$scale
   )
@@ -248,7 +252,7 @@ datasets <- lapply(datasets, function(dataset) {
   if (!is.null(test_data)) {
     dataset$test_data <- helphlme::prep_hlme(
       df = dataset$test_data,
-      vars = dataset$age_var,
+      vars = prep_age_vars,
       center = config$center,
       scale = config$scale
     )
