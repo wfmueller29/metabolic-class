@@ -8,7 +8,7 @@ scale: FALSE
 survival_dataset:
   path: "../00c_survival_data/output/main_cat_surv.csv"
   id: "idno"
-  age_death: "le_wk"
+  age_death: "percent_le"
   event: "dead_censor"
   tod: "tod"
   covariates: "sex_M + strain_HET3"
