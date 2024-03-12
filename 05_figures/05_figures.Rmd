@@ -40,8 +40,9 @@ mega_pal <- rep(palette(), 40)
 # for the case when we are not running with RStudio
 if (!exists("params")) {
   params <- list()
-  params$input_path <- "../04_prediction_data/output/test_local.yaml"
+  # params$input_path <- "../04_prediction_data/output/test_local.yaml"
   # params$input_path <- "../04_prediction_data/output/all.yaml"
+  params$input_path <- "../04_prediction_data/output/all_relative_age.yaml"
 }
 
 input <- yaml::read_yaml(file = params$input_path)
