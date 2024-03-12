@@ -10,6 +10,7 @@ keep_cols <- c(
 
 main_cat_surv <- main_cat_surv[keep_cols]
 
+main_cat_surv$percent_le <- 1
 
 dir.create("output")
 write.csv(x = main_cat_surv, file = "output/main_cat_surv.csv")
