@@ -1,8 +1,9 @@
-out_tag: all
+# local test
+out_tag: test_relative_age
 tag_time: FALSE
 plan: multicore
-ncpus: 10
-sample_n: FALSE
+ncpus: 5
+sample_n: 50
 center: TRUE
 scale: FALSE
 survival_dataset:
@@ -17,7 +18,7 @@ datasets:
 - name: "slam"
   path: "../00b_dataset_mods/output/data/test/slam_bw_og.csv"
   outcome: "bw"
-  age_var: ["age_wk", "age_wk2"] # these must be in increasing polynomial order
+  age_var: ["per_age_wk", "per_age_wk2"] # these must be in increasing polynomial order
   id: "idno"
   covariates: ["sex", "strain"]
   covariates_dummy: ["sex_M", "strain_HET3"]
@@ -27,15 +28,13 @@ datasets:
     sample_by: ["sex", "strain"]
     split: .8
   model:
-    fixed: "~ age_wk + age_wk2 + sex_F * strain_HET3"
+    fixed: "~ per_age_wk + per_age_wk2 + sex_F * strain_HET3"
     fixcov: ["sex_F", "strain_HET3"]
-    mixture: "~ age_wk + age_wk2" 
+    mixture: "~ per_age_wk + per_age_wk2" 
     random: 
       - "~ 1"
-      - "~ age_wk"
-      - "~ age_wk + age_wk2"
-    idiag: [FALSE, TRUE]
-    nwg: [FALSE, TRUE]
+    idiag: FALSE
+    nwg: FALSE
     ng_max: 5
   prediction_data:
     filter_interval:
@@ -63,8 +62,8 @@ datasets:
   labels:
     oc_name: "Body Weight"
     oc_units: "(g)"
-    age_var_name: "Age"
-    age_var_units: "(weeks)"
+    age_var_name: "Relative Age"
+    age_var_units: "(%)"
     data_name: "SLAM Body Weight"
   harmonize:
     execute: TRUE
@@ -74,7 +73,7 @@ datasets:
 - name: "slam"
   path: "../00b_dataset_mods/output/data/test/slam_fat_og.csv"
   outcome: "fat"
-  age_var: ["age_wk", "age_wk2"]
+  age_var: ["per_age_wk", "per_age_wk2"]
   id: "idno"
   covariates: ["sex", "strain"]
   covariates_dummy: ["sex_M", "strain_HET3"]
@@ -84,14 +83,12 @@ datasets:
     sample_by: ["sex", "strain"]
     split: .8
   model:
-    fixed: "~ age_wk + age_wk2"
-    mixture: "~ age_wk + age_wk2" 
+    fixed: "~ per_age_wk + per_age_wk2"
+    mixture: "~ per_age_wk + per_age_wk2" 
     random: 
       - "~ 1"
-      - "~ age_wk"
-      - "~ age_wk + age_wk2"
-    idiag: [FALSE, TRUE]
-    nwg: [FALSE, TRUE]
+    idiag: FALSE
+    nwg: FALSE
     ng_max: 5
   prediction_data:
     filter_interval:
@@ -119,8 +116,8 @@ datasets:
   labels:
     oc_name: "Body Fat"
     oc_units: "(g)"
-    age_var_name: "Age"
-    age_var_units: "(weeks)"
+    age_var_name: "Relative Age"
+    age_var_units: "(%)"
     data_name: "SLAM Body Fat"
   harmonize:
     execute: TRUE
@@ -130,7 +127,7 @@ datasets:
 - name: "slam"
   path: "../00b_dataset_mods/output/data/test/slam_gluc_og.csv"
   outcome: "gluc"
-  age_var: ["age_wk", "age_wk2"]
+  age_var: ["per_age_wk", "per_age_wk2"]
   id: "idno"
   covariates: ["sex", "strain"]
   covariates_dummy: ["sex_M", "strain_HET3"]
@@ -140,15 +137,13 @@ datasets:
     sample_by: ["sex", "strain"]
     split: .8
   model:
-    fixed: "~ age_wk + age_wk2 + sex_F + strain_HET3" 
+    fixed: "~ per_age_wk + per_age_wk2 + sex_F + strain_HET3" 
     fixcov: ["sex_F", "strain_HET3"]
-    mixture: "~ age_wk + age_wk2" 
+    mixture: "~ per_age_wk + per_age_wk2" 
     random: 
       - "~ 1"
-      - "~ age_wk"
-      - "~ age_wk + age_wk2"
-    idiag: [FALSE, TRUE]
-    nwg: [FALSE, TRUE]
+    idiag: FALSE
+    nwg: FALSE
     ng_max: 5
   prediction_data:
     filter_interval:
@@ -176,8 +171,8 @@ datasets:
   labels:
     oc_name: "Glucose"
     oc_units: "(mg/dL)"
-    age_var_name: "Age"
-    age_var_units: "(weeks)"
+    age_var_name: "Relative Age"
+    age_var_units: "(%)"
     data_name: "SLAM Glucose"
   harmonize:
     execute: TRUE
