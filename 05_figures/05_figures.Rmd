@@ -1726,7 +1726,7 @@ final_models$filter_window_test_lp_plot
 final_models$filter_window_test_concord_plot
 ```
 
-#### Waved Combined Cox
+## Waved Combined Cox
 
 ```{r source wave combined_class_cox, file = 'R/pred_class_waved.R'}
 source("R/pred_class_waved.R")
@@ -2514,6 +2514,812 @@ final_models$filter_window_test_wave_lp_plot[[i]]
 final_models$filter_window_test_lp_plot[[i]]
 final_models$filter_window_test_wave_concord_plot[[i]]
 final_models$filter_window_test_concord_plot[[i]]
+```
+
+## Combined Metabolic Class Discrete
+
+### Create Combined Cox Discrete
+
+```{r source combined_class_cox, file = 'R/combined_class_cox.R'}
+source("R/combined_class_cox_discrete.R")
+```
+
+```{r combined survival}
+# get model_names that are not train_test
+train_test_index <- (final_models$data_mod == "train_test")
+train_test_names <- final_models[train_test_index, "model_name"]
+rest_names <- final_models[!train_test_index, "model_name"]
+
+model_name_list <- list(rest_names, train_test_names)
+
+combined_cox_models <- lapply(
+  model_name_list,
+  cox_combine,
+  final_model_object = final_models,
+  covariates = config$survival_dataset$covariates,
+  age_death = config$survival_dataset$age_death,
+  censor = config$survival_dataset$event
+)
+
+names(combined_cox_models) <- lapply(model_name_list, paste, collapse = "-")
+
+for (name in names(combined_cox_models)) {
+  name_vector <- strsplit(x = name, split = "-")[[1]]
+  model_index <- final_models$model_name %in% name_vector
+  model_index <- match(name_vector, final_models$model_name)
+  for (i in model_index) {
+    final_models[i, "cox_combined_models"] <- list(combined_cox_models[name])
+  }
+}
+```
+
+### Determine get Hazard Predictions from test set
+
+#### Predict Class Assignement for Test Dataframe
+
+```{r source create test prediction results, file = 'R/pred_class.R'}
+source("R/pred_class.R")
+```
+
+```{r create test prediction results}
+# Get the names of the filtered data
+prediction_data_names <- lapply(datasets, function(dataset) {
+  names(dataset$prediction_test_data$data)
+})
+prediction_data_names <- unlist(prediction_data_names, use.names = FALSE)
+prediction_columns <- unique(prediction_data_names)
+
+prediction_names <- lapply(prediction_columns, strsplit, split = "_data")
+prediction_names <- unlist(prediction_names)
+
+# create a list of lists, where parent list is the filter applied, and the
+# daughter lists provides the filtered dataframes for the corresponding
+# row of final_models. This code does not take into account the case where
+# certain filters are applied to one row, but not another
+filter_list <- lapply(prediction_columns, function(filter) {
+  row_list <- lapply(seq_len(nrow(final_models)), function(row_number) {
+    data_name <- final_models[row_number, "data"]
+    datasets[[data_name]]$prediction_test_data$data[[filter]]
+  })
+  row_list
+})
+names(filter_list) <- prediction_columns
+
+for (filter in names(filter_list)) {
+  final_models[[filter]] <- filter_list[[filter]]
+}
+
+prediction_names <- paste0(prediction_names, "_test")
+prediction_results_names <- paste(prediction_names, "results", sep = "_")
+
+prediction_results <- lapply(prediction_columns, function(col) {
+  print(col)
+  predict_class_model_list(
+    nested_newdata_list = final_models[[col]],
+    model_list = final_models$final_model,
+    names = final_models$model_name
+  )
+})
+
+final_models[, prediction_results_names] <- prediction_results
+```
+
+#### Create new test class numbering
+
+```{r test class numbering}
+increment_class <- function(filtered_df, i = 0) {
+  filtered_df$new_class <- as.character(filtered_df$class + i)
+
+  # Create new prob based off of new_class
+  probs_index <- grepl("^prob", names(filtered_df))
+  probs <- names(filtered_df)[grepl("^prob", names(filtered_df))]
+  probs <- unlist(lapply(strsplit(probs, split = "prob"), `[`, 2))
+  new_probs <- as.numeric(probs) + i
+  new_probs <- paste0("prob", new_probs)
+  names(filtered_df)[probs_index] <- new_probs
+
+  filtered_df
+}
+
+reorder_prediction_class <- function(final_models,
+                                     model_names,
+                                     filtered_df_name) {
+  print(filtered_df_name) # delete
+  i <- 0
+  for (model_name in model_names) {
+    print(model_name) # delete
+    index <- final_models$model_name == model_name
+    row <- final_models[index, ]
+    filtered_dfs <- row[, filtered_df_name][[1]]
+    if (is.list(filtered_dfs)) {
+      filtered_dfs_inced <- lapply(
+        filtered_dfs,
+        increment_class,
+        i
+      )
+    } else {
+      filtered_dfs_inced <- NA
+    }
+
+    column <- final_models[, filtered_df_name]
+    column[[which(index)]] <- filtered_dfs_inced
+    final_models[[filtered_df_name]] <- column
+    i <- as.numeric(row$ng) + i
+  }
+  final_models
+}
+
+# get model_names that are not train_test
+train_test_index <- (final_models$data_mod == "train_test")
+train_test_names <- final_models[train_test_index, "model_name"]
+rest_names <- final_models[!train_test_index, "model_name"]
+
+for (filtered_df_name in prediction_results_names) {
+  final_models <- reorder_prediction_class(
+    final_models = final_models,
+    model_names = train_test_names,
+    filtered_df_name = filtered_df_name
+  )
+}
+```
+
+#### Merge test_data prediction dataframes
+
+```{r merge prediction dataframes}
+merge_prediction_data <- function(x, y) {
+  print(y$suffix)
+  if (length(x$data_list) != length(y$data_list)) {
+    stop("Data lists are not of the same length, cannot merge them")
+  }
+  z <- list()
+  z$data_list <- mapply(merge,
+    x = x$data_list, y = y$data_list,
+    MoreArgs = list(by.x = x$id, by.y = y$id, suffixes = c(x$suffix, y$suffix)),
+    SIMPLIFY = FALSE
+  )
+  z$id <- x$id
+  z$suffix <- ""
+
+  z
+}
+
+
+merge_prediction_data_group <- function(
+    final_models,
+    model_names,
+    filtered_df_name) {
+  index <- final_models$model_name %in% model_names
+  desired_dfs <- final_models[index, filtered_df_name]
+  desired_ids <- final_models[index, "subject"]
+  desired_suffixes <- paste0("_", final_models[index, "oc"])
+
+  if (all(is.na(desired_dfs))) {
+    merged_data <- NA
+  } else {
+    reduce_list <- lapply(seq_len(length(desired_dfs)), function(i) {
+      list(
+        data_list = desired_dfs[[i]],
+        id = desired_ids[[i]],
+        suffix = desired_suffixes[[i]]
+      )
+    })
+    merged_data <- Reduce(f = merge_prediction_data, x = reduce_list)$data_list
+
+    # the last element name improperly following reduce function, thus:
+    merged_data <- lapply(merged_data, function(data) {
+      last_class_name <- paste0("class", tail(desired_suffixes, n = 1))
+      last_new_class_name <- paste0("new_class", tail(desired_suffixes, n = 1))
+      colnames(data)[colnames(data) == "class"] <- last_class_name
+      colnames(data)[colnames(data) == "new_class"] <- last_new_class_name
+      data
+    })
+  }
+
+  # create new column to store data
+  column <- final_models[, filtered_df_name]
+  for (row in which(index)) {
+    column[[row]] <- merged_data
+  }
+  new_column_name <- gsub("_results$", "", filtered_df_name)
+  new_column_name <- paste0(new_column_name, "_merged")
+  final_models[[new_column_name]] <- column
+  final_models
+}
+
+train_test_index <- (final_models$data_mod == "train_test")
+train_test_names <- final_models[train_test_index, "model_name"]
+
+for (filtered_df_name in prediction_results_names) {
+  final_models <- merge_prediction_data_group(
+    final_models = final_models,
+    model_names = train_test_names,
+    filtered_df_name = filtered_df_name
+  )
+}
+```
+
+#### Create test census dataframe
+
+```{r create test census dataframe}
+make_test_census <- function(cf_row, dataset) {
+  if (is.null(dataset$test_data)) {
+    return(NA)
+  }
+  data <- dataset$test_data
+  id <- dataset$id
+
+  # create census from data
+  census <- data[!duplicated(data[[id]]), ]
+  census_cols <- dataset[c("id", "covariates", "factor", "covariates_dummy")]
+  census_cols <- unlist(census_cols, use.names = FALSE)
+
+  census <- census[, census_cols]
+  # add survival information to census
+  surv_id <- config$survival_dataset$id
+
+  census <- merge(x = census, y = main_cat_surv, by.x = id, by.y = surv_id)
+
+  census
+}
+
+
+final_models$test_census <- lapply(seq_len(nrow(final_models)), function(i) {
+  cf_row <- final_models[i, ]
+  dataset <- datasets[[cf_row$dataset_index]]
+  make_test_census(cf_row, dataset)
+})
+```
+
+```{r merge test census}
+merge_test_census_apply <- function(data_list, census, id) {
+  if (all(is.na(data_list))) {
+    data_list <- NA
+    warning("data_list is all NA, returning NA")
+  } else {
+    data_list <- lapply(data_list, merge, y = census, by = id)
+  }
+  data_list
+}
+
+merge_test_census_column <- function(final_models, filtered_df_name) {
+  final_models_test <- final_models[final_models$data_mod == "train_test", ]
+  censuses <- final_models_test[, "test_census"]
+  data_lol <- final_models_test[, filtered_df_name]
+  ids <- final_models_test[, "subject"]
+  data_lol <- mapply(merge_test_census_apply,
+    data_list = data_lol, census = censuses, id = ids,
+    SIMPLIFY = FALSE
+  )
+
+  final_models[[filtered_df_name]] <- data_lol
+  final_models
+}
+
+merged_prediction_names <- paste0(prediction_names, "_merged")
+
+for (filtered_df_name in merged_prediction_names) {
+  final_models <- merge_test_census_column(
+    final_models = final_models,
+    filtered_df_name = filtered_df_name
+  )
+}
+```
+
+```{r add prediction data to census}
+invert_list <- function(list) {
+  list_matrix <- do.call(rbind, list)
+  output <- apply(list_matrix, 2, as.list)
+  output
+}
+
+tmerge_prediction_data <- function(data, id, age, age_death, outcomes) {
+  print(nrow(data))
+  if (nrow(data) == 0) {
+    warning("Cannot perform surv_tmerge, 0 nrows in data")
+    return(data)
+  }
+
+  tmerged_data <- surv_tmerge(
+    data = data,
+    id = id,
+    age = age,
+    age_death = age_death,
+    outcomes = outcomes
+  )
+
+  prob_cols <- names(tmerged_data)[grepl("^prob", names(tmerged_data))]
+  prob_cols_drop <- sapply(prob_cols, function(name) {
+    all(tmerged_data[[name]] == 1)
+  })
+  prob_cols <- prob_cols[!prob_cols_drop]
+
+  tmerged_data[, prob_cols] <- lapply(tmerged_data[, prob_cols],
+    log,
+    base = 1.1
+  )
+
+  tmerged_data
+}
+
+add_prediction_data <- function(final_models, datasets, filtered_df_name) {
+  test_index <- final_models$data_mod == "train_test"
+  final_models_test <- final_models[test_index, ]
+
+  age_vars <- rep(config$survival_dataset$age_var, nrow(final_models_test))
+  age_vars <- paste0(age_vars, "_ns")
+  outcomes <- final_models_test[, "oc"]
+  ids <- final_models_test[, "subject"]
+
+  censuses_name <- paste0(filtered_df_name, "_merged")
+  censuses_lol <- final_models_test[, censuses_name]
+
+  filter <- gsub("_test", "_data", filtered_df_name)
+  datasets_index <- final_models_test[, "dataset_index"]
+  desired_data <- lapply(datasets_index, function(i) {
+    datasets[[i]][["prediction_test_data"]][[1]][[filter]]
+  })
+
+
+  desired_data <- invert_list(desired_data)
+  censuses_lol <- invert_list(censuses_lol)
+  censuses_lol <- lapply(censuses_lol, `[[`, 1)
+
+
+  combined_data_lol <- mapply(
+    combine_data,
+    data = desired_data,
+    census = censuses_lol,
+    MoreArgs = list(
+      ids = ids,
+      age_vars = age_vars,
+      outcomes = outcomes,
+      census_id = ids[[1]]
+    ),
+    SIMPLIFY = FALSE
+  )
+
+  data_lol <- lapply(combined_data_lol, `[[`, "data")
+  id_lol <- lapply(combined_data_lol, `[[`, "id")
+  age_var_lol <- lapply(combined_data_lol, `[[`, "age_var")
+
+  tmerged_data <- mapply(tmerge_prediction_data,
+    data = data_lol,
+    id = id_lol,
+    age = age_var_lol,
+    MoreArgs = list(
+      age_death = config$survival_dataset$age_death,
+      outcomes = outcomes
+    ),
+    SIMPLIFY = FALSE
+  )
+
+  output_name <- paste0(filtered_df_name, "_tmerged")
+  column <- rep(list(NA), nrow(final_models))
+  column[test_index] <- rep(list(tmerged_data), times = nrow(final_models_test))
+  final_models[[output_name]] <- column
+
+  final_models
+}
+
+for (filtered_df_name in prediction_names) {
+  final_models <- add_prediction_data(
+    final_models = final_models,
+    datasets = datasets,
+    filtered_df_name = filtered_df_name
+  )
+}
+```
+
+#### We need to predict hazard ratios for our test sets
+
+```{r test mortaility prediction using train test}
+predict_cox <- function(test_data,
+                        model,
+                        type = c("lp", "risk"),
+                        suffix = "") {
+  print(nrow(test_data))
+  if (nrow(test_data) == 0) {
+    warning("test_data has 0 obs, cannot predict; returning itself")
+    return(test_data)
+  }
+  for (t in type) {
+    name <- paste0(t, suffix)
+    test_data[[name]] <- predict(model, test_data, type = t)
+  }
+
+  test_data
+}
+
+predict_cox_apply <- function(test_data, model_list, type = c("lp", "risk")) {
+  for (i in seq_len(length(model_list))) {
+    test_data <- predict_cox(
+      test_data = test_data,
+      model = model_list[[i]],
+      type = type,
+      suffix = i
+    )
+  }
+
+  test_data
+}
+
+predict_cox_apply2 <- function(test_data_list,
+                               model_list,
+                               type = c("lp", "risk")) {
+  if (is.list(test_data_list)) {
+    test_data_list <- lapply(
+      X = test_data_list,
+      FUN = predict_cox_apply,
+      model_list = model_list,
+      type = type
+    )
+  } else {
+    test_data_list <- NA
+    warning("test_data_list is not a list, returning NA")
+  }
+
+  test_data_list
+}
+
+predict_cox_final_model <- function(final_models,
+                                    prediction_name,
+                                    type = c("lp", "risk")) {
+  train_test_index <- final_models[, "data_mod"] == "train_test"
+  tmerged_df_name <- paste0(prediction_name, "_tmerged")
+  test_data_lol <- final_models[, tmerged_df_name]
+  model_lol <- final_models[, "cox_combined_models"]
+
+  test_data_lol <- lapply(seq_along(test_data_lol), function(row_no) {
+    print(row_no)
+    test_data_list <- predict_cox_apply2(
+      test_data_list = test_data_lol[[row_no]],
+      model_list = model_lol[[row_no]],
+      type = type
+    )
+    test_data_list
+  })
+
+  output_name <- paste0(prediction_name, "_tmerged_prediction")
+  final_models[[output_name]] <- test_data_lol
+  final_models
+}
+
+for (prediction_name in prediction_names) {
+  print(filtered_df_name)
+  final_models <- predict_cox_final_model(
+    final_models = final_models,
+    prediction_name = prediction_name,
+    type = c("lp", "risk")
+  )
+}
+```
+
+#### Determine Calibration by Regressing PI on Test outcomes
+
+```{r create new dataframes from the predictions}
+get_slope_concord <- function(test_data, age_death, censor) {
+  surv_obj <- survival::Surv(
+    time = test_data[[age_death]], event = test_data[[censor]]
+  )
+
+  col_names <- names(test_data)
+  # get columns that have lp in them (the linear predictor)
+  index <- grepl(pattern = "lp\\d", x = col_names)
+  lp_cols <- col_names[index]
+
+  sum_concord_list <- lapply(lp_cols, function(lp) {
+    form <- as.formula(paste0("surv_obj ~ ", lp))
+    cox <- survival::coxph(formula = form, data = test_data)
+    sum <- as.data.frame(summary(cox)$coefficients)
+    names(sum) <- c("coef", "exp_coef", "se_coef", "z", "p")
+    names(sum) <- paste(lp, names(sum), sep = "_")
+
+    concord <- as.data.frame(t(summary(cox)$concordance))
+    names(concord) <- c("concord", "se_concord")
+    names(concord) <- paste(lp, names(concord), sep = "_")
+    sum_concord <- cbind(sum, concord)
+    sum_concord
+  })
+
+  sum_df_row <- do.call(what = cbind, args = sum_concord_list)
+
+  sum_df_row
+}
+
+get_slope_concord_apply <- function(test_data_list, age_death, censor) {
+  if (is.list(test_data_list)) {
+    test_data_df <- lapply(
+      X = test_data_list,
+      FUN = get_slope_concord,
+      age_death = age_death,
+      censor = censor
+    )
+
+    # for when there are intervals with no observations
+    null_index <- unlist(lapply(test_data_df, is.null))
+
+    test_data_df <- do.call(
+      what = rbind,
+      args = test_data_df
+    )
+
+    test_data_df$subset_name <- names(test_data_list)[!null_index]
+  } else {
+    test_data_df <- NA
+    warning("test_data_list is not a list, returning NA")
+  }
+
+  test_data_df
+}
+
+get_slope_concord_final_models <- function(final_models,
+                                           prediction_name,
+                                           age_death,
+                                           censor) {
+  column_name <- paste0(prediction_name, "_tmerged_prediction")
+  column <- final_models[, column_name]
+  train_test_index <- final_models$data_mod == "train_test"
+  column[train_test_index] <- lapply(column[train_test_index],
+    get_slope_concord_apply,
+    age_death = age_death, censor = censor
+  )
+  column[!train_test_index] <- NA
+
+  new_column_name <- paste0(prediction_name, "_tmerged_summary")
+
+  final_models[[new_column_name]] <- column
+
+  final_models
+}
+
+for (prediction_name in prediction_names) {
+  print(prediction_name)
+  final_models <- get_slope_concord_final_models(
+    final_models = final_models,
+    prediction_name = prediction_name,
+    age_death = config$survival_dataset$age_death,
+    censor = config$survival_dataset$event
+  )
+}
+```
+
+#### Convert from short to long for lp1, lp2, lp3
+
+```{r short to long for lp1}
+reshape_summary <- function(data) {
+  names(data) <- gsub("(lp\\d)_(.*)", "\\2_\\1", names(data))
+  varying_vars <- names(data)[grepl("_lp\\d", names(data))]
+
+  data <- reshape(data,
+    direction = "long",
+    varying = varying_vars,
+    idvar = "subset_name",
+    sep = "_lp",
+    timevar = "model"
+  )
+
+  data
+}
+
+data <- final_models$filter_cumulative_test_tmerged_summary
+
+
+for (prediction_name in prediction_names) {
+  data_name <- paste0(prediction_name, "_tmerged_summary")
+  train_test_index <- final_models$data_mod == "train_test"
+  data <- final_models[train_test_index, data_name]
+  new_data <- lapply(data, reshape_summary)
+  column <- rep(list(NA), times = length(train_test_index))
+  column[train_test_index] <- new_data
+  final_models[[data_name]] <- column
+}
+```
+
+#### Generated columns for prediction data plotting
+
+```{r prediction data renaming}
+name_window <- function(data, col_name) {
+  if (all(is.na(data))) {
+    warning("data is NA, returning data")
+    return(data)
+  }
+  col <- data[[col_name]]
+  col_split <- strsplit(x = col, split = "\\[|,| |\\]")
+  lower_bound <- lapply(col_split, function(i) i[[2]])
+  lower_bound <- as.numeric(unlist(lower_bound))
+  upper_bound <- lapply(col_split, function(i) i[[4]])
+  upper_bound <- as.numeric(unlist(upper_bound))
+  window_size <- upper_bound - lower_bound
+
+  data[["upper_bound"]] <- upper_bound
+  data[["lower_bound"]] <- lower_bound
+  data[["window_size"]] <- window_size
+  data[["midpoint"]] <- window_size / 2 + lower_bound
+
+  data
+}
+
+name_cumulative <- function(data, col_name) {
+  if (all(is.na(data))) {
+    warning("data is NA, returning data")
+    return(data)
+  }
+  col <- data[[col_name]]
+  col_split <- strsplit(x = col, split = "\\[|,| |\\]")
+  lower_bound <- lapply(col_split, function(i) i[[2]])
+  lower_bound <- as.numeric(unlist(lower_bound))
+  upper_bound <- lapply(col_split, function(i) i[[4]])
+  upper_bound <- as.numeric(unlist(upper_bound))
+
+  data[["upper_bound"]] <- upper_bound
+  data[["lower_bound"]] <- lower_bound
+  data[["midpoint"]] <- (upper_bound - lower_bound) / 2 + lower_bound
+
+  data
+}
+
+final_models$filter_cumulative_test_tmerged_summary <- lapply(
+  final_models$filter_cumulative_test_tmerged_summary,
+  name_cumulative,
+  col_name = "subset_name"
+)
+
+final_models$filter_window_test_tmerged_summary <- lapply(
+  final_models$filter_window_test_tmerged_summary,
+  name_window,
+  col_name = "subset_name"
+)
+```
+
+#### Create plots of concordances and regression on PI
+
+```{r create concordance plots}
+plot_cumulative_concord_lp <- function(data, outcome, color,
+                                       lower_bound, upper_bound, se,
+                                       ylab, xlab, title, legend_title) {
+  ggplot2::ggplot(
+    data = data,
+    mapping = ggplot2::aes(
+      x = as.numeric(.data[[upper_bound]]),
+      y = as.numeric(.data[[outcome]]),
+      color = factor(.data[[color]])
+    )
+  ) +
+    ggplot2::geom_line(stat = "identity") +
+    ggplot2::geom_errorbar(
+      ggplot2::aes(
+        x = .data[[upper_bound]],
+        ymin = .data[[outcome]] - 1.96 * .data[[se]],
+        ymax = .data[[outcome]] + 1.96 * .data[[se]]
+      ),
+      stat = "identity",
+      width = 0.8
+    ) +
+    ggplot2::labs(
+      y = ylab,
+      x = xlab,
+      title = title,
+      color = legend_title
+    ) +
+    ggplot2::facet_wrap(c(lower_bound), ncol = 1)
+}
+
+plot_window_concord_lp <- function(data, outcome, color,
+                                   window_size, midpoint, se,
+                                   ylab, xlab, title, legend_title) {
+  ggplot2::ggplot(
+    data = data,
+    mapping = ggplot2::aes(
+      x = as.numeric(.data[[midpoint]]),
+      y = as.numeric(.data[[outcome]]),
+      color = factor(.data[[color]])
+    )
+  ) +
+    ggplot2::geom_line(stat = "identity") +
+    ggplot2::geom_errorbar(
+      ggplot2::aes(
+        x = .data[[midpoint]],
+        ymin = .data[[outcome]] - 1.96 * .data[[se]],
+        ymax = .data[[outcome]] + 1.96 * .data[[se]]
+      ),
+      stat = "identity",
+      width = 0.8
+    ) +
+    ggplot2::labs(
+      y = ylab,
+      x = xlab,
+      title = title,
+      color = legend_title
+    ) +
+    ggplot2::facet_wrap(~ c(window_size), ncol = 1)
+}
+
+prediction_name <- "filter_window_test"
+data_name <- paste0(prediction_name, "_tmerged_summary")
+train_test_index <- final_models$data_mod == "train_test"
+
+data <- final_models[train_test_index, data_name]
+
+lp_plots <- lapply(data, plot_window_concord_lp,
+  outcome = "coef",
+  color = "model",
+  window_size = "window_size",
+  midpoint = "midpoint",
+  se = "se_coef",
+  ylab = "Linear Predictor Coeffecient",
+  xlab = "Age (weeks)",
+  title = "Window LP",
+  legend_title = "Model"
+)
+
+output_name <- paste0(prediction_name, "_lp_plot")
+column <- rep(list(NA), times = length(train_test_index))
+column[train_test_index] <- lp_plots
+final_models[[output_name]] <- column
+
+concord_plots <- lapply(data, plot_window_concord_lp,
+  outcome = "concord",
+  color = "model",
+  window_size = "window_size",
+  midpoint = "midpoint",
+  se = "se_concord",
+  ylab = "Concordance",
+  xlab = "Age (weeks)",
+  title = "Window Concordance",
+  legend_title = "Model"
+)
+
+output_name <- paste0(prediction_name, "_concord_plot")
+column <- rep(list(NA), times = length(train_test_index))
+column[train_test_index] <- concord_plots
+final_models[[output_name]] <- column
+
+
+
+prediction_name <- "filter_cumulative_test"
+data_name <- paste0(prediction_name, "_tmerged_summary")
+train_test_index <- final_models$data_mod == "train_test"
+
+data <- final_models[train_test_index, data_name]
+
+lp_plots <- lapply(data, plot_cumulative_concord_lp,
+  outcome = "coef",
+  color = "model",
+  lower_bound = "lower_bound",
+  upper_bound = "upper_bound",
+  se = "se_coef",
+  ylab = "Linear Predictor Coeffecient",
+  xlab = "Age (weeks)",
+  title = "Cumulative LP",
+  legend_title = "Model"
+)
+
+output_name <- paste0(prediction_name, "_lp_plot")
+column <- rep(list(NA), times = length(train_test_index))
+column[train_test_index] <- lp_plots
+final_models[[output_name]] <- column
+
+concord_plots <- lapply(data, plot_cumulative_concord_lp,
+  outcome = "concord",
+  color = "model",
+  lower_bound = "lower_bound",
+  upper_bound = "upper_bound",
+  se = "se_concord",
+  ylab = "Concordance",
+  xlab = "Age (weeks)",
+  title = "Cumulative Concordance",
+  legend_title = "Model"
+)
+
+output_name <- paste0(prediction_name, "_concord_plot")
+column <- rep(list(NA), times = length(train_test_index))
+column[train_test_index] <- concord_plots
+final_models[[output_name]] <- column
+
+final_models$filter_cumulative_test_lp_plot
+final_models$filter_cumulative_test_concord_plot
+final_models$filter_window_test_lp_plot
+final_models$filter_window_test_concord_plot
 ```
 
 ### Save R Objects
