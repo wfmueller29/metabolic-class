@@ -40,9 +40,10 @@ mega_pal <- rep(palette(), 40)
 # for the case when we are not running with RStudio
 if (!exists("params")) {
   params <- list()
-  # params$input_path <- "../04_prediction_data/output/test_local.yaml"
+  params$input_path <- "../04_prediction_data/output/test_local.yaml"
   # params$input_path <- "../04_prediction_data/output/all.yaml"
-  params$input_path <- "../04_prediction_data/output/all_relative_age.yaml"
+  # params$input_path <- "../04_prediction_data/output/all_relative_age.yaml"
+  params$input_path <- "../04_prediction_data/output/test_relative_age.yaml"
 }
 
 input <- yaml::read_yaml(file = params$input_path)
@@ -726,7 +727,7 @@ final_models$window_accuracy_plots
 source("R/boot_accuracy.R")
 ```
 
-```{r compute accuracy}
+```{r compute accuracy, cache = TRUE}
 final_models$interval_accuracy <- lapply(
   seq_len(nrow(final_models)),
   function(i) {
@@ -1248,7 +1249,7 @@ add_prediction_data <- function(final_models, datasets, filtered_df_name) {
   test_index <- final_models$data_mod == "train_test"
   final_models_test <- final_models[test_index, ]
 
-  age_vars <- final_models_test[, "age_var"]
+  age_vars <- rep(config$survival_dataset$age_var, nrow(final_models_test))
   age_vars <- paste0(age_vars, "_ns")
   outcomes <- final_models_test[, "oc"]
   ids <- final_models_test[, "subject"]
@@ -1280,7 +1281,6 @@ add_prediction_data <- function(final_models, datasets, filtered_df_name) {
     ),
     SIMPLIFY = FALSE
   )
-
 
   data_lol <- lapply(combined_data_lol, `[[`, "data")
   id_lol <- lapply(combined_data_lol, `[[`, "id")

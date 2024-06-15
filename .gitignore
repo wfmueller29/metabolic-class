@@ -1,3 +1,5 @@
+**/05_figures_cache/*
+.gitignore
 .Rproj.user
 *.md
 *__packages

@@ -124,13 +124,16 @@ tmerge_prediction_data <- function(data, id, age, age_death, outcomes) {
   tmerged_data
 }
 
-combine_census <- function(censuses, ids) {
+combine_census <- function(censuses, ids, outcomes) {
   # Select probability of class membership and id's
-  censuses_bare <- mapply(function(census, id) {
+  censuses_bare <- mapply(function(census, id, outcome) {
     # get prob column names
     probs <- names(census)[grepl("^prob", names(census))]
-    census <- census[, c(id, probs)]
-  }, census = censuses, id = ids)
+    class <- names(census)[grepl("^new_class$", names(census))]
+    census <- census[, c(id, probs, class)]
+    names(census)[names(census) == "new_class"] <- paste0("new_class_", outcome)
+    census
+  }, census = censuses, id = ids, outcome = outcomes)
 
   xy_list <- mapply(function(census, id) {
     list(census = census, id = id)
@@ -234,8 +237,9 @@ cox_combine <- function(model_name_vector,
   model_index <- final_models$model_name %in% model_name_vector
   censuses <- final_models[model_index, ]$census
   ids <- final_models[model_index, "subject"]
+  outcomes <- final_models[model_index, "oc"]
 
-  merged_census <- combine_census(censuses = censuses, ids = ids)
+  merged_census <- combine_census(censuses = censuses, ids = ids, outcomes = outcomes)
   census_id <- merged_census$id
   census <- merged_census$census
 
@@ -248,7 +252,6 @@ cox_combine <- function(model_name_vector,
   data <- final_models[model_index, "dfs"]
   age_vars <- final_models[model_index, "age_var"]
   age_vars <- paste0(age_vars, "_ns")
-  outcomes <- final_models[model_index, "oc"]
 
   merged_data <- combine_data(
     data = data, ids = ids, age_vars = age_vars, outcomes = outcomes,
