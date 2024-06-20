@@ -918,6 +918,34 @@ final_models$resampled_boot_accuracy_plot
 
 ## Combined Metabolic Class
 
+### Create combined census
+
+```{r source combine_census, file = 'R/combine_census.R'}
+source("R/combine_census.R")
+```
+
+```{r combined census}
+model_name_list <- list(rest_names, train_test_names)
+
+column <- list(rep(NA, times = length(model_index)))
+for (model_name_vector in model_name_list) {
+  model_index <- final_models$model_name %in% model_name_vector
+  censuses <- final_models[model_index, ]$census
+  ids <- final_models[model_index, "subject"]
+  outcomes <- final_models[model_index, "oc"]
+
+
+  merged_census <- combine_census(
+    censuses = censuses,
+    ids = ids,
+    outcomes = outcomes
+  )
+
+  column[model_index] <- list(merged_census$census)
+}
+final_models$combined_census <- column
+```
+
 ### Create Combined Cox 
 
 ```{r source combined_class_cox, file = 'R/combined_class_cox.R'}
