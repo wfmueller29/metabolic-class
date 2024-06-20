@@ -931,7 +931,7 @@ rest_names <- final_models[!train_test_index, "model_name"]
 
 model_name_list <- list(rest_names, train_test_names)
 
-column <- list(rep(NA, times = length(model_index)))
+column <- list(rep(NA, times = length(final_models)))
 for (model_name_vector in model_name_list) {
   model_index <- final_models$model_name %in% model_name_vector
   censuses <- final_models[model_index, ]$census
