@@ -419,6 +419,33 @@ class_prediction_panel <- cowplot::plot_grid(title_theme,
 )
 ```
 
+### Combinded Cox Model 
+
+```{r combined cox model}
+test_index <- final_models$data_mod == "train_test"
+rest_index <- !test_index
+test_index <- which(test_index)[[1]]
+rest_index <- which(rest_index)[[1]]
+
+test_combined_cox <- survminer::ggforest(
+  final_models$cox_combined_models[[test_index]][[1]],
+  final_models$combined_census[[test_index]],
+  main = "HR Testing Combined Cox"
+)
+
+rest_combined_cox <- survminer::ggforest(
+  final_models$cox_combined_models[[rest_index]][[1]],
+  final_models$combined_census[[rest_index]],
+  main = "HR All Combined Cox"
+)
+```
+
+### Internal Validation: Prognostic Index and Concordance
+
+```{r internal validation}
+
+```
+
 
 ## Display Figures
 
@@ -466,7 +493,7 @@ other_met_panel
 ### Table 2: Metabolic Classes Predict other Metabolic Metrics
 
 ```{r table 2, results = 'asis'}
-for(table in lme_table) {
+for (table in lme_table) {
   cat(table$knitr)
 }
 ```
@@ -496,9 +523,22 @@ print_table(.GlobalEnv,
 class_prediction_panel
 ```
 
-### Figure 6: Internal Validation (Preliminary)
-
+### Figure 6: Combined Cox Forrest Plots
 ```{r figure 6}
+test_combined_cox
+rest_combined_cox
+```
+
+### Figure 7: Internal Validation (Preliminary)
+
+#### Discrete
+
+```{r figure 7 discrete}
+final_models[!og_index, ]$filter_cumulative_discrete_test_lp_plot[[1]]
+final_models[!og_index, ]$filter_cumulative_discrete_test_concord_plot[[1]]
+```
+#### Preliminary
+```{r figure 7 preliminary}
 final_models[!og_index, ]$filter_window_test_lp_plot[[1]]
 final_models[!og_index, ]$filter_window_test_concord[[1]]
 final_models[!og_index, ]$filter_window_test_wave_lp_plot[[1]]
