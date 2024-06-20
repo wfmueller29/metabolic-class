@@ -1728,8 +1728,8 @@ final_models$filter_window_test_concord_plot
 
 ## Waved Combined Cox
 
-```{r source wave combined_class_cox, file = 'R/pred_class_waved.R'}
-source("R/pred_class_waved.R")
+```{r source wave combined_class_cox, file = 'R/combined_class_cox_waved.R'}
+source("R/combined_class_cox_waved.R")
 ```
 
 ```{r combined waved survival}
@@ -1837,8 +1837,8 @@ final_models[["combined_wave_cox"]] <- column
 ```{r source create wave test prediction results, file = 'R/pred_class.R'}
 source("R/pred_class.R")
 ```
-```{r source create test waved prediction results, file = 'R/pred_class_waved.R'}
-source("R/pred_class_waved.R")
+```{r source create test waved prediction results, file = 'R/combined_class_cox_waved.R'}
+source("R/combined_class_cox_waved.R")
 ```
 
 ```{r create test wave prediction results}
