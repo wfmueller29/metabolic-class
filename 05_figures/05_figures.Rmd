@@ -925,6 +925,10 @@ source("R/combine_census.R")
 ```
 
 ```{r combined census}
+train_test_index <- (final_models$data_mod == "train_test")
+train_test_names <- final_models[train_test_index, "model_name"]
+rest_names <- final_models[!train_test_index, "model_name"]
+
 model_name_list <- list(rest_names, train_test_names)
 
 column <- list(rep(NA, times = length(model_index)))
