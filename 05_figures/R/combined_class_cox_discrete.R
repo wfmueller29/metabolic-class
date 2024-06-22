@@ -74,13 +74,14 @@ cox_combine <- function(model_name_vector,
   data <- merged_census$census
 
   class_names <- names(data)[grepl("^new_class", names(data))]
+  prob_names <- names(data)[grepl("^prob", names(data))]
   class_form_add <- paste(class_names, collapse = "+")
+  prob_form_add <- paste(prob_names, collapse = "+")
   class_form_interact <- paste(class_names, collapse = "*")
   surv_obj <- survival::Surv(time = data$le_wk, event = data$dead_censor)
   form1 <- as.formula(paste("surv_obj ~", class_form_add, "+", covariates))
-  form2 <- as.formula(paste("surv_obj ~", class_form_interact, "+", covariates))
-  form3 <- as.formula(paste("surv_obj ~", class_form_interact, "*", covariates))
-  forms <- list(form1, form2, form3)
+  form2 <- as.formula(paste("surv_obj ~", prob_form_add, "+", covariates))
+  forms <- list(form1, form2)
   cox_combined <- lapply(forms, survival::coxph, data)
 
   cox_combined
