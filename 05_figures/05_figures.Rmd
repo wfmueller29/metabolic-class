@@ -1269,10 +1269,10 @@ tmerge_prediction_data <- function(data, id, age, age_death, outcomes) {
   })
   prob_cols <- prob_cols[!prob_cols_drop]
 
-  tmerged_data[, prob_cols] <- lapply(tmerged_data[, prob_cols],
-    log,
-    base = 1.1
-  )
+  # tmerged_data[, prob_cols] <- lapply(tmerged_data[, prob_cols],
+  #   log,
+  #   base = 1.1
+  # )
 
   tmerged_data
 }
@@ -2046,10 +2046,10 @@ tmerge_prediction_data <- function(data, id, age, age_death, outcomes) {
   })
   prob_cols <- prob_cols[!prob_cols_drop]
 
-  tmerged_data[, prob_cols] <- lapply(tmerged_data[, prob_cols],
-    log,
-    base = 1.1
-  )
+  # tmerged_data[, prob_cols] <- lapply(tmerged_data[, prob_cols],
+  #   log,
+  #   base = 1.1
+  # )
 
   tmerged_data
 }
