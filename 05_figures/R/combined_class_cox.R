@@ -1,16 +1,8 @@
 # This file is going to combine metabolic classes to create one mortality
 # prediction
 surv_tmerge <- function(data, id, age, age_death, outcomes) {
-  # Create baseline data -------------------------------------------------------
-
-  # Reoder Dataset by Id and Age
   data_baseline <- data[order(data[[id]], data[[age]]), , drop = FALSE]
-
-  ## take first observation for each id
   data_baseline <- data_baseline[!duplicated(data_baseline[[id]]), , drop = FALSE]
-
-  # First tmerge ---------------------------------------------------------------
-  # Create call for first tmerge
   cl_tmerge1 <- rlang::call2("tmerge",
     data1 = as.symbol("data_baseline"),
     data2 = as.symbol("data_baseline"),
@@ -19,24 +11,15 @@ surv_tmerge <- function(data, id, age, age_death, outcomes) {
     tstop = as.symbol(age_death),
     .ns = "survival"
   )
-
-  # Call first tmerge, this will create a tstart, tstop, and death column
-  # tstart is the time of first observation
-  # tstop is the time of last observation
-  # death is weather or not the individual died following the time of last observation
   data1 <- eval(cl_tmerge1)
 
   # Second tmerge --------------------------------------------------------------
-  # Create call for second tmerge,
-  # This will fill in all the times between the first and last observation for each subject
-  # and make death column 0
-  # Create tmerge ... arguments and store them as args. age is included so it will
-  # be constant
   args <- lapply(c(outcomes, age), function(outcome) {
     call("tdc", as.symbol(age), as.symbol(outcome))
   })
+  args <- c(args, call("event", as.symbol(age_death)))
   # name args
-  names(args) <- outcomes
+  names(args) <- c(outcomes, "age", "death_event")
   # Create call
   cl_tmerge2 <- rlang::call2("tmerge",
     data1 = as.symbol("data1"),
@@ -45,8 +28,6 @@ surv_tmerge <- function(data, id, age, age_death, outcomes) {
     !!!args,
     .ns = "survival"
   )
-
-  # Call second tmerge
   data2 <- eval(cl_tmerge2)
 
   return(data2)
@@ -196,11 +177,6 @@ create_combined_cox <- function(data,
   })
   prob_cols <- prob_cols[!prob_cols_drop]
 
-  tmerged_data[, prob_cols] <- lapply(tmerged_data[, prob_cols],
-    log,
-    base = 1.1
-  )
-
   # drop any prob_cols from outcomes
   outcomes <- outcomes[!outcomes %in% prob_cols]
 
@@ -220,7 +196,7 @@ create_combined_cox <- function(data,
     data = tmerged_data,
     time = "tstart",
     time2 = "tstop",
-    death = death_censor
+    death = "death_event"
   ), SIMPLIFY = FALSE)
 
   cox_outputs
