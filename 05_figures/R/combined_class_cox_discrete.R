@@ -63,7 +63,17 @@ cox_combine <- function(model_name_vector,
   model_index <- final_models$model_name %in% model_name_vector
   censuses <- final_models[model_index, ]$census
   ids <- final_models[model_index, "subject"]
+  age <- final_models[model_index, "age_var"]
+  age <- paste0(age, "_ns")
   outcomes <- final_models[model_index, "oc"]
+  dfs <- final_models[model_index, "dfs"]
+  dfs <- mapply(
+    function(data, cols) {
+      data[, cols]
+    }, dfs, mapply(c, ids, age, SIMPLIFY = FALSE),
+    SIMPLIFY = FALSE
+  )
+  data <- do.call(rbind, dfs)
 
   merged_census <- combine_census(
     censuses = censuses,
@@ -71,18 +81,31 @@ cox_combine <- function(model_name_vector,
     outcomes = outcomes
   )
 
-  data <- merged_census$census
+  data <- merge(data, merged_census$census)
+
+  data <- data[order(data[[ids[[1]]]], data[[age[[1]]]]), ]
+
+  data[[censor]] <- sapply(seq_len(nrow(data)), FUN = function(i) {
+    id <- ids[[1]]
+    if (i != nrow(data)) {
+      output <- ifelse(data[i, id] != data[i + 1, id], data[i, censor], 0)
+    } else
+      output <- data[i, censor]
+  })
+
 
   class_names <- names(data)[grepl("^new_class", names(data))]
   prob_names <- names(data)[grepl("^prob", names(data))]
   class_form_add <- paste(class_names, collapse = "+")
   prob_form_add <- paste(prob_names, collapse = "+")
   class_form_interact <- paste(class_names, collapse = "*")
-  surv_obj <- survival::Surv(time = data$le_wk, event = data$dead_censor)
+  surv_obj <- survival::Surv(time = data[[age_death]], event = data[[censor]])
   form1 <- as.formula(paste("surv_obj ~", class_form_add, "+", covariates))
   form2 <- as.formula(paste("surv_obj ~", prob_form_add, "+", covariates))
-  forms <- list(form1, form2)
-  cox_combined <- lapply(forms, survival::coxph, data)
+  form3 <- as.formula(paste("surv_obj ~", prob_form_add, "+", age[[1]], "+", covariates))
+  forms <- list(form1, form2, form3)
+  cox_combined <- lapply(forms, survival::coxph, data, id = ids[[1]])
+
 
   cox_combined
 }
