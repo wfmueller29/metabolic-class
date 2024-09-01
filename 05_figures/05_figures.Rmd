@@ -40,8 +40,8 @@ mega_pal <- rep(palette(), 40)
 # for the case when we are not running with RStudio
 if (!exists("params")) {
   params <- list()
-  params$input_path <- "../04_prediction_data/output/test_local.yaml"
-  # params$input_path <- "../04_prediction_data/output/all.yaml"
+  # params$input_path <- "../04_prediction_data/output/test_local.yaml"
+  params$input_path <- "../04_prediction_data/output/all.yaml"
   # params$input_path <- "../04_prediction_data/output/all_relative_age.yaml"
   # params$input_path <- "../04_prediction_data/output/test_relative_age.yaml"
 }
@@ -976,6 +976,8 @@ combined_cox_models <- lapply(
   age_death = config$survival_dataset$age_death,
   censor = config$survival_dataset$event
 )
+
+lapply(combined_cox_models, lapply, `[[`, "formula")
 
 names(combined_cox_models) <- lapply(model_name_list, paste, collapse = "-")
 

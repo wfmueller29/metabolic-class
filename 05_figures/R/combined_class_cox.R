@@ -171,6 +171,12 @@ create_combined_cox <- function(data,
     outcomes = outcomes
   )
 
+  new_class_cols <- names(tmerged_data)[grepl("^new_class", names(tmerged_data))]
+  new_class_cols_drop <- sapply(new_class_cols, function(name) {
+    all(tmerged_data[[name]] == 1)
+  })
+  new_class_cols <- new_class_cols[!new_class_cols_drop]
+
   prob_cols <- names(tmerged_data)[grepl("^prob", names(tmerged_data))]
   prob_cols_drop <- sapply(prob_cols, function(name) {
     all(tmerged_data[[name]] == 1)
@@ -180,17 +186,13 @@ create_combined_cox <- function(data,
   # drop any prob_cols from outcomes
   outcomes <- outcomes[!outcomes %in% prob_cols]
 
-  form1 <- paste0("~", paste(outcomes, collapse = "+"))
-  form2 <- paste0("~", paste(prob_cols, collapse = "+"))
+
+  form1 <- paste0("~", covariates)
+  form2 <- paste0(form1, "+", paste(new_class_cols, collapse = "+"))
   form3 <- paste0(form1, "+", paste(prob_cols, collapse = "+"))
 
-  form1 <- paste0(form1)
-
   forms <- list(form1, form2, form3)
-  forms <- lapply(forms, paste, paste0("+", covariates), collapse = "+")
-  forms <- lapply(forms, paste, age, sep = "+")
   forms <- lapply(forms, as.formula)
-
 
   cox_outputs <- mapply(surv_cox, covariates = forms, MoreArgs = list(
     data = tmerged_data,
