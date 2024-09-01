@@ -163,6 +163,7 @@ create_combined_cox <- function(data,
                                 death_censor,
                                 outcomes,
                                 covariates) {
+  # WARNING: We probably do not need tmerge here, something throwing warnings
   tmerged_data <- surv_tmerge(
     data = data,
     id = id,
