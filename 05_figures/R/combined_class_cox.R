@@ -188,9 +188,13 @@ create_combined_cox <- function(data,
   outcomes <- outcomes[!outcomes %in% prob_cols]
 
 
-  form1 <- paste0("~", covariates)
-  form2 <- paste0(form1, "+", paste(new_class_cols, collapse = "+"))
-  form3 <- paste0(form1, "+", paste(prob_cols, collapse = "+"))
+  cov_form <- paste0("~", covariates)
+  form1 <- paste0(cov_form, "+", paste(new_class_cols, collapse = "+"))
+  form2 <- paste0(cov_form, "+", paste(prob_cols, collapse = "+"))
+  form3 <- paste0(
+    cov_form, "*",
+    "(", paste(new_class_cols, collapse = "+"), ")"
+  )
 
   forms <- list(form1, form2, form3)
   forms <- lapply(forms, as.formula)

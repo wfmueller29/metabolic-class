@@ -437,6 +437,11 @@ test_combined_cox <- list(
     final_models$cox_combined_models[[test_index]][[2]],
     final_models$combined_census[[test_index]],
     main = "HR Testing Combined Cox"
+  ),
+  survminer::ggforest(
+    final_models$cox_combined_models[[test_index]][[3]],
+    final_models$combined_census[[test_index]],
+    main = "HR Testing Combined Cox"
   )
 )
 
@@ -448,6 +453,11 @@ rest_combined_cox <- list(
   ),
   survminer::ggforest(
     final_models$cox_combined_models[[rest_index]][[2]],
+    final_models$combined_census[[rest_index]],
+    main = "HR All Combined Cox"
+  ),
+  survminer::ggforest(
+    final_models$cox_combined_models[[rest_index]][[3]],
     final_models$combined_census[[rest_index]],
     main = "HR All Combined Cox"
   )
@@ -555,6 +565,12 @@ final_models[!og_index, ]$filter_window_discrete_test_concord_plot[[1]]
 ```
 
 #### Preliminary
+
+```{r print models}
+
+final_models$cox_combined_models
+
+```
 
 ```{r figure 7 preliminary}
 final_models[!og_index, ]$filter_window_test_lp_plot[[1]]
