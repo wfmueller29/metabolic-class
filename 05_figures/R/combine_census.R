@@ -9,7 +9,7 @@ combine_census <- function(censuses, ids, outcomes) {
     census <- census[, c(id, probs, class)]
     names(census)[names(census) == "new_class"] <- paste0("new_class_", outcome)
     census
-  }, census = censuses, id = ids, outcome = outcomes)
+  }, census = censuses, id = ids, outcome = outcomes, SIMPLIFY = FALSE)
 
   xy_list <- mapply(function(census, id) {
     list(census = census, id = id)
