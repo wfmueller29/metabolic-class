@@ -114,7 +114,7 @@ combine_census <- function(censuses, ids, outcomes) {
     census <- census[, c(id, probs, class)]
     names(census)[names(census) == "new_class"] <- paste0("new_class_", outcome)
     census
-  }, census = censuses, id = ids, outcome = outcomes)
+  }, census = censuses, id = ids, outcome = outcomes, SIMPLIFY = FALSE)
 
   xy_list <- mapply(function(census, id) {
     list(census = census, id = id)
@@ -184,16 +184,27 @@ create_combined_cox <- function(data,
   })
   prob_cols <- prob_cols[!prob_cols_drop]
 
+  keep_new_class_cols <- sapply(new_class_cols, function(col) {
+    number_unique <- length(unique(data[[col]]))
+    if (number_unique == 1) {
+      return(FALSE)
+    } else {
+      return(TRUE)
+    }
+  })
+
+  # drop new_class_cols that only have one value, otherwise contrast error
+  new_class_cols <- new_class_cols[keep_new_class_cols]
+
   # drop any prob_cols from outcomes
   outcomes <- outcomes[!outcomes %in% prob_cols]
 
-
-  cov_form <- paste0("~", covariates)
+  cov_form <- paste0("~", "(", covariates, ")")
   form1 <- paste0(cov_form, "+", paste(new_class_cols, collapse = "+"))
   form2 <- paste0(cov_form, "+", paste(prob_cols, collapse = "+"))
   form3 <- paste0(
     cov_form, "*",
-    "(", paste(new_class_cols, collapse = "+"), ")"
+    "(", paste(prob_cols, collapse = "+"), ")"
   )
 
   forms <- list(form1, form2, form3)
