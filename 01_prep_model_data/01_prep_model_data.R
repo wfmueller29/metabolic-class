@@ -242,7 +242,7 @@ datasets <- lapply(datasets, function(dataset) {
   prediction_data_age_vars <- lapply(dataset$prediction_data, `[[`, "age_var")
   prediction_data_age_vars <- unlist(prediction_data_age_vars)
   prep_age_vars <- unique(c(prediction_data_age_vars, dataset$age_var))
-  dataset$data <- helphlme::prep_hlme(
+  data_scaled <- helphlme::prep_hlme(
     df = dataset$data,
     vars = prep_age_vars,
     center = config$center,
@@ -254,11 +254,18 @@ datasets <- lapply(datasets, function(dataset) {
       df = dataset$test_data,
       vars = prep_age_vars,
       center = config$center,
-      scale = config$scale
+      scale = config$scale,
+      ref_data = dataset$data
     )
   }
+  dataset$data <- data_scaled
   dataset
 })
+
+# Check that data and test_data were centered by same value
+
+datasets[[4]]$data$age_wk
+datasets[[4]]$test_data$age_wk
 
 
 # ensure all data is a data.frame object --------------------------------------
