@@ -5,6 +5,7 @@ sample_n: 100
 ncpus: 2
 center: TRUE
 scale: FALSE
+external_validate: FALSE
 survival_dataset:
   path: "../00c_survival_data/output/main_cat_surv.csv"
   id: "idno"

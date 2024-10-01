@@ -3,8 +3,7 @@ tag_time: FALSE
 sample_n: FALSE
 center: TRUE
 scale: FALSE
-model:
-  path: "../05_figures/output/all.yaml"
+external_validate: "../05_figures/output/all.yaml"
 survival_dataset:
   path: "../00c_survival_data/output/main_cat_surv.csv"
   id: "idno"
