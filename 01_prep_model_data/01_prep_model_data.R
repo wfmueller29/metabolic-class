@@ -264,8 +264,24 @@ datasets <- lapply(datasets, function(dataset) {
 
 # Check that data and test_data were centered by same value
 
-datasets[[4]]$data$age_wk
-datasets[[4]]$test_data$age_wk
+lapply(datasets, function(dataset) {
+  if (!is.null(dataset$test_data)) {
+    age_vars <- dataset$age_var
+    age_vars_ns <- paste0(age_vars, "_ns")
+    dif_data <- dataset$data[[age_vars[[1]]]] -
+      dataset$data[[age_vars_ns[[1]]]]
+    dif_test_data <- dataset$test_data[[age_vars[[1]]]] -
+      dataset$test_data[[age_vars_ns[[1]]]]
+    should_be_zero <- sum(round(dif_data), round(dif_test_data))
+    if (should_be_zero != 0) {
+      stop("We have not properly scaled train and test set")
+    } else {
+      print("We're good")
+    }
+  } else {
+    print("We're good")
+  }
+})
 
 
 # ensure all data is a data.frame object --------------------------------------
