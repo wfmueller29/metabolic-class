@@ -12,7 +12,8 @@ library(rsample)
 args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) == 0) {
-  args[[1]] <- "input/test_local.yaml"
+  # args[[1]] <- "input/test_local.yaml"
+  args[[1]] <- "../x07_external_validation/input/slam_age_all.yaml"
   warning("No input file provided, using: ", args[[1]])
 }
 
@@ -20,11 +21,26 @@ input_path <- args[[1]]
 
 config <- yaml::read_yaml(input_path)
 
-datasets <- config$datasets
+# if validation, make validation data og data and input datasets test data
+if (!isFALSE(config$external_validate)) {
+  validation_output <- yaml::read_yaml(config$external_validate)
+  validation_input <- yaml::read_yaml(validation_output$input_path)
+  validation_input1 <- yaml::read_yaml(validation_input$input_path)
+  validation_input2 <- yaml::read_yaml(validation_input1$input_path)
+  validation_input3 <- yaml::read_yaml(validation_input2$input_yaml_path)
+  validation_config <- yaml::read_yaml(validation_output$config_path)
+
+  datasets <- validation_config$datasets
+  validation_datasets <- config$datasets
+} else {
+  datasets <- config$datasets
+}
+
 
 get_extension <- function(datasets) {
   datasets <- lapply(datasets, function(dataset) {
     data_path <- file.path(dataset$path)
+    print(data_path)
     ext <- tools::file_ext(data_path)
     dataset$ext <- ext
     dataset
@@ -32,9 +48,13 @@ get_extension <- function(datasets) {
 }
 
 datasets <- get_extension(datasets)
+if (!isFALSE(config$external_validate)) {
+  validation_datasets <- get_extension(validation_datasets)
+}
 
 read_data <- function(datasets) {
   datasets <- lapply(datasets, function(dataset) {
+    print(dataset$path)
     if (dataset$ext == "RDATA") {
       dataset$data <- read_rdata(dataset$path)
     } else if (dataset$ext == "csv") {
@@ -51,6 +71,9 @@ read_rdata <- function(file_name) {
 }
 
 datasets <- read_data(datasets)
+if (!isFALSE(config$external_validate)) {
+  validation_datasets <- read_data(validation_datasets)
+}
 
 
 # convert all variables to correct type ---------------------------------------
@@ -85,6 +108,9 @@ convert_factor <- function(dataset) {
 }
 
 datasets <- convert_variables(datasets)
+if (!isFALSE(config$external_validate)) {
+  validation_datasets <- convert_variables(validation_datasets)
+}
 
 # filter out cases that have NA in the outcome variable -----------------------
 
@@ -99,6 +125,9 @@ filter_na <- function(dataset) {
 }
 
 datasets <- lapply(datasets, filter_na)
+if (!isFALSE(config$external_validate)) {
+  validation_datasets <- lapply(validation_datasets, filter_na)
+}
 
 # generate idno if ID column not coercible to numeric -------------------------
 
@@ -118,64 +147,104 @@ for (i in seq_along(datasets)) {
   }
 }
 
+if (!isFALSE(config$external_validate)) {
+  for (i in seq_along(validation_datasets)) {
+    if (!is.null(validation_datasets[[i]]$generate_idno)) {
+      if (validation_datasets[[i]]$generate_idno) {
+        id <- validation_datasets[[i]]$id
+        data <- validation_datasets[[i]]$data
+        census <- unique(data[, id])
+        census <- as.data.frame(census)
+        names(census) <- id
+        census$idno <- seq_along(census[, 1])
+        data <- merge(data, census, by = id)
+        validation_datasets[[i]]$data <- data
+        validation_datasets[[i]]$id <- "idno"
+      }
+    }
+  }
+}
+
 # harmonize the datasets for cohort -------------------------------------------
 
 source("R/harmonize.R")
 
-harmonized_datasets <- lapply(datasets, function(dataset) {
-  if (isTRUE(dataset$harmonize$execute)) {
-    data_harmonized <- harmonize(
-      data = dataset$data,
-      formula = dataset$harmonize$formula,
-      outcome = dataset$outcome,
-      variable = dataset$harmonize$variable
-    )
+harmonize_apply <- function(datasets) {
+  harmonized_datasets <- lapply(datasets, function(dataset) {
+    if (isTRUE(dataset$harmonize$execute)) {
+      data_harmonized <- harmonize(
+        data = dataset$data,
+        formula = dataset$harmonize$formula,
+        outcome = dataset$outcome,
+        variable = dataset$harmonize$variable
+      )
 
-    dataset$data <- data_harmonized
+      dataset$data <- data_harmonized
 
-    return(dataset)
-  } else {
-    return(NULL)
-  }
-})
+      return(dataset)
+    } else {
+      return(NULL)
+    }
+  })
+  harmonized_datasets
+}
 
-datasets <- harmonized_datasets
+datasets <- harmonize_apply(datasets)
+if (!isFALSE(config$external_validate)) {
+  validation_datasets <- harmonize_apply(validation_datasets)
+}
 
-# check if there is overlap in unique ID's for each dataset -------------------
-unique_id_list <- lapply(datasets, function(dataset) {
-  id <- dataset$id
-  data <- dataset$data
-  unique_ids <- unique(data[[id]])
-})
+# Make sure all datasets have the same ids ------------------------------------
+id_intersect <- function(datasets) {
+  # check if there is overlap in unique ID's for each dataset
+
+  unique_id_list <- lapply(datasets, function(dataset) {
+    id <- dataset$id
+    data <- dataset$data
+    unique_ids <- unique(data[[id]])
+  })
 
 
-# these are the id's that are common to all outcomes. This way we can exclude
-# the same ids from the training set for all outcome
-shared_unique_id <- Reduce(dplyr::intersect, unique_id_list)
+  # these are the id's that are common to all outcomes. This way we can exclude
+  # the same ids from the training set for all outcome
+  shared_unique_id <- Reduce(dplyr::intersect, unique_id_list)
 
-# keep ID's that have all outcomes --------------------------------------------
-new_datasets <- lapply(datasets, function(dataset) {
-  data <- dataset$data
-  id <- dataset$id
-  missing_data <- data[!data$id %in% shared_unique_id, ]
-  data <- data[data$id %in% shared_unique_id, ]
-  dataset$data <- data
-  dataset$missing_data <- missing_data
-  dataset
-})
+  # keep ID's that have all outcomes
+  new_datasets <- lapply(datasets, function(dataset) {
+    data <- dataset$data
+    id <- dataset$id
+    missing_data <- data[!data$id %in% shared_unique_id, ]
+    data <- data[data$id %in% shared_unique_id, ]
+    dataset$data <- data
+    dataset$missing_data <- missing_data
+    dataset
+  })
+  new_datasets
+}
+
+datasets <- id_intersect(datasets)
+if (!isFALSE(config$external_validate)) {
+  validation_datasets <- id_intersect(validation_datasets)
+}
 
 # Get orphaned ID numbers ------------------------------------------------------
 
-orphaned_ids <- lapply(datasets, function(dataset) {
-  id <- dataset$id
-  data <- dataset$missing_data
-  orphaned_ids <- unique(data[[id]])
+orphaned_ids <- function(datasets) {
+  orphaned_ids <- lapply(datasets, function(dataset) {
+    id <- dataset$id
+    data <- dataset$missing_data
+    orphaned_ids <- unique(data[[id]])
+    orphaned_ids
+  })
+
+  orphaned_ids <- as.vector(orphaned_ids)
   orphaned_ids
-})
+}
 
-orphaned_ids <- as.vector(orphaned_ids)
-
-datasets <- new_datasets
+datasets_orphans <- orphaned_ids(datasets)
+if (!isFALSE(config$external_validate)) {
+  validation_datasets_orphans <- orphaned_ids(validation_datasets)
+}
 
 # training testing split ------------------------------------------------------
 
@@ -191,6 +260,9 @@ create_strata_vars <- function(dataset) {
 }
 
 datasets <- lapply(datasets, create_strata_vars)
+if (!isFALSE(config$external_validate)) {
+  validation_datasets <- lapply(validation_datasets, create_strata_vars)
+}
 
 # create determine training ids and testing ids
 get_train_test_id <- function(datasets) {
@@ -231,12 +303,27 @@ create_train_test <- function(dataset, train_id, test_id) {
   dataset
 }
 
-train_test_datasets <- lapply(datasets, create_train_test, train_ids, test_ids)
+create_train_test_validate <- function(dataset, validation_dataset) {
+  dataset$test_data <- validation_dataset$data
+  dataset
+}
+
+if (isFALSE(config$external_validate)) {
+  train_test_datasets <- lapply(
+    datasets,
+    create_train_test, train_ids, test_ids
+  )
+} else if (!isFALSE(config$external_validate)) {
+  train_test_datasets <- mapply(
+    create_train_test_validate,
+    datasets, validation_datasets,
+    SIMPLIFY = FALSE
+  )
+}
 
 datasets <- c(datasets, train_test_datasets)
 
 # use prep_hlme to center and scale the data ----------------------------------
-
 
 datasets <- lapply(datasets, function(dataset) {
   prediction_data_age_vars <- lapply(dataset$prediction_data, `[[`, "age_var")
@@ -272,11 +359,14 @@ lapply(datasets, function(dataset) {
       dataset$data[[age_vars_ns[[1]]]]
     dif_test_data <- dataset$test_data[[age_vars[[1]]]] -
       dataset$test_data[[age_vars_ns[[1]]]]
-    should_be_zero <- sum(round(dif_data), round(dif_test_data))
-    if (should_be_zero != 0) {
-      stop("We have not properly scaled train and test set")
-    } else {
+    dif_data <- round(dif_data, digits = 3)
+    dif_test_data <- round(dif_test_data, digits = 3)
+    # Checks that all differences are equal 
+    x <- all(dif_test_data == dif_data[1]) && all(dif_data == dif_test_data[1])
+    if (x) {
       print("We're good")
+    } else {
+      stop("We have not properly scaled train and test set")
     }
   } else {
     print("We're good")
