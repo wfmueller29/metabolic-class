@@ -1,12 +1,26 @@
 # metabolic-class
-A Latent Class Mixed Effects Modelling Pipeline. A rewrite of the traj analysis
-repository. 
+A Latent Class Mixed Effects Modelling Pipeline. 
+This is a rewrite of [traj_models](https://github.com/wfmueller29/traj_models)
 
 ### Purpose
-This is an attempt to make a generalized modelling pipeline for applying 
-large longitudinal datasets to latent class mixed effects models.
+This is an attempt to make a generalized _Latent Class Mixed Models (LCMM)_ pipeline for large longitudinal datasets, like the _Study of Longitudinal Aging in Mice (SLAM)_.
 
-This is a rewrite of [traj_models](https://github.com/wfmueller29/traj_models)
+### Overview
+Training
+<img width="1159" alt="image" src="https://github.com/user-attachments/assets/3864b34f-2f41-433e-839b-2cdfeb8ad11d" />
+Validation
+<img width="1163" alt="image" src="https://github.com/user-attachments/assets/fb23c660-1324-4dd0-9589-9dcb46425d8f" />
+
+### Structure
+This pipeline uses file in, file out structure with yaml files. 
+## How to use
+
+### Step 1: Training
+If you have your own longitudinal dataset that you would like to use to train 
+
+
+
+
 
 ## How to use on Biowulf
 
