@@ -28,33 +28,28 @@ setwd("../04_prediction_data")
 system2("Rscript", args = c("create_prediction_data.R", input_04))
 setwd("../x07_external_validation")
 
-# 05 --------------------------------------------------------------------------
-# for the case when we are not running with RStudio
-if (!exists("params")) {
-  params <- list()
-  params$input_path <- "../04_prediction_data/output/external_validation.yaml"
-  # params$input_path <- "../04_prediction_data/output/all.yaml"
-  # params$input_path <- "../04_prediction_data/output/all_relative_age.yaml"
-  # params$input_path <- "../04_prediction_data/output/test_relative_age.yaml"
-}
+# 05 -------------------------------------------------------------------------
 
-input <- yaml::read_yaml(file = params$input_path)
+input_05 <- normalizePath(
+  paste0(file.path("../04_prediction_data/output", config$out_tag), ".yaml")
+)
 
-# read in final models
-model <- yaml::read_yaml(config$model$path)
+setwd("../05_figures")
+output_dir <- normalizePath(file.path("output", config$out_tag))
+rmarkdown::render("05_figures.Rmd",
+  output_dir = output_dir, params = list(input_path = input_05)
+)
+setwd("../x07_external_validation")
+setwd("..")
 
-# load datasets ---------------------------------------------------------------
-load(input$datasets_path)
-load(model$final_models_path)
-config <- yaml::read_yaml(input$config_path)
+# 06 --------------------------------------------------------------------------
+input_06 <- normalizePath(
+  paste0(file.path("05_figures/output", config$out_tag), ".yaml")
+)
 
-
-# load in main_cat_surv
-main_cat_surv <- read.csv(file = config$survival_dataset$path)
-main_cat_surv <- as.data.frame(main_cat_surv)
-
-final_models$dfs <- lapply(final_models$data, function(name) {
-  datasets[[name]]$data
-})
-
-
+setwd("../06_display_figures")
+output_dir <- normalizePath(file.path("output", config$out_tag))
+rmarkdown::render("06_display_figures.Rmd",
+  output_dir = output_dir, params = list(input_path = input_06)
+)
+setwd("..")

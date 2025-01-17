@@ -6,6 +6,8 @@ repository.
 This is an attempt to make a generalized modelling pipeline for applying 
 large longitudinal datasets to latent class mixed effects models.
 
+This is a rewrite of [traj_models](https://github.com/wfmueller29/traj_models)
+
 ## How to use on Biowulf
 
 This repository runs using predominantly R code, a little shell, and yaml 
