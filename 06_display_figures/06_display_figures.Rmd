@@ -125,6 +125,16 @@ last_names <- seq_along(names(t1_df))[-first_names]
 t1_df <- t1_df[, c(first_names, last_names)]
 ```
 
+### Heatmap census
+```{r heatmap}
+census <- final_models$combined_census[[1]]
+prob_cols <- names(census)[grepl("^prob\\d+", names(census))]
+cov <- datasets[[1]]$covariates_dummy
+census <- census[, c(prob_cols, cov)]
+heatmap1 <- heatmap(as.matrix(census))
+census <- census[, prob_cols]
+heatmap2 <- heatmap(as.matrix(census))
+```
 
 ### Mortality outcomes by class
 

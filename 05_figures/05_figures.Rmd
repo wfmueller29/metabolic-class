@@ -40,8 +40,8 @@ mega_pal <- rep(palette(), 40)
 # for the case when we are not running with RStudio
 if (!exists("params")) {
   params <- list()
-  # params$input_path <- "../04_prediction_data/output/test_local.yaml"
-  params$input_path <- "../04_prediction_data/output/external_validation.yaml"
+  params$input_path <- "../04_prediction_data/output/test_local.yaml"
+  # params$input_path <- "../04_prediction_data/output/external_validation.yaml"
   # params$input_path <- "../04_prediction_data/output/all.yaml"
   # params$input_path <- "../04_prediction_data/output/all_relative_age.yaml"
   # params$input_path <- "../04_prediction_data/output/test_relative_age.yaml"
@@ -1680,7 +1680,7 @@ plot_cumulative_concord_lp <- function(data, outcome, color,
       title = title,
       color = legend_title
     ) +
-    ggplot2::facet_wrap(c(lower_bound), ncol = 1)
+    ggplot2::facet_wrap(c(lower_bound), nrow = 1)
 }
 
 plot_window_concord_lp <- function(data, outcome, color,
@@ -1710,7 +1710,7 @@ plot_window_concord_lp <- function(data, outcome, color,
       title = title,
       color = legend_title
     ) +
-    ggplot2::facet_wrap(~ c(window_size), ncol = 1)
+    ggplot2::facet_wrap(~ as.factor(window_size), nrow = 1)
 }
 
 prediction_name <- "filter_window_test"
