@@ -305,6 +305,7 @@ create_train_test <- function(dataset, train_id, test_id) {
 
 create_train_test_validate <- function(dataset, validation_dataset) {
   dataset$test_data <- validation_dataset$data
+  dataset$data_mod <- "train_test"
   dataset
 }
 
