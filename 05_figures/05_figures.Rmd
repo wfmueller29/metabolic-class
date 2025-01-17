@@ -769,7 +769,7 @@ final_models$window_accuracy_plots
 source("R/boot_accuracy.R")
 ```
 
-```{r compute accuracy, cache = TRUE}
+```{r compute accuracy, cache = FALSE}
 final_models$interval_accuracy <- lapply(
   seq_len(nrow(final_models)),
   function(i) {
