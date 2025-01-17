@@ -40,13 +40,32 @@ mega_pal <- rep(palette(), 40)
 # for the case when we are not running with RStudio
 if (!exists("params")) {
   params <- list()
-  params$input_path <- "../04_prediction_data/output/test_local.yaml"
+  # params$input_path <- "../04_prediction_data/output/test_local.yaml"
+  params$input_path <- "../04_prediction_data/output/external_validation.yaml"
   # params$input_path <- "../04_prediction_data/output/all.yaml"
   # params$input_path <- "../04_prediction_data/output/all_relative_age.yaml"
   # params$input_path <- "../04_prediction_data/output/test_relative_age.yaml"
 }
 
 input <- yaml::read_yaml(file = params$input_path)
+config <- yaml::read_yaml(input$config_path)
+```
+
+```{r external validation}
+# notice if doing external validation, parts of "input" are empty
+# we are going to fill those using paths from our validation file that
+# has run them already
+# WARNING: This might be slightly dangerous, as we should also reexecute
+# the entire model pathway for our external dataset.
+if (!isFALSE(config$external_validate)) {
+  validation_output <- yaml::read_yaml(config$external_validate)
+  validation_input <- yaml::read_yaml(validation_output$input_path)
+
+  input$models_path <- validation_input$models_path
+  input$cf_path <- validation_input$cf_path
+  input$final_models_path <- validation_input$final_models_path
+  input$csv_path <- validation_input$csv_path
+}
 ```
 
 ### Load Models
@@ -55,8 +74,29 @@ input <- yaml::read_yaml(file = params$input_path)
 load(input$cf_path)
 load(input$datasets_path)
 load(input$final_models_path)
-config <- yaml::read_yaml(input$config_path)
 
+if (!isFALSE(config$external_validate)) {
+  # overwrite train_test_models because we are using og models as our training
+  # model in external validation
+
+  # values we need to overwrite
+  data_mod <- final_models$data_mod
+  model_name <- final_models$model_name
+  data <- final_models$data
+  data_id <- final_models$data_id
+
+  og_models <- final_models[final_models$data_mod == "og", ]
+  final_models <- rbind(og_models, og_models)
+  if (!all(final_models$data_mod == "og")) {
+    stop("All our models for external validation are not based off original
+         dataset")
+  }
+
+  final_models$data_mod <- data_mod
+  final_models$model_name <- model_name
+  final_models$data <- data
+  final_models$data_id <- data_id
+}
 
 # load in main_cat_surv
 main_cat_surv <- read.csv(file = config$survival_dataset$path)
