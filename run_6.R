@@ -23,3 +23,5 @@ rmarkdown::render("06_display_figures.Rmd",
   output_dir = output_dir, params = list(input_path = input_06)
 )
 setwd("..")
+
+beepr::beep()
