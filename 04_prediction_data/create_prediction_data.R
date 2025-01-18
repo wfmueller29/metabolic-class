@@ -3,6 +3,7 @@
 # Author: William Mueller
 
 library(tidyverse)
+set.seed(365)
 
 
 # take command line arguments for output tag ----------------------------------

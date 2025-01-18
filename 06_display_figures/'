@@ -225,7 +225,7 @@ datasets <- lapply(datasets, function(dataset) {
   dataset
 })
 
-# datasets[[1]]$validation_plots
+datasets[[1]]$validation_plots
 ```
 
 ### Mortality outcomes by class
@@ -392,7 +392,7 @@ hr_table <- combine_cox_table(final_models, model_names, c(1, 2, 3))
 
 ```{r metabolic outcomes by class, fig.height=16, fig.width=24}
 og_plots_index <- grepl("^plot.*_og_.*across$", names(final_models))
-length_plots <- length(which(og_plots_index))
+lenght_plots <- length(which(og_plots_index))
 
 og_plots <- final_models[og_index, og_plots_index]
 
@@ -445,15 +445,24 @@ other_met_panel <- cowplot::plot_grid(title_theme, other_met_panel,
 ### New Figure 1
 
 ```{r new figure 1}
-selector <- matrix(seq_len(length_plots * length_plots), nrow = length_plots)
-diag(selector) <- NA
-selector <- t(matrix(t(selector)[which(!is.na(selector))], ncol = length_plots))
-selector <- as.vector(selector)
-unique_plots <- og_plots[selector]
+og_plots_matrix <- as.matrix(og_plots, nrow  = length_plots)
+identity_vector <- as.vector(diag(lenght_plots))
+unique_plots <- og_plots[!identity_vector]
 
+list <- unique_plots
+cycle <- function(list, n) {
+  if (n == 0) {
+    return(list)
+  }
+  list <- c(list[length(list)], list[1:(length(list) - 1)])
+  n <- n - 1 
+  list <- cycle(list, n)
+  list
+}
+unique_plots <- cycle(unique_plots, 2)
 
 new_figure1 <- cowplot::plot_grid(
-  plotlist = c(obs_plots, kap_plots, unique_plots),
+  plotlist = unique_plots,
   nrow = length(which(og_index)),
   byrow = FALSE,
   greedy = FALSE,
