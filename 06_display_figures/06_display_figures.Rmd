@@ -136,6 +136,54 @@ census <- census[, prob_cols]
 heatmap2 <- heatmap(as.matrix(census))
 ```
 
+### Show validation data
+```{r validation data}
+dataset <- datasets[[1]]
+data1 <- dataset$data
+outcome <- dataset$outcome
+age_var <- dataset$age_var[[1]]
+age_var <- paste0(age_var, "_ns")
+age_var_name <- paste(dataset$labels$age_var_name, dataset$labels$age_var_units)
+outcome_name <- paste(dataset$labels$oc_name, dataset$labels$oc_units)
+
+prediction_data <- dataset$prediction_data$data
+data2 <- dataset$prediction_data$data[[2]][[6]]
+
+
+validation_plot <- function(data1, data2, age, outcome, age_name, outcome_name) {
+  ggplot2::ggplot(
+    data = data1,
+    mapping = ggplot2::aes(
+      x = eval(as.symbol((age_var))),
+      y = eval(as.symbol(outcome))
+    )
+  ) +
+    ggplot2::geom_point(alpha = .1) +
+    ggplot2::geom_point(
+      data = data2,
+      mapping = ggplot2::aes(
+        x = eval(as.symbol((age_var))),
+        y = eval(as.symbol(outcome))
+      ),
+      alpha = 1
+    ) +
+    ggplot2::labs(
+      x = age_name,
+      y = outcome_name
+    )
+}
+
+lapply(prediction_data, function(data) {
+  lapply(data, validation_plot,
+    data1 = data1,
+    age = age_var, outcome = outcome,
+    age_name = age_var_name,
+    outcome_name = outcome_name
+  )
+})
+
+```
+
 ### Mortality outcomes by class
 
 - Supplement will include same figures but for each sex strain strata
@@ -577,9 +625,7 @@ final_models[!og_index, ]$filter_window_discrete_test_concord_plot[[1]]
 #### Preliminary
 
 ```{r print models}
-
 final_models$cox_combined_models
-
 ```
 
 ```{r figure 7 preliminary}
