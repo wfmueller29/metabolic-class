@@ -50,13 +50,13 @@ datasets:
     filter_window:
       age_var: "age_wk"
       start: 6.5 # 1.5 months
-      end: 165.4 # 36 months
+      end: 143.4 # 33 months
       window_size_vector: [26.1, 39.1, 52.1] # 6, 9, 12 months
       step: 13 # 3 months
     filter_cumulative:
       age_var: "age_wk"
       start_vector: [6.5, 19.6, 32.6, 45.62] #1.5, 4.5, 7.5, 10.5 months
-      end: 165.4 # 36 months
+      end: 143.4 # 33 months
       step: 13 # 3 months
     resample:
       age_var: "age_wk"
@@ -106,13 +106,13 @@ datasets:
     filter_window:
       age_var: "age_wk"
       start: 6.5 # 1.5 months
-      end: 165.4 # 36 months
+      end: 143.4 # 33 months
       window_size_vector: [26.1, 39.1, 52.1] # 6, 9, 12 months
       step: 13 # 3 months
     filter_cumulative:
       age_var: "age_wk"
       start_vector: [6.5, 19.6, 32.6, 45.62] #1.5, 4.5, 7.5, 10.5 months
-      end: 165.4 # 36 months
+      end: 143.4 # 33 months
       step: 13 # 3 months
     resample:
       age_var: "age_wk"
@@ -163,13 +163,13 @@ datasets:
     filter_window:
       age_var: "age_wk"
       start: 6.5 # 1.5 months
-      end: 165.4 # 36 months
+      end: 143.4 # 33 months
       window_size_vector: [26.1, 39.1, 52.1] # 6, 9, 12 months
       step: 13 # 3 months
     filter_cumulative:
       age_var: "age_wk"
       start_vector: [6.5, 19.6, 32.6, 45.62] #1.5, 4.5, 7.5, 10.5 months
-      end: 165.4 # 36 months
+      end: 143.4 # 33 months
       step: 13 # 3 months
     resample:
       age_var: "age_wk"
