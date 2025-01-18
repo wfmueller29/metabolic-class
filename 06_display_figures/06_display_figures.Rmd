@@ -138,19 +138,7 @@ heatmap2 <- heatmap(as.matrix(census))
 
 ### Show validation data
 ```{r validation data}
-dataset <- datasets[[1]]
-data1 <- dataset$data
-outcome <- dataset$outcome
-age_var <- dataset$age_var[[1]]
-age_var <- paste0(age_var, "_ns")
-age_var_name <- paste(dataset$labels$age_var_name, dataset$labels$age_var_units)
-outcome_name <- paste(dataset$labels$oc_name, dataset$labels$oc_units)
-
-prediction_data <- dataset$prediction_data$data
-data2 <- dataset$prediction_data$data[[2]][[6]]
-
-
-validation_plot <- function(data1, data2, age, outcome, age_name, outcome_name) {
+plot_validation <- function(data1, data2, age, outcome, age_name, outcome_name) {
   ggplot2::ggplot(
     data = data1,
     mapping = ggplot2::aes(
@@ -158,14 +146,15 @@ validation_plot <- function(data1, data2, age, outcome, age_name, outcome_name) 
       y = eval(as.symbol(outcome))
     )
   ) +
-    ggplot2::geom_point(alpha = .1) +
+    ggplot2::geom_point(alpha = .03, color = "navy") +
     ggplot2::geom_point(
       data = data2,
       mapping = ggplot2::aes(
         x = eval(as.symbol((age_var))),
         y = eval(as.symbol(outcome))
       ),
-      alpha = 1
+      alpha = .5,
+      color = "navy"
     ) +
     ggplot2::labs(
       x = age_name,
@@ -173,15 +162,36 @@ validation_plot <- function(data1, data2, age, outcome, age_name, outcome_name) 
     )
 }
 
-lapply(prediction_data, function(data) {
-  lapply(data, validation_plot,
-    data1 = data1,
-    age = age_var, outcome = outcome,
-    age_name = age_var_name,
-    outcome_name = outcome_name
+
+datasets <- lapply(datasets, function(dataset) {
+  data1 <- dataset$data
+  outcome <- dataset$outcome
+  age_var <- dataset$age_var[[1]]
+  age_var <- paste0(age_var, "_ns")
+  age_var_name <- paste(
+    dataset$labels$age_var_name,
+    dataset$labels$age_var_units
   )
+  outcome_name <- paste(
+    dataset$labels$oc_name,
+    dataset$labels$oc_units
+  )
+
+  prediction_data <- dataset$prediction_data$data
+
+  dataset$validation_plots <- lapply(prediction_data, function(data) {
+    lapply(data, plot_validation,
+      data1 = data1,
+      age = age_var, outcome = outcome,
+      age_name = age_var_name,
+      outcome_name = outcome_name
+    )
+  })
+
+  dataset
 })
 
+datasets[[1]]$validation_plots
 ```
 
 ### Mortality outcomes by class
