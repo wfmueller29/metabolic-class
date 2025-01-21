@@ -52,6 +52,7 @@ plot_combined_across <- function(final_models, model_name) {
   final_models_row <- final_models[final_models$model_name == model_name, ]
   outcome_df <- final_models_row$dfs[[1]]
   other_name <- final_models_row$oc_name
+  other_name_units <- final_models_row$oc_name_units
   outcome <- final_models_row$oc
   outcome_id <- final_models_row$subject
   plots <- lapply(seq_len(nrow(final_models)), function(i) {
@@ -74,8 +75,8 @@ plot_combined_across <- function(final_models, model_name) {
       ),
       xlab = paste(final_models$age_var_name[[i]],
                    final_models$age_var_units[[i]], sep = " "),
-      ylab = paste(final_models$oc_name[[i]],
-                   final_models$oc_name_units[[i]], sep = " ")
+      ylab = paste(other_name,
+                   other_name_units, sep = " ")
     )
   })
   plots
