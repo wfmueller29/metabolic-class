@@ -33,10 +33,10 @@ plot_boot_accuracy_interval <- function(accuracy_interval_df,
         stat = "identity",
         width = 0.4
       ) +
-      ggsignif::geom_signif(
-        comparisons = comparisons, annotations = "*", margin_top = .1,
-        step_increase = .35
-      ) +
+      # ggsignif::geom_signif(
+      #   comparisons = comparisons, annotations = "*", margin_top = .1,
+      #   step_increase = .35
+      # ) +
       ggplot2::labs(
         y = ylab,
         x = xlab,
