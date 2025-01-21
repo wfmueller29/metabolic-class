@@ -35,7 +35,7 @@ palatte_colors <- c(
   "#28E2E5", "#CD0BBC", "#F5C710", "gray62"
 )
 legend_labels <- c(
-  "Mid-Weight", "Low-weight", "Overweight", "High-fat",
+  "Overweight", "Mid-Weight", "Low-weight", "High-fat",
   "Low-fat", "Mid-fat", "Decline Glucose", "Stable Glucose"
 )
 ```
@@ -160,14 +160,16 @@ t1_df <- t1_df[, c(first_names, last_names)]
 ```
 
 ### Heatmap census
-```{r heatmap}
+```{r heatmap, fig.height = 8, fig.width = 8}
 census <- final_models$combined_census[[1]]
 prob_cols <- names(census)[grepl("^prob\\d+", names(census))]
 cov <- datasets[[1]]$covariates_dummy
-census <- census[, c(prob_cols, cov)]
-heatmap1 <- heatmap(as.matrix(census))
-census <- census[, prob_cols]
-heatmap2 <- heatmap(as.matrix(census))
+census1 <- census[, c(prob_cols, cov)]
+colnames(census1) <- c(legend_labels, cov)
+heatmap1 <- heatmap(as.matrix(census1), margins = c(10, 4))
+census2 <- census[, prob_cols]
+colnames(census2) <- legend_labels
+heatmap2 <- heatmap(as.matrix(census2), margins = c(10, 4))
 ```
 
 ### Show validation data
@@ -400,13 +402,13 @@ og_plots <- final_models[og_index, og_plots_index]
 if (custom_palette) {
   for (n in seq_along(og_plots)) {
     j <- 0
-    obs_plots <- og_plots[[n]]
-    for (i in seq_along(obs_plots)) {
-      group <- rlang::eval_tidy(obs_plots[[i]]$mapping$colour,
-        data = obs_plots[[i]]$data
+    plots <- og_plots[[n]]
+    for (i in seq_along(plots)) {
+      group <- rlang::eval_tidy(plots[[i]]$mapping$colour,
+        data = plots[[i]]$data
       )
       k <- length(unique(group)) + j
-      obs_plots[[i]] <- obs_plots[[i]] +
+      plots[[i]] <- plots[[i]] +
         scale_color_manual(
           values = palette()[j + 1:k],
           name = "Class",
@@ -414,7 +416,7 @@ if (custom_palette) {
         )
       j <- k
     }
-    og_plots[[n]] <- obs_plots
+    og_plots[[n]] <- plots
   }
 }
 
@@ -444,7 +446,7 @@ other_met_panel <- cowplot::plot_grid(title_theme, other_met_panel,
 
 ### New Figure 1
 
-```{r new figure 1}
+```{r new figure 1, fig.height = 24, fig.width = 24}
 selector <- matrix(seq_len(length_plots * length_plots), nrow = length_plots)
 diag(selector) <- NA
 selector <- t(matrix(t(selector)[which(!is.na(selector))], ncol = length_plots))
@@ -470,6 +472,8 @@ new_figure1 <- cowplot::plot_grid(title_theme, new_figure1,
   rel_heights = c(.05, 1),
   ncol = 1
 )
+
+new_figure1
 ```
 
 ### Table of lme models
