@@ -20,6 +20,7 @@ library(sjPlot)
 library(lme4)
 library(cowplot)
 library(RColorBrewer)
+library(viridis)
 set.seed(365)
 
 # setting global knitr options for r markdown output
@@ -38,6 +39,12 @@ legend_labels <- c(
   "Overweight", "Mid-Weight", "Low-weight", "High-fat",
   "Low-fat", "Mid-fat", "Decline Glucose", "Stable Glucose"
 )
+window_legend <- TRUE
+window_legend_palette <- magma(3, begin = .2, end = .7, direction = -1)
+window_legend_labels <- c("2 measures", "3 measures", "4 measures")
+
+cumulative_legend <- TRUE
+cumulative_legend_palette <- viridis(3, begin = .2, end = .7, direction = -1)
 ```
 
 
@@ -576,7 +583,34 @@ window_plots <- final_models[og_index, "window_boot_accuracy_plot"]
 cumulative_plots <- final_models[og_index, "cumulative_boot_accuracy_plot"]
 resampled_plots <- final_models[og_index, "resampled_boot_accuracy_plot"]
 
+if (window_legend) {
+  for (i in seq_along(window_plots)) {
+    window_plots[[i]] <- window_plots[[i]] +
+      scale_color_manual(
+        values = window_legend_palette,
+        name = "Window Size",
+        labels = window_legend_labels
+      )
+  }
+}
+
+if (cumulative_legend) {
+  for (i in seq_along(cumulative_plots)) {
+    cumulative_plots[[i]] <- cumulative_plots[[i]] +
+      scale_color_viridis(begin = .2, end = .8, direction = -1, discrete = TRUE)
+  }
+}
+
+
+
 plot_list <- c(interval_plots, window_plots, cumulative_plots, resampled_plots)
+
+
+plot_list <- lapply(plot_list, function(plot) {
+  plot <- plot +
+    coord_cartesian(ylim = c(0, 1))
+  plot
+})
 
 title <- paste("Classification Accuracy")
 
