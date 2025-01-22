@@ -792,3 +792,36 @@ final_models[!og_index, ]$filter_cumulative_test_concord[[1]]
 final_models[!og_index, ]$filter_cumulative_test_wave_lp_plot[[1]]
 final_models[!og_index, ]$filter_cumulative_test_wave_concord[[1]]
 ```
+
+```{r figure 7 model2}
+final_models[!og_index, ]$filter_window_test_concord_plot_model2[[1]]
+final_models[!og_index, ]$filter_window_test_lp_plot_model2[[1]]
+final_models[!og_index, ]$filter_cumulative_test_concord_plot_model2[[1]]
+final_models[!og_index, ]$filter_cumulative_test_lp_plot_model2[[1]]
+if (window_legend) {
+  final_models[!og_index, ]$filter_window_test_lp_plot_model2[[1]] +
+    scale_color_manual(
+      values = window_legend_palette,
+      name = "Window Size",
+      labels = window_legend_labels
+    ) +
+    coord_cartesian(ylim = c(-1, 2))
+
+  final_models[!og_index, ]$filter_window_test_concord_plot_model2[[1]] +
+    scale_color_manual(
+      values = window_legend_palette,
+      name = "Window Size",
+      labels = window_legend_labels
+    ) +
+    coord_cartesian(ylim = c(.5, 1))
+} 
+
+if (cumulative_legend) {
+  final_models[!og_index, ]$filter_cumulative_test_lp_plot_model2[[1]] +
+    scale_color_viridis(begin = .2, end = .8, direction = -1, discrete = TRUE) +
+    coord_cartesian(ylim = c(-1, 2))
+  final_models[!og_index, ]$filter_cumulative_test_concord_plot_model2[[1]] +
+    scale_color_viridis(begin = .2, end = .8, direction = -1, discrete = TRUE) +
+    coord_cartesian(ylim = c(.5, 1))
+}
+```
