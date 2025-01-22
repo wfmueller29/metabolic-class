@@ -41,9 +41,9 @@ mega_pal <- rep(palette(), 40)
 # for the case when we are not running with RStudio
 if (!exists("params")) {
   params <- list()
-  params$input_path <- "../04_prediction_data/output/test_local.yaml"
+  # params$input_path <- "../04_prediction_data/output/test_local.yaml"
   # params$input_path <- "../04_prediction_data/output/external_validation.yaml"
-  # params$input_path <- "../04_prediction_data/output/all.yaml"
+  params$input_path <- "../04_prediction_data/output/all.yaml"
   # params$input_path <- "../04_prediction_data/output/all_relative_age.yaml"
   # params$input_path <- "../04_prediction_data/output/test_relative_age.yaml"
 }
@@ -1802,36 +1802,6 @@ final_models$filter_window_test_lp_plot
 final_models$filter_window_test_concord_plot
 ```
 
-### Save R Objects
-
-#### Prune Final Models Before Saving 
-
-```{r prune}
-drop_patterns <- c(
-  "_tmerge",
-  "_test_merged",
-  "_test_results",
-  "_accuracy_df",
-  "_accuracy$",
-  "_table$",
-  "_data$",
-  "_df$",
-  "_results$"
-)
-
-drop_columns <- do.call(c, lapply(drop_patterns, grep, names(final_models)))
-
-final_models_pruned <- final_models[, -drop_columns]
-
-dif_size <- object.size(final_models) - object.size(final_models_pruned)
-percent_drop <- as.numeric(dif_size / object.size(final_models)) * 100
-
-cat("Percent memory pruned: ", percent_drop, "\n", sep = "")
-
-final_models <- final_models_pruned
-rm(final_models_pruned)
-```
-
 #### Create plots of concordances and regression on PI with one model
 
 ```{r create concordance plots for 1 model}
@@ -1900,6 +1870,7 @@ train_test_index <- final_models$data_mod == "train_test"
 data <- final_models[train_test_index, data_name]
 data <- lapply(data, function(data) {
   data <- data[data$model == 2, ]
+  data
 })
 
 lp_plots <- lapply(data, plot_window_concord_lp,
@@ -1943,6 +1914,7 @@ train_test_index <- final_models$data_mod == "train_test"
 data <- final_models[train_test_index, data_name]
 data <- lapply(data, function(data) {
   data <- data[data$model == 2, ]
+  data
 })
 
 lp_plots <- lapply(data, plot_cumulative_concord_lp,
@@ -1982,6 +1954,37 @@ final_models$filter_cumulative_test_concord_plot_model2
 final_models$filter_window_test_lp_plot_model2
 final_models$filter_window_test_concord_plot_model2
 ```
+
+### Save R Objects
+
+#### Prune Final Models Before Saving 
+
+```{r prune}
+drop_patterns <- c(
+  "_tmerge",
+  "_test_merged",
+  "_test_results",
+  "_accuracy_df",
+  "_accuracy$",
+  "_table$",
+  "_data$",
+  "_df$",
+  "_results$"
+)
+
+drop_columns <- do.call(c, lapply(drop_patterns, grep, names(final_models)))
+
+final_models_pruned <- final_models[, -drop_columns]
+
+dif_size <- object.size(final_models) - object.size(final_models_pruned)
+percent_drop <- as.numeric(dif_size / object.size(final_models)) * 100
+
+cat("Percent memory pruned: ", percent_drop, "\n", sep = "")
+
+final_models <- final_models_pruned
+rm(final_models_pruned)
+```
+
 
 #### Save 
 
