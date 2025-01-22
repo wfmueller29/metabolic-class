@@ -19,7 +19,6 @@ library(survival)
 library(lcmm)
 library(future)
 library(helphlme)
-set.seed(365)
 
 
 # setting global knitr options for r markdown output
