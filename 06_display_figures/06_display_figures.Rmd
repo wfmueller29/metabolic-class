@@ -709,6 +709,9 @@ lapply(prob_cols_tile, function(prob_col_tile) {
 ```
 
 ### Kaplan Meier by Cohort
+
+This may explain our trouble externally validating with cohorts 9 and 10, since
+both have lower levels of survival
 ```{r kap plot by cohort}
 kap_plot_all(census, "cohort",
   age_death = config$survival_dataset$age_death,
