@@ -233,7 +233,11 @@ cox_combine <- function(model_name_vector,
   ids <- final_models[model_index, "subject"]
   outcomes <- final_models[model_index, "oc"]
 
-  merged_census <- combine_census(censuses = censuses, ids = ids, outcomes = outcomes)
+  merged_census <- combine_census(
+    censuses = censuses,
+    ids = ids,
+    outcomes = outcomes
+  )
   census_id <- merged_census$id
   census <- merged_census$census
 

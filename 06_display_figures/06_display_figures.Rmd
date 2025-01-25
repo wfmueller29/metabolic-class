@@ -683,7 +683,7 @@ source("R/surv_dose.R")
 ```
 
 
-```{r dose response, fig.height = 10, fig.width = 10}
+```{r dose response, fig.height = 8, fig.width = 8}
 test_index <- final_models$data_mod == "train_test"
 rest_index <- !test_index
 test_index <- which(test_index)[[1]]
