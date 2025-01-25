@@ -708,6 +708,14 @@ lapply(prob_cols_tile, function(prob_col_tile) {
 })
 ```
 
+### Kaplan Meier by Cohort
+```{r kap plot by cohort}
+kap_plot_all(census, "cohort",
+  age_death = config$survival_dataset$age_death,
+  event = config$survival_dataset$event
+)
+```
+
 ### Internal Validation: Prognostic Index and Concordance
 
 ```{r internal validation}
