@@ -191,9 +191,9 @@ harmonize_apply <- function(datasets) {
 }
 
 harmonize_apply_validate <- function(datasets, validation_datasets) {
-  browser()
   harmonized_datasets <- lapply(seq_along(datasets), function(i) {
-    if (isTRUE(dataset$harmonize$execute)) {
+    if (isTRUE(datasets[[i]]$harmonize$execute)) {
+      browser()
       validation_data <- validation_datasets[[i]]$data[, -1]
       validation_data$validate <- 1
       data <- datasets[[i]]$data
@@ -205,12 +205,13 @@ harmonize_apply_validate <- function(datasets, validation_datasets) {
         outcome = validation_datasets[[i]]$outcome,
         variable = validation_datasets[[i]]$harmonize$variable
       )
+      browser()
 
-      dataset$data <- data_harmonized
+      validation_datasets[[i]]$data <- data_harmonized
 
-      return(dataset)
+      return(validation_datasets[[i]])
     } else {
-      return(dataset)
+      return(validation_datasets[[i]])
     }
   })
   harmonized_datasets
