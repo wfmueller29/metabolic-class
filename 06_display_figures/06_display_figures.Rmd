@@ -676,6 +676,38 @@ rest_combined_cox <- list(
 )
 ```
 
+### Dose response
+
+```{r source surv analysis, file = 'R/surv_dose.R'}
+source("R/surv_dose.R")
+```
+
+
+```{r dose response, fig.height = 10, fig.width = 10}
+test_index <- final_models$data_mod == "train_test"
+rest_index <- !test_index
+test_index <- which(test_index)[[1]]
+rest_index <- which(rest_index)[[1]]
+
+census <- final_models[rest_index, "combined_census"][[1]]
+prob_cols <- names(census)[grepl("^prob\\d+", names(census))]
+
+for (prob_col in prob_cols) {
+  name <- paste0(prob_col, "_tile")
+  census[[name]] <- cut(census[[prob_col]], breaks = 5, dig.lab = 2)
+}
+
+prob_cols_tile <- paste0(prob_cols, "_tile")
+
+lapply(prob_cols_tile, function(prob_col_tile) {
+  kap_plot_all(
+    df = census, var = prob_col_tile,
+    age_death = config$survival_dataset$age_death,
+    event = config$survival_dataset$event
+  )
+})
+```
+
 ### Internal Validation: Prognostic Index and Concordance
 
 ```{r internal validation}
@@ -830,7 +862,6 @@ p
 # Display model 2 solo figures
 
 ```{r display figure 7 model 2}
-
 model2_grid <- cowplot::plot_grid(
   plotlist = p,
   nrow = 2,
@@ -851,5 +882,4 @@ model2_grid <- cowplot::plot_grid(title_theme, model2_grid,
 )
 
 model2_grid
-
 ```
