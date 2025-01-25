@@ -184,7 +184,33 @@ harmonize_apply <- function(datasets) {
 
       return(dataset)
     } else {
-      return(NULL)
+      return(dataset)
+    }
+  })
+  harmonized_datasets
+}
+
+harmonize_apply_validate <- function(datasets, validation_datasets) {
+  browser()
+  harmonized_datasets <- lapply(seq_along(datasets), function(i) {
+    if (isTRUE(dataset$harmonize$execute)) {
+      validation_data <- validation_datasets[[i]]$data[, -1]
+      validation_data$validate <- 1
+      data <- datasets[[i]]$data
+      data$validate <- 0
+      combined_data <- rbind(data, validation_data)
+      data_harmonized <- harmonize(
+        data = combined_data,
+        formula = validation_datasets[[i]]$harmonize$formula,
+        outcome = validation_datasets[[i]]$outcome,
+        variable = validation_datasets[[i]]$harmonize$variable
+      )
+
+      dataset$data <- data_harmonized
+
+      return(dataset)
+    } else {
+      return(dataset)
     }
   })
   harmonized_datasets
@@ -192,7 +218,7 @@ harmonize_apply <- function(datasets) {
 
 datasets <- harmonize_apply(datasets)
 if (!isFALSE(config$external_validate)) {
-  validation_datasets <- harmonize_apply(validation_datasets)
+  validation_datasets <- harmonize_apply_validate(datasets, validation_datasets)
 }
 
 # Make sure all datasets have the same ids ------------------------------------
@@ -363,7 +389,7 @@ lapply(datasets, function(dataset) {
       dataset$test_data[[age_vars_ns[[1]]]]
     dif_data <- round(dif_data, digits = 3)
     dif_test_data <- round(dif_test_data, digits = 3)
-    # Checks that all differences are equal 
+    # Checks that all differences are equal
     x <- all(dif_test_data == dif_data[1]) && all(dif_data == dif_test_data[1])
     if (x) {
       print("We're good")
