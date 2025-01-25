@@ -193,7 +193,6 @@ harmonize_apply <- function(datasets) {
 harmonize_apply_validate <- function(datasets, validation_datasets) {
   harmonized_datasets <- lapply(seq_along(datasets), function(i) {
     if (isTRUE(datasets[[i]]$harmonize$execute)) {
-      browser()
       validation_data <- validation_datasets[[i]]$data[, -1]
       validation_data$validate <- 1
       data <- datasets[[i]]$data
@@ -205,7 +204,8 @@ harmonize_apply_validate <- function(datasets, validation_datasets) {
         outcome = validation_datasets[[i]]$outcome,
         variable = validation_datasets[[i]]$harmonize$variable
       )
-      browser()
+
+      data_harmonized <- data_harmonized[data_harmonized$validate == 1, ]
 
       validation_datasets[[i]]$data <- data_harmonized
 
@@ -217,10 +217,16 @@ harmonize_apply_validate <- function(datasets, validation_datasets) {
   harmonized_datasets
 }
 
-datasets <- harmonize_apply(datasets)
+harmonized_datasets <- harmonize_apply(datasets)
 if (!isFALSE(config$external_validate)) {
-  validation_datasets <- harmonize_apply_validate(datasets, validation_datasets)
+  harmonized_validation_datasets <- harmonize_apply_validate(
+    datasets,
+    validation_datasets
+  )
 }
+
+datasets <- harmonized_datasets
+validation_datasets <- harmonized_validation_datasets
 
 # Make sure all datasets have the same ids ------------------------------------
 id_intersect <- function(datasets) {
@@ -351,6 +357,9 @@ if (isFALSE(config$external_validate)) {
 }
 
 datasets <- c(datasets, train_test_datasets)
+
+# datasets[[4]]$test_data[datasets[[4]]$test_data$cohort == 9, c("cohort", "(Intercept)")]
+# datasets[[4]]$data[datasets[[4]]$data$cohort == 9, c("cohort", "(Intercept)")]
 
 # use prep_hlme to center and scale the data ----------------------------------
 
