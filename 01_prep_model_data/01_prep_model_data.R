@@ -7,7 +7,7 @@
 library(tidyverse)
 library(helphlme)
 library(rsample)
-set.seed(365)
+set.seed(1000)
 
 # load in config using file path ----------------------------------------------
 args <- commandArgs(trailingOnly = TRUE)
