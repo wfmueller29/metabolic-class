@@ -20,7 +20,7 @@ library(sjPlot)
 library(lme4)
 library(cowplot)
 library(RColorBrewer)
-set.seed(1000)
+set.seed(365)
 # setting global knitr options for r markdown output
 knitr::opts_chunk$set(autodep = TRUE)
 knitr::opts_chunk$set(warning = FALSE)

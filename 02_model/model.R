@@ -6,7 +6,7 @@ library(helphlme)
 library(callframe)
 library(tidyverse)
 library(future)
-set.seed(1000)
+set.seed(365)
 
 # take command line arguments for output tag ----------------------------------
 args <- commandArgs(trailingOnly = TRUE)
