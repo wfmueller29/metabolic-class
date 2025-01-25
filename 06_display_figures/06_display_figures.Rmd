@@ -861,11 +861,24 @@ if (window_legend && cumulative_legend) {
     ) +
     coord_cartesian(ylim = c(.5, 1))
   p[[3]] <- final_models[!og_index, ]$filter_cumulative_test_lp_plot_model2[[1]] +
-    scale_color_viridis(begin = .2, end = .8, direction = -1, discrete = TRUE) +
-    coord_cartesian(ylim = c(-1, 2))
-  p[[4]] <- final_models[!og_index, ]$filter_cumulative_test_concord_plot_model2[[1]] +
-    scale_color_viridis(begin = .2, end = .8, direction = -1, discrete = TRUE) +
-    coord_cartesian(ylim = c(.5, 1))
+    viridis::scale_color_viridis(
+      begin = .2,
+      end = .8,
+      direction = -1,
+      discrete = TRUE
+    ) +
+    ggplot2::coord_cartesian(ylim = c(-1, 2)) +
+    ggplot2::labs(color = "Lower Bound (weeks)")
+
+    p[[4]] <- final_models[!og_index, ]$filter_cumulative_test_concord_plot_model2[[1]] +
+    viridis::scale_color_viridis(
+      begin = .2,
+      end = .8,
+      direction = -1,
+      discrete = TRUE
+    ) +
+    ggplot2::coord_cartesian(ylim = c(.5, 1)) +
+    ggplot2::labs(color = "Lower Bound (weeks)")
 }
 p
 ```
