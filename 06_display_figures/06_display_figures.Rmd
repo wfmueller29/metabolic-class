@@ -793,13 +793,16 @@ final_models[!og_index, ]$filter_cumulative_test_wave_lp_plot[[1]]
 final_models[!og_index, ]$filter_cumulative_test_wave_concord[[1]]
 ```
 
+# Model 2 solo figures
+
 ```{r figure 7 model2}
-final_models[!og_index, ]$filter_window_test_concord_plot_model2[[1]]
-final_models[!og_index, ]$filter_window_test_lp_plot_model2[[1]]
-final_models[!og_index, ]$filter_cumulative_test_concord_plot_model2[[1]]
-final_models[!og_index, ]$filter_cumulative_test_lp_plot_model2[[1]]
-if (window_legend) {
-  final_models[!og_index, ]$filter_window_test_lp_plot_model2[[1]] +
+p <- list()
+p[[1]] <- final_models[!og_index, ]$filter_window_test_concord_plot_model2[[1]]
+p[[2]] <- final_models[!og_index, ]$filter_window_test_lp_plot_model2[[1]]
+p[[3]] <- final_models[!og_index, ]$filter_cumulative_test_concord_plot_model2[[1]]
+p[[4]] <- final_models[!og_index, ]$filter_cumulative_test_lp_plot_model2[[1]]
+if (window_legend && cumulative_legend) {
+  p[[1]] <- final_models[!og_index, ]$filter_window_test_lp_plot_model2[[1]] +
     scale_color_manual(
       values = window_legend_palette,
       name = "Window Size",
@@ -807,21 +810,46 @@ if (window_legend) {
     ) +
     coord_cartesian(ylim = c(-1, 2))
 
-  final_models[!og_index, ]$filter_window_test_concord_plot_model2[[1]] +
+  p[[2]] <- final_models[!og_index, ]$filter_window_test_concord_plot_model2[[1]] +
     scale_color_manual(
       values = window_legend_palette,
       name = "Window Size",
       labels = window_legend_labels
     ) +
     coord_cartesian(ylim = c(.5, 1))
-} 
-
-if (cumulative_legend) {
-  final_models[!og_index, ]$filter_cumulative_test_lp_plot_model2[[1]] +
+  p[[3]] <- final_models[!og_index, ]$filter_cumulative_test_lp_plot_model2[[1]] +
     scale_color_viridis(begin = .2, end = .8, direction = -1, discrete = TRUE) +
     coord_cartesian(ylim = c(-1, 2))
-  final_models[!og_index, ]$filter_cumulative_test_concord_plot_model2[[1]] +
+  p[[4]] <- final_models[!og_index, ]$filter_cumulative_test_concord_plot_model2[[1]] +
     scale_color_viridis(begin = .2, end = .8, direction = -1, discrete = TRUE) +
     coord_cartesian(ylim = c(.5, 1))
 }
+p
+```
+
+# Display model 2 solo figures
+
+```{r display figure 7 model 2}
+
+model2_grid <- cowplot::plot_grid(
+  plotlist = p,
+  nrow = 2,
+  byrow = FALSE,
+  greedy = FALSE,
+  labels = "AUTO"
+)
+
+title_theme <- ggdraw() +
+  draw_label(paste(
+    "Validation using window and cumulative data",
+    sep = " "
+  ))
+
+model2_grid <- cowplot::plot_grid(title_theme, model2_grid,
+  rel_heights = c(.05, 1),
+  ncol = 1
+)
+
+model2_grid
+
 ```
