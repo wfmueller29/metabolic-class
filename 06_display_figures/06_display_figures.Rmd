@@ -868,9 +868,11 @@ if (window_legend && cumulative_legend) {
       discrete = TRUE
     ) +
     ggplot2::coord_cartesian(ylim = c(-1, 2)) +
-    ggplot2::labs(color = "Lower Bound (weeks)")
+    ggplot2::labs(color = "Lower Bound (weeks)") +
+    theme(legend.title = element_text(size = rel(.8)))
 
-    p[[4]] <- final_models[!og_index, ]$filter_cumulative_test_concord_plot_model2[[1]] +
+
+  p[[4]] <- final_models[!og_index, ]$filter_cumulative_test_concord_plot_model2[[1]] +
     viridis::scale_color_viridis(
       begin = .2,
       end = .8,
@@ -878,7 +880,8 @@ if (window_legend && cumulative_legend) {
       discrete = TRUE
     ) +
     ggplot2::coord_cartesian(ylim = c(.5, 1)) +
-    ggplot2::labs(color = "Lower Bound (weeks)")
+    ggplot2::labs(color = "Lower Bound (weeks)") +
+    theme(legend.title = element_text(size = rel(.8)))
 }
 p
 ```
