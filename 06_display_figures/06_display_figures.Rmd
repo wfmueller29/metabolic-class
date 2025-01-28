@@ -31,12 +31,12 @@ knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(cache = FALSE)
 
 custom_palette <- TRUE
-palatte_colors <- c(
-  "black", "#DF536B", "#61D04F", "#2297E6",
-  "#28E2E5", "#CD0BBC", "#F5C710", "gray62"
+palette_colors <- c(
+  "black", "#DF536B", "#61D04F", "midnightblue",
+  "#28E2E5", "#CD0BBC", "#FF991C", "gray62"
 )
 legend_labels <- c(
-  "Overweight", "Mid-Weight", "Low-weight", "High-fat",
+  "Overweight", "Low-weight", "Mid-Weight", "High-fat",
   "Low-fat", "Mid-fat", "Decline Glucose", "Stable Glucose"
 )
 window_legend <- TRUE
@@ -58,7 +58,8 @@ cumulative_legend_palette <- viridis(3, begin = .2, end = .7, direction = -1)
 if (!exists("params")) {
   params <- list()
   # params$input_path <- "../05_figures/output/test_local.yaml"
-  params$input_path <- "../05_figures/output/all.yaml"
+  # params$input_path <- "../05_figures/output/all.yaml"
+  params$input_path <- "../05_figures/output/external_validation.yaml"
 }
 
 input <- yaml::read_yaml(file = params$input_path)
@@ -110,7 +111,7 @@ if (custom_palette) {
     k <- length(unique(group)) + j
     obs_plots[[i]] <- obs_plots[[i]] +
       scale_color_manual(
-        values = palette()[j + 1:k],
+        values = palette_colors[j + 1:k],
         name = "Class",
         labels = legend_labels[j + 1:k]
       )
@@ -177,6 +178,24 @@ heatmap1 <- heatmap(as.matrix(census1), margins = c(10, 4))
 census2 <- census[, prob_cols]
 colnames(census2) <- legend_labels
 heatmap2 <- heatmap(as.matrix(census2), margins = c(10, 4))
+```
+
+```{r save heatamps}
+getwd()
+output_path <- file.path("output", config$out_tag, "heatmap", "png")
+dir.create(output_path, recursive = TRUE)
+output_path <- normalizePath(output_path)
+
+file_path <- file.path(output_path, "heatmap1.png")
+jpeg(file = file_path)
+heatmap(as.matrix(census1), margins = c(10, 4))
+dev.off()
+
+file_path <- file.path(output_path, "heatmap2.png")
+jpeg(file = file_path)
+heatmap(as.matrix(census2), margins = c(10, 4))
+dev.off()
+
 ```
 
 ### Show validation data
@@ -251,7 +270,7 @@ if (custom_palette) {
     k <- length(unique(group)) + j
     kap_plots[[i]]$plot <- kap_plots[[i]]$plot +
       scale_color_manual(
-        values = palette()[j + 1:k],
+        values = palette_colors[j + 1:k],
         name = "Class",
         labels = legend_labels[j + 1:k]
       )
@@ -417,7 +436,7 @@ if (custom_palette) {
       k <- length(unique(group)) + j
       plots[[i]] <- plots[[i]] +
         scale_color_manual(
-          values = palette()[j + 1:k],
+          values = palette_colors[j + 1:k],
           name = "Class",
           labels = legend_labels[j + 1:k]
         )
@@ -460,9 +479,17 @@ selector <- t(matrix(t(selector)[which(!is.na(selector))], ncol = length_plots))
 selector <- as.vector(selector)
 unique_plots <- og_plots[selector]
 
+new_figure1_plot_list <- c(obs_plots, kap_plots, unique_plots)
+
+
+new_figure1_plot_list <- lapply(new_figure1_plot_list, function(p) {
+  p +
+    coord_cartesian(xlim = c(0, NA), ylim = c(0, NA))
+})
+
 
 new_figure1 <- cowplot::plot_grid(
-  plotlist = c(obs_plots, kap_plots, unique_plots),
+  plotlist = new_figure1_plot_list,
   nrow = length(which(og_index)),
   byrow = FALSE,
   greedy = FALSE,
@@ -481,6 +508,18 @@ new_figure1 <- cowplot::plot_grid(title_theme, new_figure1,
 )
 
 new_figure1
+```
+```{r save plots from above chunk}
+for (i in seq_along(new_figure1_plot_list)) {
+  plot <- new_figure1_plot_list[[i]]
+  name <- paste0("plot_", i, ".png")
+  output_path <- file.path("output", config$out_tag, "outcome", "png")
+  dir.create(output_path, recursive = TRUE)
+  output_path <- normalizePath(output_path)
+
+
+  ggsave(filename = name, plot = plot, device = "png", path = output_path)
+}
 ```
 
 ### Table of lme models
@@ -629,6 +668,19 @@ class_prediction_panel <- cowplot::plot_grid(title_theme,
   rel_heights = c(.05, 1),
   ncol = 1
 )
+```
+
+```{r save plots from chunk above}
+for (i in seq_along(plot_list)) {
+  plot <- plot_list[[i]]
+  name <- paste0("plot_", i, ".png")
+  output_path <- file.path("output", config$out_tag, "classification", "png")
+  dir.create(output_path, recursive = TRUE)
+  output_path <- normalizePath(output_path)
+
+
+  ggsave(filename = name, plot = plot, device = "png", path = output_path)
+}
 ```
 
 ### Combinded Cox Model 
@@ -884,6 +936,19 @@ if (window_legend && cumulative_legend) {
     theme(legend.title = element_text(size = rel(.8)))
 }
 p
+```
+
+```{r save vaidation plots}
+for (i in seq_along(p)) {
+  plot <- p[[i]]
+  name <- paste0("plot_", i, ".png")
+  output_path <- file.path("output", config$out_tag, "validation", "png")
+  dir.create(output_path, recursive = TRUE)
+  output_path <- normalizePath(output_path)
+
+
+  ggsave(filename = name, plot = plot, device = "png", path = output_path)
+}
 ```
 
 # Display model 2 solo figures
