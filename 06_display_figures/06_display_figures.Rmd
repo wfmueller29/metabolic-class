@@ -182,7 +182,7 @@ heatmap2 <- heatmap(as.matrix(census2), margins = c(10, 4))
 
 ```{r save heatamps}
 getwd()
-output_path <- file.path("output", config$out_tag, "heatmap", "png")
+output_path <- file.path("output", config$out_tag, "heatmap")
 dir.create(output_path, recursive = TRUE)
 output_path <- normalizePath(output_path)
 
@@ -195,7 +195,6 @@ file_path <- file.path(output_path, "heatmap2.png")
 jpeg(file = file_path)
 heatmap(as.matrix(census2), margins = c(10, 4))
 dev.off()
-
 ```
 
 ### Show validation data
@@ -513,7 +512,7 @@ new_figure1
 for (i in seq_along(new_figure1_plot_list)) {
   plot <- new_figure1_plot_list[[i]]
   name <- paste0("plot_", i, ".png")
-  output_path <- file.path("output", config$out_tag, "outcome", "png")
+  output_path <- file.path("output", config$out_tag, "outcome")
   dir.create(output_path, recursive = TRUE)
   output_path <- normalizePath(output_path)
 
@@ -674,7 +673,7 @@ class_prediction_panel <- cowplot::plot_grid(title_theme,
 for (i in seq_along(plot_list)) {
   plot <- plot_list[[i]]
   name <- paste0("plot_", i, ".png")
-  output_path <- file.path("output", config$out_tag, "classification", "png")
+  output_path <- file.path("output", config$out_tag, "classification")
   dir.create(output_path, recursive = TRUE)
   output_path <- normalizePath(output_path)
 
@@ -859,6 +858,23 @@ class_prediction_panel
 test_combined_cox
 rest_combined_cox
 ```
+```{r save cominbed cox}
+p <- c(test_combined_cox, rest_combined_cox)
+for (i in seq_along(p)) {
+  plot <- p[[i]]
+  name <- paste0("plot_", i, ".png")
+  output_path <- file.path("output", config$out_tag, "forest")
+  dir.create(output_path, recursive = TRUE)
+  output_path <- normalizePath(output_path)
+  file_name <- file.path(output_path, name)
+
+  ggsave(filename = name, plot = plot, device = "png", path = output_path)
+  png(file = file_name)
+  plot
+  dev.off()
+
+}
+```
 
 ### Figure 7: Internal Validation (Preliminary)
 
@@ -942,7 +958,7 @@ p
 for (i in seq_along(p)) {
   plot <- p[[i]]
   name <- paste0("plot_", i, ".png")
-  output_path <- file.path("output", config$out_tag, "validation", "png")
+  output_path <- file.path("output", config$out_tag, "validation")
   dir.create(output_path, recursive = TRUE)
   output_path <- normalizePath(output_path)
 
