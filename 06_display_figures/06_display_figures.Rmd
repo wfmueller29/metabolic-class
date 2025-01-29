@@ -639,16 +639,28 @@ if (cumulative_legend) {
   }
 }
 
+interval_plots <- lapply(interval_plots, function(plot) {
+  plot +
+    coord_cartesian(ylim = c(0, 1))
+})
 
+window_plots <- lapply(window_plots, function(plot) {
+  plot +
+    coord_cartesian(xlim = c(0, NA), ylim = c(0, 1))
+})
+
+cumulative_plots <- lapply(cumulative_plots, function(plot) {
+  plot +
+    coord_cartesian(xlim = c(0, NA), ylim = c(0, 1))
+})
+
+resampled_plots <- lapply(resampled_plots, function(plot) {
+  plot +
+    coord_cartesian(xlim = c(0, 1), ylim = c(0, 1))
+})
 
 plot_list <- c(interval_plots, window_plots, cumulative_plots, resampled_plots)
 
-
-plot_list <- lapply(plot_list, function(plot) {
-  plot <- plot +
-    coord_cartesian(ylim = c(0, 1))
-  plot
-})
 
 title <- paste("Classification Accuracy")
 
@@ -872,7 +884,6 @@ for (i in seq_along(p)) {
   png(file = file_name)
   plot
   dev.off()
-
 }
 ```
 
