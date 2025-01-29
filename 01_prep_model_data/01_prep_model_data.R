@@ -14,7 +14,8 @@ args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) == 0) {
   # args[[1]] <- "input/test_local.yaml"
-  args[[1]] <- "../x07_external_validation/input/slam_age_all.yaml"
+  args[[1]] <- "input/slam_age_mb6.yaml"
+  # args[[1]] <- "../x07_external_validation/input/slam_age_all.yaml"
   warning("No input file provided, using: ", args[[1]])
 }
 
@@ -226,7 +227,9 @@ if (!isFALSE(config$external_validate)) {
 }
 
 datasets <- harmonized_datasets
-validation_datasets <- harmonized_validation_datasets
+if (!isFALSE(config$external_validate)) {
+  validation_datasets <- harmonized_validation_datasets
+}
 
 # Make sure all datasets have the same ids ------------------------------------
 id_intersect <- function(datasets) {
@@ -454,7 +457,7 @@ names(datasets) <- dataset_names
 # save datasets as R object list, individual R objects, and csv's -------------
 input_path <- normalizePath(input_path)
 output_dir_path <- file.path("output", config$out_tag)
-dir.create(output_dir_path)
+dir.create(output_dir_path, recursive = TRUE)
 output_dir_path <- normalizePath(output_dir_path)
 datasets_path <- normalizePath(file.path(output_dir_path, "datasets.RDATA"))
 
