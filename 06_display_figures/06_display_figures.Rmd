@@ -30,7 +30,7 @@ knitr::opts_chunk$set(message = FALSE)
 knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(cache = FALSE)
 
-custom_palette <- TRUE
+custom_palette <- FALSE
 palette_colors <- c(
   "black", "#DF536B", "#61D04F", "midnightblue",
   "#28E2E5", "#CD0BBC", "#FF991C", "gray62"
@@ -47,8 +47,6 @@ cumulative_legend <- TRUE
 cumulative_legend_palette <- viridis(3, begin = .2, end = .7, direction = -1)
 ```
 
-
-
 ## Analysis
 
 ### Load Input File
@@ -58,7 +56,8 @@ cumulative_legend_palette <- viridis(3, begin = .2, end = .7, direction = -1)
 if (!exists("params")) {
   params <- list()
   # params$input_path <- "../05_figures/output/test_local.yaml"
-  params$input_path <- "../05_figures/output/all.yaml"
+  # params$input_path <- "../05_figures/output/all.yaml"
+  params$input_path <- "../05_figures/output/mb6.yaml"
   # params$input_path <- "../05_figures/output/external_validation.yaml"
 }
 
@@ -173,10 +172,14 @@ census <- final_models$combined_census[[1]]
 prob_cols <- names(census)[grepl("^prob\\d+", names(census))]
 cov <- datasets[[1]]$covariates_dummy
 census1 <- census[, c(prob_cols, cov)]
-colnames(census1) <- c(legend_labels, cov)
+if (custom_palette) {
+  colnames(census1) <- c(legend_labels, cov)
+}
 heatmap1 <- heatmap(as.matrix(census1), margins = c(10, 4))
 census2 <- census[, prob_cols]
-colnames(census2) <- legend_labels
+if (custom_palette) {
+  colnames(census2) <- legend_labels
+}
 heatmap2 <- heatmap(as.matrix(census2), margins = c(10, 4))
 ```
 
@@ -875,7 +878,7 @@ rest_combined_cox
 cox_models <- final_models$cox_combined_models
 lapply(cox_models, function(models) {
          lapply(models, function(model) {
-                  anova(cox_model)
+                  anova(model)
 
   })
 })
