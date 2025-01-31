@@ -44,8 +44,8 @@ if (!exists("params")) {
   params <- list()
   # params$input_path <- "../04_prediction_data/output/test_local.yaml"
   # params$input_path <- "../04_prediction_data/output/external_validation.yaml"
-  params$input_path <- "../04_prediction_data/output/all.yaml"
-  # params$input_path <- "../04_prediction_data/output/mb6.yaml"
+  # params$input_path <- "../04_prediction_data/output/all.yaml"
+  params$input_path <- "../04_prediction_data/output/mb6.yaml"
   # params$input_path <- "../04_prediction_data/output/all_relative_age.yaml"
   # params$input_path <- "../04_prediction_data/output/test_relative_age.yaml"
 }

@@ -2,7 +2,9 @@
 # prediction
 surv_tmerge <- function(data, id, age, age_death, outcomes) {
   data_baseline <- data[order(data[[id]], data[[age]]), , drop = FALSE]
-  data_baseline <- data_baseline[!duplicated(data_baseline[[id]]), , drop = FALSE]
+  data_baseline <- data_baseline[!duplicated(data_baseline[[id]]), ,
+    drop = FALSE
+  ]
   cl_tmerge1 <- rlang::call2("tmerge",
     data1 = as.symbol("data_baseline"),
     data2 = as.symbol("data_baseline"),
@@ -33,11 +35,25 @@ surv_tmerge <- function(data, id, age, age_death, outcomes) {
   return(data2)
 }
 
-surv_cox <- function(data, covariates, time, time2 = NULL, death, tt = NULL, type = c("right", "left", "interval", "counting", "interval2", "mstate")) {
+surv_cox <- function(data,
+                     covariates,
+                     time,
+                     time2 = NULL,
+                     death,
+                     tt = NULL,
+                     type = c("right", "left", "interval", "counting", "interval2", "mstate")) {
   if (is.null(time2)) {
-    surv_object <- survival::Surv(time = data[[time]], event = data[[death]], type = type)
+    surv_object <- survival::Surv(
+      time = data[[time]],
+      event = data[[death]],
+      type = type
+    )
   } else {
-    surv_object <- survival::Surv(time = data[[time]], time2 = data[[time2]], event = data[[death]])
+    surv_object <- survival::Surv(
+      time = data[[time]],
+      time2 = data[[time2]],
+      event = data[[death]]
+    )
   }
   cox.form <- stats::as.formula(paste0("surv_object", deparse1(covariates)))
 
@@ -199,13 +215,23 @@ create_combined_cox <- function(data,
   # drop any prob_cols from outcomes
   outcomes <- outcomes[!outcomes %in% prob_cols]
 
-  cov_form <- paste0("~", "(", covariates, ")")
-  form1 <- paste0(cov_form, "+", paste(new_class_cols, collapse = "+"))
-  form2 <- paste0(cov_form, "+", paste(prob_cols, collapse = "+"))
-  form3 <- paste0(
-    cov_form, "*",
-    "(", paste(prob_cols, collapse = "+"), ")"
-  )
+  if (!is.null(covariates)) {
+    cov_form <- paste0("~", "(", covariates, ")")
+    form1 <- paste0(cov_form, "+", paste(new_class_cols, collapse = "+"))
+    form2 <- paste0(cov_form, "+", paste(prob_cols, collapse = "+"))
+    form3 <- paste0(
+      cov_form, "*",
+      "(", paste(prob_cols, collapse = "+"), ")"
+    )
+  } else {
+    cov_form <- "~"
+    form1 <- paste0(cov_form, paste(new_class_cols, collapse = "+"))
+    form2 <- paste0(cov_form, paste(prob_cols, collapse = "+"))
+    form3 <- paste0(
+      cov_form,
+      "(", paste(prob_cols, collapse = "+"), ")"
+    )
+  }
 
   forms <- list(form1, form2, form3)
   forms <- lapply(forms, as.formula)
