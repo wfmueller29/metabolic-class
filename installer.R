@@ -15,6 +15,6 @@ install.packages("RColorBrewer", repos = "https://cloud.r-project.org")
 install.packages("viridis", repos = "https://cloud.r-project.org")
 install.packages("MLmetrics", repos = "https://cloud.r-project.org")
 install.packages("beepr", repos = "https://cloud.r-project.org")
-install.packages("rms", repos = "https://cloud.r-project.org")
-install.packages("base.rms", repos = "https://cloud.r-project.org")
+# install.packages("rms", repos = "https://cloud.r-project.org")
+# install.packages("base.rms", repos = "https://cloud.r-project.org")
 
