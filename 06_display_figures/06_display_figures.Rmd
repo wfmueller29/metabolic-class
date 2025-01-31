@@ -58,8 +58,8 @@ cumulative_legend_palette <- viridis(3, begin = .2, end = .7, direction = -1)
 if (!exists("params")) {
   params <- list()
   # params$input_path <- "../05_figures/output/test_local.yaml"
-  # params$input_path <- "../05_figures/output/all.yaml"
-  params$input_path <- "../05_figures/output/external_validation.yaml"
+  params$input_path <- "../05_figures/output/all.yaml"
+  # params$input_path <- "../05_figures/output/external_validation.yaml"
 }
 
 input <- yaml::read_yaml(file = params$input_path)
@@ -870,6 +870,18 @@ class_prediction_panel
 test_combined_cox
 rest_combined_cox
 ```
+### Figure 7: Combined Cox Feature Importance
+```{r figure 7 feature importance}
+cox_models <- final_models$cox_combined_models
+lapply(cox_models, function(models) {
+         lapply(models, function(model) {
+                  anova(cox_model)
+
+  })
+})
+
+```
+
 ```{r save cominbed cox}
 p <- c(test_combined_cox, rest_combined_cox)
 for (i in seq_along(p)) {
