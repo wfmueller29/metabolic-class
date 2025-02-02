@@ -1,4 +1,4 @@
-out_tag: mb6
+out_tag: mhet3
 tag_time: FALSE
 plan: multicore
 ncpus: 10
@@ -16,7 +16,7 @@ survival_dataset:
   covariates: NULL
 datasets:
 - name: "slam"
-  path: "../00b_dataset_mods/output/data/test/slam_bw_og_M_B6.csv"
+  path: "../00b_dataset_mods/output/data/test/slam_bw_og_M_HET3.csv"
   outcome: "bw"
   age_var: ["age_wk", "age_wk2"] # these must be in increasing polynomial order
   id: "idno"
@@ -73,7 +73,7 @@ datasets:
     variable: "cohort"
 
 - name: "slam"
-  path: "../00b_dataset_mods/output/data/test/slam_fat_og_M_B6.csv"
+  path: "../00b_dataset_mods/output/data/test/slam_fat_og_M_HET3.csv"
   outcome: "fat"
   age_var: ["age_wk", "age_wk2"]
   id: "idno"
@@ -129,7 +129,7 @@ datasets:
     variable: "cohort"
 
 - name: "slam"
-  path: "../00b_dataset_mods/output/data/test/slam_gluc_og_M_B6.csv"
+  path: "../00b_dataset_mods/output/data/test/slam_gluc_og_M_HET3.csv"
   outcome: "gluc"
   age_var: ["age_wk", "age_wk2"]
   id: "idno"
