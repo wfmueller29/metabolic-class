@@ -46,12 +46,6 @@ window_legend_labels <- c("2 measures", "3 measures", "4 measures")
 
 cumulative_legend <- TRUE
 cumulative_legend_palette <- viridis(3, begin = .2, end = .7, direction = -1)
-
-if (!isFALSE(config$external_validate)) {
-  validation_type <- "External"
-} else {
-  validation_type <- "Internal"
-}
 ```
 
 ## Analysis
@@ -209,6 +203,7 @@ dev.off()
 ### Show validation data
 ```{r validation data}
 plot_validation <- function(data1, data2, age, outcome, age_name, outcome_name) {
+  print(outcome)
   ggplot2::ggplot(
     data = data1,
     mapping = ggplot2::aes(
@@ -260,8 +255,6 @@ datasets <- lapply(datasets, function(dataset) {
 
   dataset
 })
-
-# datasets[[1]]$validation_plots
 ```
 
 ### Mortality outcomes by class
@@ -820,7 +813,7 @@ dose_plot_panel <- cowplot::plot_grid(title_theme, dose_plot_panel,
 
 ```{r hist prob, echo = FALSE, include = FALSE}
 hist_plots <- lapply(prob_cols, function(prob_col) {
-  ggplot2::ggplot(data = census, aes_string(x = prob_col)) + 
+  ggplot2::ggplot(data = census, aes_string(x = prob_col)) +
     ggplot2::geom_histogram()
 })
 
@@ -1190,3 +1183,37 @@ model2_grid <- cowplot::plot_grid(title_theme, model2_grid,
 
 model2_grid
 ```
+
+### Figure `r as.character(fig_no)`: Display Validation Data
+
+This is a check that we provided the correct validation data
+
+#### Cumulative
+
+```{r cumulative validation plots, fig.width = 36, fig.height = 36}
+plots <- datasets[[1]]$validation_plots[[1]]
+plot_grid(plotlist = plots)
+```
+
+#### Window
+
+```{r window validation plots, fig.width = 36, fig.height = 36}
+plots <- datasets[[1]]$validation_plots[[2]]
+plot_grid(plotlist = plots)
+```
+
+#### Interval
+
+```{r interval validation plots, fig.width = 36, fig.height = 36}
+plots <- datasets[[1]]$validation_plots[[3]]
+plot_grid(plotlist = plots)
+```
+#### Proportion Resampled
+
+```{r resampled validation plots, fig.width = 36, fig.height = 36}
+plots <- datasets[[1]]$validation_plots[[4]]
+plot_grid(plotlist = plots)
+
+fig_no <- fig_no + 1
+```
+
