@@ -790,7 +790,7 @@ dose_plots <- lapply(dose_plots, `[[`, "plot")
 dose_plot_panel <- cowplot::plot_grid(
   plotlist = dose_plots,
   nrow = round(sqrt(length(prob_cols))),
-  byrow = FALSE,
+  byrow = TRUE,
   greedy = FALSE,
   labels = "AUTO"
 )
@@ -818,6 +818,25 @@ hist_plots <- lapply(prob_cols, function(prob_col) {
   )
   p <- recordPlot()
 })
+
+hist_plot_panel <- cowplot::plot_grid(
+  plotlist = hist_plots,
+  nrow = round(sqrt(length(prob_cols))),
+  byrow = TRUE,
+  greedy = FALSE,
+  labels = "AUTO"
+)
+
+title_theme <- ggdraw() +
+  draw_label(paste(
+    "Histograms of probabilites of class membership for all subjects",
+    sep = " "
+  ))
+
+hist_plot_panel <- cowplot::plot_grid(title_theme, hist_plot_panel,
+  rel_heights = c(.05, 1),
+  ncol = 1
+)
 ```
 
 ### Kaplan Meier by Cohort
@@ -918,6 +937,12 @@ dose_plot_panel
 fig_no <- fig_no + 1
 ```
 
+### Figure `r as.character(fig_no)`: Histogram of probability of class membership
+
+```{r disply hist class prob panel, fig.height=24, fig.width=24}
+hist_plot_panel
+fig_no <- fig_no + 1
+```
 
 ### Table `r as.character(tab_no)`: Hazard Ratios
 
@@ -940,15 +965,58 @@ class_prediction_panel
 fig_no <- fig_no + 1
 ```
 
+### Table `r as.character(tab_no)`: Combined Classes Cox Models
+
+#### All Data
+
+```{r print combined cox models all data}
+final_models$cox_combined_models[[rest_index]]
+```
+
+#### Training Data
+```{r print combined cox models training}
+final_models$cox_combined_models[[test_index]]
+tab_no <- tab_no + 1
+```
+
 ### Figure `r as.character(fig_no)`: Combined Cox Forrest Plots
 
-```{r combined cox forrest plots}
-test_combined_cox
+These take the models shown in the previous table and display them in forrest
+plot format. It also drops any interaction variables
+
+#### All Data
+
+```{r combined cox forrest plots all data}
 rest_combined_cox
+```
+
+#### Training data
+```{r combined cox forrest plots training}
+test_combined_cox
 fig_no <- fig_no + 1
 ```
 
+```{r save cominbed cox forrest plots}
+p <- c(test_combined_cox, rest_combined_cox)
+for (i in seq_along(p)) {
+  plot <- p[[i]]
+  name <- paste0("plot_", i, ".png")
+  output_path <- file.path("output", config$out_tag, "forest")
+  dir.create(output_path, recursive = TRUE)
+  output_path <- normalizePath(output_path)
+  file_name <- file.path(output_path, name)
+
+  ggsave(filename = name, plot = plot, device = "png", path = output_path)
+  png(file = file_name)
+  plot
+  dev.off()
+}
+```
+
 ### Table `r as.character(tab_no)`: Combined Cox Feature Importance
+
+This takes the combined cox models from above and assesses the importance 
+of each added variable in predicting mortality
 
 #### Analysis of Deviance: All Mice
 
@@ -972,50 +1040,19 @@ for (model in models) {
 tab_no <- tab_no + 1
 ```
 
-```{r save cominbed cox}
-p <- c(test_combined_cox, rest_combined_cox)
-for (i in seq_along(p)) {
-  plot <- p[[i]]
-  name <- paste0("plot_", i, ".png")
-  output_path <- file.path("output", config$out_tag, "forest")
-  dir.create(output_path, recursive = TRUE)
-  output_path <- normalizePath(output_path)
-  file_name <- file.path(output_path, name)
-
-  ggsave(filename = name, plot = plot, device = "png", path = output_path)
-  png(file = file_name)
-  plot
-  dev.off()
-}
-```
-
 ### Figure `r as.character(fig_no)`: Internal Validation (Preliminary)
-
-#### Discrete
-
-```{r figure 7 discrete}
-final_models[!og_index, ]$filter_cumulative_discrete_test_lp_plot[[1]]
-final_models[!og_index, ]$filter_cumulative_discrete_test_concord_plot[[1]]
-final_models[!og_index, ]$filter_window_discrete_test_lp_plot[[1]]
-final_models[!og_index, ]$filter_window_discrete_test_concord_plot[[1]]
-```
 
 #### Preliminary
 
-```{r print models}
-final_models$cox_combined_models[[rest_index]]
-final_models$cox_combined_models[[test_index]]
-```
-
 ```{r figure 7 preliminary}
 final_models[!og_index, ]$filter_window_test_lp_plot[[1]]
-final_models[!og_index, ]$filter_window_test_concord[[1]]
+final_models[!og_index, ]$filter_window_test_concord_plot[[1]]
 final_models[!og_index, ]$filter_window_test_wave_lp_plot[[1]]
-final_models[!og_index, ]$filter_window_test_wave_concord[[1]]
+final_models[!og_index, ]$filter_window_test_wave_concord_plot[[1]]
 final_models[!og_index, ]$filter_cumulative_test_lp_plot[[1]]
-final_models[!og_index, ]$filter_cumulative_test_concord[[1]]
+final_models[!og_index, ]$filter_cumulative_test_concord_plot[[1]]
 final_models[!og_index, ]$filter_cumulative_test_wave_lp_plot[[1]]
-final_models[!og_index, ]$filter_cumulative_test_wave_concord[[1]]
+final_models[!og_index, ]$filter_cumulative_test_wave_concord_plot[[1]]
 ```
 
 # Model 2 solo figures
