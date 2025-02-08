@@ -1,5 +1,6 @@
 ---
-title: "`r config$out_tag` SLAM Metabolic Class Figures Display"
+title: "SLAM Metabolic Class Figures Display - `r config$out_tag` Mice"
+subtitle: "External Validation: `r config$external_validate`"
 author: "William Mueller"
 data: "`r format(Sys.time(), '%Y %B %d')`"
 output:
@@ -45,6 +46,12 @@ window_legend_labels <- c("2 measures", "3 measures", "4 measures")
 
 cumulative_legend <- TRUE
 cumulative_legend_palette <- viridis(3, begin = .2, end = .7, direction = -1)
+
+if (!isFALSE(config$external_validate)) {
+  validation_type <- "External"
+} else {
+  validation_type <- "Internal"
+}
 ```
 
 ## Analysis
@@ -813,11 +820,8 @@ dose_plot_panel <- cowplot::plot_grid(title_theme, dose_plot_panel,
 
 ```{r hist prob, echo = FALSE, include = FALSE}
 hist_plots <- lapply(prob_cols, function(prob_col) {
-  print(prob_col)
-  as.ggplot(~hist(census[[prob_col]],
-    main = paste("Histogram of", prob_col),
-    xlab = prob_col
-  ))
+  ggplot2::ggplot(data = census, aes_string(x = prob_col)) + 
+    ggplot2::geom_histogram()
 })
 
 hist_plot_panel <- cowplot::plot_grid(
@@ -865,7 +869,7 @@ tab_no <- 1
 
 ### Figure `r as.character(fig_no)`: How it works
 
-```{r how it works}
+```{r how it works, fig.width = 12, fig.height = 6}
 how_it_works
 fig_no <- fig_no + 1
 ```
@@ -955,7 +959,7 @@ fig_no <- fig_no + 1
 
 ### Figure `r as.character(fig_no)`: Histogram of probability of class membership
 
-```{r disply hist class prob panel, fig.height=24, fig.width=24}
+```{r disply hist class prob panel, fig.height=12, fig.width=12}
 hist_plot_panel
 fig_no <- fig_no + 1
 ```
