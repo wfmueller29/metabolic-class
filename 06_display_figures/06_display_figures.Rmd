@@ -89,7 +89,7 @@ final_models$dfs <- lapply(final_models$data, function(name) {
 p1 <- final_models[, "spag_plot"][[1]]
 p3 <- final_models[, "traj_obs"][[1]]
 
-fig1 <- cowplot::plot_grid(p1, p3, nrow = 1)
+how_it_works <- cowplot::plot_grid(p1, p3, nrow = 1)
 ```
 
 ### Dispaly predicted and observed
@@ -117,9 +117,6 @@ if (custom_palette) {
     j <- k
   }
 }
-
-obs_plots
-
 
 pred_plots <- lapply(pred_plots, ggdraw, clip = "on")
 
@@ -279,7 +276,6 @@ if (custom_palette) {
     j <- k
   }
 }
-kap_plots
 kap_plots <- lapply(kap_plots, `[[`, "plot")
 plot_list <- c(obs_plots, kap_plots)
 
@@ -508,9 +504,8 @@ new_figure1 <- cowplot::plot_grid(title_theme, new_figure1,
   rel_heights = c(.05, 1),
   ncol = 1
 )
-
-new_figure1
 ```
+
 ```{r save plots from above chunk}
 for (i in seq_along(new_figure1_plot_list)) {
   plot <- new_figure1_plot_list[[i]]
@@ -526,7 +521,6 @@ for (i in seq_along(new_figure1_plot_list)) {
 
 ```{r model_display}
 model_display <- 4
-
 ```
 
 ### Table of lme models
@@ -623,8 +617,6 @@ lme_table
 - Supplmenet will include same table for glucose and body fat
 
 ```{r class prediction panel, fig.height=16, fig.width=16}
-mo_names <- c("bw_main|bw_age_wk", "gluc_main|gluc_age_wk", "fat_main|fat_age_wk")
-
 interval_plots <- final_models[og_index, "interval_boot_accuracy_plot"]
 window_plots <- final_models[og_index, "window_boot_accuracy_plot"]
 cumulative_plots <- final_models[og_index, "cumulative_boot_accuracy_plot"]
@@ -763,11 +755,6 @@ rest_index <- which(rest_index)[[1]]
 census <- final_models[rest_index, "combined_census"][[1]]
 prob_cols <- names(census)[grepl("^prob\\d+", names(census))]
 
-lapply(prob_cols, function(prob_col){
-         print(prob_col)
-         hist(census[[prob_col]])
-})
-
 for (prob_col in prob_cols) {
   name <- paste0(prob_col, "_cut")
   name_tile <- paste0(prob_col, "_tile")
@@ -777,7 +764,7 @@ for (prob_col in prob_cols) {
 
 prob_cols_tile <- paste0(prob_cols, "_tile")
 
-lapply(seq_along(prob_cols_tile), function(i) {
+dose_plots <- lapply(seq_along(prob_cols_tile), function(i) {
   if (custom_palette) {
     kap_plot_all_dose(
       df = census, var = prob_cols_tile[[i]],
@@ -797,6 +784,40 @@ lapply(seq_along(prob_cols_tile), function(i) {
     )
   }
 })
+
+dose_plots <- lapply(dose_plots, `[[`, "plot")
+
+dose_plot_panel <- cowplot::plot_grid(
+  plotlist = dose_plots,
+  nrow = round(sqrt(length(prob_cols))),
+  byrow = FALSE,
+  greedy = FALSE,
+  labels = "AUTO"
+)
+
+title_theme <- ggdraw() +
+  draw_label(paste(
+    "Dose Response of Probability of Class Membership",
+    sep = " "
+  ))
+
+dose_plot_panel <- cowplot::plot_grid(title_theme, dose_plot_panel,
+  rel_heights = c(.05, 1),
+  ncol = 1
+)
+```
+
+### Histogram of probabilites of class assignment for all data 
+
+```{r hist prob, echo = FALSE, include = FALSE}
+hist_plots <- lapply(prob_cols, function(prob_col) {
+  print(prob_col)
+  hist(census[[prob_col]],
+    main = paste("Histogram of", prob_col),
+    xlab = prob_col
+  )
+  p <- recordPlot()
+})
 ```
 
 ### Kaplan Meier by Cohort
@@ -815,28 +836,28 @@ kap_plot_all(census, "cohort",
 )
 ```
 
-### Internal Validation: Prognostic Index and Concordance
-
-```{r internal validation}
-
-```
-
 
 ## Display Figures
-
-### Figure 1:How it works
-
-```{r figure 1}
-fig1
+```{r initiate figure and table number}
+fig_no <- 1
+tab_no <- 1
 ```
 
-### Figure 2: Predicted Observed
-```{r figure 2, fig.height=18, fig.width=12}
+### Figure `r as.character(fig_no)`: How it works
+
+```{r how it works}
+how_it_works
+fig_no <- fig_no + 1
+```
+
+### Figure `r as.character(fig_no)`: Predicted Observed
+```{r predicted and observed, fig.height=18, fig.width=12}
 pred_obs_panel
+fig_no <- fig_no + 1
 ```
 
-### Table 1: Whos in each Class
-```{r table 1, results = 'asis'}
+### Table `r as.character(tab_no)`: Whos in each Class
+```{r table whos in each class, results = 'asis'}
 print_table <- function(env, table_name, title) {
   cap <- paste(env$subgroup,
     title,
@@ -857,60 +878,98 @@ print_table(.GlobalEnv,
   table_name = "t1_df",
   title = "Demographics by Metabolic Index and Class"
 )
+tab_no <- tab_no + 1
 ```
 
-### Figure 3: Metabolic Classes with Other Metabolic Metrics
+### Figure `r as.character(fig_no)`: Metabolic Classes with Other Metabolic Metrics
 
-```{r figure 3, fig.height=18, fig.width=24}
+```{r plot classes by other outcomes, fig.height=18, fig.width=24}
 other_met_panel
+fig_no <- fig_no + 1
 ```
 
-### Table 2: Metabolic Classes Predict other Metabolic Metrics
+### Table `r as.character(tab_no)`: Metabolic Classes Predict other Metabolic Metrics
 
 ```{r table 2, results = 'asis'}
 for (table in lme_table) {
   cat(table$knitr)
 }
+tab_no <- tab_no + 1
 ```
 
-### Figure 4: Mortality and Class
+### Figure `r as.character(fig_no)`: Mortality and Class
 
-```{r figure 4, fig.height=18, fig.width=12}
+```{r mortality and class, fig.height=18, fig.width=12}
 mortality_panel
+fig_no <- fig_no + 1
 ```
 
-### Table 3: Hazard Ratios
+### Figure `r as.character(fig_no)`: Class, Mortality, and other outcome
+
+```{r class mortality and other outcome, fig.height=24, fig.width=30}
+new_figure1
+fig_no <- fig_no + 1
+```
+
+### Figure `r as.character(fig_no)`: Dose Response
+
+```{r dose reponse, fig.height=18, fig.width=18}
+dose_plot_panel
+fig_no <- fig_no + 1
+```
+
+
+### Table `r as.character(tab_no)`: Hazard Ratios
 
 - Model 1: $ Surv ~ Class $
 - Model 2: $ Surv ~ Class + Sex + Strain$
 - Model 3: $ Surv ~ Class + Sex * Strain$
 
-```{r table 3, results = 'asis'}
+```{r table hazard ratios, results = 'asis'}
 print_table(.GlobalEnv,
   table_name = "hr_table",
   title = "Table of Hazard Ratios by Metabolic Indices"
 )
+tab_no <- tab_no + 1
 ```
 
-### Figure 5: Class Prediction Panel
+### Figure `r as.character(fig_no)`: Class Prediction Panel
 
-```{r figure 5, fig.width=18, fig.height=18}
+```{r Class prediction panel, fig.width=24, fig.height=30}
 class_prediction_panel
+fig_no <- fig_no + 1
 ```
 
-### Figure 6: Combined Cox Forrest Plots
-```{r figure 6}
+### Figure `r as.character(fig_no)`: Combined Cox Forrest Plots
+
+```{r combined cox forrest plots}
 test_combined_cox
 rest_combined_cox
+fig_no <- fig_no + 1
 ```
-### Figure 7: Combined Cox Feature Importance
-```{r figure 7 feature importance}
-cox_models <- final_models$cox_combined_models
-lapply(cox_models, function(models) {
-  lapply(models, function(model) {
-    anova(model)
-  })
-})
+
+### Table `r as.character(tab_no)`: Combined Cox Feature Importance
+
+#### Analysis of Deviance: All Mice
+
+```{r feature importance all data}
+models <- final_models$cox_combined_models[[rest_index]]
+for (model in models) {
+  print(model$formula)
+  print(anova(model))
+}
+```
+
+#### Analysis of Deviance: Training Mice
+
+```{r feature importance training data}
+models <- final_models$cox_combined_models[[test_index]]
+for (model in models) {
+  print(model$formula)
+  print(anova(model))
+}
+
+tab_no <- tab_no + 1
 ```
 
 ```{r save cominbed cox}
@@ -930,7 +989,7 @@ for (i in seq_along(p)) {
 }
 ```
 
-### Figure 7: Internal Validation (Preliminary)
+### Figure `r as.character(fig_no)`: Internal Validation (Preliminary)
 
 #### Discrete
 
@@ -944,7 +1003,8 @@ final_models[!og_index, ]$filter_window_discrete_test_concord_plot[[1]]
 #### Preliminary
 
 ```{r print models}
-final_models$cox_combined_models
+final_models$cox_combined_models[[rest_index]]
+final_models$cox_combined_models[[test_index]]
 ```
 
 ```{r figure 7 preliminary}
