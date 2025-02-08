@@ -1,5 +1,5 @@
 ---
-title: "SLAM Metabolic Class Figures Display"
+title: "`r config$out_tag` SLAM Metabolic Class Figures Display"
 author: "William Mueller"
 data: "`r format(Sys.time(), '%Y %B %d')`"
 output:
@@ -30,7 +30,7 @@ knitr::opts_chunk$set(message = FALSE)
 knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(cache = FALSE)
 
-custom_palette <- FALSE
+custom_palette <- TRUE
 palette_colors <- c(
   "black", "#DF536B", "#61D04F", "midnightblue",
   "#28E2E5", "#CD0BBC", "#FF991C", "gray62"
@@ -56,8 +56,8 @@ cumulative_legend_palette <- viridis(3, begin = .2, end = .7, direction = -1)
 if (!exists("params")) {
   params <- list()
   # params$input_path <- "../05_figures/output/test_local.yaml"
-  # params$input_path <- "../05_figures/output/all.yaml"
-  params$input_path <- "../05_figures/output/mb6.yaml"
+  params$input_path <- "../05_figures/output/all.yaml"
+  # params$input_path <- "../05_figures/output/mb6.yaml"
   # params$input_path <- "../05_figures/output/external_validation.yaml"
 }
 
@@ -524,12 +524,18 @@ for (i in seq_along(new_figure1_plot_list)) {
 }
 ```
 
+```{r model_display}
+model_display <- 4
+
+```
+
 ### Table of lme models
 - Model1 (No interaction): $outcome = Age + Age^2 + Class + (Age + Age^2 | Subject)$
 - Model2 : $outcome = Age + Age^2 + Class + Female * HET3 + (Age + Age^2 | Subject)$
 - Model3 (no controlled): $outcome = (Age + Age^2) * Class + (Age + Age^2| Subject)$
 - Model4 (Sex and Strain additive controlled) : $outcome = (Age + Age^2) * Class + Female * HET3 + (Age + Age^2 | Subject)$
 - Model5 (Sex and Strain interacted controlled): $outcome = (Age + Age^2) * Class + (Age + Age^2) * Female * HET3 + (Age + Age^2 | Subject)$
+- Model displayed: `r model_display`
 ```{r table lme, results = 'asis'}
 rows <- final_models[og_index, ]
 
@@ -574,7 +580,7 @@ lmes_index <- grepl("^model.*_og_.*across$", names(final_models))
 lmes_list <- final_models[og_index, lmes_index]
 
 model_list <- lapply(lmes_list, function(row) {
-  lapply(row, `[[`, 4)
+  lapply(row, `[[`, model_display)
 })
 
 invert_list <- function(list) {
@@ -748,7 +754,6 @@ rest_combined_cox <- list(
 source("R/surv_dose.R")
 ```
 
-
 ```{r dose response, fig.height = 8, fig.width = 8}
 test_index <- final_models$data_mod == "train_test"
 rest_index <- !test_index
@@ -758,19 +763,39 @@ rest_index <- which(rest_index)[[1]]
 census <- final_models[rest_index, "combined_census"][[1]]
 prob_cols <- names(census)[grepl("^prob\\d+", names(census))]
 
+lapply(prob_cols, function(prob_col){
+         print(prob_col)
+         hist(census[[prob_col]])
+})
+
 for (prob_col in prob_cols) {
-  name <- paste0(prob_col, "_tile")
+  name <- paste0(prob_col, "_cut")
+  name_tile <- paste0(prob_col, "_tile")
   census[[name]] <- cut(census[[prob_col]], breaks = 5, dig.lab = 2)
+  census[[name_tile]] <- Hmisc::cut2(census[[prob_col]], g = 5)
 }
 
 prob_cols_tile <- paste0(prob_cols, "_tile")
 
-lapply(prob_cols_tile, function(prob_col_tile) {
-  kap_plot_all(
-    df = census, var = prob_col_tile,
-    age_death = config$survival_dataset$age_death,
-    event = config$survival_dataset$event
-  )
+lapply(seq_along(prob_cols_tile), function(i) {
+  if (custom_palette) {
+    kap_plot_all_dose(
+      df = census, var = prob_cols_tile[[i]],
+      age_death = config$survival_dataset$age_death,
+      event = config$survival_dataset$event,
+      color = palette_colors[[i]],
+      ptitle = paste("Probability of Class", i, "Quntile"),
+      class_number = i
+    )
+  } else {
+    kap_plot_all_dose(
+      df = census, var = prob_cols_tile[[i]],
+      age_death = config$survival_dataset$age_death,
+      event = config$survival_dataset$event,
+      ptitle = paste("Probability of Class", i, "Quntile"),
+      class_number = i
+    )
+  }
 })
 ```
 
@@ -778,6 +803,11 @@ lapply(prob_cols_tile, function(prob_col_tile) {
 
 This may explain our trouble externally validating with cohorts 9 and 10, since
 both have lower levels of survival
+
+```{r source surv analysis for cohort, file = 'R/surv_all.R'}
+source("R/surv_all.R")
+```
+
 ```{r kap plot by cohort}
 kap_plot_all(census, "cohort",
   age_death = config$survival_dataset$age_death,
@@ -877,12 +907,10 @@ rest_combined_cox
 ```{r figure 7 feature importance}
 cox_models <- final_models$cox_combined_models
 lapply(cox_models, function(models) {
-         lapply(models, function(model) {
-                  anova(model)
-
+  lapply(models, function(model) {
+    anova(model)
   })
 })
-
 ```
 
 ```{r save cominbed cox}
