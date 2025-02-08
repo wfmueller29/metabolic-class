@@ -164,7 +164,7 @@ t1_df <- t1_df[, c(first_names, last_names)]
 ```
 
 ### Heatmap census
-```{r heatmap, fig.height = 8, fig.width = 8}
+```{r heatmap, fig.height = 8, fig.width = 8, include = FALSE}
 census <- final_models$combined_census[[1]]
 prob_cols <- names(census)[grepl("^prob\\d+", names(census))]
 cov <- datasets[[1]]$covariates_dummy
@@ -172,12 +172,14 @@ census1 <- census[, c(prob_cols, cov)]
 if (custom_palette) {
   colnames(census1) <- c(legend_labels, cov)
 }
-heatmap1 <- heatmap(as.matrix(census1), margins = c(10, 4))
+heatmap(as.matrix(census1), margins = c(10, 4))
+heatmap1 <- recordPlot()
 census2 <- census[, prob_cols]
 if (custom_palette) {
   colnames(census2) <- legend_labels
 }
-heatmap2 <- heatmap(as.matrix(census2), margins = c(10, 4))
+heatmap(as.matrix(census2), margins = c(10, 4))
+heatmap2 <- recordPlot()
 ```
 
 ```{r save heatamps}
@@ -812,11 +814,10 @@ dose_plot_panel <- cowplot::plot_grid(title_theme, dose_plot_panel,
 ```{r hist prob, echo = FALSE, include = FALSE}
 hist_plots <- lapply(prob_cols, function(prob_col) {
   print(prob_col)
-  hist(census[[prob_col]],
+  as.ggplot(~hist(census[[prob_col]],
     main = paste("Histogram of", prob_col),
     xlab = prob_col
-  )
-  p <- recordPlot()
+  ))
 })
 
 hist_plot_panel <- cowplot::plot_grid(
@@ -907,6 +908,21 @@ other_met_panel
 fig_no <- fig_no + 1
 ```
 
+### Figure `r as.character(fig_no)`: Heatmap of census by class probability 
+
+#### Without Covariates
+
+```{r heatmap of census with out covariate, fig.height=12, fig.width=12}
+heatmap2
+```
+
+#### With Covariates
+
+```{r heatmap of census with covariate, fig.height=12, fig.width=12}
+heatmap1
+fig_no <- fig_no + 1
+```
+
 ### Table `r as.character(tab_no)`: Metabolic Classes Predict other Metabolic Metrics
 
 ```{r table 2, results = 'asis'}
@@ -960,12 +976,29 @@ tab_no <- tab_no + 1
 
 ### Figure `r as.character(fig_no)`: Class Prediction Panel
 
-```{r Class prediction panel, fig.width=24, fig.height=30}
+```{r Class prediction panel, fig.width=30, fig.height=24}
 class_prediction_panel
 fig_no <- fig_no + 1
 ```
 
 ### Table `r as.character(tab_no)`: Combined Classes Cox Models
+
+```{r get model calls}
+model_formulas <- lapply(
+  final_models$cox_combined_models[[rest_index]],
+  `[[`, "formula"
+)
+model_formulas <- lapply(model_formulas, function(formula) {
+  Reduce(paste, deparse(formula))
+})
+```
+
+These are the combined models we will use to predict mortality there are
+three model calls
+
+- Model 1: `r model_formulas[[1]]`
+- Model 2: `r model_formulas[[2]]`
+- Model 3: `r model_formulas[[3]]`
 
 #### All Data
 
@@ -1040,20 +1073,37 @@ for (model in models) {
 tab_no <- tab_no + 1
 ```
 
-### Figure `r as.character(fig_no)`: Internal Validation (Preliminary)
+```{r validation is this internal or external}
+if (!isFALSE(config$external_validate)) {
+  validation_type <- "External"
+} else {
+  validation_type <- "Internal"
+}
+```
 
-#### Preliminary
+### Figure `r as.character(fig_no)`: `r validation_type` Validation Compare models
 
-```{r figure 7 preliminary}
+Using the three combined cox models from above assess their performance 
+using the linear predictor and concordance derived from validation data
+
+Again we are still using these three models
+
+- Model 1: `r model_formulas[[1]]`
+- Model 2: `r model_formulas[[2]]`
+- Model 3: `r model_formulas[[3]]`
+
+```{r validation compare models preliminary}
 final_models[!og_index, ]$filter_window_test_lp_plot[[1]]
 final_models[!og_index, ]$filter_window_test_concord_plot[[1]]
 final_models[!og_index, ]$filter_cumulative_test_lp_plot[[1]]
 final_models[!og_index, ]$filter_cumulative_test_concord_plot[[1]]
+
+fig_no <- fig_no + 1
 ```
 
-# Model 2 solo figures
+### Figure `r as.character(fig_no)`: `r validation_type` Validation Model 2
 
-```{r figure 7 model2}
+```{r validation with model 2, include = FALSE}
 p <- list()
 p[[1]] <- final_models[!og_index, ]$filter_window_test_concord_plot_model2[[1]]
 p[[2]] <- final_models[!og_index, ]$filter_window_test_lp_plot_model2[[1]]
@@ -1114,9 +1164,7 @@ for (i in seq_along(p)) {
 }
 ```
 
-# Display model 2 solo figures
-
-```{r display figure 7 model 2}
+```{r display model 2 validation, fig.height = 12, fig.width = 12}
 model2_grid <- cowplot::plot_grid(
   plotlist = p,
   nrow = 2,
