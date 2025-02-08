@@ -38,26 +38,14 @@ kap_plot_cox <- function(df, var, age_death, event, covariates = NULL) {
   return(surv_results)
 }
 
-kap_plot_all_dose <- function(df,
-                              var,
-                              age_death,
-                              event,
-                              class_number,
-                              ptitle = " ",
-                              subtitle = " ",
-                              color = NULL) {
-  if (!is.null(color)) {
-    colors <- lapply(1:5, function(j) {
-      alpha <- j / 5
-      quickcode::mix.color(color, alpha = alpha)
-    })
-    colors <- unlist(colors)
-    pal <- colors
-    pal_names <- 1:5
-  } else {
-    pal_names <- as.numeric(sort(unique(df[[var]])))
-    pal <- rep(palette(), 20)[pal_names]
-  }
+kap_plot_all <- function(df,
+                         var,
+                         age_death,
+                         event,
+                         ptitle = " ",
+                         subtitle = " ") {
+  pal_names <- as.numeric(sort(unique(df[[var]])))
+  pal <- rep(palette(), 20)[pal_names]
   df[[var]] <- factor(df[[var]])
   if (length(unique(df[[var]])) == 1) {
     hr1 <- NULL
@@ -73,9 +61,9 @@ kap_plot_all_dose <- function(df,
     pval = hr1[[1]],
     xlab = "Age (Weeks) ",
     ylab = "Survival Probability",
-    legend.labs = pal_names,
+    # legend.labs = pal_names,
     surv.median.line = "hv",
-    legend.title = "Quintile",
+    # legend.title = "Class",
     legend = "right",
     title = ptitle,
     #             font.title = c(12, "bold", "black"),
