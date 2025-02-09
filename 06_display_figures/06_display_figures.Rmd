@@ -203,7 +203,6 @@ dev.off()
 ### Show validation data
 ```{r validation data}
 plot_validation <- function(data1, data2, age, outcome, age_name, outcome_name) {
-  print(outcome)
   ggplot2::ggplot(
     data = data1,
     mapping = ggplot2::aes(
@@ -579,6 +578,12 @@ model_list <- lapply(lmes_list, function(row) {
   lapply(row, `[[`, model_display)
 })
 
+model_calls <- lapply(model_list, function(models) {
+  lapply(models, function(model) {
+    model@call
+  })
+})
+
 invert_list <- function(list) {
   list_matrix <- do.call(rbind, list)
   output <- apply(list_matrix, 2, as.list)
@@ -922,6 +927,18 @@ fig_no <- fig_no + 1
 
 ### Table `r as.character(tab_no)`: Metabolic Classes Predict other Metabolic Metrics
 
+- Model1 (No interaction): $outcome = Age + Age^2 + Class + (Age + Age^2 | Subject)$
+- Model2 : $outcome = Age + Age^2 + Class + Female * HET3 + (Age + Age^2 | Subject)$
+- Model3 (no controlled): $outcome = (Age + Age^2) * Class + (Age + Age^2| Subject)$
+- Model4 (Sex and Strain additive controlled) : $outcome = (Age + Age^2) * Class + Female * HET3 + (Age + Age^2 | Subject)$
+- Model5 (Sex and Strain interacted controlled): $outcome = (Age + Age^2) * Class + (Age + Age^2) * Female * HET3 + (Age + Age^2 | Subject)$
+
+#### Model displayed: `r model_display`
+
+```{r display model_calls}
+model_calls
+```
+
 ```{r table 2, results = 'asis'}
 for (table in lme_table) {
   cat(table$knitr)
@@ -1208,6 +1225,7 @@ plot_grid(plotlist = plots)
 plots <- datasets[[1]]$validation_plots[[3]]
 plot_grid(plotlist = plots)
 ```
+
 #### Proportion Resampled
 
 ```{r resampled validation plots, fig.width = 36, fig.height = 36}
