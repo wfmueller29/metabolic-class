@@ -753,7 +753,7 @@ rest_combined_cox <- list(
 source("R/surv_dose.R")
 ```
 
-```{r dose response, fig.height = 8, fig.width = 8}
+```{r dose response, fig.height = 8, fig.width = 8, include = FALSE}
 test_index <- final_models$data_mod == "train_test"
 rest_index <- !test_index
 test_index <- which(test_index)[[1]]
@@ -816,7 +816,7 @@ dose_plot_panel <- cowplot::plot_grid(title_theme, dose_plot_panel,
 
 ### Dose Response for test data with cumulative validation data
 
-```{r cumulative validation dose response}
+```{r cumulative validation dose response, include = FALSE}
 test_index <- final_models$data_mod == "train_test"
 rest_index <- !test_index
 test_index <- which(test_index)[[1]]
@@ -833,7 +833,7 @@ dose_plot_cum_validation <- lapply(censuses, function(census) {
     name <- paste0(prob_col, "_cut")
     name_tile <- paste0(prob_col, "_tile")
     census[[name]] <- cut(census[[prob_col]], breaks = 5, dig.lab = 2)
-    census[[name_tile]] <- Hmisc::cut2(census[[prob_col]], digits = 5, g = 5)
+    census[[name_tile]] <- Hmisc::cut2(census[[prob_col]], digits = 7, g = 5)
   }
 
   prob_cols_tile <- paste0(prob_cols, "_tile")
@@ -1361,6 +1361,8 @@ if (window_legend && cumulative_legend) {
     theme(legend.title = element_text(size = rel(.8)))
 }
 p
+
+fig_no <- fig_no + 1
 ```
 
 ```{r save vaidation plots}
