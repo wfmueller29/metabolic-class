@@ -31,7 +31,7 @@ knitr::opts_chunk$set(message = FALSE)
 knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(cache = FALSE)
 
-custom_palette <- TRUE
+custom_palette <- FALSE
 palette_colors <- c(
   "black", "#DF536B", "#61D04F", "midnightblue",
   "#28E2E5", "#CD0BBC", "#FF991C", "gray62"
@@ -57,8 +57,8 @@ cumulative_legend_palette <- viridis(3, begin = .2, end = .7, direction = -1)
 if (!exists("params")) {
   params <- list()
   # params$input_path <- "../05_figures/output/test_local.yaml"
-  params$input_path <- "../05_figures/output/all.yaml"
-  # params$input_path <- "../05_figures/output/mb6.yaml"
+  # params$input_path <- "../05_figures/output/all.yaml"
+  params$input_path <- "../05_figures/output/fhet3.yaml"
   # params$input_path <- "../05_figures/output/external_validation.yaml"
 }
 
@@ -833,7 +833,7 @@ dose_plot_cum_validation <- lapply(censuses, function(census) {
     name <- paste0(prob_col, "_cut")
     name_tile <- paste0(prob_col, "_tile")
     census[[name]] <- cut(census[[prob_col]], breaks = 5, dig.lab = 2)
-    census[[name_tile]] <- Hmisc::cut2(census[[prob_col]], g = 5)
+    census[[name_tile]] <- Hmisc::cut2(census[[prob_col]], digits = 5, g = 5)
   }
 
   prob_cols_tile <- paste0(prob_cols, "_tile")
@@ -912,11 +912,10 @@ kap_plot_cum_validation <- lapply(censuses, function(census) {
       )
     } else {
       kap_plot_all(
-        df = census, var = class_cols[[i]],
+        df = census, 
+        var = class_cols[[i]],
         age_death = config$survival_dataset$age_death,
-        event = config$survival_dataset$event,
-        ptitle = paste("Probability of Class", i, "Quntile"),
-        class_number = i
+        event = config$survival_dataset$event
       )
     }
   })
@@ -925,7 +924,7 @@ kap_plot_cum_validation <- lapply(censuses, function(census) {
 
   kap_plot_cum_validation_panel <- cowplot::plot_grid(
     plotlist = kap_plots_cum_validation,
-    ncol = round(sqrt(length(prob_cols))),
+    ncol = length(class_cols),
     byrow = TRUE,
     greedy = FALSE,
     labels = "AUTO"
@@ -1095,69 +1094,6 @@ fig_no <- fig_no + 1
 
 ```{r dose reponse, fig.height=18, fig.width=18}
 dose_plot_panel
-fig_no <- fig_no + 1
-```
-
-### Figure `r as.character(fig_no)`: Dose Response Cumulative Validation @ `r names(dose_plot_cum_validation)[[3]]` weeks
-
-```{r dose reponse cum validation 1, fig.height=18, fig.width=18}
-dose_plot_cum_validation[[3]]
-fig_no <- fig_no + 1
-```
-
-### Figure `r as.character(fig_no)`: Dose Response Cumulative Validation @ `r names(dose_plot_cum_validation)[[4]]` weeks
-
-```{r dose reponse cum validation 2, fig.height=18, fig.width=18}
-dose_plot_cum_validation[[4]]
-fig_no <- fig_no + 1
-```
-
-### Figure `r as.character(fig_no)`: Dose Response Cumulative Validation @ `r names(dose_plot_cum_validation)[[5]]` weeks
-
-```{r dose reponse cum validation 3, fig.height=18, fig.width=18}
-dose_plot_cum_validation[[5]]
-fig_no <- fig_no + 1
-```
-
-### Figure `r as.character(fig_no)`: Dose Response Cumulative Validation @ `r names(dose_plot_cum_validation)[[6]]` weeks
-
-```{r dose reponse cum validation 4, fig.height=18, fig.width=18}
-dose_plot_cum_validation[[6]]
-fig_no <- fig_no + 1
-```
-
-### Figure `r as.character(fig_no)`: KM Class Validation @ `r names(kap_plot_cum_validation)[[3]]` weeks
-
-```{r km cum validation 1, fig.height=6, fig.width=18}
-kap_plot_cum_validation[[3]]
-fig_no <- fig_no + 1
-```
-
-### Figure `r as.character(fig_no)`: KM Class Validation @ `r names(kap_plot_cum_validation)[[4]]` weeks
-
-```{r km cum validation 2, fig.height=6, fig.width=18}
-kap_plot_cum_validation[[4]]
-fig_no <- fig_no + 1
-```
-
-### Figure `r as.character(fig_no)`: KM Class Validation @ `r names(kap_plot_cum_validation)[[5]]` weeks
-
-```{r km cum validation 3, fig.height=6, fig.width=18}
-kap_plot_cum_validation[[5]]
-fig_no <- fig_no + 1
-```
-
-### Figure `r as.character(fig_no)`: KM Class Validation @ `r names(kap_plot_cum_validation)[[6]]` weeks
-
-```{r km cum validation 4, fig.height=6, fig.width=18}
-kap_plot_cum_validation[[6]]
-fig_no <- fig_no + 1
-```
-
-### Figure `r as.character(fig_no)`: Histogram of probability of class membership
-
-```{r disply hist class prob panel, fig.height=12, fig.width=12}
-hist_plot_panel
 fig_no <- fig_no + 1
 ```
 
