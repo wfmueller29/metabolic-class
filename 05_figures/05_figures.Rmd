@@ -1963,8 +1963,8 @@ final_models$filter_window_test_concord_plot_model2
 
 ```{r prune}
 drop_patterns <- c(
-  "_tmerge",
-  "_test_merged",
+  # "_tmerge",
+  # "_test_merged",
   "_test_results",
   "_accuracy_df",
   "_accuracy$",
