@@ -46,6 +46,9 @@ kap_plot_all_dose <- function(df,
                               ptitle = " ",
                               subtitle = " ",
                               color = NULL) {
+  print(class_number)
+  print(var)
+  print(length(unique(as.character(df[[var]]))))
   if (!is.null(color)) {
     colors <- lapply(1:5, function(j) {
       alpha <- j / 5
@@ -55,8 +58,10 @@ kap_plot_all_dose <- function(df,
     pal <- colors
     pal_names <- 1:5
   } else {
-    pal_names <- as.numeric(sort(unique(df[[var]])))
-    pal <- rep(palette(), 20)[pal_names]
+    pal_unique <- unique(as.character(df[[var]]))
+    pal_names <- levels(df[[var]])[levels(df[[var]]) %in% pal_unique]
+    pal_seq <- which(levels(df[[var]]) %in% pal_unique)
+    pal <- rep(palette(), 20)[pal_seq]
   }
   df[[var]] <- factor(df[[var]])
   if (length(unique(df[[var]])) == 1) {
