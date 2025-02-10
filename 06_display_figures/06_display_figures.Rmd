@@ -883,6 +883,68 @@ dose_plot_cum_validation <- lapply(censuses, function(census) {
 })
 ```
 
+### KM by class test data with cumulative validation data
+
+```{r source surv analysis for km validation, file = 'R/surv_all.R'}
+source("R/surv_all.R")
+```
+
+```{r cumulative validation by kaplan meier class}
+test_index <- final_models$data_mod == "train_test"
+rest_index <- !test_index
+test_index <- which(test_index)[[1]]
+rest_index <- which(rest_index)[[1]]
+
+# 6 to 58 weeks
+censuses <- final_models[test_index, "filter_cumulative_test_tmerged"][[1]]
+census_names <- names(censuses)
+
+kap_plot_cum_validation <- lapply(censuses, function(census) {
+  class_cols <- names(census)[grepl("^new_class", names(census))]
+
+  kap_plots_cum_validation <- lapply(seq_along(class_cols), function(i) {
+    if (custom_palette) {
+      kap_plot_all(
+        df = census, 
+        var = class_cols[[i]],
+        age_death = config$survival_dataset$age_death,
+        event = config$survival_dataset$event
+      )
+    } else {
+      kap_plot_all(
+        df = census, var = class_cols[[i]],
+        age_death = config$survival_dataset$age_death,
+        event = config$survival_dataset$event,
+        ptitle = paste("Probability of Class", i, "Quntile"),
+        class_number = i
+      )
+    }
+  })
+
+  kap_plots_cum_validation <- lapply(kap_plots_cum_validation, `[[`, "plot")
+
+  kap_plot_cum_validation_panel <- cowplot::plot_grid(
+    plotlist = kap_plots_cum_validation,
+    ncol = round(sqrt(length(prob_cols))),
+    byrow = TRUE,
+    greedy = FALSE,
+    labels = "AUTO"
+  )
+
+  title_theme <- ggdraw() +
+    draw_label(paste(
+      "KM Validation of Test Data",
+      sep = " "
+    ))
+
+  kap_plot_cum_validation_panel <- cowplot::plot_grid(title_theme,
+    kap_plot_cum_validation_panel,
+    rel_heights = c(.05, 1),
+    ncol = 1
+  )
+})
+```
+
 ### Histogram of probabilites of class assignment for all data 
 
 ```{r hist prob, echo = FALSE, include = FALSE}
@@ -1061,6 +1123,34 @@ fig_no <- fig_no + 1
 
 ```{r dose reponse cum validation 4, fig.height=18, fig.width=18}
 dose_plot_cum_validation[[6]]
+fig_no <- fig_no + 1
+```
+
+### Figure `r as.character(fig_no)`: KM Class Validation @ `r names(kap_plot_cum_validation)[[3]]` weeks
+
+```{r km cum validation 1, fig.height=6, fig.width=18}
+kap_plot_cum_validation[[3]]
+fig_no <- fig_no + 1
+```
+
+### Figure `r as.character(fig_no)`: KM Class Validation @ `r names(kap_plot_cum_validation)[[4]]` weeks
+
+```{r km cum validation 2, fig.height=6, fig.width=18}
+kap_plot_cum_validation[[4]]
+fig_no <- fig_no + 1
+```
+
+### Figure `r as.character(fig_no)`: KM Class Validation @ `r names(kap_plot_cum_validation)[[5]]` weeks
+
+```{r km cum validation 3, fig.height=6, fig.width=18}
+kap_plot_cum_validation[[5]]
+fig_no <- fig_no + 1
+```
+
+### Figure `r as.character(fig_no)`: KM Class Validation @ `r names(kap_plot_cum_validation)[[6]]` weeks
+
+```{r km cum validation 4, fig.height=6, fig.width=18}
+kap_plot_cum_validation[[6]]
 fig_no <- fig_no + 1
 ```
 
