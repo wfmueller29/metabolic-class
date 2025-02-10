@@ -1182,6 +1182,81 @@ class_prediction_panel
 fig_no <- fig_no + 1
 ```
 
+### KM Class Validation
+These curve use the testing validation from specfic time intervals that were 
+input into the trained model to provide class predictions. We then plot the
+KM curves of each predicted metabolic class. This serves as a graphical 
+validation of the ability of the classes to predict mortality even early in life
+
+#### Figure `r as.character(fig_no)`: KM Class Validation @ `r names(kap_plot_cum_validation)[[3]]` weeks
+
+```{r km cum validation 1, fig.height=6, fig.width=18}
+kap_plot_cum_validation[[3]]
+fig_no <- fig_no + 1
+```
+
+#### Figure `r as.character(fig_no)`: KM Class Validation @ `r names(kap_plot_cum_validation)[[4]]` weeks
+
+```{r km cum validation 2, fig.height=6, fig.width=18}
+kap_plot_cum_validation[[4]]
+fig_no <- fig_no + 1
+```
+
+#### Figure `r as.character(fig_no)`: KM Class Validation @ `r names(kap_plot_cum_validation)[[5]]` weeks
+
+```{r km cum validation 3, fig.height=6, fig.width=18}
+kap_plot_cum_validation[[5]]
+fig_no <- fig_no + 1
+```
+
+#### Figure `r as.character(fig_no)`: KM Class Validation @ `r names(kap_plot_cum_validation)[[6]]` weeks
+
+```{r km cum validation 4, fig.height=6, fig.width=18}
+kap_plot_cum_validation[[6]]
+fig_no <- fig_no + 1
+```
+
+### Dose Response Validation
+
+These curve use the testing validation from specfic time intervals that were 
+input into the trained model to provide class predictions. We then plot the
+KM curves of the quintiles of class probability
+
+#### Figure `r as.character(fig_no)`: Dose Response Cumulative Validation @ `r names(dose_plot_cum_validation)[[3]]` weeks
+
+```{r dose reponse cum validation 1, fig.height=18, fig.width=18}
+dose_plot_cum_validation[[3]]
+fig_no <- fig_no + 1
+```
+
+#### Figure `r as.character(fig_no)`: Dose Response Cumulative Validation @ `r names(dose_plot_cum_validation)[[4]]` weeks
+
+```{r dose reponse cum validation 2, fig.height=18, fig.width=18}
+dose_plot_cum_validation[[4]]
+fig_no <- fig_no + 1
+```
+
+#### Figure `r as.character(fig_no)`: Dose Response Cumulative Validation @ `r names(dose_plot_cum_validation)[[5]]` weeks
+
+```{r dose reponse cum validation 3, fig.height=18, fig.width=18}
+dose_plot_cum_validation[[5]]
+fig_no <- fig_no + 1
+```
+
+#### Figure `r as.character(fig_no)`: Dose Response Cumulative Validation @ `r names(dose_plot_cum_validation)[[6]]` weeks
+
+```{r dose reponse cum validation 4, fig.height=18, fig.width=18}
+dose_plot_cum_validation[[6]]
+fig_no <- fig_no + 1
+```
+
+### Figure `r as.character(fig_no)`: Histogram of probability of class membership
+
+```{r disply hist class prob panel, fig.height=12, fig.width=12}
+hist_plot_panel
+fig_no <- fig_no + 1
+```
+
 ### Table `r as.character(tab_no)`: Combined Classes Cox Models
 
 ```{r get model calls}
