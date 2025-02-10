@@ -202,7 +202,7 @@ dev.off()
 
 ### Show validation data
 ```{r validation data}
-plot_validation <- function(data1, data2, age, outcome, age_name, outcome_name) {
+plot_validation <- function(data1, data2, age_var, outcome, age_name, outcome_name) {
   ggplot2::ggplot(
     data = data1,
     mapping = ggplot2::aes(
@@ -814,6 +814,75 @@ dose_plot_panel <- cowplot::plot_grid(title_theme, dose_plot_panel,
 )
 ```
 
+### Dose Response for test data with cumulative validation data
+
+```{r cumulative validation dose response}
+test_index <- final_models$data_mod == "train_test"
+rest_index <- !test_index
+test_index <- which(test_index)[[1]]
+rest_index <- which(rest_index)[[1]]
+
+# 6 to 58 weeks
+censuses <- final_models[test_index, "filter_cumulative_test_tmerged"][[1]]
+census_names <- names(censuses)
+
+dose_plot_cum_validation <- lapply(censuses, function(census) {
+  prob_cols <- names(census)[grepl("^prob\\d+", names(census))]
+
+  for (prob_col in prob_cols) {
+    name <- paste0(prob_col, "_cut")
+    name_tile <- paste0(prob_col, "_tile")
+    census[[name]] <- cut(census[[prob_col]], breaks = 5, dig.lab = 2)
+    census[[name_tile]] <- Hmisc::cut2(census[[prob_col]], g = 5)
+  }
+
+  prob_cols_tile <- paste0(prob_cols, "_tile")
+
+  dose_plots_cum_validation <- lapply(seq_along(prob_cols_tile), function(i) {
+    if (custom_palette) {
+      kap_plot_all_dose(
+        df = census, var = prob_cols_tile[[i]],
+        age_death = config$survival_dataset$age_death,
+        event = config$survival_dataset$event,
+        color = palette_colors[[i]],
+        ptitle = paste("Probability of Class", i, "Quntile"),
+        class_number = i
+      )
+    } else {
+      kap_plot_all_dose(
+        df = census, var = prob_cols_tile[[i]],
+        age_death = config$survival_dataset$age_death,
+        event = config$survival_dataset$event,
+        ptitle = paste("Probability of Class", i, "Quntile"),
+        class_number = i
+      )
+    }
+  })
+
+  dose_plots_cum_validation <- lapply(dose_plots_cum_validation, `[[`, "plot")
+
+  dose_plot_cum_validation_panel <- cowplot::plot_grid(
+    plotlist = dose_plots_cum_validation,
+    nrow = round(sqrt(length(prob_cols))),
+    byrow = TRUE,
+    greedy = FALSE,
+    labels = "AUTO"
+  )
+
+  title_theme <- ggdraw() +
+    draw_label(paste(
+      "Dose Response of Probability of Class Membership",
+      sep = " "
+    ))
+
+  dose_plot_cum_validation_panel <- cowplot::plot_grid(title_theme,
+    dose_plot_cum_validation_panel,
+    rel_heights = c(.05, 1),
+    ncol = 1
+  )
+})
+```
+
 ### Histogram of probabilites of class assignment for all data 
 
 ```{r hist prob, echo = FALSE, include = FALSE}
@@ -964,6 +1033,34 @@ fig_no <- fig_no + 1
 
 ```{r dose reponse, fig.height=18, fig.width=18}
 dose_plot_panel
+fig_no <- fig_no + 1
+```
+
+### Figure `r as.character(fig_no)`: Dose Response Cumulative Validation @ `r names(dose_plot_cum_validation)[[3]]` weeks
+
+```{r dose reponse cum validation 1, fig.height=18, fig.width=18}
+dose_plot_cum_validation[[3]]
+fig_no <- fig_no + 1
+```
+
+### Figure `r as.character(fig_no)`: Dose Response Cumulative Validation @ `r names(dose_plot_cum_validation)[[4]]` weeks
+
+```{r dose reponse cum validation 2, fig.height=18, fig.width=18}
+dose_plot_cum_validation[[4]]
+fig_no <- fig_no + 1
+```
+
+### Figure `r as.character(fig_no)`: Dose Response Cumulative Validation @ `r names(dose_plot_cum_validation)[[5]]` weeks
+
+```{r dose reponse cum validation 3, fig.height=18, fig.width=18}
+dose_plot_cum_validation[[5]]
+fig_no <- fig_no + 1
+```
+
+### Figure `r as.character(fig_no)`: Dose Response Cumulative Validation @ `r names(dose_plot_cum_validation)[[6]]` weeks
+
+```{r dose reponse cum validation 4, fig.height=18, fig.width=18}
+dose_plot_cum_validation[[6]]
 fig_no <- fig_no + 1
 ```
 
