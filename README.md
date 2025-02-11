@@ -3,12 +3,24 @@ A generalized _Latent Class Mixed Model (LCMM)_ and _Cox Proportional Hazard Mod
 
 ## Installation
 
+To install this end-to-end modelling pipeline: 
+
 ```bash
 git clone https://github.com/wfmueller29/metabolic-class
 ```
 ## Dependencies 
+
+To install R package dependencies:
+
+```bash
+Rscript installer.R
+```
+This should install all R packages that the pipeline depends upon, including two in-house dependencies listed below:
+
 * [Callframe Package](https://github.com/wfmueller29/callframe)
 * [Helphlme Package](https://github.com/wfmueller29/helphlme)
+
+
 
 ## Overview
 
@@ -37,7 +49,7 @@ If you have longitudinal data you would like test against a previously trained m
 Rscript validate.R <validate_config.yaml>
 ```
 
-The tedious part is creating the `train_config.yaml` file (See below)
+The tedious part is creating the `validate_config.yaml` file (See below)
 
 ## Config Files
 Yaml files are required and must follow the provided format. The easiest case would be to copy this example then change as necessary. Think of the yaml files as all the inputs to a function, and the R files as the functions themselves. The function argument names are provided on the left (i.e. "out_tag"), and the acutal arguemnt (i.e. "all") is provided on the right. This file will be read into R as a specifically structured list, so proper indentation is critical.
