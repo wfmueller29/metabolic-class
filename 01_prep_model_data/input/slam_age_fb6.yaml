@@ -6,6 +6,16 @@ sample_n: FALSE
 center: TRUE
 scale: FALSE
 external_validate: FALSE
+custom_palette: TRUE
+palette_colors: ["black", "#DF536B", "#61D04F", "midnightblue",
+  "#28E2E5", "#CD0BBC"]
+legend_labels: ["Early Peak BW", "Late Peak BW", "Low BW", "High-fat",
+  "Low-fat", "Stable Glucose"]
+custom_palette_train: FALSE
+palette_colors_train: [ "black", "#DF536B", "#61D04F", "midnightblue",
+  "#28E2E5", "#CD0BBC", "#FF991C", "gray62" ]
+legend_labels_train: [ "Overweight", "Low-weight", "Mid-Weight", "High-fat",
+  "Low-fat", "Mid-fat", "Decline Glucose", "Stable Glucose" ]
 survival_dataset:
   path: "../00c_survival_data/output/main_cat_surv.csv"
   id: "idno"
