@@ -196,6 +196,11 @@ first_names <- match(c("oc_name", "row_names"), names(t1_df))
 last_names <- seq_along(names(t1_df))[-first_names]
 
 t1_df <- t1_df[, c(first_names, last_names)]
+
+if (config$custom_palette) {
+  index <- grepl("^class_\\d+_final$", t1_df$row_names)
+  t1_df$row_names[index] <- config$legend_labels
+}
 ```
 
 ### Heatmap census
@@ -492,6 +497,12 @@ combine_cox_table <- function(final_models, mo_names, cox_mo_select) {
 
 model_names <- final_models[og_index, "model_name"]
 hr_table <- combine_cox_table(final_models, model_names, c(1, 2, 3))
+
+if (config$custom_palette) {
+  splits <- base::strsplit(hr_table$Class, split = "Class")
+  splits <- as.numeric(unlist(lapply(splits, `[[`, 2)))
+  hr_table$Class <- config$legend_labels[splits]
+}
 ```
 
 ### Metabolic Outcomes by Class
@@ -627,6 +638,10 @@ age_var_ns <- paste(age_var, "ns", sep = "_")
 age_var2_ns <- paste(age_var2, "ns", sep = "_")
 class_names <- paste("Class", seq_len(100))
 names(class_names) <- paste0("new_class", seq_len(100))
+if (config$custom_palette) {
+  class_names <- config$legend_labels
+  names(class_names) <- paste0("new_class", seq_along(config$legend_labels))
+}
 age_names <- paste(age_var_name, age_var_units)
 names(age_names) <- age_var_ns
 age2_names <- paste(age_var2_name, age_var2_units)
@@ -986,14 +1001,14 @@ kap_plot_cum_validation <- lapply(censuses, function(census) {
   kap_plots_cum_validation <- lapply(seq_along(class_cols), function(i) {
     if (config$custom_palette) {
       kap_plot_all(
-        df = census, 
+        df = census,
         var = class_cols[[i]],
         age_death = config$survival_dataset$age_death,
         event = config$survival_dataset$event
       )
     } else {
       kap_plot_all(
-        df = census, 
+        df = census,
         var = class_cols[[i]],
         age_death = config$survival_dataset$age_death,
         event = config$survival_dataset$event
