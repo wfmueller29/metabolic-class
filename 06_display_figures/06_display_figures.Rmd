@@ -40,6 +40,15 @@ legend_labels <- c(
   "Overweight", "Low-weight", "Mid-Weight", "High-fat",
   "Low-fat", "Mid-fat", "Decline Glucose", "Stable Glucose"
 )
+custom_palette_train <- FALSE
+palette_colors_train <- c(
+  "black", "#DF536B", "#61D04F", "midnightblue",
+  "#28E2E5", "#CD0BBC", "#FF991C", "gray62"
+)
+legend_labels_train <- c(
+  "Overweight", "Low-weight", "Mid-Weight", "High-fat",
+  "Low-fat", "Mid-fat", "Decline Glucose", "Stable Glucose"
+)
 window_legend <- TRUE
 window_legend_palette <- magma(3, begin = .2, end = .7, direction = -1)
 window_legend_labels <- c("2 measures", "3 measures", "4 measures")
@@ -97,6 +106,8 @@ how_it_works <- cowplot::plot_grid(p1, p3, nrow = 1)
 
 - Supplement will include sex strain strata 
 
+#### All Data
+
 ```{r pred_obs_panel, fig.height= 16, fig.width=12}
 og_index <- final_models$data_mod == "og"
 pred_plots <- final_models[og_index, "traj_pred"]
@@ -131,6 +142,47 @@ pred_obs_panel <- cowplot::plot_grid(
 )
 
 pred_obs_panel <- cowplot::plot_grid(title_theme, pred_obs_panel,
+  rel_heights = c(.05, 1),
+  ncol = 1
+)
+```
+
+#### Training Data
+
+```{r pred_obs_panel training, fig.height= 16, fig.width=12}
+train_index <- final_models$data_mod == "train_test"
+pred_plots_train <- final_models[train_index, "traj_pred"]
+obs_plots_train <- final_models[train_index, "traj_obs"]
+
+if (custom_palette_train) {
+  j <- 0
+  for (i in seq_along(obs_plots_train)) {
+    group <- rlang::eval_tidy(obs_plots_train[[i]]$mapping$colour,
+      data = obs_plots_train[[i]]$data
+    )
+    k <- length(unique(group)) + j
+    obs_plots_train[[i]] <- obs_plots_train[[i]] +
+      scale_color_manual(
+        values = palette_colors_train[j + 1:k],
+        name = "Class",
+        labels = legend_labels_train[j + 1:k]
+      )
+    j <- k
+  }
+}
+
+pred_plots <- lapply(pred_plots, ggdraw, clip = "on")
+
+title_theme <- ggdraw() +
+  draw_label("Predicted and Observed Metabolic Life Course Trajectories")
+
+plot_list <- c(pred_plots, obs_plots_train)
+pred_obs_panel_train <- cowplot::plot_grid(
+  plotlist = plot_list, nrow = 3, byrow = FALSE,
+  greedy = FALSE, labels = "AUTO"
+)
+
+pred_obs_panel_train <- cowplot::plot_grid(title_theme, pred_obs_panel_train,
   rel_heights = c(.05, 1),
   ncol = 1
 )
@@ -201,8 +253,14 @@ dev.off()
 ```
 
 ### Show validation data
+
 ```{r validation data}
-plot_validation <- function(data1, data2, age_var, outcome, age_name, outcome_name) {
+plot_validation <- function(data1,
+                            data2,
+                            age_var,
+                            outcome,
+                            age_name,
+                            outcome_name) {
   ggplot2::ggplot(
     data = data1,
     mapping = ggplot2::aes(
@@ -260,6 +318,8 @@ datasets <- lapply(datasets, function(dataset) {
 
 - Supplement will include same figures but for each sex strain strata
 
+#### All data
+
 ```{r mortality outcomes by class, fig.height= 16, fig.width=12}
 kap_plots <- final_models[og_index, "kap_plot"]
 
@@ -292,6 +352,45 @@ title_theme <- ggdraw() +
   )
 
 mortality_panel <- cowplot::plot_grid(title_theme, mortality_panel,
+  rel_heights = c(.05, 1),
+  ncol = 1
+)
+```
+
+#### Training data
+
+```{r mortality outcomes by class training, fig.height= 16, fig.width=12}
+kap_plots_train <- final_models[train_index, "kap_plot"]
+
+if (custom_palette_train) {
+  j <- 0
+  for (i in seq_along(kap_plots_train)) {
+    group <- kap_plots_train[[i]]$plot$data$strata
+    k <- length(unique(group)) + j
+    kap_plots_train[[i]]$plot <- kap_plots_train[[i]]$plot +
+      scale_color_manual(
+        values = palette_colors_train[j + 1:k],
+        name = "Class",
+        labels = legend_labels_train[j + 1:k]
+      )
+    j <- k
+  }
+}
+kap_plots_train <- lapply(kap_plots_train, `[[`, "plot")
+plot_list <- c(obs_plots, kap_plots_train)
+
+mortality_panel_train <- cowplot::plot_grid(
+  plotlist = plot_list, nrow = 3,
+  byrow = FALSE,
+  greedy = FALSE,
+  labels = "AUTO"
+)
+title_theme <- ggdraw() +
+  draw_label(
+    "Observed Metabolic Life Course Trajectories and Kaplan Meiers by Class"
+  )
+
+mortality_panel_train <- cowplot::plot_grid(title_theme, mortality_panel_train,
   rel_heights = c(.05, 1),
   ncol = 1
 )
@@ -1115,6 +1214,13 @@ tab_no <- tab_no + 1
 
 ```{r Class prediction panel, fig.width=30, fig.height=24}
 class_prediction_panel
+fig_no <- fig_no + 1
+```
+
+### Figure `r as.character(fig_no)`: Mortality and Class for Training Data
+
+```{r mortality and class training, fig.height=18, fig.width=12}
+mortality_panel_train
 fig_no <- fig_no + 1
 ```
 
