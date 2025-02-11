@@ -31,24 +31,6 @@ knitr::opts_chunk$set(message = FALSE)
 knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(cache = FALSE)
 
-custom_palette <- FALSE
-palette_colors <- c(
-  "black", "#DF536B", "#61D04F", "midnightblue",
-  "#28E2E5", "#CD0BBC", "#FF991C", "gray62"
-)
-legend_labels <- c(
-  "Overweight", "Low-weight", "Mid-Weight", "High-fat",
-  "Low-fat", "Mid-fat", "Decline Glucose", "Stable Glucose"
-)
-custom_palette_train <- FALSE
-palette_colors_train <- c(
-  "black", "#DF536B", "#61D04F", "midnightblue",
-  "#28E2E5", "#CD0BBC", "#FF991C", "gray62"
-)
-legend_labels_train <- c(
-  "Overweight", "Low-weight", "Mid-Weight", "High-fat",
-  "Low-fat", "Mid-fat", "Decline Glucose", "Stable Glucose"
-)
 window_legend <- TRUE
 window_legend_palette <- magma(3, begin = .2, end = .7, direction = -1)
 window_legend_labels <- c("2 measures", "3 measures", "4 measures")
@@ -66,8 +48,8 @@ cumulative_legend_palette <- viridis(3, begin = .2, end = .7, direction = -1)
 if (!exists("params")) {
   params <- list()
   # params$input_path <- "../05_figures/output/test_local.yaml"
-  # params$input_path <- "../05_figures/output/all.yaml"
-  params$input_path <- "../05_figures/output/fhet3.yaml"
+  params$input_path <- "../05_figures/output/all.yaml"
+  # params$input_path <- "../05_figures/output/fhet3.yaml"
   # params$input_path <- "../05_figures/output/external_validation.yaml"
 }
 
@@ -113,7 +95,7 @@ og_index <- final_models$data_mod == "og"
 pred_plots <- final_models[og_index, "traj_pred"]
 obs_plots <- final_models[og_index, "traj_obs"]
 
-if (custom_palette) {
+if (config$custom_palette) {
   j <- 0
   for (i in seq_along(obs_plots)) {
     group <- rlang::eval_tidy(obs_plots[[i]]$mapping$colour,
@@ -122,9 +104,9 @@ if (custom_palette) {
     k <- length(unique(group)) + j
     obs_plots[[i]] <- obs_plots[[i]] +
       scale_color_manual(
-        values = palette_colors[j + 1:k],
+        values = config$palette_colors[j + 1:k],
         name = "Class",
-        labels = legend_labels[j + 1:k]
+        labels = config$legend_labels[j + 1:k]
       )
     j <- k
   }
@@ -154,7 +136,7 @@ train_index <- final_models$data_mod == "train_test"
 pred_plots_train <- final_models[train_index, "traj_pred"]
 obs_plots_train <- final_models[train_index, "traj_obs"]
 
-if (custom_palette_train) {
+if (config$custom_palette_train) {
   j <- 0
   for (i in seq_along(obs_plots_train)) {
     group <- rlang::eval_tidy(obs_plots_train[[i]]$mapping$colour,
@@ -163,9 +145,9 @@ if (custom_palette_train) {
     k <- length(unique(group)) + j
     obs_plots_train[[i]] <- obs_plots_train[[i]] +
       scale_color_manual(
-        values = palette_colors_train[j + 1:k],
+        values = config$palette_colors_train[j + 1:k],
         name = "Class",
-        labels = legend_labels_train[j + 1:k]
+        labels = config$legend_labels_train[j + 1:k]
       )
     j <- k
   }
@@ -222,14 +204,14 @@ census <- final_models$combined_census[[1]]
 prob_cols <- names(census)[grepl("^prob\\d+", names(census))]
 cov <- datasets[[1]]$covariates_dummy
 census1 <- census[, c(prob_cols, cov)]
-if (custom_palette) {
-  colnames(census1) <- c(legend_labels, cov)
+if (config$custom_palette) {
+  colnames(census1) <- c(config$legend_labels, cov)
 }
 heatmap(as.matrix(census1), margins = c(10, 4))
 heatmap1 <- recordPlot()
 census2 <- census[, prob_cols]
-if (custom_palette) {
-  colnames(census2) <- legend_labels
+if (config$custom_palette) {
+  colnames(census2) <- config$legend_labels
 }
 heatmap(as.matrix(census2), margins = c(10, 4))
 heatmap2 <- recordPlot()
@@ -323,16 +305,16 @@ datasets <- lapply(datasets, function(dataset) {
 ```{r mortality outcomes by class, fig.height= 16, fig.width=12}
 kap_plots <- final_models[og_index, "kap_plot"]
 
-if (custom_palette) {
+if (config$custom_palette) {
   j <- 0
   for (i in seq_along(kap_plots)) {
     group <- kap_plots[[i]]$plot$data$strata
     k <- length(unique(group)) + j
     kap_plots[[i]]$plot <- kap_plots[[i]]$plot +
       scale_color_manual(
-        values = palette_colors[j + 1:k],
+        values = config$palette_colors[j + 1:k],
         name = "Class",
-        labels = legend_labels[j + 1:k]
+        labels = config$legend_labels[j + 1:k]
       )
     j <- k
   }
@@ -362,16 +344,16 @@ mortality_panel <- cowplot::plot_grid(title_theme, mortality_panel,
 ```{r mortality outcomes by class training, fig.height= 16, fig.width=12}
 kap_plots_train <- final_models[train_index, "kap_plot"]
 
-if (custom_palette_train) {
+if (config$custom_palette_train) {
   j <- 0
   for (i in seq_along(kap_plots_train)) {
     group <- kap_plots_train[[i]]$plot$data$strata
     k <- length(unique(group)) + j
     kap_plots_train[[i]]$plot <- kap_plots_train[[i]]$plot +
       scale_color_manual(
-        values = palette_colors_train[j + 1:k],
+        values = config$palette_colors_train[j + 1:k],
         name = "Class",
-        labels = legend_labels_train[j + 1:k]
+        labels = config$legend_labels_train[j + 1:k]
       )
     j <- k
   }
@@ -523,7 +505,7 @@ length_plots <- length(which(og_plots_index))
 og_plots <- final_models[og_index, og_plots_index]
 
 
-if (custom_palette) {
+if (config$custom_palette) {
   for (n in seq_along(og_plots)) {
     j <- 0
     plots <- og_plots[[n]]
@@ -534,9 +516,9 @@ if (custom_palette) {
       k <- length(unique(group)) + j
       plots[[i]] <- plots[[i]] +
         scale_color_manual(
-          values = palette_colors[j + 1:k],
+          values = config$palette_colors[j + 1:k],
           name = "Class",
-          labels = legend_labels[j + 1:k]
+          labels = config$legend_labels[j + 1:k]
         )
       j <- k
     }
@@ -871,12 +853,12 @@ for (prob_col in prob_cols) {
 prob_cols_tile <- paste0(prob_cols, "_tile")
 
 dose_plots <- lapply(seq_along(prob_cols_tile), function(i) {
-  if (custom_palette) {
+  if (config$custom_palette) {
     kap_plot_all_dose(
       df = census, var = prob_cols_tile[[i]],
       age_death = config$survival_dataset$age_death,
       event = config$survival_dataset$event,
-      color = palette_colors[[i]],
+      color = config$palette_colors[[i]],
       ptitle = paste("Probability of Class", i, "Quntile"),
       class_number = i
     )
@@ -938,12 +920,12 @@ dose_plot_cum_validation <- lapply(censuses, function(census) {
   prob_cols_tile <- paste0(prob_cols, "_tile")
 
   dose_plots_cum_validation <- lapply(seq_along(prob_cols_tile), function(i) {
-    if (custom_palette) {
+    if (config$custom_palette) {
       kap_plot_all_dose(
         df = census, var = prob_cols_tile[[i]],
         age_death = config$survival_dataset$age_death,
         event = config$survival_dataset$event,
-        color = palette_colors[[i]],
+        color = config$palette_colors[[i]],
         ptitle = paste("Probability of Class", i, "Quntile"),
         class_number = i
       )
@@ -1002,7 +984,7 @@ kap_plot_cum_validation <- lapply(censuses, function(census) {
   class_cols <- names(census)[grepl("^new_class", names(census))]
 
   kap_plots_cum_validation <- lapply(seq_along(class_cols), function(i) {
-    if (custom_palette) {
+    if (config$custom_palette) {
       kap_plot_all(
         df = census, 
         var = class_cols[[i]],
