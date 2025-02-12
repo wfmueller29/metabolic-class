@@ -153,12 +153,12 @@ if (config$custom_palette_train) {
   }
 }
 
-pred_plots <- lapply(pred_plots, ggdraw, clip = "on")
+pred_plots_train <- lapply(pred_plots_train, ggdraw, clip = "on")
 
 title_theme <- ggdraw() +
   draw_label("Predicted and Observed Metabolic Life Course Trajectories")
 
-plot_list <- c(pred_plots, obs_plots_train)
+plot_list <- c(pred_plots_train, obs_plots_train)
 pred_obs_panel_train <- cowplot::plot_grid(
   plotlist = plot_list, nrow = 3, byrow = FALSE,
   greedy = FALSE, labels = "AUTO"
@@ -551,6 +551,8 @@ if (config$custom_palette) {
 
 - Supplement will show the same figures but fore each sex strain combo
 
+#### Complete Data
+
 ```{r metabolic outcomes by class, fig.height=16, fig.width=24}
 og_plots_index <- grepl("^plot.*_og_.*across$", names(final_models))
 length_plots <- length(which(og_plots_index))
@@ -598,6 +600,60 @@ title_theme <- ggdraw() +
   ))
 
 other_met_panel <- cowplot::plot_grid(title_theme, other_met_panel,
+  rel_heights = c(.05, 1),
+  ncol = 1
+)
+```
+
+#### Training Data
+
+```{r metabolic outcomes by class train, fig.height=16, fig.width=24}
+train_plots_index <- grepl("^plot.*_og_.*across$", names(final_models))
+length_plots <- length(which(train_plots_index))
+
+train_plots <- final_models[train_index, train_plots_index]
+
+
+if (config$custom_palette) {
+  for (n in seq_along(train_plots)) {
+    j <- 0
+    plots <- train_plots[[n]]
+    for (i in seq_along(plots)) {
+      group <- rlang::eval_tidy(plots[[i]]$mapping$colour,
+        data = plots[[i]]$data
+      )
+      k <- length(unique(group)) + j
+      plots[[i]] <- plots[[i]] +
+        scale_color_manual(
+          values = config$palette_colors[j + 1:k],
+          name = "Class",
+          labels = config$legend_labels[j + 1:k]
+        )
+      j <- k
+    }
+    train_plots[[n]] <- plots
+  }
+}
+
+
+
+train_plots <- unlist(train_plots, recursive = FALSE)
+
+other_met_panel_train <- cowplot::plot_grid(
+  plotlist = train_plots,
+  nrow = length(which(og_index)),
+  byrow = FALSE,
+  greedy = FALSE,
+  labels = "AUTO"
+)
+
+title_theme <- ggdraw() +
+  draw_label(paste(
+    "Cross-reference Other Metabolic Parameters by Each Metabolic Class",
+    sep = " "
+  ))
+
+other_met_panel_train <- cowplot::plot_grid(title_theme, other_met_panel_train,
   rel_heights = c(.05, 1),
   ncol = 1
 )
@@ -1164,8 +1220,16 @@ fig_no <- fig_no + 1
 
 ### Figure `r as.character(fig_no)`: Predicted Observed
 
+#### Complete Data
+
 ```{r predicted and observed, fig.height=18, fig.width=12}
 pred_obs_panel
+```
+
+#### Training Data
+
+```{r predicted and observed train, fig.height=18, fig.width=12}
+pred_obs_panel_train
 fig_no <- fig_no + 1
 ```
 
@@ -1208,8 +1272,16 @@ print_table(.GlobalEnv,
 
 ### Figure `r as.character(fig_no)`: Metabolic Classes with Other Metabolic Metrics
 
+#### Complete Data
+
 ```{r plot classes by other outcomes, fig.height=18, fig.width=24}
 other_met_panel
+```
+
+#### Training Data
+
+```{r plot classes by other outcomes train, fig.height=18, fig.width=24}
+other_met_panel_train
 fig_no <- fig_no + 1
 ```
 
@@ -1238,6 +1310,8 @@ fig_no <- fig_no + 1
 
 #### Model displayed: `r model_display`
 
+#### Complete Data
+
 ```{r display model_calls}
 model_calls
 ```
@@ -1251,26 +1325,35 @@ tab_no <- tab_no + 1
 
 ### Figure `r as.character(fig_no)`: Mortality and Class
 
+#### Complete Data
+
 ```{r mortality and class, fig.height=18, fig.width=12}
 mortality_panel
 fig_no <- fig_no + 1
 ```
 
-### Figure `r as.character(fig_no)`: Class, Mortality, and other outcome
+#### Training Data
+
+```{r mortality and class training, fig.height=18, fig.width=12}
+mortality_panel_train
+fig_no <- fig_no + 1
+```
+
+### Figure `r as.character(fig_no)`: Class, Mortality, and other outcome - Complete Data
 
 ```{r class mortality and other outcome, fig.height=24, fig.width=30}
 new_figure1
 fig_no <- fig_no + 1
 ```
 
-### Figure `r as.character(fig_no)`: Dose Response
+### Figure `r as.character(fig_no)`: Dose Response - Complete Data
 
 ```{r dose reponse, fig.height=18, fig.width=18}
 dose_plot_panel
 fig_no <- fig_no + 1
 ```
 
-### Table `r as.character(tab_no)`: Hazard Ratios
+### Table `r as.character(tab_no)`: Hazard Ratios - Complete Data
 
 - Model 1: $ Surv ~ Class $
 - Model 2: $ Surv ~ Class + Sex + Strain$
@@ -1284,25 +1367,18 @@ print_table(.GlobalEnv,
 tab_no <- tab_no + 1
 ```
 
-### Figure `r as.character(fig_no)`: Class Prediction Panel
+### Figure `r as.character(fig_no)`: Class Prediction Panel - Complete Data
 
 ```{r Class prediction panel, fig.width=30, fig.height=24}
 class_prediction_panel
 fig_no <- fig_no + 1
 ```
 
-### Figure `r as.character(fig_no)`: Mortality and Class for Training Data
+### KM Class Validation - Testing Data
 
-```{r mortality and class training, fig.height=18, fig.width=12}
-mortality_panel_train
-fig_no <- fig_no + 1
-```
-
-### KM Class Validation
-These curve use the testing validation from specfic time intervals that were 
-input into the trained model to provide class predictions. We then plot the
-KM curves of each predicted metabolic class. This serves as a graphical 
-validation of the ability of the classes to predict mortality even early in life
+The 20% testing data was applied to the 80% training latent class mixed model
+to derive their predicted class assignments. These class assignments are then 
+used to make the KM Curves below
 
 #### Figure `r as.character(fig_no)`: KM Class Validation @ `r names(kap_plot_cum_validation)[[3]]` weeks
 
@@ -1332,11 +1408,12 @@ kap_plot_cum_validation[[6]]
 fig_no <- fig_no + 1
 ```
 
-### Dose Response Validation
+### Dose Response Validation - Testing Data
 
-These curve use the testing validation from specfic time intervals that were 
-input into the trained model to provide class predictions. We then plot the
-KM curves of the quintiles of class probability
+The 20% testing data was applied to the 80% training latent class mixed model
+to derive their predicted class assignments probabilities. These class 
+assignment probabilities were then quintiled and plotted in the KM curves 
+below. 
 
 #### Figure `r as.character(fig_no)`: Dose Response Cumulative Validation @ `r names(dose_plot_cum_validation)[[3]]` weeks
 
@@ -1366,7 +1443,7 @@ dose_plot_cum_validation[[6]]
 fig_no <- fig_no + 1
 ```
 
-### Figure `r as.character(fig_no)`: Histogram of probability of class membership
+### Figure `r as.character(fig_no)`: Histogram of probability of class membership - Complete Data
 
 ```{r disply hist class prob panel, fig.height=12, fig.width=12}
 hist_plot_panel
@@ -1411,11 +1488,34 @@ plot format. It also drops any interaction variables
 
 #### Complete Data
 
+Key: 
+
+```{r combined cox key, results = 'asis'}
+if (config$custom_palette) {
+  df <- data.frame(Class = paste("Class", seq_along(config$legend_labels)),
+                   Label = config$legend_labels)
+}
+kable(df)
+
+```
+
 ```{r combined cox forrest plots all data}
 rest_combined_cox
 ```
 
 #### Training data
+
+Key: 
+
+```{r combined cox key train, results = 'asis'}
+if (config$custom_palette_train) {
+  df <- data.frame(Class = paste("Class", seq_along(config$legend_labels_train)),
+                   Label = config$legend_labels_train)
+}
+kable(df)
+
+```
+
 ```{r combined cox forrest plots training}
 test_combined_cox
 fig_no <- fig_no + 1
