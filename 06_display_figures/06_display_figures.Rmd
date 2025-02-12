@@ -48,8 +48,8 @@ cumulative_legend_palette <- viridis(3, begin = .2, end = .7, direction = -1)
 if (!exists("params")) {
   params <- list()
   # params$input_path <- "../05_figures/output/test_local.yaml"
-  params$input_path <- "../05_figures/output/all.yaml"
-  # params$input_path <- "../05_figures/output/fhet3.yaml"
+  # params$input_path <- "../05_figures/output/all.yaml"
+  params$input_path <- "../05_figures/output/fb6.yaml"
   # params$input_path <- "../05_figures/output/external_validation.yaml"
 }
 
@@ -500,7 +500,14 @@ hr_table <- combine_cox_table(final_models, model_names, c(1, 2, 3))
 
 if (config$custom_palette) {
   splits <- base::strsplit(hr_table$Class, split = "Class")
-  splits <- as.numeric(unlist(lapply(splits, `[[`, 2)))
+  splits <- as.numeric(unlist(lapply(splits, function(split) {
+    if (!anyNA(split)) {
+      split <- split[[2]]
+    } else {
+      split <- NA
+    }
+    split
+  })))
   hr_table$Class <- config$legend_labels[splits]
 }
 ```
@@ -868,6 +875,10 @@ for (prob_col in prob_cols) {
 prob_cols_tile <- paste0(prob_cols, "_tile")
 
 dose_plots <- lapply(seq_along(prob_cols_tile), function(i) {
+  if (length(unique(census[[prob_cols_tile[[i]]]])) == 1) {
+    print("returning NA")
+    return(NA)
+  }
   if (config$custom_palette) {
     kap_plot_all_dose(
       df = census, var = prob_cols_tile[[i]],
@@ -888,7 +899,14 @@ dose_plots <- lapply(seq_along(prob_cols_tile), function(i) {
   }
 })
 
-dose_plots <- lapply(dose_plots, `[[`, "plot")
+dose_plots <- lapply(dose_plots, function(plot) {
+  if (anyNA(plot)) {
+    plot <- NA
+  } else {
+    plot <- plot[["plot"]]
+  }
+  plot
+})
 
 dose_plot_panel <- cowplot::plot_grid(
   plotlist = dose_plots,
@@ -935,6 +953,10 @@ dose_plot_cum_validation <- lapply(censuses, function(census) {
   prob_cols_tile <- paste0(prob_cols, "_tile")
 
   dose_plots_cum_validation <- lapply(seq_along(prob_cols_tile), function(i) {
+    if (length(unique(census[[prob_cols_tile[[i]]]])) == 1) {
+      print("returning NA")
+      return(NA)
+    }
     if (config$custom_palette) {
       kap_plot_all_dose(
         df = census, var = prob_cols_tile[[i]],
@@ -955,7 +977,14 @@ dose_plot_cum_validation <- lapply(censuses, function(census) {
     }
   })
 
-  dose_plots_cum_validation <- lapply(dose_plots_cum_validation, `[[`, "plot")
+  dose_plots_cum_validation <- lapply(dose_plots_cum_validation, function(plot) {
+    if (anyNA(plot)) {
+      plot <- NA
+    } else {
+      plot <- plot[["plot"]]
+    }
+    plot
+  })
 
   dose_plot_cum_validation_panel <- cowplot::plot_grid(
     plotlist = dose_plots_cum_validation,
