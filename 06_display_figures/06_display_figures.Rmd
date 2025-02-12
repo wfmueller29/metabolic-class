@@ -1573,9 +1573,15 @@ if (!isFALSE(config$external_validate)) {
 }
 ```
 
-### Figure `r as.character(fig_no)`: `r validation_type` Validation Compare models
+### Figure `r as.character(fig_no)`: `r validation_type` Validation Compare models - Testing Data
 
-Using the three combined cox models from above assess their performance 
+The 20% testing data was applied to the 80% training latent class model to 
+determine their predicted class probability. These predicted class probabilities
+for the 20% testing data were then applied to the 80% training combined cox
+models to determine if the predicted class probabilities could be used as
+predictors of mortality. 
+
+Using the three combined cox models from above, we assess their performance 
 using the linear predictor and concordance derived from validation data
 
 Again we are still using these three models
@@ -1594,6 +1600,9 @@ fig_no <- fig_no + 1
 ```
 
 ### Figure `r as.character(fig_no)`: `r validation_type` Validation Model 2
+
+After selecting the Model 2 from the figure above, we can dispaly it in a 
+similar format to that of the reclassifcation figures
 
 ```{r validation with model 2, include = FALSE}
 p <- list()
@@ -1681,7 +1690,7 @@ model2_grid <- cowplot::plot_grid(title_theme, model2_grid,
 model2_grid
 ```
 
-### Figure `r as.character(fig_no)`: Display Validation Data
+### Figure `r as.character(fig_no)`: Display Testing Data
 
 This is a check that we provided the correct validation data
 
