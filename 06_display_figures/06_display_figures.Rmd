@@ -205,9 +205,9 @@ if (config$custom_palette) {
 }
 ```
 
-#### 80-Training Data
+#### Training Data
 
-```{r table class demographics 80 train, results='asis'}
+```{r table class demographics train, results='asis'}
 t1_list_train <- final_models[train_index, "clean_t1"]
 outcome_names <- final_models[train_index, "oc_name"]
 
@@ -1197,9 +1197,9 @@ print_table(.GlobalEnv,
 tab_no <- tab_no + 1
 ```
 
-#### 80-training Data
+#### Training Data
 
-```{r table whos in each class 80-train, results = 'asis'}
+```{r table whos in each class train, results = 'asis'}
 print_table(.GlobalEnv,
   table_name = "t1_df_train",
   title = "Demographics by Metabolic Index and Class"
