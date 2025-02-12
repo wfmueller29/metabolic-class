@@ -976,7 +976,10 @@ dose_plots <- lapply(seq_along(prob_cols_tile), function(i) {
       age_death = config$survival_dataset$age_death,
       event = config$survival_dataset$event,
       color = config$palette_colors[[i]],
-      ptitle = paste("Probability of Class", i, "Quntile"),
+      ptitle = paste(
+        "Probability of ", config$legend_labels[[i]],
+        "Class Quintile"
+      ),
       class_number = i
     )
   } else {
@@ -984,7 +987,7 @@ dose_plots <- lapply(seq_along(prob_cols_tile), function(i) {
       df = census, var = prob_cols_tile[[i]],
       age_death = config$survival_dataset$age_death,
       event = config$survival_dataset$event,
-      ptitle = paste("Probability of Class", i, "Quntile"),
+      ptitle = paste("Probability of Class", i, "Quintile"),
       class_number = i
     )
   }
@@ -1048,13 +1051,16 @@ dose_plot_cum_validation <- lapply(censuses, function(census) {
       print("returning NA")
       return(NA)
     }
-    if (config$custom_palette) {
+    if (config$custom_palette_train) {
       kap_plot_all_dose(
         df = census, var = prob_cols_tile[[i]],
         age_death = config$survival_dataset$age_death,
         event = config$survival_dataset$event,
         color = config$palette_colors[[i]],
-        ptitle = paste("Probability of Class", i, "Quntile"),
+        ptitle = paste(
+          "Probability of ", config$legend_labels_train[[i]],
+          "Class Quintile"
+        ),
         class_number = i
       )
     } else {
@@ -1492,11 +1498,12 @@ Key:
 
 ```{r combined cox key, results = 'asis'}
 if (config$custom_palette) {
-  df <- data.frame(Class = paste("Class", seq_along(config$legend_labels)),
-                   Label = config$legend_labels)
+  df <- data.frame(
+    Class = paste("Class", seq_along(config$legend_labels)),
+    Label = config$legend_labels
+  )
 }
 kable(df)
-
 ```
 
 ```{r combined cox forrest plots all data}
@@ -1509,11 +1516,12 @@ Key:
 
 ```{r combined cox key train, results = 'asis'}
 if (config$custom_palette_train) {
-  df <- data.frame(Class = paste("Class", seq_along(config$legend_labels_train)),
-                   Label = config$legend_labels_train)
+  df <- data.frame(
+    Class = paste("Class", seq_along(config$legend_labels_train)),
+    Label = config$legend_labels_train
+  )
 }
 kable(df)
-
 ```
 
 ```{r combined cox forrest plots training}
