@@ -88,7 +88,7 @@ how_it_works <- cowplot::plot_grid(p1, p3, nrow = 1)
 
 - Supplement will include sex strain strata 
 
-#### All Data
+#### Complete Data
 
 ```{r pred_obs_panel, fig.height= 16, fig.width=12}
 og_index <- final_models$data_mod == "og"
@@ -172,6 +172,8 @@ pred_obs_panel_train <- cowplot::plot_grid(title_theme, pred_obs_panel_train,
 
 ### Table Who's in what class
 
+#### Complete Data
+
 ```{r table class demographics, results='asis'}
 t1_list <- final_models[og_index, "clean_t1"]
 outcome_names <- final_models[og_index, "oc_name"]
@@ -200,6 +202,39 @@ t1_df <- t1_df[, c(first_names, last_names)]
 if (config$custom_palette) {
   index <- grepl("^class_\\d+_final$", t1_df$row_names)
   t1_df$row_names[index] <- config$legend_labels
+}
+```
+
+#### 80-Training Data
+
+```{r table class demographics 80 train, results='asis'}
+t1_list_train <- final_models[train_index, "clean_t1"]
+outcome_names <- final_models[train_index, "oc_name"]
+
+t1_list_train <- lapply(seq_along(t1_list_train), function(i) {
+  t1 <- t1_list_train[[i]]
+  oc_name <- outcome_names[[i]]
+
+  if (isFALSE(all(is.na(t1[[1]])))) {
+    t1 <- t1
+    t1 <- as.data.frame(t(t1))
+    t1$row_names <- row.names(t1)
+    row.names(t1) <- NULL
+    t1$oc_name <- oc_name
+  } else {
+    t1 <- NULL
+  }
+  t1
+})
+t1_df_train <- do.call(rbind, t1_list_train)
+first_names <- match(c("oc_name", "row_names"), names(t1_df_train))
+last_names <- seq_along(names(t1_df_train))[-first_names]
+
+t1_df_train <- t1_df_train[, c(first_names, last_names)]
+
+if (config$custom_palette_train) {
+  index <- grepl("^class_\\d+_final$", t1_df_train$row_names)
+  t1_df_train$row_names[index] <- config$legend_labels_train
 }
 ```
 
@@ -305,7 +340,7 @@ datasets <- lapply(datasets, function(dataset) {
 
 - Supplement will include same figures but for each sex strain strata
 
-#### All data
+#### Complete data
 
 ```{r mortality outcomes by class, fig.height= 16, fig.width=12}
 kap_plots <- final_models[og_index, "kap_plot"]
@@ -835,17 +870,17 @@ rest_combined_cox <- list(
   survminer::ggforest(
     final_models$cox_combined_models[[rest_index]][[1]],
     final_models$combined_census[[rest_index]],
-    main = "HR All Combined Cox"
+    main = "HR Complete Data Combined Cox"
   ),
   survminer::ggforest(
     final_models$cox_combined_models[[rest_index]][[2]],
     final_models$combined_census[[rest_index]],
-    main = "HR All Combined Cox"
+    main = "HR Complete Data Combined Cox"
   ),
   survminer::ggforest(
     final_models$cox_combined_models[[rest_index]][[3]],
     final_models$combined_census[[rest_index]],
-    main = "HR All Combined Cox"
+    main = "HR Complete Data Combined Cox"
   )
 )
 ```
@@ -1128,12 +1163,16 @@ fig_no <- fig_no + 1
 ```
 
 ### Figure `r as.character(fig_no)`: Predicted Observed
+
 ```{r predicted and observed, fig.height=18, fig.width=12}
 pred_obs_panel
 fig_no <- fig_no + 1
 ```
 
 ### Table `r as.character(tab_no)`: Whos in each Class
+
+#### Complete Data
+
 ```{r table whos in each class, results = 'asis'}
 print_table <- function(env, table_name, title) {
   cap <- paste(env$subgroup,
@@ -1156,6 +1195,15 @@ print_table(.GlobalEnv,
   title = "Demographics by Metabolic Index and Class"
 )
 tab_no <- tab_no + 1
+```
+
+#### 80-training Data
+
+```{r table whos in each class 80-train, results = 'asis'}
+print_table(.GlobalEnv,
+  table_name = "t1_df_train",
+  title = "Demographics by Metabolic Index and Class"
+)
 ```
 
 ### Figure `r as.character(fig_no)`: Metabolic Classes with Other Metabolic Metrics
@@ -1344,7 +1392,7 @@ three model calls
 - Model 2: `r model_formulas[[2]]`
 - Model 3: `r model_formulas[[3]]`
 
-#### All Data
+#### Complete Data
 
 ```{r print combined cox models all data}
 final_models$cox_combined_models[[rest_index]]
@@ -1361,7 +1409,7 @@ tab_no <- tab_no + 1
 These take the models shown in the previous table and display them in forrest
 plot format. It also drops any interaction variables
 
-#### All Data
+#### Complete Data
 
 ```{r combined cox forrest plots all data}
 rest_combined_cox
@@ -1395,7 +1443,7 @@ for (i in seq_along(p)) {
 This takes the combined cox models from above and assesses the importance 
 of each added variable in predicting mortality
 
-#### Analysis of Deviance: All Mice
+#### Analysis of Deviance: Complete Data
 
 ```{r feature importance all data}
 models <- final_models$cox_combined_models[[rest_index]]
@@ -1405,7 +1453,7 @@ for (model in models) {
 }
 ```
 
-#### Analysis of Deviance: Training Mice
+#### Analysis of Deviance: Training Data
 
 ```{r feature importance training data}
 models <- final_models$cox_combined_models[[test_index]]
