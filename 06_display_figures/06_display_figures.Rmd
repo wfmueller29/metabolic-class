@@ -1569,15 +1569,15 @@ three model calls
 #### Complete Data
 
 ```{r print combined cox models all data}
-lapply (final_models$cox_combined_models[[rest_index]], function(model) {
-          list(cox_model = model, schoenfeld_residuals = cox.zph(model))
+lapply(final_models$cox_combined_models[[rest_index]], function(model) {
+  list(cox_model = model, proportiona_hazards_test = cox.zph(model))
 })
 ```
 
 #### Training Data
 ```{r print combined cox models training}
-lapply (final_models$cox_combined_models[[test_index]], function(model) {
-          list(cox_model = model, schoenfeld_residuals = cox.zph(model))
+lapply(final_models$cox_combined_models[[test_index]], function(model) {
+  list(cox_model = model, proportiona_hazards_test = cox.zph(model))
 })
 tab_no <- tab_no + 1
 ```
