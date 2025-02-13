@@ -1210,6 +1210,95 @@ kap_plot_all(census, "cohort",
 )
 ```
 
+### Dataset informaton 
+
+Do this for complete dataset, training dataset, testing dataset.
+
+- Number of observations per outcome
+- Number of subjects per outcome
+- Number of sujbects excluded for completeness
+
+```{r dataset information, results = 'asis'}
+make_wave <- function(data, id, age_var) {
+  data <- data %>%
+    dplyr::group_by(!!sym(id)) %>%
+    dplyr::arrange(!!sym(age_var)) %>%
+    dplyr::mutate(wave = dplyr::row_number()) %>%
+    dplyr::mutate(dif_time = !!sym(age_var) - lag(!!sym(age_var))) %>%
+    dplyr::ungroup() %>%
+    as.data.frame()
+
+  data
+}
+
+summarise_dataset <- function(dataset, data_name) {
+  data <- dataset[[data_name]]
+  if (is.null(data)) {
+    return(NULL)
+  }
+  data_id <- dataset$data_id
+  data_mod <- dataset$data_mod
+  if (data_mod == "train_test" && data_name == "data") {
+    data_name <- "training_data"
+  }
+
+  id <- dataset$id
+  age <- paste0(dataset$age[[1]], "_ns")
+  if (data_name == "missing_data") {
+    age <- dataset$age[[1]]
+  }
+  outcome <- dataset$outcome
+  data <- make_wave(data, id, age)
+  sum <- round(psych::describe(data[, c(outcome, age, "wave", "dif_time")]), 2)
+  rownames(sum) <- c(outcome, age, "wave", "dif_time")
+  sum <- cbind(rownames(sum), data.frame(sum, row.names = NULL))
+  names(sum)[1] <- "variables"
+  sum <- data.frame(outcome = rep(outcome, nrow(sum)), sum)
+  sum <- data.frame(data_id = rep(data_id, nrow(sum)), sum)
+  sum <- data.frame(data_name = rep(data_name, nrow(sum)), sum)
+  sum
+}
+
+
+sum_data <- do.call(rbind, lapply(datasets, summarise_dataset, "data"))
+rownames(sum_data) <- NULL
+sum_missing <- do.call(rbind, lapply(datasets, summarise_dataset, "missing_data"))
+rownames(sum_missing) <- NULL
+sum_test <- do.call(rbind, lapply(datasets, summarise_dataset, "test_data"))
+rownames(sum_test) <- NULL
+```
+
+#### Complete and Training Data
+
+```{r dataset info complete and training, results = 'asis'}
+kable(sum_data)
+```
+
+#### Missing Data from Complete and Training Data
+
+```{r dataset info missing complete and training, results = 'asis'}
+kable(sum_missing)
+```
+
+#### Testing Data
+
+```{r dataset info testing data, results = 'asis'}
+kable(sum_missing)
+```
+
+### Census information
+
+- Study Demographics
+- Average Life Expectancy
+
+### LCMM information 
+
+Include latent class model fit statistics
+
+- entropy
+- BIC
+
+### 
 
 ## Display Figures
 ```{r initiate figure and table number}
