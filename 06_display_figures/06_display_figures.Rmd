@@ -1248,11 +1248,13 @@ summarise_dataset <- function(dataset, data_name) {
     age <- dataset$age[[1]]
   }
   outcome <- dataset$outcome
+  unique_id <- length(unique(data[[id]]))
   data <- make_wave(data, id, age)
   sum <- round(psych::describe(data[, c(outcome, age, "wave", "dif_time")]), 2)
   rownames(sum) <- c(outcome, age, "wave", "dif_time")
   sum <- cbind(rownames(sum), data.frame(sum, row.names = NULL))
   names(sum)[1] <- "variables"
+  sum <- data.frame(unique_id = rep(unique_id, nrow(sum)), sum)
   sum <- data.frame(outcome = rep(outcome, nrow(sum)), sum)
   sum <- data.frame(data_id = rep(data_id, nrow(sum)), sum)
   sum <- data.frame(data_name = rep(data_name, nrow(sum)), sum)
@@ -1283,7 +1285,7 @@ kable(sum_missing)
 #### Testing Data
 
 ```{r dataset info testing data, results = 'asis'}
-kable(sum_missing)
+kable(sum_test)
 ```
 
 ### Census information
