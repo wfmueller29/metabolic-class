@@ -1,4 +1,4 @@
-out_tag: all
+out_tag: all_log
 tag_time: FALSE
 plan: multicore
 ncpus: 10
@@ -27,12 +27,12 @@ survival_dataset:
 datasets:
 - name: "slam"
   path: "../00b_dataset_mods/output/data/test/slam_bw_og.csv"
-  outcome: "bw"
+  outcome: "log_bw"
   age_var: ["age_wk", "age_wk2"] # these must be in increasing polynomial order
   id: "idno"
   covariates: ["sex", "strain"]
   covariates_dummy: ["sex_M", "strain_HET3"]
-  numeric: ["bw", "idno", "le_wk"]
+  numeric: ["log_bw", "idno", "le_wk"]
   factor: ["cohort"]
   train_test:
     sample_by: ["sex", "strain"]
@@ -72,8 +72,8 @@ datasets:
       age_var: "age_wk"
       fraction_vector: [.75, .667, .5, .337, .25]
   labels:
-    oc_name: "Body Weight"
-    oc_units: "(g)"
+    oc_name: "log(Body Weight)"
+    oc_units: "(log g)"
     age_var_name: "Age"
     age_var_units: "(weeks)"
     data_name: "SLAM Body Weight"
@@ -84,12 +84,12 @@ datasets:
 
 - name: "slam"
   path: "../00b_dataset_mods/output/data/test/slam_fat_og.csv"
-  outcome: "fat"
+  outcome: "log_fat"
   age_var: ["age_wk", "age_wk2"]
   id: "idno"
   covariates: ["sex", "strain"]
   covariates_dummy: ["sex_M", "strain_HET3"]
-  numeric: ["fat", "idno", "le_wk"]
+  numeric: ["log_fat", "idno", "le_wk"]
   factor: ["cohort"]
   train_test:
     sample_by: ["sex", "strain"]
@@ -128,8 +128,8 @@ datasets:
       age_var: "age_wk"
       fraction_vector: [.75, .667, .5, .337, .25]
   labels:
-    oc_name: "Body Fat"
-    oc_units: "(g)"
+    oc_name: "log(Body Fat)"
+    oc_units: "(log g)"
     age_var_name: "Age"
     age_var_units: "(weeks)"
     data_name: "SLAM Body Fat"
