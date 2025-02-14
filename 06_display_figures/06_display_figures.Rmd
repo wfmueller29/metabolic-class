@@ -1250,10 +1250,24 @@ summarise_dataset <- function(dataset, data_name) {
   outcome <- dataset$outcome
   unique_id <- length(unique(data[[id]]))
   data <- make_wave(data, id, age)
+  print(nrow(data))
+  if (data_name != "missing_data") {
+    outcome_data <- data[[outcome]]
+    outcome_data_log <- log(data[[outcome]])
+    outcome_data_sqrt <- sqrt(data[[outcome]])
+    shapiro_test <- signif(shapiro.test(outcome_data)$p.value, 3)
+    shapiro_test_log <- signif(shapiro.test(outcome_data_log)$p.value, 3)
+    shapiro_test_sqrt <- signif(shapiro.test(outcome_data_sqrt)$p.value, 3)
+  }
   sum <- round(psych::describe(data[, c(outcome, age, "wave", "dif_time")]), 2)
   rownames(sum) <- c(outcome, age, "wave", "dif_time")
   sum <- cbind(rownames(sum), data.frame(sum, row.names = NULL))
   names(sum)[1] <- "variables"
+  if (data_name != "missing_data") {
+    sum <- data.frame(shapiro_test = rep(shapiro_test, nrow(sum)), sum)
+    sum <- data.frame(shapiro_test_log = rep(shapiro_test_log, nrow(sum)), sum)
+    sum <- data.frame(shapiro_test_sqrt = rep(shapiro_test_sqrt, nrow(sum)), sum)
+  }
   sum <- data.frame(unique_id = rep(unique_id, nrow(sum)), sum)
   sum <- data.frame(outcome = rep(outcome, nrow(sum)), sum)
   sum <- data.frame(data_id = rep(data_id, nrow(sum)), sum)
@@ -1286,6 +1300,12 @@ kable(sum_missing)
 
 ```{r dataset info testing data, results = 'asis'}
 kable(sum_test)
+```
+
+### Assess outcome for normality, an assumption of the latent class models
+
+```{r outcome normality}
+
 ```
 
 ### Census information
