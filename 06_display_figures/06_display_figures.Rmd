@@ -1614,27 +1614,6 @@ dose_plot_cum_validation[[6]]
 fig_no <- fig_no + 1
 ```
 
-### Figure `r as.character(fig_no)`: Histogram of Outcome Variables - Complete and Training Data
-
-```{r disply hist outcome panel, fig.height=12, fig.width=12}
-hist_outcome_plot_panel
-fig_no <- fig_no + 1
-```
-
-### Figure `r as.character(fig_no)`: Histogram of log transform of outcome Variables - Complete and Training Data
-
-```{r disply hist log outcome panel, fig.height=12, fig.width=12}
-hist_log_outcome_plot_panel
-fig_no <- fig_no + 1
-```
-
-### Figure `r as.character(fig_no)`: Histogram of probability of class membership - Complete Data
-
-```{r disply hist class prob panel, fig.height=12, fig.width=12}
-hist_plot_panel
-fig_no <- fig_no + 1
-```
-
 ### Table `r as.character(tab_no)`: Combined Classes Cox Models
 
 ```{r get model calls}
@@ -1879,6 +1858,27 @@ model2_grid <- cowplot::plot_grid(title_theme, model2_grid,
 )
 
 model2_grid
+```
+
+### Figure `r as.character(fig_no)`: Histogram of Outcome Variables - Complete and Training Data
+
+```{r disply hist outcome panel, fig.height=12, fig.width=12}
+hist_outcome_plot_panel
+fig_no <- fig_no + 1
+```
+
+### Figure `r as.character(fig_no)`: Histogram of log transform of outcome Variables - Complete and Training Data
+
+```{r disply hist log outcome panel, fig.height=12, fig.width=12}
+hist_log_outcome_plot_panel
+fig_no <- fig_no + 1
+```
+
+### Figure `r as.character(fig_no)`: Histogram of probability of class membership - Complete Data
+
+```{r disply hist class prob panel, fig.height=12, fig.width=12}
+hist_plot_panel
+fig_no <- fig_no + 1
 ```
 
 ### Figure `r as.character(fig_no)`: Display Testing Data
