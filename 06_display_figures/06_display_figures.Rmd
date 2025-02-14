@@ -1166,6 +1166,73 @@ kap_plot_cum_validation <- lapply(censuses, function(census) {
 })
 ```
 
+### Histogram of outcomes for complete data
+
+```{r hist outcome, echo = FALSE, include = FALSE}
+hist_outcome_plots <- lapply(datasets, function(dataset) {
+  data <- dataset$data
+  outcome <- dataset$outcome
+  data_mod <- dataset$data_mod
+  ggplot2::ggplot(data = data, aes_string(x = outcome)) +
+    ggplot2::geom_histogram() +
+    ggplot2::labs(title = data_mod)
+})
+
+hist_outcome_plot_panel <- cowplot::plot_grid(
+  plotlist = hist_outcome_plots,
+  nrow = round(sqrt(length(datasets))),
+  byrow = TRUE,
+  greedy = FALSE,
+  labels = "AUTO"
+)
+
+title_theme <- ggdraw() +
+  draw_label(paste(
+    "Histograms of outcomes for complete and training data",
+    sep = " "
+  ))
+
+hist_outcome_plot_panel <- cowplot::plot_grid(title_theme,
+  hist_outcome_plot_panel,
+  rel_heights = c(.05, 1),
+  ncol = 1
+)
+```
+
+### Histogram of log(outcomes) for complete data
+
+```{r hist log outcome, echo = FALSE, include = FALSE}
+hist_outcome_plots <- lapply(datasets, function(dataset) {
+  data <- dataset$data
+  outcome <- dataset$outcome
+  outcome <- paste0("log(", outcome, ")")
+  data_mod <- dataset$data_mod
+  ggplot2::ggplot(data = data, aes_string(x = outcome)) +
+    ggplot2::geom_histogram() +
+    ggplot2::labs(title = data_mod)
+})
+
+hist_outcome_plot_panel <- cowplot::plot_grid(
+  plotlist = hist_outcome_plots,
+  nrow = round(sqrt(length(datasets))),
+  byrow = TRUE,
+  greedy = FALSE,
+  labels = "AUTO"
+)
+
+title_theme <- ggdraw() +
+  draw_label(paste(
+    "Histograms of log(outcomes) for complete and training data",
+    sep = " "
+  ))
+
+hist_log_outcome_plot_panel <- cowplot::plot_grid(title_theme,
+  hist_outcome_plot_panel,
+  rel_heights = c(.05, 1),
+  ncol = 1
+)
+```
+
 ### Histogram of probabilites of class assignment for all data 
 
 ```{r hist prob, echo = FALSE, include = FALSE}
@@ -1544,6 +1611,20 @@ fig_no <- fig_no + 1
 
 ```{r dose reponse cum validation 4, fig.height=18, fig.width=18}
 dose_plot_cum_validation[[6]]
+fig_no <- fig_no + 1
+```
+
+### Figure `r as.character(fig_no)`: Histogram of Outcome Variables - Complete and Training Data
+
+```{r disply hist outcome panel, fig.height=12, fig.width=12}
+hist_outcome_plot_panel
+fig_no <- fig_no + 1
+```
+
+### Figure `r as.character(fig_no)`: Histogram of log transform of outcome Variables - Complete and Training Data
+
+```{r disply hist log outcome panel, fig.height=12, fig.width=12}
+hist_log_outcome_plot_panel
 fig_no <- fig_no + 1
 ```
 
