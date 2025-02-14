@@ -129,6 +129,13 @@ for (i in seq_along(datasets)) {
   }
 }
 
+# log transform the outcome variable ------------------------------------------
+datasets <- lapply(datasets, function(dataset) {
+  log_outcome_name <- paste0("log_", dataset$outcome)
+  dataset$data[[log_outcome_name]] <- log(dataset$data[[dataset$outcome]])
+  dataset
+})
+
 # sample datasets based upon 3 month time interval ----------------------------
 
 source("R/sample_monthwise.R")

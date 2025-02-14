@@ -1,4 +1,5 @@
 install.packages("devtools", repos = "https://cloud.r-project.org")
+install.packages("fastDummies", repos = "https://cloud.r-project.org")
 devtools::install_github("https://github.com/wfmueller29/helphlme.git")
 devtools::install_github("https://github.com/wfmueller29/callframe.git")
 install.packages("tidyverse", repos = "https://cloud.r-project.org")
@@ -17,4 +18,3 @@ install.packages("MLmetrics", repos = "https://cloud.r-project.org")
 install.packages("beepr", repos = "https://cloud.r-project.org")
 # install.packages("rms", repos = "https://cloud.r-project.org")
 # install.packages("base.rms", repos = "https://cloud.r-project.org")
-
