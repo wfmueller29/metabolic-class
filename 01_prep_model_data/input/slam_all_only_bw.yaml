@@ -1,0 +1,196 @@
+out_tag: all
+tag_time: FALSE
+plan: multicore
+ncpus: 10
+sample_n: FALSE
+center: TRUE
+scale: FALSE
+external_validate: FALSE
+custom_palette: TRUE
+palette_colors: ["black", "#DF536B", "#61D04F", "midnightblue",
+  "#28E2E5", "#CD0BBC", "#FF991C", "gray62"]
+legend_labels: ["Overweight", "Low-weight", "Mid-Weight", "High-fat",
+  "Low-fat", "Mid-fat", "Decline Glucose", "Stable Glucose"]
+custom_palette_train: TRUE
+palette_colors_train: [ "black", "#DF536B", "#61D04F", "midnightblue",
+  "#28E2E5", "#CD0BBC", "#FF991C", "gray62" ]
+legend_labels_train: [ "Overweight", "Low-weight", "Mid-Weight", "High-fat",
+  "Low-fat", "Mid-fat", "Decline Glucose", "Stable Glucose" ]
+survival_dataset:
+  path: "../00c_survival_data/output/main_cat_surv.csv"
+  id: "idno"
+  age_var: "age_wk"
+  age_death: "le_wk"
+  event: "dead_censor"
+  tod: "tod"
+  covariates: "sex_M + strain_HET3"
+datasets:
+- name: "slam"
+  path: "../00b_dataset_mods/output/data/test/slam_bw_og.csv"
+  outcome: "bw"
+  age_var: ["age_wk", "age_wk2"] # these must be in increasing polynomial order
+  id: "idno"
+  covariates: ["sex", "strain"]
+  covariates_dummy: ["sex_M", "strain_HET3"]
+  numeric: ["bw", "idno", "le_wk"]
+  factor: ["cohort"]
+  train_test:
+    sample_by: ["sex", "strain"]
+    split: .8
+  model:
+    fixed: "~ age_wk + age_wk2 + sex_F * strain_HET3"
+    fixcov: ["sex_F", "strain_HET3"]
+    mixture: "~ age_wk + age_wk2" 
+    random: 
+      - "~ 1"
+      - "~ age_wk"
+      - "~ age_wk + age_wk2"
+    idiag: [FALSE, TRUE]
+    nwg: [FALSE, TRUE]
+    ng_max: 5
+  prediction_data:
+    filter_interval:
+      intervals:
+        - [age_wk_ns: "(0, 57.50)"]
+        - [age_wk_ns: "[57.50,86.25)"]
+        - [age_wk_ns: "[86.25,103.50)"]
+        - [age_wk_ns: "[103.50,Inf)"]
+        - [age_wk_ns: "[57.50,103.50]"]
+      names:
+    filter_window:
+      age_var: "age_wk"
+      start: 6.5 # 1.5 months
+      end: 143.4 # 33 months
+      window_size_vector: [26.1, 39.1, 52.1] # 6, 9, 12 months
+      step: 13 # 3 months
+    filter_cumulative:
+      age_var: "age_wk"
+      start_vector: [6.5, 19.6, 32.6, 45.62] #1.5, 4.5, 7.5, 10.5 months
+      end: 143.4 # 33 months
+      step: 13 # 3 months
+    resample:
+      age_var: "age_wk"
+      fraction_vector: [.75, .667, .5, .337, .25]
+  labels:
+    oc_name: "Body Weight"
+    oc_units: "(g)"
+    age_var_name: "Age"
+    age_var_units: "(weeks)"
+    data_name: "SLAM Body Weight"
+  harmonize:
+    execute: TRUE
+    formula: "~ age_wk + age_wk2 + sex * strain + (1|idno)"
+    variable: "cohort"
+
+- name: "slam"
+  path: "../00b_dataset_mods/output/data/test/slam_fat_og.csv"
+  outcome: "fat"
+  age_var: ["age_wk", "age_wk2"]
+  id: "idno"
+  covariates: ["sex", "strain"]
+  covariates_dummy: ["sex_M", "strain_HET3"]
+  numeric: ["fat", "idno", "le_wk"]
+  factor: ["cohort"]
+  train_test:
+    sample_by: ["sex", "strain"]
+    split: .8
+  model:
+    fixed: "~ age_wk + age_wk2"
+    mixture: "~ age_wk + age_wk2" 
+    random: 
+      - "~ 1"
+      - "~ age_wk"
+      - "~ age_wk + age_wk2"
+    idiag: [FALSE, TRUE]
+    nwg: [FALSE, TRUE]
+    ng_max: 5
+  prediction_data:
+    filter_interval:
+      intervals:
+        - [age_wk_ns: "(0, 57.50)"]
+        - [age_wk_ns: "[57.50,86.25)"]
+        - [age_wk_ns: "[86.25,103.50)"]
+        - [age_wk_ns: "[103.50,Inf)"]
+        - [age_wk_ns: "[57.50,103.50]"]
+      names:
+    filter_window:
+      age_var: "age_wk"
+      start: 6.5 # 1.5 months
+      end: 143.4 # 33 months
+      window_size_vector: [26.1, 39.1, 52.1] # 6, 9, 12 months
+      step: 13 # 3 months
+    filter_cumulative:
+      age_var: "age_wk"
+      start_vector: [6.5, 19.6, 32.6, 45.62] #1.5, 4.5, 7.5, 10.5 months
+      end: 143.4 # 33 months
+      step: 13 # 3 months
+    resample:
+      age_var: "age_wk"
+      fraction_vector: [.75, .667, .5, .337, .25]
+  labels:
+    oc_name: "Body Fat"
+    oc_units: "(g)"
+    age_var_name: "Age"
+    age_var_units: "(weeks)"
+    data_name: "SLAM Body Fat"
+  harmonize:
+    execute: TRUE
+    formula: "~ age_wk + age_wk2 + sex * strain + (1|idno)"
+    variable: "cohort"
+
+- name: "slam"
+  path: "../00b_dataset_mods/output/data/test/slam_gluc_og.csv"
+  outcome: "gluc"
+  age_var: ["age_wk", "age_wk2"]
+  id: "idno"
+  covariates: ["sex", "strain"]
+  covariates_dummy: ["sex_M", "strain_HET3"]
+  numeric: ["gluc", "idno", "le_wk"]
+  factor: ["cohort"]
+  train_test:
+    sample_by: ["sex", "strain"]
+    split: .8
+  model:
+    fixed: "~ age_wk + age_wk2 + sex_F + strain_HET3" 
+    fixcov: ["sex_F", "strain_HET3"]
+    mixture: "~ age_wk + age_wk2" 
+    random: 
+      - "~ 1"
+      - "~ age_wk"
+      - "~ age_wk + age_wk2"
+    idiag: [FALSE, TRUE]
+    nwg: [FALSE, TRUE]
+    ng_max: 5
+  prediction_data:
+    filter_interval:
+      intervals:
+        - [age_wk_ns: "(0, 57.50)"]
+        - [age_wk_ns: "[57.50,86.25)"]
+        - [age_wk_ns: "[86.25,103.50)"]
+        - [age_wk_ns: "[103.50,Inf)"]
+        - [age_wk_ns: "[57.50,103.50]"]
+      names:
+    filter_window:
+      age_var: "age_wk"
+      start: 6.5 # 1.5 months
+      end: 143.4 # 33 months
+      window_size_vector: [26.1, 39.1, 52.1] # 6, 9, 12 months
+      step: 13 # 3 months
+    filter_cumulative:
+      age_var: "age_wk"
+      start_vector: [6.5, 19.6, 32.6, 45.62] #1.5, 4.5, 7.5, 10.5 months
+      end: 143.4 # 33 months
+      step: 13 # 3 months
+    resample:
+      age_var: "age_wk"
+      fraction_vector: [.75, .667, .5, .337, .25]
+  labels:
+    oc_name: "Glucose"
+    oc_units: "(mg/dL)"
+    age_var_name: "Age"
+    age_var_units: "(weeks)"
+    data_name: "SLAM Glucose"
+  harmonize:
+    execute: TRUE
+    formula: "~ age_wk + age_wk2 + sex * strain + (1|idno)"
+    variable: "cohort"
