@@ -19,15 +19,37 @@ boot_accuracy <- function(pred_df, og_df, subject) {
 
   bootobj <- boot::boot(data = new_df, statistic = function(data, indices) {
     data <- data[indices, ]
-    data$class_og_factor <- as.factor(as.character(data$class.og))
-    data$class_pred_factor <- as.factor(as.character(data$class.pred))
-    f1 <- yardstick::f_meas(
-      data = data,
-      truth = class_og_factor,
-      estimate = class_pred_factor,
+    unique_og <- length(unique(data$class.og))
+    unique_pred <- length(unique(data$class.pred))
+    if (unique_og == 1) {
+      warning("Truth data has only one level")
+      message("f1 stat is meaningless in this case")
+      message("returning NA")
+      return(NA)
+    }
+    data$class_og_factor <- factor(as.character(data$class.og),
+      levels = as.character(sort(unique(data$class.og))),
+      labels = as.character(sort(unique(data$class.og)))
+    )
+    data$class_pred_factor <- factor(as.character(data$class.pred),
+      levels = as.character(sort(unique(data$class.og))),
+      labels = as.character(sort(unique(data$class.og)))
+    )
+
+
+    f1 <- yardstick::f_meas_vec(
+      truth = data$class_og_factor,
+      estimate = data$class_pred_factor,
       estimator = "macro"
     )
-    f1 <- f1$.estimate
+    if (unique_og != unique_pred) {
+      warning("Some levels had no predicted events")
+      message("f1 was calculated excluding those levels")
+      message("f1 will be multiplied by the fraction of missing levels.")
+      message("original f1 = ", f1)
+      f1 <- f1 * (unique_pred / unique_og)
+      message("rebalanced f1 = ", f1)
+    }
     # f1 <- MLmetrics::F1_Score(y_true = data$class.og, y_pred = data$class.pred)
     # f1 <- f1_score(predicted = data$class.pred, expected = data$class.og)
     f1
