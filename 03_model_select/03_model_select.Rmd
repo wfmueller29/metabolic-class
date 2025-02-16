@@ -105,7 +105,7 @@ for (i in seq_len(number_of_datasets)) {
   ylim <- c(min(df[[outcome]]), max(df[[outcome]]))
   helphlme::display_classes(
     df = pred,
-    x = cf$final_model[[1]],
+    x = cf$final_model,
     age = age_var,
     main = header,
     xlab = age_var,
