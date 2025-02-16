@@ -48,8 +48,8 @@ cumulative_legend_palette <- viridis(3, begin = .2, end = .7, direction = -1)
 if (!exists("params")) {
   params <- list()
   # params$input_path <- "../05_figures/output/test_local.yaml"
-  # params$input_path <- "../05_figures/output/all.yaml"
-  params$input_path <- "../05_figures/output/fb6.yaml"
+  params$input_path <- "../05_figures/output/all.yaml"
+  # params$input_path <- "../05_figures/output/fb6.yaml"
   # params$input_path <- "../05_figures/output/external_validation.yaml"
 }
 
@@ -1202,7 +1202,7 @@ hist_outcome_plot_panel <- cowplot::plot_grid(title_theme,
 ### Histogram of log(outcomes) for complete data
 
 ```{r hist log outcome, echo = FALSE, include = FALSE}
-hist_outcome_plots <- lapply(datasets, function(dataset) {
+hist_log_outcome_plots <- lapply(datasets, function(dataset) {
   data <- dataset$data
   outcome <- dataset$outcome
   outcome <- paste0("log(", outcome, ")")
@@ -1212,8 +1212,8 @@ hist_outcome_plots <- lapply(datasets, function(dataset) {
     ggplot2::labs(title = data_mod)
 })
 
-hist_outcome_plot_panel <- cowplot::plot_grid(
-  plotlist = hist_outcome_plots,
+hist_log_outcome_plot_panel <- cowplot::plot_grid(
+  plotlist = hist_log_outcome_plots,
   nrow = round(sqrt(length(datasets))),
   byrow = TRUE,
   greedy = FALSE,
@@ -1227,7 +1227,7 @@ title_theme <- ggdraw() +
   ))
 
 hist_log_outcome_plot_panel <- cowplot::plot_grid(title_theme,
-  hist_outcome_plot_panel,
+  hist_log_outcome_plot_panel,
   rel_heights = c(.05, 1),
   ncol = 1
 )
@@ -1356,12 +1356,6 @@ kable(sum_missing)
 kable(sum_test)
 ```
 
-### Assess outcome for normality, an assumption of the latent class models
-
-```{r outcome normality}
-
-```
-
 ### Census information
 
 - Study Demographics
@@ -1371,10 +1365,45 @@ kable(sum_test)
 
 Include latent class model fit statistics
 
-- entropy
-- BIC
+#### Concise Table
 
-### 
+```{r lcmm concise, results = 'asis'}
+table <- helphlme::compare_models(final_models$final_model)$table
+table <- data.frame(
+  outcome = final_models$oc,
+  data_type = final_models$data_mod,
+  table
+)
+kable(table)
+```
+
+#### Verbose Table
+
+```{r lcmm model information}
+for (i in seq_len(nrow(final_models))) {
+  label <- paste(final_models$oc[[i]], final_models$data_mod[[i]])
+  cat("####################################################\n")
+  cat(label)
+  cat("\n####################################################\n")
+  model <- final_models$final_model[[i]]
+  summary(model)
+  lcmm::postprob(model)
+}
+```
+
+#### Model residual plots
+
+```{r plot model residuals, fig.height = 12, fig.width = 12}
+for (i in seq_len(nrow(final_models))) {
+  title <- paste(final_models$data_mod[[i]], final_models$oc[[i]])
+  model <- final_models$final_model[[i]]
+  cat("##### ")
+  cat(title)
+  cat("\n")
+
+  plot(model, which = "residuals", var.time = "age_wk_ns", title = title)
+}
+```
 
 ## Display Figures
 ```{r initiate figure and table number}
