@@ -19,10 +19,19 @@ boot_accuracy <- function(pred_df, og_df, subject) {
 
   bootobj <- boot::boot(data = new_df, statistic = function(data, indices) {
     data <- data[indices, ]
-    f1 <- MLmetrics::F1_Score(y_true = data$class.og, y_pred = data$class.pred)
+    data$class_og_factor <- as.factor(as.character(data$class.og))
+    data$class_pred_factor <- as.factor(as.character(data$class.pred))
+    f1 <- yardstick::f_meas(
+      data = data,
+      truth = class_og_factor,
+      estimate = class_pred_factor,
+      estimator = "macro"
+    )
+    f1 <- f1$.estimate
+    # f1 <- MLmetrics::F1_Score(y_true = data$class.og, y_pred = data$class.pred)
     # f1 <- f1_score(predicted = data$class.pred, expected = data$class.og)
     f1
-  }, R = 2000)
+  }, R = 100)
 
   bootobj
 }
