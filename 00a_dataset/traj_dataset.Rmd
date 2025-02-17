@@ -333,11 +333,20 @@ main_all <- glucose %>%
     ),
     age_wk = round(((date - dob) / 7), 2) + 1
   ) %>%
-  filter(!is.na(date) & !is.na(idno)) %>%
+  filter(!is.na(date) & !is.na(idno))
+
+before_age_filter <- nrow(main_all)
+
+main_all <- main_all %>%
   filter(age_wk > 0)
+
+after_age_filter <- nrow(main_all)
 
 main_all$age_wk <- as.numeric(main_all$age_wk)
 ```
+
+- Before age filter = `r before_age_filter`
+- After age filter = `r after_age_filter`
   
 #### restriction to cohorts 1 to 10
 
