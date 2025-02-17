@@ -1692,8 +1692,8 @@ if (config$custom_palette) {
     Class = paste("Class", seq_along(config$legend_labels)),
     Label = config$legend_labels
   )
+  kable(df)
 }
-kable(df)
 ```
 
 ```{r combined cox forrest plots all data}
@@ -1710,8 +1710,8 @@ if (config$custom_palette_train) {
     Class = paste("Class", seq_along(config$legend_labels_train)),
     Label = config$legend_labels_train
   )
+  kable(df)
 }
-kable(df)
 ```
 
 ```{r combined cox forrest plots training}
