@@ -26,7 +26,7 @@ survival_dataset:
   covariates: "sex_M + strain_HET3"
 datasets:
 - name: "slam"
-  path: "../00b_dataset_mods/output/data/test/slam_bw_og.csv"
+  path: "../00b_dataset_mods/output/test/data/slam_bw_og.csv"
   outcome: "bw"
   age_var: ["age_wk", "age_wk2"] # these must be in increasing polynomial order
   id: "idno"
@@ -83,7 +83,7 @@ datasets:
     variable: "cohort"
 
 - name: "slam"
-  path: "../00b_dataset_mods/output/data/test/slam_fat_og.csv"
+  path: "../00b_dataset_mods/output/test/data/slam_fat_og.csv"
   outcome: "fat"
   age_var: ["age_wk", "age_wk2"]
   id: "idno"
@@ -139,7 +139,7 @@ datasets:
     variable: "cohort"
 
 - name: "slam"
-  path: "../00b_dataset_mods/output/data/test/slam_gluc_og.csv"
+  path: "../00b_dataset_mods/output/test/data/slam_gluc_og.csv"
   outcome: "gluc"
   age_var: ["age_wk", "age_wk2"]
   id: "idno"
@@ -196,7 +196,7 @@ datasets:
     variable: "cohort"
 
 - name: "slam"
-  path: "../00b_dataset_mods/output/data/test/slam_lean_og.csv"
+  path: "../00b_dataset_mods/output/test/data/slam_lean_og.csv"
   outcome: "lean"
   age_var: ["age_wk", "age_wk2"]
   id: "idno"
