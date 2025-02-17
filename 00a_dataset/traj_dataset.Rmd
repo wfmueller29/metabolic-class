@@ -99,14 +99,19 @@ bodywt <- bodywt %>%
 bodywt$date <- as.Date(bodywt$date, "%Y-%m-%d")
 bodywt$bw <- as.numeric(as.character(bodywt$bw))
 bodywt$idno <- as.character(bodywt$idno)
+bw_na_before <- sum(is.na(bodywt$bw))
 bodywt <- bodywt %>%
   mutate(
     bw = ifelse(bw < 10, NA,
       ifelse(bw > 100, NA, bw)
     )
-  ) %>%
+  ) 
+bw_na_after <- sum(is.na(bodywt$bw))
+
+bodywt <- bodywt %>%
   filter(!is.na(bw))
 
+duplicated_bw <- sum(duplicated(bodywt[c(1, 2)]))
 bodywt <- bodywt[!duplicated(bodywt[c(1, 2)]), ]
 
 ## from NMR
@@ -130,6 +135,11 @@ bodywt <- bodywt[!duplicated(bodywt[c(1, 2)]), ]
 
 hist(bodywt$bw)
 ```
+
+- duplicated bw = `r duplicated_bw`
+- NA bw before outlier removal `r bw_na_before`
+- NA bw after outlier removal `r bw_na_after`
+- bw outlier `r bw_na_after - bw_na_before`
 
 #### glucose data read in and clean 
   - input file Glucose_Lactate.csv (10/30/2019)
@@ -173,15 +183,24 @@ glucose <- read.csv("data/gluc_lact_2021-12-01.csv") %>%
 glucose$date <- as.Date(glucose$date, "%Y-%m-%d")
 glucose$gluc <- as.numeric(glucose$gluc)
 glucose$idno <- as.character(glucose$idno)
+gluc_na_before <- sum(is.na(glucose$gluc))
 glucose <- glucose %>%
   mutate(
     gluc = ifelse(gluc < 20 | gluc >= 300, NA, gluc)
   )
 
+gluc_na_after <- sum(is.na(glucose$gluc))
+duplicated_gluc <- sum(duplicated(glucose[c(1, 2)]))
+
 glucose <- glucose[!duplicated(glucose[c(1, 2)]), ]
 
 hist(glucose$gluc)
 ```
+
+- duplicated gluc = `r duplicated_gluc`
+- NA gluc before outlier removal `r gluc_na_before`
+- NA gluc after outlier removal `r gluc_na_after`
+- gluc outlier `r gluc_na_after - gluc_na_before`
 
 #### body comp data read in and clean 
   - input file NMR.csv (10/30/2019)
@@ -205,6 +224,8 @@ nmr <- nmr %>%
 nmr$date <- as.Date(nmr$date, "%Y-%m-%d")
 nmr$idno <- as.character(nmr$idno)
 nmr$fat <- as.numeric(as.character(nmr$fat))
+fat_na_before <- sum(is.na(nmr$fat))
+lean_na_before <- sum(is.na(nmr$lean))
 nmr <- nmr %>%
   mutate(
     fat = ifelse(fat <= 0, NA, fat)
@@ -214,12 +235,23 @@ nmr <- nmr %>%
       ifelse(lean >= 40, NA, lean)
     )
   )
+fat_na_after <- sum(is.na(nmr$fat))
+lean_na_after <- sum(is.na(nmr$lean))
 
+duplicated_nmr <- sum(!duplicated(nmr[c(1, 2)]))
 nmr <- nmr[!duplicated(nmr[c(1, 2)]), ]
 
 hist(nmr$fat)
 hist(nmr$lean)
 ```
+
+- duplicated nmr = `r duplicated_nmr`
+- NA fat before outlier removal `r fat_na_before`
+- NA fat after outlier removal `r fat_na_after`
+- fat outlier `r fat_na_after - fat_na_before`
+- NA lean before outlier removal `r lean_na_before`
+- NA lean after outlier removal `r lean_na_after`
+- lean outlier `r lean_na_after - lean_na_before`
 
 ```{r all_to_new_idno, warning=FALSE, message=FALSE, echo=FALSE}
 
