@@ -376,7 +376,7 @@ for (i in seq_along(datasets)) {
 # save all datsets as csv files in output/data --------------------------------
 output_name <- basename(args[[1]])
 output_name <- strsplit(x = output_name, split = "\\.")[[1]][[1]]
-file_path <- file.path("output", "data", output_name)
+file_path <- file.path("output", output_name, "data")
 if (dir.exists(file_path)) {
   files <- list.files(file_path)
   files <- file.path(file_path, files)
