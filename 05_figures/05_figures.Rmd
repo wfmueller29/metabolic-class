@@ -225,6 +225,7 @@ chi_results <- lapply(seq_along(final_models$census), function(i) {
 
 final_models$chi_df <- chi_results$dfs
 final_models$chi_test <- chi_results$tests
+final_models$chi_tests <- chi_results
 ```
 
 #### Create clean t1
@@ -237,7 +238,8 @@ final_models$clean_t1 <- lapply(seq_along(final_models$census), function(i) {
   clean_t1 <- clean_t1(final_models$census[[i]],
     columns = final_models$covariates[[i]],
     age_death = config$survival_dataset$age_death,
-    event = config$survival_dataset$event
+    event = config$survival_dataset$event,
+    chi_tests = final_models$chi_tests[[i]]
   )
 
   clean_t1

@@ -4,7 +4,8 @@ source("R/t1.R")
 clean_t1 <- function(census,
                      columns,
                      age_death,
-                     event) {
+                     event, 
+                     chi_tests) {
   # create t1
   df_table <- create_count_columns(census,
     columns,
@@ -20,7 +21,8 @@ clean_t1 <- function(census,
       census,
       columns,
       age_death,
-      event
+      event,
+      chi_tests
     )
   } else if (is.na(t1)) {
     cat("T1 was NA \n")
@@ -38,7 +40,8 @@ create_clean_t1 <- function(df_table,
                             census,
                             columns,
                             age_death,
-                            event) {
+                            event,
+                            chi_tests) {
   total <- rowSums(df_table)
 
   t1 <- t1[, grepl("_final", colnames(t1)), drop = FALSE]
@@ -49,6 +52,12 @@ create_clean_t1 <- function(df_table,
 
   # get chi squared results for t1
   chi_result <- chi_test(census, columns, age_death, event)
+  print(all.equal(chi_result, chi_tests))
+  if (!all.equal(chi_result, chi_tests)) {
+    stop("Our chi squared tests are not the same; something went wrong")
+  } else {
+    chi_results <- chi_tests
+  }
   chi_tests <- chi_result$tests
 
   # create named list of pvals with column name
