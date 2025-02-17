@@ -1317,7 +1317,6 @@ summarise_dataset <- function(dataset, data_name) {
   outcome <- dataset$outcome
   unique_id <- length(unique(data[[id]]))
   data <- make_wave(data, id, age)
-  print(nrow(data))
   sum <- round(psych::describe(data[, c(outcome, age, "wave", "dif_time")]), 2)
   rownames(sum) <- c(outcome, age, "wave", "dif_time")
   sum <- cbind(rownames(sum), data.frame(sum, row.names = NULL))
