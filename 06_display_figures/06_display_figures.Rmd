@@ -48,7 +48,8 @@ cumulative_legend_palette <- viridis(3, begin = .2, end = .7, direction = -1)
 if (!exists("params")) {
   params <- list()
   # params$input_path <- "../05_figures/output/test_local.yaml"
-  params$input_path <- "../05_figures/output/all.yaml"
+  # params$input_path <- "../05_figures/output/all.yaml"
+  params$input_path <- "../05_figures/output/all_lean.yaml"
   # params$input_path <- "../05_figures/output/fb6.yaml"
   # params$input_path <- "../05_figures/output/external_validation.yaml"
 }
@@ -119,7 +120,7 @@ title_theme <- ggdraw() +
 
 plot_list <- c(pred_plots, obs_plots)
 pred_obs_panel <- cowplot::plot_grid(
-  plotlist = plot_list, nrow = 3, byrow = FALSE,
+  plotlist = plot_list, nrow = length(pred_plots), byrow = FALSE,
   greedy = FALSE, labels = "AUTO"
 )
 
@@ -160,7 +161,7 @@ title_theme <- ggdraw() +
 
 plot_list <- c(pred_plots_train, obs_plots_train)
 pred_obs_panel_train <- cowplot::plot_grid(
-  plotlist = plot_list, nrow = 3, byrow = FALSE,
+  plotlist = plot_list, nrow = length(pred_plots_train), byrow = FALSE,
   greedy = FALSE, labels = "AUTO"
 )
 
@@ -363,7 +364,7 @@ kap_plots <- lapply(kap_plots, `[[`, "plot")
 plot_list <- c(obs_plots, kap_plots)
 
 mortality_panel <- cowplot::plot_grid(
-  plotlist = plot_list, nrow = 3,
+  plotlist = plot_list, nrow = length(kap_plots),
   byrow = FALSE,
   greedy = FALSE,
   labels = "AUTO"
@@ -402,7 +403,7 @@ kap_plots_train <- lapply(kap_plots_train, `[[`, "plot")
 plot_list <- c(obs_plots, kap_plots_train)
 
 mortality_panel_train <- cowplot::plot_grid(
-  plotlist = plot_list, nrow = 3,
+  plotlist = plot_list, nrow = length(kap_plots_train),
   byrow = FALSE,
   greedy = FALSE,
   labels = "AUTO"
