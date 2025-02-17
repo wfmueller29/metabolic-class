@@ -45,7 +45,8 @@ if (!exists("params")) {
   # params$input_path <- "../04_prediction_data/output/test_local.yaml"
   # params$input_path <- "../04_prediction_data/output/external_validation.yaml"
   # params$input_path <- "../04_prediction_data/output/all.yaml"
-  params$input_path <- "../04_prediction_data/output/mb6.yaml"
+  params$input_path <- "../04_prediction_data/output/all_lean.yaml"
+  # params$input_path <- "../04_prediction_data/output/mb6.yafl"
   # params$input_path <- "../04_prediction_data/output/all_relative_age.yaml"
   # params$input_path <- "../04_prediction_data/output/test_relative_age.yaml"
 }
@@ -1150,15 +1151,33 @@ for (filtered_df_name in prediction_results_names) {
 ```{r merge prediction dataframes}
 merge_prediction_data <- function(x, y) {
   print(y$suffix)
+  print(consoler::peek(x$data_list[[1]]))
+  print(consoler::peek(y$data_list[[1]]))
   if (length(x$data_list) != length(y$data_list)) {
     stop("Data lists are not of the same length, cannot merge them")
   }
+
+  # put suffixes on data ahead of time
+  x$data_list <- lapply(x$data_list, function(data) {
+    class_names_index <- grepl("^class$|^new_class$", names(data))
+    class_names <- names(data)[class_names_index]
+    names(data)[class_names_index] <- paste0(class_names, x$suffix)
+    data
+  })
+  y$data_list <- lapply(y$data_list, function(data) {
+    class_names_index <- grepl("^class$|^new_class$", names(data))
+    class_names <- names(data)[class_names_index]
+    names(data)[class_names_index] <- paste0(class_names, y$suffix)
+    data
+  })
+
   z <- list()
   z$data_list <- mapply(merge,
     x = x$data_list, y = y$data_list,
     MoreArgs = list(by.x = x$id, by.y = y$id, suffixes = c(x$suffix, y$suffix)),
     SIMPLIFY = FALSE
   )
+  print(consoler::peek(z$data_list[[1]]))
   z$id <- x$id
   z$suffix <- ""
 
