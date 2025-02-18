@@ -3,14 +3,14 @@ A generalized _Latent Class Mixed Model (LCMM)_ and _Cox Proportional Hazard Mod
 
 ## Installation
 
-To install this end-to-end modelling pipeline: 
+To install this end-to-end modelling pipeline in your current working directory, run the following command your terminal: 
 
 ```bash
 git clone https://github.com/wfmueller29/metabolic-class
 ```
 ## Dependencies 
 
-To install R package dependencies:
+To install R package dependencies, navigate to the `metabolic-class` directory and run this command in your terminal:
 
 ```bash
 Rscript installer.R
@@ -35,7 +35,7 @@ This pipeline uses file in, file out structure with yaml files, with the only tw
 ## How to use
 
 ### Training
-If you have your own longitudinal dataset that you would like to use to train, all you need to do is run the following command. 
+If you have your own longitudinal dataset that you would like to use to train, navigate to the `metabolic-class` directory and run this command in your terminal.
 
 ```bash
 Rscript train.R <train_config.yaml>
@@ -44,7 +44,7 @@ Rscript train.R <train_config.yaml>
 The tedious part is creating the `train_config.yaml` file (See below)
 
 ### Validate
-If you have longitudinal data you would like test against a previously trained model, all you need to do is run the following command. 
+If you have longitudinal data you would like test against a previously trained model, navigate to the `metabolic-class` directory and run this command in your terminal. 
 ```bash
 Rscript validate.R <validate_config.yaml>
 ```
