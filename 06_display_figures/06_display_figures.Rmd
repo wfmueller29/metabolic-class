@@ -22,6 +22,7 @@ library(lme4)
 library(cowplot)
 library(RColorBrewer)
 library(viridis)
+library(consoler)
 set.seed(365)
 
 # setting global knitr options for r markdown output
@@ -1856,6 +1857,51 @@ kable(sum_test)
 - Study Demographics
 - Average Life Expectancy
 
+```{r census information, results = 'asis'}
+describe_le <- function(data, age_death, event) {
+  surv_object <- survival::Surv(time = data[[age_death]], event = data[[event]])
+  surv_fit <- survival::survfit(surv_object ~ 1)
+  quant_surv <- quantile(surv_fit)
+  names(quant_surv$quantile) <- c("Q1", "Median", "Q3")
+  names(quant_surv$lower) <- c("Lower Q1", "Lower Median", "Lower Q3")
+  names(quant_surv$upper) <- c("Upper Q1", "Upper Median", "Upper Q3")
+  quant_surv <- lapply(quant_surv, t)
+  quant_surv <- lapply(quant_surv, as.data.frame)
+  names(quant_surv) <- NULL
+  quant_surv <- do.call(cbind, quant_surv)
+  quant_surv <- data.frame(n = surv_fit$n, quant_surv)
+  quant_surv$conf_int <- surv_fit$conf.int
+  quant_surv$conf_type <- surv_fit$conf.type
+  quant_surv$type <- surv_fit$type
+  quant_surv
+}
+census_complete <- final_models$combined_census[[1]]
+age_death <- config$survival_dataset$age_death
+event <- config$survival_dataset$event
+filter_vars <- config$datasets[[1]]$covariates
+filtered_dfs <- lapply(filter_vars, function(filter) {
+  print(filter)
+  unique_values <- unique(census_complete[[filter]])
+
+  filtered_dfs <- lapply(unique_values, function(value) {
+    print(value)
+    census_complete[census_complete[[filter]] == value, ]
+  })
+  names(filtered_dfs) <- unique_values
+  filtered_dfs
+})
+names(filtered_dfs) <- filter_vars
+filtered_dfs <- unlist(filtered_dfs, recursive = FALSE)
+
+data <- c(list(all = census_complete), filtered_dfs)
+# peek(data)
+
+table_mle <- lapply(data, describe_le, age_death, event)
+table_mle <- do.call(rbind, table_mle)
+
+kable(table_mle)
+```
+
 ### LCMM information 
 
 Include latent class model fit statistics
@@ -1877,9 +1923,9 @@ kable(table)
 ```{r lcmm model information}
 for (i in seq_len(nrow(final_models))) {
   label <- paste(final_models$oc[[i]], final_models$data_mod[[i]])
-  cat("####################################################\n")
+  cat("#############################################################\n")
   cat(label)
-  cat("\n####################################################\n")
+  cat("\n#############################################################\n")
   model <- final_models$final_model[[i]]
   summary(model)
   lcmm::postprob(model)
@@ -1906,9 +1952,9 @@ for (i in seq_len(nrow(final_models))) {
 for (i in seq_len(nrow(final_models))) {
   title <- paste(final_models$data_mod[[i]], final_models$oc[[i]])
   chi_test <- final_models$chi_test[[i]]
-  print("#################################################################")
-  print(title)
-  print("#################################################################")
+  cat("#############################################################\n")
+  cat(title)
+  cat("\n#############################################################\n")
   print(chi_test)
 }
 ```
@@ -1920,12 +1966,12 @@ for (i in seq_len(nrow(final_models))) {
 ```{r lme information}
 for (models in model_list) {
   for (model in models) {
-    print("#################################################################")
+    cat("#############################################################\n")
     print(model@call)
-    print("#################################################################")
+    cat("\n#############################################################\n")
     print(model)
-    summary(model)
-    plot(model)
+    print(summary(model))
+    print(plot(model))
   }
 }
 ```
