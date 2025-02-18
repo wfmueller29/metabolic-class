@@ -48,8 +48,8 @@ cumulative_legend_palette <- viridis(3, begin = .2, end = .7, direction = -1)
 if (!exists("params")) {
   params <- list()
   # params$input_path <- "../05_figures/output/test_local.yaml"
-  # params$input_path <- "../05_figures/output/all.yaml"
-  params$input_path <- "../05_figures/output/all_lean.yaml"
+  params$input_path <- "../05_figures/output/all.yaml"
+  # params$input_path <- "../05_figures/output/all_lean.yaml"
   # params$input_path <- "../05_figures/output/fb6.yaml"
   # params$input_path <- "../05_figures/output/external_validation.yaml"
 }
@@ -1824,7 +1824,10 @@ summarise_dataset <- function(dataset, data_name) {
 
 sum_data <- do.call(rbind, lapply(datasets, summarise_dataset, "data"))
 rownames(sum_data) <- NULL
-sum_missing <- do.call(rbind, lapply(datasets, summarise_dataset, "missing_data"))
+sum_missing <- do.call(
+  rbind,
+  lapply(datasets, summarise_dataset, "missing_data")
+)
 rownames(sum_missing) <- NULL
 sum_test <- do.call(rbind, lapply(datasets, summarise_dataset, "test_data"))
 rownames(sum_test) <- NULL
@@ -1857,7 +1860,7 @@ kable(sum_test)
 
 Include latent class model fit statistics
 
-#### Concise Table
+#### LCMM - Concise Table
 
 ```{r lcmm concise, results = 'asis'}
 table <- helphlme::compare_models(final_models$final_model)$table
@@ -1869,7 +1872,7 @@ table <- data.frame(
 kable(table)
 ```
 
-#### Verbose Table
+#### LCMM - Verbose Table
 
 ```{r lcmm model information}
 for (i in seq_len(nrow(final_models))) {
@@ -1883,7 +1886,7 @@ for (i in seq_len(nrow(final_models))) {
 }
 ```
 
-#### Model residual plots
+#### LCMM - Model residual plots
 
 ```{r plot model residuals, fig.height = 12, fig.width = 12}
 for (i in seq_len(nrow(final_models))) {
@@ -1894,6 +1897,36 @@ for (i in seq_len(nrow(final_models))) {
   cat("\n")
 
   plot(model, which = "residuals", var.time = "age_wk_ns", title = title)
+}
+```
+
+### Chi-squared information
+
+```{r chi squared information }
+for (i in seq_len(nrow(final_models))) {
+  title <- paste(final_models$data_mod[[i]], final_models$oc[[i]])
+  chi_test <- final_models$chi_test[[i]]
+  print("#################################################################")
+  print(title)
+  print("#################################################################")
+  print(chi_test)
+}
+```
+
+### LME information
+
+- Selected model - `r model_display`
+
+```{r lme information}
+for (models in model_list) {
+  for (model in models) {
+    print("#################################################################")
+    print(model@call)
+    print("#################################################################")
+    print(model)
+    summary(model)
+    plot(model)
+  }
 }
 ```
 
