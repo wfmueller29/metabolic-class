@@ -1278,134 +1278,8 @@ kap_plot_all(census, "cohort",
 )
 ```
 
-### Dataset informaton 
-
-Do this for complete dataset, training dataset, testing dataset.
-
-- Number of observations per outcome
-- Number of subjects per outcome
-- Number of sujbects excluded for completeness
-
-```{r dataset information, results = 'asis'}
-make_wave <- function(data, id, age_var) {
-  data <- data %>%
-    dplyr::group_by(!!sym(id)) %>%
-    dplyr::arrange(!!sym(age_var)) %>%
-    dplyr::mutate(wave = dplyr::row_number()) %>%
-    dplyr::mutate(dif_time = !!sym(age_var) - lag(!!sym(age_var))) %>%
-    dplyr::ungroup() %>%
-    as.data.frame()
-
-  data
-}
-
-summarise_dataset <- function(dataset, data_name) {
-  data <- dataset[[data_name]]
-  if (is.null(data)) {
-    return(NULL)
-  }
-  data_id <- dataset$data_id
-  data_mod <- dataset$data_mod
-  if (data_mod == "train_test" && data_name == "data") {
-    data_name <- "training_data"
-  }
-
-  id <- dataset$id
-  age <- paste0(dataset$age[[1]], "_ns")
-  if (data_name == "missing_data") {
-    age <- dataset$age[[1]]
-  }
-  outcome <- dataset$outcome
-  unique_id <- length(unique(data[[id]]))
-  data <- make_wave(data, id, age)
-  sum <- round(psych::describe(data[, c(outcome, age, "wave", "dif_time")]), 2)
-  rownames(sum) <- c(outcome, age, "wave", "dif_time")
-  sum <- cbind(rownames(sum), data.frame(sum, row.names = NULL))
-  names(sum)[1] <- "variables"
-  sum <- data.frame(unique_id = rep(unique_id, nrow(sum)), sum)
-  sum <- data.frame(outcome = rep(outcome, nrow(sum)), sum)
-  sum <- data.frame(data_id = rep(data_id, nrow(sum)), sum)
-  sum <- data.frame(data_name = rep(data_name, nrow(sum)), sum)
-  sum
-}
-
-
-sum_data <- do.call(rbind, lapply(datasets, summarise_dataset, "data"))
-rownames(sum_data) <- NULL
-sum_missing <- do.call(rbind, lapply(datasets, summarise_dataset, "missing_data"))
-rownames(sum_missing) <- NULL
-sum_test <- do.call(rbind, lapply(datasets, summarise_dataset, "test_data"))
-rownames(sum_test) <- NULL
-```
-
-#### Complete and Training Data
-
-```{r dataset info complete and training, results = 'asis'}
-kable(sum_data)
-```
-
-#### Missing Data from Complete and Training Data
-
-```{r dataset info missing complete and training, results = 'asis'}
-kable(sum_missing)
-```
-
-#### Testing Data
-
-```{r dataset info testing data, results = 'asis'}
-kable(sum_test)
-```
-
-### Census information
-
-- Study Demographics
-- Average Life Expectancy
-
-### LCMM information 
-
-Include latent class model fit statistics
-
-#### Concise Table
-
-```{r lcmm concise, results = 'asis'}
-table <- helphlme::compare_models(final_models$final_model)$table
-table <- data.frame(
-  outcome = final_models$oc,
-  data_type = final_models$data_mod,
-  table
-)
-kable(table)
-```
-
-#### Verbose Table
-
-```{r lcmm model information}
-for (i in seq_len(nrow(final_models))) {
-  label <- paste(final_models$oc[[i]], final_models$data_mod[[i]])
-  cat("####################################################\n")
-  cat(label)
-  cat("\n####################################################\n")
-  model <- final_models$final_model[[i]]
-  summary(model)
-  lcmm::postprob(model)
-}
-```
-
-#### Model residual plots
-
-```{r plot model residuals, fig.height = 12, fig.width = 12}
-for (i in seq_len(nrow(final_models))) {
-  title <- paste(final_models$data_mod[[i]], final_models$oc[[i]])
-  model <- final_models$final_model[[i]]
-  cat("##### ")
-  cat(title)
-  cat("\n")
-
-  plot(model, which = "residuals", var.time = "age_wk_ns", title = title)
-}
-```
-
 ## Display Figures
+
 ```{r initiate figure and table number}
 fig_no <- 1
 tab_no <- 1
@@ -1894,6 +1768,133 @@ model2_grid
 ```{r disply hist outcome panel, fig.height=12, fig.width=12}
 hist_outcome_plot_panel
 fig_no <- fig_no + 1
+```
+
+## Display Dataset/Model informaton 
+
+Do this for complete dataset, training dataset, testing dataset.
+
+- Number of observations per outcome
+- Number of subjects per outcome
+- Number of sujbects excluded for completeness
+
+```{r dataset information, results = 'asis'}
+make_wave <- function(data, id, age_var) {
+  data <- data %>%
+    dplyr::group_by(!!sym(id)) %>%
+    dplyr::arrange(!!sym(age_var)) %>%
+    dplyr::mutate(wave = dplyr::row_number()) %>%
+    dplyr::mutate(dif_time = !!sym(age_var) - lag(!!sym(age_var))) %>%
+    dplyr::ungroup() %>%
+    as.data.frame()
+
+  data
+}
+
+summarise_dataset <- function(dataset, data_name) {
+  data <- dataset[[data_name]]
+  if (is.null(data)) {
+    return(NULL)
+  }
+  data_id <- dataset$data_id
+  data_mod <- dataset$data_mod
+  if (data_mod == "train_test" && data_name == "data") {
+    data_name <- "training_data"
+  }
+
+  id <- dataset$id
+  age <- paste0(dataset$age[[1]], "_ns")
+  if (data_name == "missing_data") {
+    age <- dataset$age[[1]]
+  }
+  outcome <- dataset$outcome
+  unique_id <- length(unique(data[[id]]))
+  data <- make_wave(data, id, age)
+  sum <- round(psych::describe(data[, c(outcome, age, "wave", "dif_time")]), 2)
+  rownames(sum) <- c(outcome, age, "wave", "dif_time")
+  sum <- cbind(rownames(sum), data.frame(sum, row.names = NULL))
+  names(sum)[1] <- "variables"
+  sum <- data.frame(unique_id = rep(unique_id, nrow(sum)), sum)
+  sum <- data.frame(outcome = rep(outcome, nrow(sum)), sum)
+  sum <- data.frame(data_id = rep(data_id, nrow(sum)), sum)
+  sum <- data.frame(data_name = rep(data_name, nrow(sum)), sum)
+  sum
+}
+
+
+sum_data <- do.call(rbind, lapply(datasets, summarise_dataset, "data"))
+rownames(sum_data) <- NULL
+sum_missing <- do.call(rbind, lapply(datasets, summarise_dataset, "missing_data"))
+rownames(sum_missing) <- NULL
+sum_test <- do.call(rbind, lapply(datasets, summarise_dataset, "test_data"))
+rownames(sum_test) <- NULL
+```
+
+#### Complete and Training Data
+
+```{r dataset info complete and training, results = 'asis'}
+kable(sum_data)
+```
+
+#### Missing Data from Complete and Training Data
+
+```{r dataset info missing complete and training, results = 'asis'}
+kable(sum_missing)
+```
+
+#### Testing Data
+
+```{r dataset info testing data, results = 'asis'}
+kable(sum_test)
+```
+
+### Census information
+
+- Study Demographics
+- Average Life Expectancy
+
+### LCMM information 
+
+Include latent class model fit statistics
+
+#### Concise Table
+
+```{r lcmm concise, results = 'asis'}
+table <- helphlme::compare_models(final_models$final_model)$table
+table <- data.frame(
+  outcome = final_models$oc,
+  data_type = final_models$data_mod,
+  table
+)
+kable(table)
+```
+
+#### Verbose Table
+
+```{r lcmm model information}
+for (i in seq_len(nrow(final_models))) {
+  label <- paste(final_models$oc[[i]], final_models$data_mod[[i]])
+  cat("####################################################\n")
+  cat(label)
+  cat("\n####################################################\n")
+  model <- final_models$final_model[[i]]
+  summary(model)
+  lcmm::postprob(model)
+}
+```
+
+#### Model residual plots
+
+```{r plot model residuals, fig.height = 12, fig.width = 12}
+for (i in seq_len(nrow(final_models))) {
+  title <- paste(final_models$data_mod[[i]], final_models$oc[[i]])
+  model <- final_models$final_model[[i]]
+  cat("##### ")
+  cat(title)
+  cat("\n")
+
+  plot(model, which = "residuals", var.time = "age_wk_ns", title = title)
+}
 ```
 
 ### Figure `r as.character(fig_no)`: Histogram of log transform of outcome Variables - Complete and Training Data
