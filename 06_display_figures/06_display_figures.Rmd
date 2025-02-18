@@ -1764,13 +1764,6 @@ model2_grid <- cowplot::plot_grid(title_theme, model2_grid,
 model2_grid
 ```
 
-### Figure `r as.character(fig_no)`: Histogram of Outcome Variables - Complete and Training Data
-
-```{r disply hist outcome panel, fig.height=12, fig.width=12}
-hist_outcome_plot_panel
-fig_no <- fig_no + 1
-```
-
 ## Display Dataset/Model informaton 
 
 Do this for complete dataset, training dataset, testing dataset.
@@ -1855,7 +1848,7 @@ kable(sum_test)
 ### Census information
 
 - Study Demographics
-- Average Life Expectancy
+- Median Life Expectancy
 
 ```{r census information, results = 'asis'}
 describe_le <- function(data, age_death, event) {
@@ -1974,6 +1967,33 @@ for (models in model_list) {
     print(plot(model))
   }
 }
+```
+
+### Individual Cox Model Fits
+
+```{r individual cox model}
+rest_index <- which(final_models$data_mod == "og")
+for (i in rest_index) {
+  models <- final_models[i, "cox_models"][[1]]
+  outcome <- final_models[i, "oc"]
+  data_mod <- final_models[i, "data_mod"]
+  title <- paste(outcome, data_mod)
+  cat("#############################################################\n")
+  print(title)
+  cat("\n#############################################################\n")
+
+  for (model in models) {
+    print(model)
+    print(cox.zph(model))
+  }
+}
+```
+
+### Figure `r as.character(fig_no)`: Histogram of Outcome Variables - Complete and Training Data
+
+```{r disply hist outcome panel, fig.height=12, fig.width=12}
+hist_outcome_plot_panel
+fig_no <- fig_no + 1
 ```
 
 ### Figure `r as.character(fig_no)`: Histogram of log transform of outcome Variables - Complete and Training Data
