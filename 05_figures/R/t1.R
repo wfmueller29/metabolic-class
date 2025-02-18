@@ -98,6 +98,8 @@ create_count_columns <- function(df,
   surv_fit <- survival::survfit(data = df_main, obj ~ factor(new_class))
 
   df_surv <- survminer::surv_median(surv_fit)
+  df_surv$median <- paste0(df_surv$median,
+                           " (", df_surv$lower, ", ", df_surv$upper, ")")
   names(df_surv)[names(df_surv) == "strata"] <- "new_class"
   names(df_surv)[names(df_surv) == "median"] <- "median_surv"
   df_surv <- df_surv[, !(colnames(df_surv) == c("lower", "upper"))]
