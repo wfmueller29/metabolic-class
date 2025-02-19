@@ -1935,7 +1935,7 @@ for (i in seq_len(nrow(final_models))) {
 
 #### LCMM - Average Posterior Classifcation Probabilites
 
-```{r lcmm model information, results = 'asis'}
+```{r lcmm model average posterior probs, results = 'asis'}
 post_prob_table <- lapply(seq_len(nrow(final_models)), function(i) {
   label <- paste(final_models$oc[[i]], final_models$data_mod[[i]])
   model <- final_models$final_model[[i]]
