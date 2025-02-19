@@ -1938,9 +1938,13 @@ for (i in seq_len(nrow(final_models))) {
 ```{r lcmm model average posterior probs, results = 'asis'}
 post_prob_table <- lapply(seq_len(nrow(final_models)), function(i) {
   label <- paste(final_models$oc[[i]], final_models$data_mod[[i]])
+  outcome <- final_models$oc[[i]]
+  data_type <- final_models$data_mod[[i]]
   model <- final_models$final_model[[i]]
   post_prob <- lcmm::postprob(model)
   post_prob_table <- data.frame(
+    outcome = outcome,
+    data_type = data_type,
     label = label,
     class = row.names(post_prob[[2]]),
     t(post_prob[[1]]),
@@ -1968,6 +1972,24 @@ for (i in seq_len(nrow(final_models))) {
 
   plot(model, which = "residuals", var.time = "age_wk_ns", title = title)
 }
+```
+
+#### LCMM - Compare all possible models
+
+```{r compare all models, results = 'asis'}
+load(input$models_path)
+load(input$cf_path)
+all_models <- helphlme::compare_models(models)$table
+all_models <- data.frame(
+  model_number = all_models[, 1],
+  data = cf$data,
+  fixed_effects = cf$fixed,
+  mixture = cf$mixture,
+  all_models[, 2:length(all_models)],
+  check.names = FALSE
+)
+all_models$`Smallest Class (%)` <- round(all_models$`Smallest Class (%)`, 2)
+kable(all_models)
 ```
 
 ### Chi-squared information
