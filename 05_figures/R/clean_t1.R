@@ -4,7 +4,7 @@ source("R/t1.R")
 clean_t1 <- function(census,
                      columns,
                      age_death,
-                     event, 
+                     event,
                      chi_tests) {
   # create t1
   df_table <- create_count_columns(census,
@@ -31,6 +31,12 @@ clean_t1 <- function(census,
     cat("T1 is not NA or a data.frame \n")
     stop("T1 is not NA or a data.frame")
   }
+
+  mle_ci <- create_mle_with_ci(
+    data = census,
+    age_death = age_death,
+    event = event
+  )
 
   clean_t1
 }
@@ -81,4 +87,113 @@ create_clean_t1 <- function(df_table,
 
   # return cleaned t1
   t1
+}
+
+create_mle_with_ci <- function(data,
+                               age_death,
+                               event) {
+  browser()
+  df_main <- df
+
+  df_total <- aggregate(df_main[, "new_class"],
+    by = list(new_class = df_main[["new_class"]]),
+    FUN = length
+  )
+  names(df_total)[names(df_total) == "x"] <- "n"
+
+  df_list_count_by_class <- lapply(
+    columns,
+    count_column_by_class,
+    df = df, group = "new_class"
+  )
+
+  obj <- survival::Surv(time = df_main[[age_death]], event = df_main[[event]])
+  surv_fit <- survival::survfit(data = df_main, obj ~ factor(new_class))
+
+  df_surv <- survminer::surv_median(surv_fit)
+  df_surv$median <- paste0(
+    df_surv$median,
+    " (", df_surv$lower, ", ", df_surv$upper, ")"
+  )
+  names(df_surv)[names(df_surv) == "strata"] <- "new_class"
+  names(df_surv)[names(df_surv) == "median"] <- "median_surv"
+  df_surv <- df_surv[, !(colnames(df_surv) == c("lower", "upper"))]
+
+  df_surv$new_class <- sort(unique(df_main$new_class))
+
+  dfs <- df_list_count_by_class
+
+  dfs <- c(list(df_total), dfs)
+
+  dfs <- c(dfs, list(df_surv))
+
+  df_table <- Reduce(function(x, y) merge(x, y, by = "new_class"), dfs)
+  df_table <- data.frame(t(df_table))
+  names(df_table) <- as.character(unlist(df_table[1, ]))
+
+  # for edge case when there is one class, we need to store names and reassign
+  df_table <- df_table[-1, , drop = FALSE]
+
+  df_table[is.na(df_table)] <- 0
+  names(df_table) <- paste0("class_", names(df_table))
+  seq_cols <- seq_along(df_table)
+  df_table[, seq_cols] <- lapply(df_table[, seq_cols], as.numeric)
+  df_table <- round(df_table)
+
+  df_table
+}
+
+
+create_mle_with_ci <- function(data,
+                               age_death,
+                               event) {
+  browser()
+  df_main <- df
+
+  df_total <- aggregate(df_main[, "new_class"],
+    by = list(new_class = df_main[["new_class"]]),
+    FUN = length
+  )
+  names(df_total)[names(df_total) == "x"] <- "n"
+
+  df_list_count_by_class <- lapply(
+    columns,
+    count_column_by_class,
+    df = df, group = "new_class"
+  )
+
+  obj <- survival::Surv(time = df_main[[age_death]], event = df_main[[event]])
+  surv_fit <- survival::survfit(data = df_main, obj ~ factor(new_class))
+
+  df_surv <- survminer::surv_median(surv_fit)
+  df_surv$median <- paste0(
+    df_surv$median,
+    " (", df_surv$lower, ", ", df_surv$upper, ")"
+  )
+  names(df_surv)[names(df_surv) == "strata"] <- "new_class"
+  names(df_surv)[names(df_surv) == "median"] <- "median_surv"
+  df_surv <- df_surv[, !(colnames(df_surv) == c("lower", "upper"))]
+
+  df_surv$new_class <- sort(unique(df_main$new_class))
+
+  dfs <- df_list_count_by_class
+
+  dfs <- c(list(df_total), dfs)
+
+  dfs <- c(dfs, list(df_surv))
+
+  df_table <- Reduce(function(x, y) merge(x, y, by = "new_class"), dfs)
+  df_table <- data.frame(t(df_table))
+  names(df_table) <- as.character(unlist(df_table[1, ]))
+
+  # for edge case when there is one class, we need to store names and reassign
+  df_table <- df_table[-1, , drop = FALSE]
+
+  df_table[is.na(df_table)] <- 0
+  names(df_table) <- paste0("class_", names(df_table))
+  seq_cols <- seq_along(df_table)
+  df_table[, seq_cols] <- lapply(df_table[, seq_cols], as.numeric)
+  df_table <- round(df_table)
+
+  df_table
 }
