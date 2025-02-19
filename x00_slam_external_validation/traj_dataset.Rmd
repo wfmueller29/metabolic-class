@@ -14,30 +14,18 @@ library(kableExtra)
 library(mgcv)
 library(ggplot2)
 library(ggpubr)
+library(consoler)
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## Analysis 
-#### census data read in
-  - input file census.csv (10/30/2019)
-  - edit csv column name 'Animal_ID'
-  
-```{r slam_census, warning=FALSE, message=FALSE, echo=FALSE}
-
-# edit csv column name 'Animal_ID'
-census <- read.csv("data/census.csv") %>%
-  # census <- read.csv("/Users/shiromaej/Box/ISG Code Check/data/slam/census.csv") %>%
-  select(idno, animal = Animal_ID, tag, sex, strain, dob, cohort, taghistory)
-census$dob <- as.Date(census$dob, "%m/%d/%Y")
-census$idno <- as.character(census$idno)
-census$tag <- as.character(census$tag)
-census$taghistory <- as.character(census$taghistory)
-``` 
 
 #### body weight data read in and clean
-  - input file BW_Temp_FC_All_2019-11-16 (11/16/2019)
-  - input file NMR.csv (10/30/2019)
+  - input file Body-weight_2025-02-14.xlsx 
+    - By deault bw <= 15 and bw >= 100 were excluded
+  - input file NMR-fat_2025-02-14.xlsx
   - clean body weights (funny values) 
+    - removed duplicates
     - text to missing 
     - bw < 10 to missing 
     - bw > 100 to missing
@@ -45,92 +33,24 @@ census$taghistory <- as.character(census$taghistory)
     - bodywt_nmr
   
 ```{r slam_bodyweight, warning=FALSE, message=FALSE, echo=FALSE}
+bodywt <- readxl::read_xlsx("data/Body-weight_2025-02-14.xlsx") %>%
+  select(idno, date = date_btf, dob, cohort, sex, strain, bw)
+consoler::check_na(bodywt)
+consoler::peek(bodywt)
 
-bodywt <- read.csv("data/BW_Temp_FC_All_2021-12-23.csv") %>%
-  # bodywt <- read.csv("/Users/shiromaej/Box/ISG Code Check/data/slam/BW_Temp_FC_All_2019-11-16.csv") %>%
-  select(idno, date, bw, foodcons, temp)
-
-bodywt <- bodywt %>%
-  mutate(
-    bw = ifelse(bw == "", NA,
-      ifelse(bw == "NA", NA,
-        ifelse(bw == "wholecaedead", NA,
-          ifelse(bw == "MIA", NA,
-            ifelse(bw == "fd5-23", NA,
-              ifelse(bw == "FD", NA,
-                ifelse(bw == "f/d6/7/2018", NA,
-                  ifelse(bw == "f/d2/7/18", NA,
-                    ifelse(bw == "f/d2/27", NA,
-                      ifelse(bw == "DVR", NA,
-                        ifelse(bw == "deadd", NA,
-                          ifelse(bw == "dead5-9-18", NA,
-                            ifelse(bw == "dead5-8-18", NA,
-                              ifelse(bw == "dead5-21-18", NA,
-                                ifelse(bw == "dead5-14", NA,
-                                  ifelse(bw == "dead5-10", NA,
-                                    ifelse(bw == "dead1-30", NA,
-                                      ifelse(bw == "dead", NA,
-                                        ifelse(bw == "Dead", NA,
-                                          ifelse(bw == "DEAD", NA,
-                                            ifelse(bw == "BW", NA,
-                                              ifelse(bw == "culled5-18", NA, as.character(bw))
-                                            )
-                                          )
-                                        )
-                                      )
-                                    )
-                                  )
-                                )
-                              )
-                            )
-                          )
-                        )
-                      )
-                    )
-                  )
-                )
-              )
-            )
-          )
-        )
-      )
-    )
-  )
-bodywt$date <- as.Date(bodywt$date, "%Y-%m-%d")
-bodywt$bw <- as.numeric(as.character(bodywt$bw))
-bodywt$idno <- as.character(bodywt$idno)
 bw_na_before <- sum(is.na(bodywt$bw))
 bodywt <- bodywt %>%
   mutate(
     bw = ifelse(bw < 10, NA,
       ifelse(bw > 100, NA, bw)
     )
-  ) 
+  )
 bw_na_after <- sum(is.na(bodywt$bw))
 
 bodywt <- bodywt %>%
   filter(!is.na(bw))
 
 duplicated_bw <- sum(duplicated(bodywt[c(1, 2)]))
-bodywt <- bodywt[!duplicated(bodywt[c(1, 2)]), ]
-
-## from NMR
-bodywt_nmr <- read.csv("data/nmr_compiled_2021-11-10.csv") %>%
-  select(idno, date, bw)
-
-bodywt_nmr$date <- as.Date(bodywt_nmr$date, "%Y-%m-%d")
-bodywt_nmr$bw <- as.numeric(as.character(bodywt_nmr$bw))
-bodywt_nmr$idno <- as.character(bodywt_nmr$idno)
-bodywt_nmr <- bodywt_nmr %>%
-  mutate(
-    bw = ifelse(bw < 10, NA,
-      ifelse(bw > 100, NA, bw)
-    )
-  )
-
-bodywt <- bodywt %>%
-  full_join(bodywt_nmr)
-
 bodywt <- bodywt[!duplicated(bodywt[c(1, 2)]), ]
 
 hist(bodywt$bw)
@@ -142,44 +62,20 @@ hist(bodywt$bw)
 - bw outlier `r bw_na_after - bw_na_before`
 
 #### glucose data read in and clean 
-  - input file Glucose_Lactate.csv (10/30/2019)
+  - input file Glucose_2025-02-14.xlsx
+    - by default gluc < 20 and >= 300 excluded
   - edit csv column name 'Stress_Notes'
   - clean glucose (funny values) 
     - text to missing 
     - gluc < 20 or gluc >= 300 to missing 
     
 ```{r slam_glucose, warning=FALSE, message=FALSE, echo=FALSE}
-
 # edit csv column name 'Stress_Notes'
-glucose <- read.csv("data/gluc_lact_2021-12-01.csv") %>%
-  # glucose <- read.csv("/Users/shiromaej/Box/ISG Code Check/data/slam/Glucose_Lactate.csv") %>%
-  select(idno, date, gluc = Glucose) %>%
-  mutate(
-    dead = ifelse(gluc == "DEAD", 1, NA),
-    gluc = ifelse(gluc == "DEAD", NA,
-      ifelse(gluc == "dead", NA,
-        ifelse(gluc == "missed", NA,
-          ifelse(gluc == "missing", NA,
-            ifelse(gluc == "NOT BLED", NA,
-              ifelse(gluc == "SAC", NA,
-                ifelse(gluc == "89/148", NA,
-                  ifelse(gluc == "", NA,
-                    ifelse(gluc == "no glucose", NA,
-                      ifelse(gluc == "Not accounted for", NA,
-                        ifelse(gluc == "would not bleed", NA,
-                          ifelse(gluc == "", NA, as.character(gluc))
-                        )
-                      )
-                    )
-                  )
-                )
-              )
-            )
-          )
-        )
-      )
-    )
-  )
+glucose <- readxl::read_xlsx("data/Glucose_2025-02-14.xlsx") %>%
+  select(idno, date = date_glu, dob, cohort, sex, strain, gluc = glucose)
+consoler::check_na(glucose)
+consoler::peek(glucose)
+
 glucose$date <- as.Date(glucose$date, "%Y-%m-%d")
 glucose$gluc <- as.numeric(glucose$gluc)
 glucose$idno <- as.character(glucose$idno)
@@ -203,7 +99,7 @@ hist(glucose$gluc)
 - gluc outlier `r gluc_na_after - gluc_na_before`
 
 #### body comp data read in and clean 
-  - input file NMR.csv (10/30/2019)
+  - input file NMR-fat_2025-02-14.xlsx
   - clean nmr (funny values) 
     - text to missing 
     - fat <= 0 to missing
@@ -211,19 +107,11 @@ hist(glucose$gluc)
     - lean >= 40 to NA
 
 ```{r slam_nmr, warning=FALSE, message=FALSE, echo=FALSE}
+nmr <- readxl::read_xlsx("data/NMR-fat_2025-02-14.xlsx") %>%
+  select(idno, date = date_nmr, dob, cohort, sex, strain, fat)
+consoler::check_na(nmr)
+consoler::peek(nmr)
 
-nmr <- read.csv("data/nmr_compiled_2021-11-10.csv") %>%
-  # nmr <- read.csv("/Users/shiromaej/Box/ISG Code Check/data/slam/NMR.csv") %>%
-  select(idno, date, fat, lean, fluid)
-
-invalid_fat <- nmr$fat[is.na(as.numeric(as.character(nmr$fat)))]
-
-nmr <- nmr %>%
-  mutate(fat = ifelse(fat %in% invalid_fat, NA, fat))
-
-nmr$date <- as.Date(nmr$date, "%Y-%m-%d")
-nmr$idno <- as.character(nmr$idno)
-nmr$fat <- as.numeric(as.character(nmr$fat))
 fat_na_before <- sum(is.na(nmr$fat))
 lean_na_before <- sum(is.na(nmr$lean))
 nmr <- nmr %>%
@@ -253,49 +141,13 @@ hist(nmr$lean)
 - NA lean after outlier removal `r lean_na_after`
 - lean outlier `r lean_na_after - lean_na_before`
 
-```{r all_to_new_idno, warning=FALSE, message=FALSE, echo=FALSE}
-
-# changing old idnos to new idnos in body comp file
-fixID_history <- function(idno, census) {
-  census <- census %>%
-    separate(taghistory, c("th1", "th2", "th3", "th4", "th5", "th6"), sep = ",", extra = "warn")
-
-  idnos <- trimws(idno)
-  idnos[idnos %in% census$Animal.ID] <- census$idno[match(idnos[idnos %in% census$Animal.ID], census$Animal.ID)]
-  idnos[idnos %in% census$tag] <- census$idno[match(idnos[idnos %in% census$tag], census$tag)]
-  idnos[idnos %in% census$th1] <- census$idno[match(idnos[idnos %in% census$th1], census$th1)]
-  idnos[idnos %in% census$th2] <- census$idno[match(idnos[idnos %in% census$th2], census$th2)]
-  idnos[idnos %in% census$th3] <- census$idno[match(idnos[idnos %in% census$th3], census$th3)]
-  idnos[idnos %in% census$th4] <- census$idno[match(idnos[idnos %in% census$th4], census$th4)]
-  idnos[idnos %in% census$th5] <- census$idno[match(idnos[idnos %in% census$th5], census$th5)]
-  idnos[idnos %in% census$th6] <- census$idno[match(idnos[idnos %in% census$th6], census$th6)]
-
-  return(idnos)
-}
-
-# pull tag history if needed
-nmr$idno <- fixID_history(nmr$idno, census)
-```
-
 #### survival data read in and clean 
-  - input file Survival.csv (10/30/2019)
-  - clean survival (funny values) 
-    - text to missing 
-    - recode old to new idnos 
+  - input file Survival_2025-02-14.csv
     
 ```{r slam_survival, warning=FALSE, message=FALSE, echo=FALSE}
-
-surv <- read.csv("data/survival_2021-12-17.csv") %>%
-  mutate(age_wk_death = age_wk) %>%
-  select(-age_wk)
-# surv <- read.csv("/Users/shiromaej/Box/ISG Code Check/data/slam/Survival.csv")
-surv$tod <- as.Date(surv$tod, "%m/%d/%y")
-surv$tag <- as.character(surv$tag)
-surv$cod <- as.character((surv$cod))
-surv <- surv %>%
-  mutate(tag = ifelse(tag == "R", "179060",
-    ifelse(tag == "L", "179217", tag)
-  ))
+surv <- read.csv("data/Survival_2025-02-14.csv")
+peek(surv)
+check_na(surv)
 ```
 
 #### merging all datasets into a main file and clean
@@ -306,7 +158,6 @@ surv <- surv %>%
   - removal of timepoints before dob or mouse facility arrival date
   
 ```{r slam_main_all, warning=FALSE, message=FALSE, echo=FALSE}
-
 main_all <- glucose %>%
   full_join(bodywt, by = c("idno", "date")) %>%
   full_join(nmr, by = c("idno", "date")) %>%
@@ -351,7 +202,6 @@ main_all$age_wk <- as.numeric(main_all$age_wk)
 #### restriction to cohorts 1 to 10
 
 ```{r slam_ratio, warning=FALSE, message=FALSE, echo=FALSE}
-
 main_all2 <- main_all %>% filter(cohort >= 1 & cohort <= 10)
 
 # getting unique idnos
@@ -380,7 +230,6 @@ slam_main_all <- main_all2
 #### age characteristics
 
 ```{r slam_age_desc, warning=FALSE, message=FALSE, echo=FALSE}
-
 main_all2_desc <- main_all2 %>%
   group_by(idno, sex, strain) %>%
   summarise(
@@ -403,7 +252,6 @@ main_all2_desc2 <- bind_rows(main_all2_desc2_all, main_all2_desc_sex, main_all2_
 ```
 
 ```{r slam_age_desc_kable, warning=FALSE, message=FALSE, echo=FALSE}
-
 kable(main_all2_desc2, caption = "Age Characteristics", row.names = FALSE, align = "c") %>%
   kable_styling(bootstrap_options = "striped", full_width = FALSE)
 ```
@@ -423,7 +271,6 @@ kable(main_all2_desc2, caption = "Age Characteristics", row.names = FALSE, align
 *** 
 
 ```{r slam_censor_df, warning=FALSE, message=FALSE, echo=FALSE}
-
 census_c16_death <- main_all2 %>%
   select(idno, tag, dob) %>%
   distinct() %>%
@@ -488,7 +335,6 @@ kable(codtable, caption = "Cause of Death", col.names = c("Cause of Death", "Fre
 #### death frequency 
 
 ```{r death_cat, warning=FALSE, message=FALSE, echo=FALSE} 
-
 kable(dctable1, caption = "Death Frequency", col.names = c("Dead = 1", "Frequency"), row.names = FALSE, align = "c") %>%
   kable_styling(bootstrap_options = "striped", full_width = FALSE)
 ```
@@ -498,7 +344,6 @@ kable(dctable1, caption = "Death Frequency", col.names = c("Dead = 1", "Frequenc
 #### follow up time 
 
 ```{r followup_cat, warning=FALSE, message=FALSE, echo=FALSE} 
-
 kable(fu_time_desc, caption = "Follow Up Time", row.names = FALSE, align = "c") %>%
   kable_styling(bootstrap_options = "striped", full_width = FALSE)
 ```
@@ -508,7 +353,6 @@ kable(fu_time_desc, caption = "Follow Up Time", row.names = FALSE, align = "c") 
 #### life expectancy 
 
 ```{r slam_life_expectancy, warning=FALSE, message=FALSE, echo=FALSE, cache=FALSE}
-
 # function to create life expectancy for different groups
 create_LE <- function(data, criteria, filter) {
   life_exp <- data %>%
@@ -549,7 +393,6 @@ slam_life_exp <- life_exp
 ```
 
 ```{r slam_life_exp_kable, warning=FALSE, message=FALSE, echo=FALSE, cache=FALSE}
-
 kable(life_exp2[, c(1:6)], caption = "Life Expectancy", col.names = c("Group", "Total", "Dead", "Life Expectancy <br> (weeks)", "iqr", "sd"), row.names = TRUE, align = "c", escape = FALSE) %>%
   kable_styling(bootstrap_options = "striped", full_width = FALSE, position = "left")
 ```
@@ -561,7 +404,6 @@ kable(life_exp2[, c(1:6)], caption = "Life Expectancy", col.names = c("Group", "
 - "per_fu_wk" and "per_le_wk" in census_c16_death
 
 ```{r percent_le, warning=FALSE, message=FALSE, echo=FALSE, cache=FALSE}
-
 census_c16_death <- census_c16_death %>%
   mutate(
     per_fu_age_wk =
@@ -600,7 +442,6 @@ slam_main_all <- main_all2
 #### frequencies of measures 
 
 ```{r slam_follow_up, warning=FALSE, message=FALSE, echo=FALSE, include=TRUE}
-
 n_asmt <- main_all2 %>%
   group_by(idno, sex) %>%
   summarise_all(funs(
@@ -717,7 +558,6 @@ slam_fat_asmt <- fat_asmt
 ```
 
 ```{r asmt_kable, warning=FALSE, message=FALSE, echo=FALSE, include=TRUE}
-
 kable(all_asmt, caption = "Assessment Frequencies", row.names = FALSE, align = "c") %>%
   kable_styling(bootstrap_options = "striped", full_width = FALSE) %>%
   collapse_rows(columns = 1, valign = "middle") %>%
@@ -727,7 +567,6 @@ kable(all_asmt, caption = "Assessment Frequencies", row.names = FALSE, align = "
 #### age at peak indices value creation 
 
 ```{r slam_life_peaks, warning=FALSE, message=FALSE, echo=FALSE, cache=FALSE}
-
 scaling <- round(0.05 * life_exp$life_exp_wk)
 scaling_f <- round(0.05 * life_exp_f$life_exp_wk)
 scaling_m <- round(0.05 * life_exp_m$life_exp_wk)
@@ -739,7 +578,6 @@ slam_scaling_m <- scaling_m
 
 # functions to create peaks for different groups
 lifespan_peaks <- function(metric, data, filter, mle, scale) {
-
   # set boundary conditions for peak to lowest and highest life expectancy timepoints
   # low_bound <- 0.25*mle
   # high_bound <- 1.25*mle
@@ -855,7 +693,6 @@ lifespan_peaks <- function(metric, data, filter, mle, scale) {
 
 
   if (!is.na(scale)) {
-
     # find rate of change prepeak using linear model
     prepeak_data <- fit2 %>%
       filter(per_age_wk <= peak$per_age_wk)
@@ -908,7 +745,6 @@ lifespan_peaks <- function(metric, data, filter, mle, scale) {
     all_peaks <- list(peak, fit_diff_min, fit_diff_max, high_bound_peak, low_bound_peak, prepeak_rate, postpeak_rate, pre_pval, post_pval)
     names(all_peaks) <- c("all", "min", "max", "highbound", "lowbound", "prerate", "postrate", "pre_pval", "post_pval")
   } else {
-
     # putting all outputs into list
     all_peaks <- list(peak, fit_diff_min, fit_diff_max, high_bound_peak, low_bound_peak)
     names(all_peaks) <- c("all", "min", "max", "highbound", "lowbound")
@@ -966,17 +802,21 @@ carry_forward <- function(index, cat) {
     group_by(idno, sex) %>%
     filter(!is.na(!!index)) %>%
     # get all previous values to carry forward if needed
-    filter (
-      dplyr::case_when(sex == "F" ~ age_wk < ((!!cat / 100) * life_exp_f$life_exp_wk + 1),
-      sex == "M" ~ age_wk < ((!!cat / 100) * life_exp_m$life_exp_wk + 1))
+    filter(
+      dplyr::case_when(
+        sex == "F" ~ age_wk < ((!!cat / 100) * life_exp_f$life_exp_wk + 1),
+        sex == "M" ~ age_wk < ((!!cat / 100) * life_exp_m$life_exp_wk + 1)
+      )
     ) %>%
     mutate(!!index_cat := !!index) %>%
     # choose closest value
     filter(per_age_wk == max(per_age_wk)) %>%
     # filter for those alive at timepoint
     filter(
-       dplyr::case_when(sex == "F" ~ le_wk >= ((!!cat / 100) * life_exp_f$life_exp_wk),
-       sex == "M" ~ le_wk >= ((!!cat / 100) * life_exp_m$life_exp_wk))
+      dplyr::case_when(
+        sex == "F" ~ le_wk >= ((!!cat / 100) * life_exp_f$life_exp_wk),
+        sex == "M" ~ le_wk >= ((!!cat / 100) * life_exp_m$life_exp_wk)
+      )
     ) %>%
     # mean of data at same timepoint
     summarise(
@@ -1024,56 +864,56 @@ main_cat2 <- carry_forward(quote(age_wk), quote(90))
 
 ```{r slam_main_all3, warning=FALSE, message=FALSE, echo=FALSE, eval=TRUE}
 main_all3 <- main_all2 %>%
-    left_join(census_c16_death) %>%
-    left_join(main_cat2) %>%
-    mutate(
-        whendead =
+  left_join(census_c16_death) %>%
+  left_join(main_cat2) %>%
+  mutate(
+    whendead =
 
-        # if(sex == "F")
-        # as.factor(
-        #           ifelse(per_le_wk >= 0*life_exp_f$life_exp_wk & per_le_wk < 0.375*life_exp_f$life_exp_wk, 25,
-        #           ifelse(per_le_wk >= 0.375*life_exp_f$life_exp_wk & per_le_wk < 0.625*life_exp_f$life_exp_wk, 50,
-        #           ifelse(per_le_wk >= 0.625*life_exp_f$life_exp_wk & per_le_wk < 0.875*life_exp_f$life_exp_wk, 75,
-        #           ifelse(per_le_wk >= 0.875*life_exp_f$life_exp_wk, 90, NA)))))
-        # else
-        # as.factor(
-        #           ifelse(per_le_wk >= 0*life_exp_m$life_exp_wk & per_le_wk < 0.375*life_exp_m$life_exp_wk, 25,
-        #           ifelse(per_le_wk >= 0.375*life_exp_m$life_exp_wk & per_le_wk < 0.625*life_exp_m$life_exp_wk, 50,
-        #           ifelse(per_le_wk >= 0.625*life_exp_m$life_exp_wk & per_le_wk < 0.875*life_exp_m$life_exp_wk, 75,
-        #           ifelse(per_le_wk >= 0.875*life_exp_m$life_exp_wk, 90, NA))))),
-            as.factor(
-                ifelse(per_le_wk >= 0 & per_le_wk < 37.5, 25,
-                    ifelse(per_le_wk >= 37.5 & per_le_wk < 62.5, 50,
-                        ifelse(per_le_wk >= 62.5 & per_le_wk < 87.5, 75,
-                            ifelse(per_le_wk >= 87.5, 90, NA)
-                        )
-                    )
-                )
-            ),
-        whenvisit =
+    # if(sex == "F")
+    # as.factor(
+    #           ifelse(per_le_wk >= 0*life_exp_f$life_exp_wk & per_le_wk < 0.375*life_exp_f$life_exp_wk, 25,
+    #           ifelse(per_le_wk >= 0.375*life_exp_f$life_exp_wk & per_le_wk < 0.625*life_exp_f$life_exp_wk, 50,
+    #           ifelse(per_le_wk >= 0.625*life_exp_f$life_exp_wk & per_le_wk < 0.875*life_exp_f$life_exp_wk, 75,
+    #           ifelse(per_le_wk >= 0.875*life_exp_f$life_exp_wk, 90, NA)))))
+    # else
+    # as.factor(
+    #           ifelse(per_le_wk >= 0*life_exp_m$life_exp_wk & per_le_wk < 0.375*life_exp_m$life_exp_wk, 25,
+    #           ifelse(per_le_wk >= 0.375*life_exp_m$life_exp_wk & per_le_wk < 0.625*life_exp_m$life_exp_wk, 50,
+    #           ifelse(per_le_wk >= 0.625*life_exp_m$life_exp_wk & per_le_wk < 0.875*life_exp_m$life_exp_wk, 75,
+    #           ifelse(per_le_wk >= 0.875*life_exp_m$life_exp_wk, 90, NA))))),
+      as.factor(
+        ifelse(per_le_wk >= 0 & per_le_wk < 37.5, 25,
+          ifelse(per_le_wk >= 37.5 & per_le_wk < 62.5, 50,
+            ifelse(per_le_wk >= 62.5 & per_le_wk < 87.5, 75,
+              ifelse(per_le_wk >= 87.5, 90, NA)
+            )
+          )
+        )
+      ),
+    whenvisit =
 
-        # if(sex == "F")
-        # as.factor(
-        #           ifelse(per_age_wk >= 0*life_exp_f$life_exp_wk & per_age_wk < 0.375*life_exp_f$life_exp_wk, 25,
-        #           ifelse(per_age_wk >= 0.375*life_exp_f$life_exp_wk & per_age_wk < 0.625*life_exp_f$life_exp_wk, 50,
-        #           ifelse(per_age_wk >= 0.625*life_exp_f$life_exp_wk & per_age_wk < 0.875*life_exp_f$life_exp_wk, 75,
-        #           ifelse(per_age_wk >= 0.875*life_exp_f$life_exp_wk, 90, NA)))))
-        # else
-        # as.factor(
-        #           ifelse(per_age_wk >= 0*life_exp_m$life_exp_wk & per_age_wk < 0.375*life_exp_m$life_exp_wk, 25,
-        #           ifelse(per_age_wk >= 0.375*life_exp_m$life_exp_wk & per_age_wk < 0.625*life_exp_m$life_exp_wk, 50,
-        #           ifelse(per_age_wk >= 0.625*life_exp_m$life_exp_wk & per_age_wk < 0.875*life_exp_m$life_exp_wk, 75,
-        #           ifelse(per_age_wk >= 0.875*life_exp_m$life_exp_wk, 90, NA))))),
-            as.factor(
-                ifelse(per_age_wk >= 0 & per_age_wk < 37.5, 25,
-                    ifelse(per_age_wk >= 37.5 & per_age_wk < 62.5, 50,
-                        ifelse(per_age_wk >= 62.5 & per_age_wk < 87.5, 75,
-                            ifelse(per_age_wk >= 87.5, 90, NA)
-                        )
-                    )
-                )
-            ),
-    )
+    # if(sex == "F")
+    # as.factor(
+    #           ifelse(per_age_wk >= 0*life_exp_f$life_exp_wk & per_age_wk < 0.375*life_exp_f$life_exp_wk, 25,
+    #           ifelse(per_age_wk >= 0.375*life_exp_f$life_exp_wk & per_age_wk < 0.625*life_exp_f$life_exp_wk, 50,
+    #           ifelse(per_age_wk >= 0.625*life_exp_f$life_exp_wk & per_age_wk < 0.875*life_exp_f$life_exp_wk, 75,
+    #           ifelse(per_age_wk >= 0.875*life_exp_f$life_exp_wk, 90, NA)))))
+    # else
+    # as.factor(
+    #           ifelse(per_age_wk >= 0*life_exp_m$life_exp_wk & per_age_wk < 0.375*life_exp_m$life_exp_wk, 25,
+    #           ifelse(per_age_wk >= 0.375*life_exp_m$life_exp_wk & per_age_wk < 0.625*life_exp_m$life_exp_wk, 50,
+    #           ifelse(per_age_wk >= 0.625*life_exp_m$life_exp_wk & per_age_wk < 0.875*life_exp_m$life_exp_wk, 75,
+    #           ifelse(per_age_wk >= 0.875*life_exp_m$life_exp_wk, 90, NA))))),
+      as.factor(
+        ifelse(per_age_wk >= 0 & per_age_wk < 37.5, 25,
+          ifelse(per_age_wk >= 37.5 & per_age_wk < 62.5, 50,
+            ifelse(per_age_wk >= 62.5 & per_age_wk < 87.5, 75,
+              ifelse(per_age_wk >= 87.5, 90, NA)
+            )
+          )
+        )
+      ),
+  )
 ```
 
 ## Results 
@@ -1086,57 +926,57 @@ main_all3 <- main_all2 %>%
 surv_color <- c("green", "yellow", "red", "purple", "gray")
 
 fcn_plotdist_smooth <- function(metric, x, y, by, xlabel, ylabel, title, peak1, peak2) {
-    # subsetting
-    metric2 <- paste0("!is.na(", metric, ")")
-    metric3 <- paste0("df$", metric)
-    main_all3 <- main_all3 %>%
-        filter(per_age_wk < as.numeric(all_asmt$le_max[1]))
+  # subsetting
+  metric2 <- paste0("!is.na(", metric, ")")
+  metric3 <- paste0("df$", metric)
+  main_all3 <- main_all3 %>%
+    filter(per_age_wk < as.numeric(all_asmt$le_max[1]))
 
-    df <- base::subset(main_all3, eval(parse(text = metric2)))
-    sub <- paste0(metric, " > quantile(", metric, ", 0.025) & ", metric, " < quantile(", metric, ", 0.975)")
+  df <- base::subset(main_all3, eval(parse(text = metric2)))
+  sub <- paste0(metric, " > quantile(", metric, ", 0.025) & ", metric, " < quantile(", metric, ", 0.975)")
 
-    z <- Inf
+  z <- Inf
 
-    ggplot(subset(df, eval(parse(text = sub))), aes_string(x = x, y = y, colour = by)) +
+  ggplot(subset(df, eval(parse(text = sub))), aes_string(x = x, y = y, colour = by)) +
 
-        # dots
-        geom_point(alpha = 0.5, position = "jitter", size = 1, aes_string(colour = by), shape = 1) +
+    # dots
+    geom_point(alpha = 0.5, position = "jitter", size = 1, aes_string(colour = by), shape = 1) +
 
-        # trendlines
-        geom_smooth(aes_string(group = by, linetype = "solid"), linetype = "solid", color = "black", size = 1.8) +
-        geom_smooth(aes(linetype = "solid")) +
+    # trendlines
+    geom_smooth(aes_string(group = by, linetype = "solid"), linetype = "solid", color = "black", size = 1.8) +
+    geom_smooth(aes(linetype = "solid")) +
 
-        # peaks
-        geom_point(aes(x = peak1$all$per_age_wk, y = peak1$all$fit), size = 2, color = "black", fill = "white", alpha = 0.7, shape = 23, stroke = 2) +
-        geom_point(aes(x = peak2$all$per_age_wk, y = peak2$all$fit), size = 2, color = "black", fill = "white", alpha = 0.7, shape = 23, stroke = 2) +
+    # peaks
+    geom_point(aes(x = peak1$all$per_age_wk, y = peak1$all$fit), size = 2, color = "black", fill = "white", alpha = 0.7, shape = 23, stroke = 2) +
+    geom_point(aes(x = peak2$all$per_age_wk, y = peak2$all$fit), size = 2, color = "black", fill = "white", alpha = 0.7, shape = 23, stroke = 2) +
 
-        # labels
-        xlab(xlabel) +
-        ylab(ylabel) +
-        scale_linetype_manual(labels = c("All"), name = "", values = c("solid", "dashed", "solid"), guide = FALSE)
+    # labels
+    xlab(xlabel) +
+    ylab(ylabel) +
+    scale_linetype_manual(labels = c("All"), name = "", values = c("solid", "dashed", "solid"), guide = FALSE)
 }
 
 fcn_plotdist_lm <- function(metric, x, y, by, xlabel, ylabel, title) {
-    # subsetting
-    metric2 <- paste0("!is.na(", metric, ")")
-    metric3 <- paste0("df$", metric)
-    main_all3 <- main_all3 %>%
-        filter(as.numeric(whenvisit) <= as.numeric(whendead)) %>%
-        filter(as.numeric(whendead) > 0)
-    df <- base::subset(main_all3, eval(parse(text = metric2)))
-    sub <- paste0(metric, " > quantile(", metric, ", 0.025) & ", metric, " < quantile(", metric, ", 0.975)")
-    z <- Inf
+  # subsetting
+  metric2 <- paste0("!is.na(", metric, ")")
+  metric3 <- paste0("df$", metric)
+  main_all3 <- main_all3 %>%
+    filter(as.numeric(whenvisit) <= as.numeric(whendead)) %>%
+    filter(as.numeric(whendead) > 0)
+  df <- base::subset(main_all3, eval(parse(text = metric2)))
+  sub <- paste0(metric, " > quantile(", metric, ", 0.025) & ", metric, " < quantile(", metric, ", 0.975)")
+  z <- Inf
 
-    ggplot(subset(df, eval(parse(text = sub))), aes_string(x = x, y = y, colour = by)) +
-        # trendlines
-        geom_smooth(aes_string(group = by, linetype = "solid"), method = "loess", linetype = "solid", color = "black", size = 1.8, se = FALSE) +
-        geom_smooth(aes(linetype = "solid"), method = "loess", size = 1, se = FALSE) +
+  ggplot(subset(df, eval(parse(text = sub))), aes_string(x = x, y = y, colour = by)) +
+    # trendlines
+    geom_smooth(aes_string(group = by, linetype = "solid"), method = "loess", linetype = "solid", color = "black", size = 1.8, se = FALSE) +
+    geom_smooth(aes(linetype = "solid"), method = "loess", size = 1, se = FALSE) +
 
-        # labels
-        xlab(xlabel) +
-        ylab(ylabel) +
-        scale_linetype_manual(labels = c("All"), name = "", values = c("solid", "dashed", "solid"), guide = FALSE) +
-        scale_color_manual(values = surv_color, name = "Survival\n(% Life Expectancy)")
+    # labels
+    xlab(xlabel) +
+    ylab(ylabel) +
+    scale_linetype_manual(labels = c("All"), name = "", values = c("solid", "dashed", "solid"), guide = FALSE) +
+    scale_color_manual(values = surv_color, name = "Survival\n(% Life Expectancy)")
 }
 ``` 
 
@@ -1145,76 +985,76 @@ cbPalette_dot <- c("#f8766d", "#00b0f6", "black")
 
 # sex
 slam_fig_i1 <- fcn_plotdist_smooth(
-    metric = "gluc", x = "per_age_wk", xlabel = "Percent Life Expectancy",
-    y = "gluc", ylabel = "Glucose (mg/dL)", by = "sex", peak1 = gluc_peak_male, peak2 = gluc_peak_female
+  metric = "gluc", x = "per_age_wk", xlabel = "Percent Life Expectancy",
+  y = "gluc", ylabel = "Glucose (mg/dL)", by = "sex", peak1 = gluc_peak_male, peak2 = gluc_peak_female
 ) +
-    scale_color_manual(labels = c("Female", "Male"), name = "Sex", values = cbPalette_dot)
+  scale_color_manual(labels = c("Female", "Male"), name = "Sex", values = cbPalette_dot)
 slam_fig_i2 <- fcn_plotdist_smooth(
-    metric = "bw", x = "per_age_wk", xlabel = "Percent Life Expectancy",
-    y = "bw", ylabel = "Body Weight (g)", by = "sex", peak1 = bw_peak_male, peak2 = bw_peak_female
+  metric = "bw", x = "per_age_wk", xlabel = "Percent Life Expectancy",
+  y = "bw", ylabel = "Body Weight (g)", by = "sex", peak1 = bw_peak_male, peak2 = bw_peak_female
 ) +
-    scale_color_manual(labels = c("Female", "Male"), name = "Sex", values = cbPalette_dot)
+  scale_color_manual(labels = c("Female", "Male"), name = "Sex", values = cbPalette_dot)
 slam_fig_i3 <- fcn_plotdist_smooth(
-    metric = "fat", x = "per_age_wk", xlabel = "Percent Life Expectancy",
-    y = "fat", ylabel = "Body Fat (g)", by = "sex", peak1 = fat_peak_male, peak2 = fat_peak_female
+  metric = "fat", x = "per_age_wk", xlabel = "Percent Life Expectancy",
+  y = "fat", ylabel = "Body Fat (g)", by = "sex", peak1 = fat_peak_male, peak2 = fat_peak_female
 ) +
-    scale_color_manual(labels = c("Female", "Male"), name = "Sex", values = cbPalette_dot)
+  scale_color_manual(labels = c("Female", "Male"), name = "Sex", values = cbPalette_dot)
 
 # strain
 slam_fig_j1 <- fcn_plotdist_smooth(
-    metric = "gluc", x = "per_age_wk", xlabel = "Percent Life Expectancy",
-    y = "gluc", ylabel = "Glucose (mg/dL)", by = "strain", peak1 = gluc_peak_HET3, peak2 = gluc_peak_B6
+  metric = "gluc", x = "per_age_wk", xlabel = "Percent Life Expectancy",
+  y = "gluc", ylabel = "Glucose (mg/dL)", by = "strain", peak1 = gluc_peak_HET3, peak2 = gluc_peak_B6
 ) +
-    scale_color_manual(labels = c("B6", "HET3"), name = "Strain", values = cbPalette_dot)
+  scale_color_manual(labels = c("B6", "HET3"), name = "Strain", values = cbPalette_dot)
 slam_fig_j2 <- fcn_plotdist_smooth(
-    metric = "bw", x = "per_age_wk", xlabel = "Percent Life Expectancy",
-    y = "bw", ylabel = "Body Weight (g)", by = "strain", peak1 = bw_peak_HET3, peak2 = bw_peak_B6
+  metric = "bw", x = "per_age_wk", xlabel = "Percent Life Expectancy",
+  y = "bw", ylabel = "Body Weight (g)", by = "strain", peak1 = bw_peak_HET3, peak2 = bw_peak_B6
 ) +
-    scale_color_manual(labels = c("B6", "HET3"), name = "Strain", values = cbPalette_dot)
+  scale_color_manual(labels = c("B6", "HET3"), name = "Strain", values = cbPalette_dot)
 slam_fig_j3 <- fcn_plotdist_smooth(
-    metric = "fat", x = "per_age_wk", xlabel = "Percent Life Expectancy",
-    y = "fat", ylabel = "Body Fat (g)", by = "strain", peak1 = fat_peak_HET3, peak2 = fat_peak_B6
+  metric = "fat", x = "per_age_wk", xlabel = "Percent Life Expectancy",
+  y = "fat", ylabel = "Body Fat (g)", by = "strain", peak1 = fat_peak_HET3, peak2 = fat_peak_B6
 ) +
-    scale_color_manual(labels = c("B6", "HET3"), name = "Strain", values = cbPalette_dot)
+  scale_color_manual(labels = c("B6", "HET3"), name = "Strain", values = cbPalette_dot)
 
 # death
 slam_fig_d1 <- fcn_plotdist_lm(
-    metric = "gluc", x = "per_age_wk", xlabel = "Percent Life Expectancy",
-    y = "gluc", ylabel = "Glucose (mg/dL)", by = "whendead"
+  metric = "gluc", x = "per_age_wk", xlabel = "Percent Life Expectancy",
+  y = "gluc", ylabel = "Glucose (mg/dL)", by = "whendead"
 )
 slam_fig_d2 <- fcn_plotdist_lm(
-    metric = "bw", x = "per_age_wk", xlabel = "Percent Life Expectancy",
-    y = "bw", ylabel = "Body Weight (g)", by = "whendead"
+  metric = "bw", x = "per_age_wk", xlabel = "Percent Life Expectancy",
+  y = "bw", ylabel = "Body Weight (g)", by = "whendead"
 )
 slam_fig_d3 <- fcn_plotdist_lm(
-    metric = "fat", x = "per_age_wk", xlabel = "Percent Life Expectancy",
-    y = "fat", ylabel = "Body Fat (g)", by = "whendead"
+  metric = "fat", x = "per_age_wk", xlabel = "Percent Life Expectancy",
+  y = "fat", ylabel = "Body Fat (g)", by = "whendead"
 )
 
 #
 slam_fig_i13 <- ggarrange(slam_fig_i1, slam_fig_i2, slam_fig_i3,
-    ncol = 2, nrow = 2,
-    common.legend = TRUE,
-    legend = "right"
+  ncol = 2, nrow = 2,
+  common.legend = TRUE,
+  legend = "right"
 )
 
 slam_fig_j13 <- ggarrange(slam_fig_j1, slam_fig_j2, slam_fig_j3,
-    ncol = 2, nrow = 2,
-    common.legend = TRUE,
-    legend = "right"
+  ncol = 2, nrow = 2,
+  common.legend = TRUE,
+  legend = "right"
 )
 
 slam_fig_d13 <- ggarrange(slam_fig_d1, slam_fig_d2, slam_fig_d3,
-    ncol = 2, nrow = 2,
-    common.legend = TRUE,
-    legend = "right"
+  ncol = 2, nrow = 2,
+  common.legend = TRUE,
+  legend = "right"
 )
 ``` 
 
 ```{r slam_sex_dist_fig, warning=FALSE, message=FALSE, echo=FALSE, eval=TRUE}
 annotate_figure(slam_fig_i13,
-    top = text_grob("Trends in Metabolic Indices over the Lifespan by Sex", size = 12, hjust = 0, x = unit(0, "lines")),
-    bottom = text_grob("Note: Diamonds represent age at peak index value", size = 9, hjust = 0, x = unit(0, "lines"))
+  top = text_grob("Trends in Metabolic Indices over the Lifespan by Sex", size = 12, hjust = 0, x = unit(0, "lines")),
+  bottom = text_grob("Note: Diamonds represent age at peak index value", size = 9, hjust = 0, x = unit(0, "lines"))
 )
 ``` 
  
@@ -1222,8 +1062,8 @@ annotate_figure(slam_fig_i13,
 
 ```{r slam_strain_dist_fig, warning=FALSE, message=FALSE, echo=FALSE}
 annotate_figure(slam_fig_j13,
-    top = text_grob("Trends in Metabolic Indices over the Lifespan by Strain", size = 12, hjust = 0, x = unit(0, "lines")),
-    bottom = text_grob("Note: Diamonds represent age at peak index value", size = 9, hjust = 0, x = unit(0, "lines"))
+  top = text_grob("Trends in Metabolic Indices over the Lifespan by Strain", size = 12, hjust = 0, x = unit(0, "lines")),
+  bottom = text_grob("Note: Diamonds represent age at peak index value", size = 9, hjust = 0, x = unit(0, "lines"))
 )
 ``` 
 
@@ -1255,25 +1095,25 @@ female_fat_peak_ci <- paste0(format(round(fat_peak_female$all$per_age_wk, 2), ns
 
 # combine all indices
 roc_gluc <- c(
-    "gluc", gluc_peak_ci, female_gluc_peak_ci, male_gluc_peak_ci,
-    gluc_peak$prerate, gluc_peak_female$prerate, gluc_peak_male$prerate,
-    gluc_peak$postrate, gluc_peak_female$postrate, gluc_peak_male$postrate
+  "gluc", gluc_peak_ci, female_gluc_peak_ci, male_gluc_peak_ci,
+  gluc_peak$prerate, gluc_peak_female$prerate, gluc_peak_male$prerate,
+  gluc_peak$postrate, gluc_peak_female$postrate, gluc_peak_male$postrate
 )
 
 roc_bw <- c(
-    "bw", bw_peak_ci, female_bw_peak_ci, male_bw_peak_ci,
-    bw_peak$prerate, bw_peak_female$prerate, bw_peak_male$prerate,
-    bw_peak$postrate, bw_peak_female$postrate, bw_peak_male$postrate
+  "bw", bw_peak_ci, female_bw_peak_ci, male_bw_peak_ci,
+  bw_peak$prerate, bw_peak_female$prerate, bw_peak_male$prerate,
+  bw_peak$postrate, bw_peak_female$postrate, bw_peak_male$postrate
 )
 
 roc_fat <- c(
-    "fat", fat_peak_ci, female_fat_peak_ci, male_fat_peak_ci,
-    fat_peak$prerate, fat_peak_female$prerate, fat_peak_male$prerate,
-    fat_peak$postrate, fat_peak_female$postrate, fat_peak_male$postrate
+  "fat", fat_peak_ci, female_fat_peak_ci, male_fat_peak_ci,
+  fat_peak$prerate, fat_peak_female$prerate, fat_peak_male$prerate,
+  fat_peak$postrate, fat_peak_female$postrate, fat_peak_male$postrate
 )
 
 phases <- rbind(roc_gluc, roc_bw, roc_fat) %>%
-    as.data.frame()
+  as.data.frame()
 
 colnames(phases) <- c("index", "peak_all", "peak_female", "peak_male", "all", "female", "male", "all2", "female2", "male2")
 ``` 
@@ -1281,17 +1121,17 @@ colnames(phases) <- c("index", "peak_all", "peak_female", "peak_male", "all", "f
 ```{r slam_phase_formatting, warning=FALSE, message=FALSE, echo=FALSE}
 # html output formatting
 phases2 <- phases %>%
-    mutate(
-        peak_all = noquote((gsub("\\(", "<br>(", peak_all))),
-        peak_female = noquote((gsub("\\(", "<br>(", peak_female))),
-        peak_male = noquote((gsub("\\(", "<br>(", peak_male))),
-        all = noquote((gsub("\\(", "%<br>(", all))),
-        female = noquote((gsub("\\(", "%<br>(", female))),
-        male = noquote((gsub("\\(", "%<br>(", male))),
-        all2 = noquote((gsub("\\(", "%<br>(", all2))),
-        female2 = noquote((gsub("\\(", "%<br>(", female2))),
-        male2 = noquote((gsub("\\(", "%<br>(", male2)))
-    )
+  mutate(
+    peak_all = noquote((gsub("\\(", "<br>(", peak_all))),
+    peak_female = noquote((gsub("\\(", "<br>(", peak_female))),
+    peak_male = noquote((gsub("\\(", "<br>(", peak_male))),
+    all = noquote((gsub("\\(", "%<br>(", all))),
+    female = noquote((gsub("\\(", "%<br>(", female))),
+    male = noquote((gsub("\\(", "%<br>(", male))),
+    all2 = noquote((gsub("\\(", "%<br>(", all2))),
+    female2 = noquote((gsub("\\(", "%<br>(", female2))),
+    male2 = noquote((gsub("\\(", "%<br>(", male2)))
+  )
 
 slam_phases <- phases2
 ```
@@ -1301,21 +1141,21 @@ slam_phases <- phases2
  
 ```{r slam_phase_table_prate, warning=FALSE, message=FALSE, echo=FALSE, eval=TRUE}
 slam_phases_out <- kable(slam_phases,
-    row.names = FALSE, col.names = c("Metabolic <br> Index", "All", "Female", "Male", "All", "Female", "Male", "All", "Female", "Male"), align = c("c", "c", "c", "c", "c", "c", "c"), escape = FALSE,
-    caption = "Rate of Percent Change for Metabolic Indices Pre- and Post-peak"
+  row.names = FALSE, col.names = c("Metabolic <br> Index", "All", "Female", "Male", "All", "Female", "Male", "All", "Female", "Male"), align = c("c", "c", "c", "c", "c", "c", "c"), escape = FALSE,
+  caption = "Rate of Percent Change for Metabolic Indices Pre- and Post-peak"
 ) %>%
-    kable_styling(bootstrap_options = "striped", full_width = TRUE, position = "left", font_size = 12) %>%
-    column_spec(1, bold = TRUE, border_right = TRUE) %>%
-    column_spec(4, border_right = TRUE) %>%
-    column_spec(7, border_right = TRUE) %>%
-    add_header_above(c(" " = 1, "Age at Peak Value$^†$ \n" = 3, "Pre-Peak$^‡$$^§$" = 3, "Post-Peak$^‡$$^§$" = 3)) %>%
-    footnote(symbol = c(
-        "p value < 0.05",
-        "Mean (range of ages at similar values) age at peak index value",
-        "Mean (95% confidence interval) rate of percent change",
-        "Pre-peak is defined as 25% life expectancy to age at peak index value; post-peak phase is defined as peak to 100% life expectancy",
-        "Male and female estimates are based on sex specific life expectancy"
-    ))
+  kable_styling(bootstrap_options = "striped", full_width = TRUE, position = "left", font_size = 12) %>%
+  column_spec(1, bold = TRUE, border_right = TRUE) %>%
+  column_spec(4, border_right = TRUE) %>%
+  column_spec(7, border_right = TRUE) %>%
+  add_header_above(c(" " = 1, "Age at Peak Value$^†$ \n" = 3, "Pre-Peak$^‡$$^§$" = 3, "Post-Peak$^‡$$^§$" = 3)) %>%
+  footnote(symbol = c(
+    "p value < 0.05",
+    "Mean (range of ages at similar values) age at peak index value",
+    "Mean (95% confidence interval) rate of percent change",
+    "Pre-peak is defined as 25% life expectancy to age at peak index value; post-peak phase is defined as peak to 100% life expectancy",
+    "Male and female estimates are based on sex specific life expectancy"
+  ))
 
 slam_phases_out
 ```
@@ -1326,16 +1166,16 @@ slam_phases_out
 
 ```{r slam_scaling, warning=FALSE, message=FALSE, echo=FALSE}
 main_cont_surv <- main_all3 %>%
-    select(idno, sex, strain, per_age_wk_50, per_age_wk_75, per_age_wk_90) %>%
-    distinct() %>%
-    inner_join(census_c16_death)
+  select(idno, sex, strain, per_age_wk_50, per_age_wk_75, per_age_wk_90) %>%
+  distinct() %>%
+  inner_join(census_c16_death)
 
 main_cat_surv_f <- main_cat2 %>%
-    inner_join(main_cont_surv) %>%
-    filter(sex == "F")
+  inner_join(main_cont_surv) %>%
+  filter(sex == "F")
 main_cat_surv_m <- main_cat2 %>%
-    inner_join(main_cont_surv) %>%
-    filter(sex == "M")
+  inner_join(main_cont_surv) %>%
+  filter(sex == "M")
 ```
  
 ```{r slam_quartiles, warning=FALSE, message=FALSE, echo=FALSE}
@@ -1370,7 +1210,7 @@ main_cat_surv_m$fat_90_quart <- cut(main_cat_surv_m$fat_90, quantile(main_cat_su
 
 # merge into all dataset
 main_cat_surv <- main_cat_surv_f %>%
-    rbind(main_cat_surv_m)
+  rbind(main_cat_surv_m)
 
 slam_main_cat_surv <- main_cat_surv
 ```
