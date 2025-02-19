@@ -18,7 +18,6 @@ chi_test <- function(census, columns, age_death, event) {
 }
 
 create_chi_test <- function(t1, columns, age_death, event) {
-  browser()
   # We only want first column of counts from t1
   l <- length(t1) / 3
   # Take transpose and subsets only count rows
