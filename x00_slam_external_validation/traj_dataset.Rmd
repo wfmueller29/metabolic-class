@@ -34,7 +34,7 @@ knitr::opts_chunk$set(echo = TRUE)
   
 ```{r slam_bodyweight, warning=FALSE, message=FALSE, echo=FALSE}
 bodywt <- readxl::read_xlsx("data/Body-weight_2025-02-14.xlsx") %>%
-  select(idno, date = date_btf, dob, cohort, sex, strain, bw)
+  select(idno, date = date_btf, bw)
 consoler::check_na(bodywt)
 consoler::peek(bodywt)
 
@@ -72,13 +72,10 @@ hist(bodywt$bw)
 ```{r slam_glucose, warning=FALSE, message=FALSE, echo=FALSE}
 # edit csv column name 'Stress_Notes'
 glucose <- readxl::read_xlsx("data/Glucose_2025-02-14.xlsx") %>%
-  select(idno, date = date_glu, dob, cohort, sex, strain, gluc = glucose)
+  select(idno, date = date_glu, gluc = glucose)
 consoler::check_na(glucose)
 consoler::peek(glucose)
 
-glucose$date <- as.Date(glucose$date, "%Y-%m-%d")
-glucose$gluc <- as.numeric(glucose$gluc)
-glucose$idno <- as.character(glucose$idno)
 gluc_na_before <- sum(is.na(glucose$gluc))
 glucose <- glucose %>%
   mutate(
@@ -108,38 +105,27 @@ hist(glucose$gluc)
 
 ```{r slam_nmr, warning=FALSE, message=FALSE, echo=FALSE}
 nmr <- readxl::read_xlsx("data/NMR-fat_2025-02-14.xlsx") %>%
-  select(idno, date = date_nmr, dob, cohort, sex, strain, fat)
+  select(idno, date = date_nmr, fat)
 consoler::check_na(nmr)
 consoler::peek(nmr)
 
 fat_na_before <- sum(is.na(nmr$fat))
-lean_na_before <- sum(is.na(nmr$lean))
 nmr <- nmr %>%
   mutate(
     fat = ifelse(fat <= 0, NA, fat)
-  ) %>%
-  mutate(
-    lean = ifelse(lean <= 5, NA,
-      ifelse(lean >= 40, NA, lean)
-    )
-  )
+  ) 
 fat_na_after <- sum(is.na(nmr$fat))
-lean_na_after <- sum(is.na(nmr$lean))
 
 duplicated_nmr <- sum(!duplicated(nmr[c(1, 2)]))
 nmr <- nmr[!duplicated(nmr[c(1, 2)]), ]
 
 hist(nmr$fat)
-hist(nmr$lean)
 ```
 
 - duplicated nmr = `r duplicated_nmr`
 - NA fat before outlier removal `r fat_na_before`
 - NA fat after outlier removal `r fat_na_after`
 - fat outlier `r fat_na_after - fat_na_before`
-- NA lean before outlier removal `r lean_na_before`
-- NA lean after outlier removal `r lean_na_after`
-- lean outlier `r lean_na_after - lean_na_before`
 
 #### survival data read in and clean 
   - input file Survival_2025-02-14.csv
