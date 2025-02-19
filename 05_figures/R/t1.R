@@ -2,7 +2,7 @@
 #
 # Author: William Mueller
 
-library(tidyverse)
+# library(tidyverse)
 
 count_column_by_class <- function(df, group, column) {
   by_list <- list(df[[group]], df[[column]])
@@ -32,12 +32,14 @@ create_freq_column <- function(df_table) {
   # create new cols that are the frequency of the n columns
   new_cols <- do.call(cbind, lapply(1:(length(df_table) - 1), function(i) {
     round(df_table[[i]] / df_table$total * 100, 1)
-  })) %>%
-    data.frame()
+  }))
+  new_cols <- data.frame(new_cols)
 
   names(new_cols) <- paste0(names(df_table[, -length(df_table)]), "_freq")
 
   df_freq <- new_cols
+
+  df_freq
 }
 
 create_combo_column <- function(df_table, df_freq) {
@@ -98,8 +100,10 @@ create_count_columns <- function(df,
   surv_fit <- survival::survfit(data = df_main, obj ~ factor(new_class))
 
   df_surv <- survminer::surv_median(surv_fit)
-  df_surv$median <- paste0(df_surv$median,
-                           " (", df_surv$lower, ", ", df_surv$upper, ")")
+  df_surv$median <- paste0(
+    df_surv$median,
+    " (", df_surv$lower, ", ", df_surv$upper, ")"
+  )
   names(df_surv)[names(df_surv) == "strata"] <- "new_class"
   names(df_surv)[names(df_surv) == "median"] <- "median_surv"
   df_surv <- df_surv[, !(colnames(df_surv) == c("lower", "upper"))]
@@ -121,9 +125,9 @@ create_count_columns <- function(df,
 
   df_table[is.na(df_table)] <- 0
   names(df_table) <- paste0("class_", names(df_table))
-  seq_cols <- seq_along(df_table)
-  df_table[, seq_cols] <- lapply(df_table[, seq_cols], as.numeric)
-  df_table <- round(df_table)
+  # seq_cols <- seq_along(df_table)
+  # df_table[, seq_cols] <- lapply(df_table[, seq_cols], as.numeric)
+  # df_table <- round(df_table)
 
   df_table
 }
@@ -133,10 +137,26 @@ t1 <- function(df, columns, age_death, event) {
   no_class <- length(unique(df$class))
 
   df_table <- create_count_columns(df, columns, age_death, event)
+  # Drop MLE
+  df_table <- df_table[-nrow(df_table), ]
+  df_table <- data.frame(lapply(df_table, as.numeric),
+    row.names = rownames(df_table)
+  )
+
 
   df_freq <- create_freq_column(df_table)
 
+
   df_final <- create_combo_column(df_table, df_freq)
+
+  df_mle <- create_count_columns(df, columns, age_death, event)
+  # keep MLE
+  df_mle <- df_mle[nrow(df_mle), ]
+  df_mle2 <- df_mle
+  names(df_mle2) <- paste0(names(df_mle), "_final")
+  df_mle <- cbind(df_mle, df_mle2)
+  df_final <- data.table::rbindlist(list(df_final, df_mle), fill =TRUE)
+  df_final <- as.data.frame(df_final)
 
   # return df_final
   df_final

@@ -2022,6 +2022,23 @@ for (models in model_list) {
 }
 ```
 
+### LME table
+
+- Selected model - `r model_display`
+
+```{r lme table}
+for (models in model_list) {
+  for (model in models) {
+    cat("#############################################################\n")
+    print(model@call)
+    cat("\n#############################################################\n")
+    print(model)
+    print(summary(model))
+    print(plot(model))
+  }
+}
+```
+
 ### Individual Cox Model Fits
 
 ```{r individual cox model}
