@@ -2027,16 +2027,25 @@ for (models in model_list) {
 - Selected model - `r model_display`
 
 ```{r lme table}
-for (models in model_list) {
-  for (model in models) {
-    cat("#############################################################\n")
-    print(model@call)
-    cat("\n#############################################################\n")
-    print(model)
-    print(summary(model))
-    print(plot(model))
-  }
-}
+table_list <- lapply(model_list, function(models) {
+  lapply(models, function(model) {
+    model_sum <- summary(model)
+    data.frame(
+      call = as.character(model@call)[2],
+      title = model_sum$methTitle,
+      loglik = model_sum$logLik,
+      n_groups = model_sum$n,
+      sigma = model_sum$sigma,
+      AICtab = model_sum$AICtab,
+      optimizer = model@optinfo$optimizer,
+      conv = model@optinfo$conv$opt
+    )
+  })
+})
+
+table_list <- unlist(table_list, recursive = FALSE)
+lme_table <- do.call(rbind, table_list)
+kable(lme_table)
 ```
 
 ### Individual Cox Model Fits
@@ -2057,6 +2066,39 @@ for (i in rest_index) {
     print(cox.zph(model))
   }
 }
+```
+
+### Table coxzph Individual Cox Model Fits
+
+```{r table coxzph individual cox model, results = 'asis'}
+rest_index <- which(final_models$data_mod == "og")
+coxzph_tables <- lapply(rest_index, function(i) {
+  models <- final_models[i, "cox_models"][[1]]
+  outcome <- final_models[i, "oc"]
+  data_mod <- final_models[i, "data_mod"]
+
+  zph_tables <- lapply(seq_along(models), function(i) {
+
+    formula <- Reduce(paste, deparse(models[[i]]$formula))
+
+    table <- cox.zph(models[[i]])$table
+    table <- data.frame(
+      outcome = outcome, data_type = data_mod, Model = i, formula = formula,
+      variables = rownames(table), table
+    )
+    rownames(table) <- NULL
+    table$chisq <- round(table$chisq, 4)
+    table$p <- round(table$p, 4)
+
+    table
+  })
+  zph_tables <- do.call(rbind, zph_tables)
+
+  zph_tables
+})
+
+coxzph_tables <- do.call(rbind, coxzph_tables)
+kable(coxzph_tables)
 ```
 
 ### Figure `r as.character(fig_no)`: Histogram of Outcome Variables - Complete and Training Data
