@@ -35,6 +35,7 @@ create_freq_column <- function(df_table) {
   }))
   new_cols <- data.frame(new_cols)
 
+  browser()
   names(new_cols) <- paste0(names(df_table[, -length(df_table)]), "_freq")
 
   df_freq <- new_cols
@@ -155,8 +156,9 @@ t1 <- function(df, columns, age_death, event) {
   df_mle2 <- df_mle
   names(df_mle2) <- paste0(names(df_mle), "_final")
   df_mle <- cbind(df_mle, df_mle2)
-  df_final <- data.table::rbindlist(list(df_final, df_mle), fill =TRUE)
-  df_final <- as.data.frame(df_final)
+  row_names <- c(rownames(df_final), "MLE")
+  df_final <- data.table::rbindlist(list(df_final, df_mle), fill = TRUE)
+  df_final <- as.data.frame(df_final, row.names = row_names)
 
   # return df_final
   df_final

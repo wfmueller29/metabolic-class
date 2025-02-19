@@ -42,6 +42,7 @@ create_clean_t1 <- function(df_table,
                             age_death,
                             event,
                             chi_tests) {
+  browser()
   total <- rowSums(df_table)
 
   t1 <- t1[, grepl("_final", colnames(t1)), drop = FALSE]
