@@ -14,7 +14,7 @@ survival_dataset:
   covariates: "sex_M + strain_HET3"
 datasets:
 - name: "slam"
-  path: "../x07_external_validation/data/slam_bw_ext.csv"
+  path: "../x01_external_validation/data/slam_bw_ext.csv"
   outcome: "bw"
   age_var: ["age_wk", "age_wk2"] # these must be in increasing polynomial order
   id: "idno"
@@ -71,7 +71,7 @@ datasets:
     variable: "cohort"
 
 - name: "slam"
-  path: "../x07_external_validation/data/slam_fat_ext.csv"
+  path: "../x01_external_validation/data/slam_fat_ext.csv"
   outcome: "fat"
   age_var: ["age_wk", "age_wk2"]
   id: "idno"
@@ -127,7 +127,7 @@ datasets:
     variable: "cohort"
 
 - name: "slam"
-  path: "../x07_external_validation/data/slam_gluc_ext.csv"
+  path: "../x01_external_validation/data/slam_gluc_ext.csv"
   outcome: "gluc"
   age_var: ["age_wk", "age_wk2"]
   id: "idno"

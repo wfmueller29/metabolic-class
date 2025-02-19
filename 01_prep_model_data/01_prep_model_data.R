@@ -15,7 +15,7 @@ args <- commandArgs(trailingOnly = TRUE)
 if (length(args) == 0) {
   # args[[1]] <- "input/test_local.yaml"
   args[[1]] <- "input/slam_age_mb6.yaml"
-  # args[[1]] <- "../x07_external_validation/input/slam_age_all.yaml"
+  # args[[1]] <- "../x01_external_validation/input/slam_age_all.yaml"
   warning("No input file provided, using: ", args[[1]])
 }
 
