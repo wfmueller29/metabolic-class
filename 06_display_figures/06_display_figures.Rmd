@@ -1238,6 +1238,7 @@ hist_log_outcome_plot_panel <- cowplot::plot_grid(title_theme,
 ### Histogram of probabilites of class assignment for all data 
 
 ```{r hist prob, echo = FALSE, include = FALSE}
+census <- final_models[rest_index, "combined_census"][[1]]
 hist_plots <- lapply(prob_cols, function(prob_col) {
   ggplot2::ggplot(data = census, aes_string(x = prob_col)) +
     ggplot2::geom_histogram()
@@ -1261,6 +1262,13 @@ hist_plot_panel <- cowplot::plot_grid(title_theme, hist_plot_panel,
   rel_heights = c(.05, 1),
   ncol = 1
 )
+```
+
+### Descriptive stats of probabilities of class assignments - Complete Data
+
+```{r describe prob class, results = 'asis'}
+census <- final_models[rest_index, "combined_census"][[1]]
+kable(psych::describe(census))
 ```
 
 ### Kaplan Meier by Cohort
@@ -1923,6 +1931,29 @@ for (i in seq_len(nrow(final_models))) {
   summary(model)
   lcmm::postprob(model)
 }
+```
+
+#### LCMM - Average Posterior Classifcation Probabilites
+
+```{r lcmm model information, results = 'asis'}
+post_prob_table <- lapply(seq_len(nrow(final_models)), function(i) {
+  label <- paste(final_models$oc[[i]], final_models$data_mod[[i]])
+  model <- final_models$final_model[[i]]
+  post_prob <- lcmm::postprob(model)
+  post_prob_table <- data.frame(
+    label = label,
+    class = row.names(post_prob[[2]]),
+    t(post_prob[[1]]),
+    post_prob[[2]],
+    t(post_prob[[3]]),
+    check.names = FALSE,
+    row.names = NULL
+  )
+  post_prob_table
+})
+post_prob_table <- data.table::rbindlist(post_prob_table, fill = TRUE)
+post_prob_table <- as.data.frame(post_prob_table)
+kable(post_prob_table)
 ```
 
 #### LCMM - Model residual plots
