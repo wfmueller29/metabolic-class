@@ -1,5 +1,5 @@
 # This is where we are going to move the data modification yaml
-- name: "slam"
+- name: "slam_c16c17c18"
   path: "../x00a_slam_external_validation/output/main_all2.RDATA"
   outcome: "bw"
   age_var: ["age_wk", "per_age_wk"] # we only want one age var per dataset
@@ -36,7 +36,7 @@
       - [sex: M, strain: B6]
       - [sex: F, strain: B6]
 
-- name: "slam"
+- name: "slam_c16c17c18"
   path: "../x00a_slam_external_validation/output/main_all2.RDATA"
   outcome: "fat"
   age_var: ["age_wk", "per_age_wk"]
@@ -74,7 +74,7 @@
       - [sex: F, strain: B6]
 
 
-- name: "slam"
+- name: "slam_c16c17c18"
   path: "../x00a_slam_external_validation/output/main_all2.RDATA"
   outcome: "gluc"
   age_var: ["age_wk", "per_age_wk"]

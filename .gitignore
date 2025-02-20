@@ -13,7 +13,7 @@
 *.Rhistory
 *.RData
 .Ruserdata
-*.csv
+**/*.csv
 *.out
 *.DS*
 *.RDATA
