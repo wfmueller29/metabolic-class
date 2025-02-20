@@ -33,7 +33,8 @@ knitr::opts_chunk$set(echo = TRUE)
   
 ```{r slam_bodyweight, warning=FALSE, message=FALSE, echo=FALSE}
 bodywt <- readxl::read_xlsx("data/Body-weight_2025-02-14.xlsx") %>%
-  select(idno, date = date_btf, bw)
+  select(idno, date = date_btf, bw) %>% 
+  as.data.frame()
 
 bodywt$date <- as.Date(bodywt$date, "%Y-%m-%d")
 
@@ -72,7 +73,8 @@ hist(bodywt$bw)
 ```{r slam_glucose, warning=FALSE, message=FALSE, echo=FALSE}
 # edit csv column name 'Stress_Notes'
 glucose <- readxl::read_xlsx("data/Glucose_2025-02-14.xlsx") %>%
-  select(idno, date = date_glu, gluc = glucose)
+  select(idno, date = date_glu, gluc = glucose) %>%
+  as.data.frame()
 
 glucose$date <- as.Date(glucose$date, "%Y-%m-%d")
 
@@ -105,7 +107,8 @@ hist(glucose$gluc)
 
 ```{r slam_nmr, warning=FALSE, message=FALSE, echo=FALSE}
 nmr <- readxl::read_xlsx("data/NMR-fat_2025-02-14.xlsx") %>%
-  select(idno, date = date_nmr, fat)
+  select(idno, date = date_nmr, fat) %>%
+  as.data.frame()
 
 nmr$date <- as.Date(nmr$date, "%Y-%m-%d")
 
@@ -138,8 +141,6 @@ surv$tod <- as.Date(surv$tod, "%m/%d/%Y")
 surv$cod <- as.character((surv$cod))
 surv$cohort <- as.numeric(surv$cohort)
 
-peek(surv)
-check_na(surv)
 ```
 
 #### merging all datasets into a main file and clean
@@ -159,8 +160,6 @@ main_all <- glucose %>%
     age_wk = round(((date - dob) / 7), 2) + 1
   )
 
-peek(main_all)
-check_na(main_all)
 
 main_all <- main_all %>%
   filter(!is.na(date) & !is.na(idno))
@@ -291,8 +290,6 @@ census_c16_death <- main_all2 %>%
     idno, dead_censor, fu_age_wk, le_wk, cod, sex, strain,
     lastdate, maxdate, tod
   )
-peek(census_c16_death)
-check_na(census_c16_death)
 
 # ghost mice: timepoints after date of death
 ghost <- census_c16_death %>%
