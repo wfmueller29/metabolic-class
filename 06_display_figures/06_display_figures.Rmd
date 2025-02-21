@@ -2048,7 +2048,9 @@ lme_table <- do.call(rbind, table_list)
 kable(lme_table)
 ```
 
-### Individual Cox Model Fits
+### Individual Cox Model
+
+#### print model output and print cox.zph output
 
 ```{r individual cox model}
 rest_index <- which(final_models$data_mod == "og")
@@ -2068,7 +2070,7 @@ for (i in rest_index) {
 }
 ```
 
-### Table coxzph Individual Cox Model Fits
+#### Table coxzph Individual Cox Model Fits
 
 ```{r table coxzph individual cox model, results = 'asis'}
 rest_index <- which(final_models$data_mod == "og")
@@ -2078,7 +2080,6 @@ coxzph_tables <- lapply(rest_index, function(i) {
   data_mod <- final_models[i, "data_mod"]
 
   zph_tables <- lapply(seq_along(models), function(i) {
-
     formula <- Reduce(paste, deparse(models[[i]]$formula))
 
     table <- cox.zph(models[[i]])$table
@@ -2099,6 +2100,44 @@ coxzph_tables <- lapply(rest_index, function(i) {
 
 coxzph_tables <- do.call(rbind, coxzph_tables)
 kable(coxzph_tables)
+```
+
+#### Plot Shoenfeld Residuals
+
+```{r plot coxzph individual cox model residuals}
+rest_index <- which(final_models$data_mod == "og")
+coxzph_tables <- lapply(rest_index, function(i) {
+  models <- final_models[i, "cox_models"][[1]]
+  outcome <- final_models[i, "oc"]
+  data_mod <- final_models[i, "data_mod"]
+
+  lapply(seq_along(models), function(i) {
+    model <- models[[i]]
+    formula <- Reduce(paste, deparse(model$formula))
+
+    coxzph <- cox.zph(model)
+    plot(coxzph, main = formula)
+  })
+})
+```
+
+#### KM plots of covariates
+
+```{r source surv analysis for covs, file = 'R/surv_all.R'}
+source("R/surv_all.R")
+```
+
+```{r plot km covs}
+census <- final_models[rest_index, "combined_census"][[1]]
+
+cov_dummy <- config$datasets[[1]]$covariates_dummy
+lapply(cov_dummy, function(cov) {
+  census[[cov]] <- factor(census[[cov]])
+  kap_plot_all(census, cov,
+    age_death = config$survival_dataset$age_death,
+    event = config$survival_dataset$event
+  )
+})
 ```
 
 ### Figure `r as.character(fig_no)`: Histogram of Outcome Variables - Complete and Training Data
