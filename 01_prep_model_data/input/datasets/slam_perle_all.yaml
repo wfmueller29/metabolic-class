@@ -5,7 +5,6 @@
   age_var: "per_age_wk"
   id: "idno"
   dummy: ["sex", "strain"]
-  numeric: ["bw", "idno", "le_wk"]
   factor: ["cohort"]
   remove_velocity_outliers:
     execute: FALSE
@@ -90,7 +89,6 @@
   age_var: "per_age_wk"
   id: "idno"
   dummy: ["sex", "strain"]
-  numeric: ["gluc", "idno", "le_wk"]
   factor: ["cohort"]
   remove_velocity_outliers:
     execute: FALSE
@@ -175,7 +173,6 @@
   age_var: "per_age_wk"
   id: "idno"
   dummy: ["sex", "strain"]
-  numeric: ["fat", "idno", "le_wk"]
   factor: ["cohort"]
   remove_velocity_outliers:
     execute: FALSE

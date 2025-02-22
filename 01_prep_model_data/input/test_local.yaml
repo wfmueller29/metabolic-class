@@ -22,7 +22,6 @@ datasets:
   id: "idno"
   covariates: ["sex", "strain"]
   covariates_dummy: ["sex_M", "strain_HET3"]
-  numeric: ["bw", "idno", "le_wk"]
   factor: ["cohort"]
   train_test:
     sample_by: ["sex", "strain"]
@@ -77,7 +76,6 @@ datasets:
   id: "idno"
   covariates: ["sex", "strain"]
   covariates_dummy: ["sex_M", "strain_HET3"]
-  numeric: ["fat", "idno", "le_wk"]
   factor: ["cohort"]
   train_test:
     sample_by: ["sex", "strain"]
@@ -131,7 +129,6 @@ datasets:
   id: "idno"
   covariates: ["sex", "strain"]
   covariates_dummy: ["sex_M", "strain_HET3"]
-  numeric: ["gluc", "idno", "le_wk"]
   factor: ["cohort"]
   train_test:
     sample_by: ["sex", "strain"]

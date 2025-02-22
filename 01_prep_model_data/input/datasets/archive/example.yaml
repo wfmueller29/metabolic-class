@@ -19,7 +19,6 @@
 #   outcome: "bw"
 #   age_var: ["age_wk"]
 #   dummy: ["sex", "strain"]
-#   numeric: ["bw", "idno", "le_wk"]
 #   factor: ["cohort"]
 #
 - name: "slam"
@@ -28,7 +27,6 @@
   age_var: ["age_wk", "per_age_wk"]
   id: "idno"
   dummy: ["sex", "strain"]
-  numeric: ["bw", "idno", "le_wk"]
   factor: ["cohort"]
   remove_velocity_outliers:
     execute: TRUE
@@ -77,7 +75,6 @@
   age_var: ["age_wk", "per_age_wk"]
   id: "idno"
   dummy: ["sex", "strain"]
-  numeric: ["bw", "idno", "le_wk"]
   factor: ["cohort"]
   remove_velocity_outliers:
     execute: TRUE
@@ -132,7 +129,6 @@
   age_var: ["age_wk", "per_age_wk"]
   id: "idno"
   dummy: ["sex", "strain"]
-  numeric: ["gluc", "idno", "le_wk"]
   factor: ["cohort"]
   remove_velocity_outliers:
     execute: TRUE
@@ -166,7 +162,6 @@
   age_var: ["age_wk", "per_age_wk"]
   id: "idno"
   dummy: ["sex", "strain"]
-  numeric: ["fat", "idno", "le_wk"]
   factor: ["cohort"]
   remove_velocity_outliers:
     execute: TRUE
@@ -200,7 +195,6 @@
   age_var: ["age_wk", "per_age_wk"]
   id: "idno"
   dummy: ["sex", "strain"]
-  numeric: ["lean", "idno", "le_wk"]
   factor: ["cohort"]
   remove_velocity_outliers:
     execute: TRUE
@@ -235,7 +229,6 @@
   id: "ID"
   generate_idno: TRUE
   dummy: ["sex", "strain"]
-  numeric: ["delta", "lifespan",
     "natural_death", "tstart", "tstop", "status"]
   factor: ["cohort"]
   remove_velocity_outliers:

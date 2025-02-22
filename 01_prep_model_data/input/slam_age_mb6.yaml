@@ -32,7 +32,6 @@ datasets:
   id: "idno"
   covariates: NULL
   covariates_dummy: NULL
-  numeric: ["bw", "idno", "le_wk"]
   factor: ["cohort"]
   train_test:
     sample_by: NULL
@@ -89,7 +88,6 @@ datasets:
   id: "idno"
   covariates: NULL
   covariates_dummy: NULL
-  numeric: ["fat", "idno", "le_wk"]
   factor: ["cohort"]
   train_test:
     sample_by: NULL
@@ -145,7 +143,6 @@ datasets:
   id: "idno"
   covariates: NULL
   covariates_dummy: NULL
-  numeric: ["gluc", "idno", "le_wk"]
   factor: ["cohort"]
   train_test:
     sample_by: NULL

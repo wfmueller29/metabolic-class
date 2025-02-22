@@ -4,7 +4,6 @@
   age_var: ["age_wk", "age_wk2"] # these must be in increasing polynomial order
   id: "idno"
   dummy: ["sex", "strain"]
-  numeric: ["bw", "idno", "le_wk"]
   factor: ["cohort"]
   train_test:
     sample_by: ["sex", "strain"]
@@ -50,7 +49,6 @@
   age_var: ["age_wk", "age_wk2"]
   id: "idno"
   dummy: ["sex", "strain"]
-  numeric: ["fat", "idno", "le_wk"]
   factor: ["cohort"]
   train_test:
     sample_by: ["sex", "strain"]
@@ -103,7 +101,6 @@
   age_var: ["age_wk", "age_wk2"]
   id: "idno"
   dummy: ["sex", "strain"]
-  numeric: ["gluc", "idno", "le_wk"]
   factor: ["cohort"]
   train_test:
     sample_by: ["sex", "strain"]

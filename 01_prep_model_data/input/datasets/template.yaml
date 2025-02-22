@@ -13,7 +13,6 @@
   # it is preferable to use dummy variables when modelling
   dummy: ["sex", "strain"] 
   # Variables we would like to ensure are numeric
-  numeric: ["bw", "idno", "le_wk"]
   # Variable we would like to make into factor variables
   factor: ["cohort"]
   # If "execute" is true, we will subset the data for each object in list
