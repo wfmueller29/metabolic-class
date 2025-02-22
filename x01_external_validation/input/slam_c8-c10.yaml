@@ -1,4 +1,4 @@
-out_tag: xslam_c9-c10
+out_tag: slam_c8-c10 
 tag_time: FALSE
 plan: multicore
 ncpus: 10
