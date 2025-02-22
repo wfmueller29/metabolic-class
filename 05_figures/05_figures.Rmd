@@ -782,7 +782,9 @@ final_models$interval_accuracy <- lapply(
     boot_accuracy_list(
       pred_df_list = final_models$filter_interval_results[[i]],
       og_df = final_models$census[[i]],
-      subject = final_models$subject[[i]]
+      subject = final_models$subject[[i]],
+      parallel = config$plan,
+      ncpus = config$ncpus
     )
   }
 )
@@ -793,7 +795,10 @@ final_models$cumulative_accuracy <- lapply(
     boot_accuracy_list(
       pred_df_list = final_models$filter_cumulative_results[[i]],
       og_df = final_models$census[[i]],
-      subject = final_models$subject[[i]]
+      subject = final_models$subject[[i]],
+      parallel = config$plan,
+      ncpus = config$ncpus
+
     )
   }
 )
@@ -815,7 +820,10 @@ final_models$resampled_accuracy <- lapply(
     boot_accuracy_list(
       pred_df_list = final_models$resampled_results[[i]],
       og_df = final_models$census[[i]],
-      subject = final_models$subject[[i]]
+      subject = final_models$subject[[i]],
+      parallel = config$plan,
+      ncpus = config$ncpus
+
     )
   }
 )
