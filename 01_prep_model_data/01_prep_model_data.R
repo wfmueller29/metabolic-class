@@ -14,8 +14,9 @@ args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) == 0) {
   # args[[1]] <- "input/test_local.yaml"
-  args[[1]] <- "input/slam_age_mb6.yaml"
+  # args[[1]] <- "input/slam_age_mb6.yaml"
   # args[[1]] <- "../x01_external_validation/input/slam_age_all.yaml"
+  args[[1]] <- "../x01_external_validation/input/slam_c16-c18.yaml"
   warning("No input file provided, using: ", args[[1]])
 }
 
@@ -77,12 +78,44 @@ if (!isFALSE(config$external_validate)) {
   validation_datasets <- read_data(validation_datasets)
 }
 
+# drop all variables we are not using -----------------------------------------
+
+drop_unused_vars <- function(datasets) {
+  lapply(datasets, function(dataset) {
+    keep_vars <- c(
+      dataset$id,
+      dataset$factor,
+      dataset$covariates,
+      dataset$covariates_dummy,
+      dataset$age_var,
+      dataset$outcome
+    )
+    dataset$data <- dataset$data[, keep_vars]
+    dataset
+  })
+}
+
+datasets <- drop_unused_vars(datasets)
+
+if (!isFALSE(config$external_validate)) {
+  validation_datasets <- drop_unused_vars(validation_datasets)
+  test <- lapply(seq_along(datasets), function(i) {
+    data <- datasets[[i]]$data
+    val_data <- validation_datasets[[i]]$data
+    length(names(data)) == length(names(val_data))
+  })
+  if (all(as.vector(test))) {
+    message("Number of columns in training data = validation data")
+  }
+} else {
+  stop("Mismatched number of columns in training and validation data")
+}
+
 
 # convert all variables to correct type ---------------------------------------
 
 convert_variables <- function(datasets) {
   datasets <- lapply(datasets, function(dataset) {
-    dataset <- convert_numeric(dataset)
     dataset <- convert_factor(dataset)
     dataset
   })
@@ -194,7 +227,7 @@ harmonize_apply <- function(datasets) {
 harmonize_apply_validate <- function(datasets, validation_datasets) {
   harmonized_datasets <- lapply(seq_along(datasets), function(i) {
     if (isTRUE(datasets[[i]]$harmonize$execute)) {
-      validation_data <- validation_datasets[[i]]$data[, -1]
+      validation_data <- validation_datasets[[i]]$data
       validation_data$validate <- 1
       data <- datasets[[i]]$data
       data$validate <- 0
