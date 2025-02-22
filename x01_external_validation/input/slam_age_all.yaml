@@ -1,4 +1,4 @@
-out_tag: external_validation
+out_tag: xslam_c9-c10
 tag_time: FALSE
 plan: multicore
 ncpus: 10
