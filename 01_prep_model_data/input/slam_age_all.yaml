@@ -24,6 +24,17 @@ survival_dataset:
   event: "dead_censor"
   tod: "tod"
   covariates: "sex_M + strain_HET3"
+combined_cox:
+  forms:
+    - "~ <class+> + sex + strata(strain)"
+    - "~ <probs+> + sex + strata(strain)"
+    - "~ <probs+> + bw + gluc + fat + tt(bw) + tt(gluc) + tt(fat) + sex + strata(strain)"
+  tts:
+    - NULL
+    - NULL
+    - ["function(x, t, ...) x * log(t + 20) + x * log(t * t + 20)",
+       "function(x, t, ...) x * log(t + 20) + x * log(t * t + 20)",
+       "function(x, t, ...) x * log(t + 20) + x * log(t * t + 20)"]
 datasets:
 - name: "slam"
   path: "../00b_dataset_mods/output/data/test/slam_bw_og.csv"

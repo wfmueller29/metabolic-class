@@ -44,8 +44,8 @@ if (!exists("params")) {
   params <- list()
   # params$input_path <- "../04_prediction_data/output/test_local.yaml"
   # params$input_path <- "../04_prediction_data/output/external_validation.yaml"
-  # params$input_path <- "../04_prediction_data/output/all.yaml"
-  params$input_path <- "../04_prediction_data/output/all_lean.yaml"
+  params$input_path <- "../04_prediction_data/output/all.yaml"
+  # params$input_path <- "../04_prediction_data/output/all_lean.yaml"
   # params$input_path <- "../04_prediction_data/output/mb6.yafl"
   # params$input_path <- "../04_prediction_data/output/all_relative_age.yaml"
   # params$input_path <- "../04_prediction_data/output/test_relative_age.yaml"
@@ -1027,9 +1027,10 @@ combined_cox_models <- lapply(
   model_name_list,
   cox_combine,
   final_model_object = final_models,
-  covariates = config$survival_dataset$covariates,
   age_death = config$survival_dataset$age_death,
-  censor = config$survival_dataset$event
+  censor = config$survival_dataset$event,
+  formulas = config$combined_cox$forms,
+  tts = config$combined_cox$tts
 )
 
 lapply(combined_cox_models, lapply, `[[`, "formula")

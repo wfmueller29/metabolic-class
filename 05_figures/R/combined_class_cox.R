@@ -178,7 +178,8 @@ create_combined_cox <- function(data,
                                 age_death,
                                 death_censor,
                                 outcomes,
-                                covariates) {
+                                formulas,
+                                tts) {
   # WARNING: We probably do not need tmerge here, something throwing warnings
   tmerged_data <- surv_tmerge(
     data = data,
@@ -216,42 +217,49 @@ create_combined_cox <- function(data,
   # drop any prob_cols from outcomes
   outcomes <- outcomes[!outcomes %in% prob_cols]
 
-  if (!is.null(covariates)) {
-    cov_form <- paste0("~", "(", covariates, ")")
-    form1 <- paste0(cov_form, "+", paste(new_class_cols, collapse = "+"))
-    form2 <- paste0(cov_form, "+", paste(prob_cols, collapse = "+"))
-    form3 <- paste0(
-      cov_form, "*",
-      "(", paste(prob_cols, collapse = "+"), ")"
-    )
-  } else {
-    cov_form <- "~"
-    form1 <- paste0(cov_form, paste(new_class_cols, collapse = "+"))
-    form2 <- paste0(cov_form, paste(prob_cols, collapse = "+"))
-    form3 <- paste0(
-      cov_form,
-      "(", paste(prob_cols, collapse = "+"), ")"
-    )
+  browser()
+
+  rename_formula <- function(form, class_cols, prob_cols) {
+    form <- gsub("<probs\\+>", paste(prob_cols, collapse = " + "), form)
+    form <- gsub("<probs\\*>", paste(prob_cols, collapse = " * "), form)
+    form <- gsub("<class\\+>", paste(class_cols, collapse = " + "), form)
+    form <- gsub("<class\\*>", paste(class_cols, collapse = " * "), form)
   }
+  formulas <- lapply(formulas, rename_formula,
+    class_cols = new_class_cols,
+    prob_cols = prob_cols
+  )
+  formulas <- lapply(formulas, as.formula)
 
-  forms <- list(form1, form2, form3)
-  forms <- lapply(forms, as.formula)
+  tts <- lapply(tts, function(tt) {
+    lapply(tt, function(function_string) {
+      eval(parse(text = function_string))
+    })
+  })
 
-  cox_outputs <- mapply(surv_cox, covariates = forms, MoreArgs = list(
-    data = tmerged_data,
-    time = "tstart",
-    time2 = "tstop",
-    death = death_censor,
-  ), SIMPLIFY = FALSE)
+  tt1 <- lapply(tt1, function(function_string) {
+    eval(parse(text = function_string))
+  })
+
+  cox_outputs <- mapply(SLAM::surv_cox,
+    covariates = formulas, tt = tts,
+    MoreArgs = list(
+      data = tmerged_data,
+      time = "tstart",
+      time2 = "tstop",
+      death = death_censor
+    ), SIMPLIFY = FALSE
+  )
 
   cox_outputs
 }
 
 cox_combine <- function(model_name_vector,
                         final_model_object,
-                        covariates,
                         age_death,
-                        censor) {
+                        censor,
+                        formulas,
+                        tts) {
   # rename inputs
   final_models <- final_model_object
 
@@ -290,7 +298,8 @@ cox_combine <- function(model_name_vector,
     age_death = age_death,
     death_censor = censor,
     outcomes = outcomes,
-    covariates = covariates
+    formulas = formulas,
+    tts = tts
   )
 
   cox_model
