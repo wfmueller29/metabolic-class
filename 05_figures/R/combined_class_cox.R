@@ -1,6 +1,6 @@
 # This file is going to combine metabolic classes to create one mortality
 # prediction
-surv_tmerge <- function(data, id, age, age_death, outcomes) {
+surv_tmerge <- function(data, id, age, age_death, dead_censor, outcomes) {
   data_baseline <- data[order(data[[id]], data[[age]]), , drop = FALSE]
   data_baseline <- data_baseline[!duplicated(data_baseline[[id]]), ,
     drop = FALSE
@@ -19,9 +19,9 @@ surv_tmerge <- function(data, id, age, age_death, outcomes) {
   args <- lapply(c(outcomes, age), function(outcome) {
     call("tdc", as.symbol(age), as.symbol(outcome))
   })
-  args <- c(args, call("event", as.symbol(age_death)))
+  args <- c(args, call("event", as.symbol(age_death), as.symbol(dead_censor)))
   # name args
-  names(args) <- c(outcomes, "age", "death_event")
+  names(args) <- c(outcomes, "age", dead_censor)
   # Create call
   cl_tmerge2 <- rlang::call2("tmerge",
     data1 = as.symbol("data1"),
@@ -185,6 +185,7 @@ create_combined_cox <- function(data,
     id = id,
     age = age,
     age_death = age_death,
+    dead_censor = death_censor,
     outcomes = outcomes
   )
 
@@ -240,7 +241,7 @@ create_combined_cox <- function(data,
     data = tmerged_data,
     time = "tstart",
     time2 = "tstop",
-    death = "death_event"
+    death = dead_censor,
   ), SIMPLIFY = FALSE)
 
   cox_outputs
