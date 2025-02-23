@@ -423,63 +423,6 @@ mortality_panel_train <- cowplot::plot_grid(title_theme, mortality_panel_train,
 ### Table of Hazard Ratios, Raw and Sex/Strain Adjusted
 
 ```{r hazard ratio table, results = 'asis'}
-surv_gethr <- function(fit, vars, names = NULL, ndec = 4) {
-  sum_fit <- summary(fit) ## get summary of fit
-  # save coeffecients as dataframe
-  coef <- data.frame(sum_fit$coefficients, check.names = F)
-  # save confidence interval as dataframe
-  conf <- data.frame(sum_fit$conf.int, check.names = F)
-  # initialize hr dataframe
-  hr <- data.frame()
-  # loop through vars
-  for (var in vars) {
-    # save hr
-    value <- format(round(conf[var, "exp(coef)"], ndec), nsmall = 2)
-    # save lower HR bound
-    lower <- format(round(conf[var, "lower .95"], ndec), nsmall = 2)
-    # save upper HR bound
-    upper <- format(round(conf[var, "upper .95"], ndec), nsmall = 2)
-    # save pval
-    pval <- coef[var, "Pr(>|z|)"]
-
-    ## add stars depending on significance
-    if (pval < .001) {
-      final <- paste0(value, " (", lower, ", ", upper, ")***")
-    } else if (pval < .005) {
-      final <- paste0(value, " (", lower, ", ", upper, ")**")
-    } else if (pval < 0.050) {
-      final <- paste0(value, " (", lower, ", ", upper, ")*")
-    } else {
-      final <- paste0(value, " (", lower, ", ", upper, ")")
-    }
-
-    ## save stats above to hr dataframe
-    hr[var, c("value", "lower", "upper", "pval", "final")] <- c(
-      value,
-      lower,
-      upper,
-      pval,
-      final
-    )
-  }
-
-  ## if names are provided, rename variables
-  if (!is.null(names)) {
-    rownames(hr) <- names
-  }
-
-  ## create a column that has the rownames printed before HR
-  hr[, "with_names"] <- unlist(lapply(rownames(hr), function(name) {
-    el <- paste(name, hr[name, "final"], sep = ": ")
-  }))
-
-  ## create text that can be used to easily add to KM plot in place of pval
-  one_text <- paste(as.vector(hr[, "with_names"]), collapse = "\n")
-
-  return(list(hr_table = hr, hr_text = one_text))
-}
-
-
 make_cox_table <- function(cox_models, mo_select = c(1, 3), outcome) {
   xlevels_list <- lapply(cox_models, `[[`, "xlevels")
   xlevels_names <- lapply(xlevels_list, names)
@@ -494,7 +437,7 @@ make_cox_table <- function(cox_models, mo_select = c(1, 3), outcome) {
 
   hr_table_list <- list()
   for (i in mo_select) {
-    hr_table <- surv_gethr(cox_models[[i]],
+    hr_table <- SLAM::surv_gethr(cox_models[[i]],
       vars = xlevels_list[[i]]
     )$hr_table
     hr_table <- cbind(row.names(hr_table), hr_table)
@@ -507,7 +450,10 @@ make_cox_table <- function(cox_models, mo_select = c(1, 3), outcome) {
     names(hr_table) <- c("Outcome", "Class", model_name)
     hr_table_list[[i]] <- hr_table
   }
-  result <- purrr::reduce(hr_table_list, dplyr::left_join, by = c("Class", "Outcome"))
+  result <- purrr::reduce(hr_table_list,
+    dplyr::left_join,
+    by = c("Class", "Outcome")
+  )
 }
 
 
