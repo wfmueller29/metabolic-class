@@ -241,7 +241,7 @@ create_combined_cox <- function(data,
     data = tmerged_data,
     time = "tstart",
     time2 = "tstop",
-    death = dead_censor,
+    death = death_censor,
   ), SIMPLIFY = FALSE)
 
   cox_outputs
