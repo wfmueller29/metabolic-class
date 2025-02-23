@@ -1315,7 +1315,7 @@ for (filtered_df_name in merged_prediction_names) {
 }
 ```
 
-```{r source combined_class_cox, file = 'R/tmerge_prediction_data.R'}
+```{r source tmerge_prediction_data, file = 'R/tmerge_prediction_data.R'}
 source("R/tmerge_prediction_data.R")
 ```
 
