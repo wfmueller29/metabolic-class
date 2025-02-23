@@ -798,7 +798,6 @@ final_models$cumulative_accuracy <- lapply(
       subject = final_models$subject[[i]],
       parallel = config$plan,
       ncpus = config$ncpus
-
     )
   }
 )
@@ -823,7 +822,6 @@ final_models$resampled_accuracy <- lapply(
       subject = final_models$subject[[i]],
       parallel = config$plan,
       ncpus = config$ncpus
-
     )
   }
 )
@@ -1317,40 +1315,15 @@ for (filtered_df_name in merged_prediction_names) {
 }
 ```
 
+```{r source combined_class_cox, file = 'R/tmerge_prediction_data.R'}
+source("R/tmerge_prediction_data.R")
+```
+
 ```{r add prediction data to census}
 invert_list <- function(list) {
   list_matrix <- do.call(rbind, list)
   output <- apply(list_matrix, 2, as.list)
   output
-}
-
-tmerge_prediction_data <- function(data, id, age, age_death, outcomes) {
-  print(nrow(data))
-  if (nrow(data) == 0) {
-    warning("Cannot perform surv_tmerge, 0 nrows in data")
-    return(data)
-  }
-
-  tmerged_data <- surv_tmerge(
-    data = data,
-    id = id,
-    age = age,
-    age_death = age_death,
-    outcomes = outcomes
-  )
-
-  prob_cols <- names(tmerged_data)[grepl("^prob", names(tmerged_data))]
-  prob_cols_drop <- sapply(prob_cols, function(name) {
-    all(tmerged_data[[name]] == 1)
-  })
-  prob_cols <- prob_cols[!prob_cols_drop]
-
-  # tmerged_data[, prob_cols] <- lapply(tmerged_data[, prob_cols],
-  #   log,
-  #   base = 1.1
-  # )
-
-  tmerged_data
 }
 
 add_prediction_data <- function(final_models, datasets, filtered_df_name) {
@@ -1400,6 +1373,7 @@ add_prediction_data <- function(final_models, datasets, filtered_df_name) {
     age = age_var_lol,
     MoreArgs = list(
       age_death = config$survival_dataset$age_death,
+      dead_censor = config$survival_dataset$event,
       outcomes = outcomes
     ),
     SIMPLIFY = FALSE

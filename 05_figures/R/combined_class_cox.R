@@ -1,71 +1,5 @@
 # This file is going to combine metabolic classes to create one mortality
 # prediction
-surv_tmerge <- function(data, id, age, age_death, dead_censor, outcomes) {
-  data_baseline <- data[order(data[[id]], data[[age]]), , drop = FALSE]
-  data_baseline <- data_baseline[!duplicated(data_baseline[[id]]), ,
-    drop = FALSE
-  ]
-  cl_tmerge1 <- rlang::call2("tmerge",
-    data1 = as.symbol("data_baseline"),
-    data2 = as.symbol("data_baseline"),
-    id = as.symbol(id),
-    tstart = as.symbol(age),
-    tstop = as.symbol(age_death),
-    .ns = "survival"
-  )
-  data1 <- eval(cl_tmerge1)
-
-  # Second tmerge --------------------------------------------------------------
-  args <- lapply(c(outcomes, age), function(outcome) {
-    call("tdc", as.symbol(age), as.symbol(outcome))
-  })
-  args <- c(args, call("event", as.symbol(age_death), as.symbol(dead_censor)))
-  # name args
-  names(args) <- c(outcomes, "age", dead_censor)
-  # Create call
-  cl_tmerge2 <- rlang::call2("tmerge",
-    data1 = as.symbol("data1"),
-    data2 = as.symbol("data"),
-    id = as.symbol(id),
-    !!!args,
-    .ns = "survival"
-  )
-  data2 <- eval(cl_tmerge2)
-
-  return(data2)
-}
-
-surv_cox <- function(data,
-                     covariates,
-                     time,
-                     time2 = NULL,
-                     death,
-                     tt = NULL,
-                     type = c("right", "left", "interval", "counting", "interval2", "mstate")) {
-  if (is.null(time2)) {
-    surv_object <- survival::Surv(
-      time = data[[time]],
-      event = data[[death]],
-      type = type
-    )
-  } else {
-    surv_object <- survival::Surv(
-      time = data[[time]],
-      time2 = data[[time2]],
-      event = data[[death]]
-    )
-  }
-  cox.form <- stats::as.formula(paste0("surv_object", deparse1(covariates)))
-
-  if (is.null(tt)) {
-    fit <- survival::coxph(cox.form, data = data)
-  } else {
-    fit <- survival::coxph(cox.form, data = data, tt = tt)
-  }
-  return(fit)
-}
-
-
 combine_data <- function(data, ids, age_vars, outcomes, census, census_id) {
   data <- mapply(
     function(data, outcome, age_var, id) {
@@ -92,34 +26,6 @@ combine_data <- function(data, ids, age_vars, outcomes, census, census_id) {
   merged_data
 }
 
-tmerge_prediction_data <- function(data, id, age, age_death, outcomes) {
-  print(nrow(data))
-  if (nrow(data) == 0) {
-    warning("Cannot perform surv_tmerge, 0 nrows in data")
-    return(data)
-  }
-
-  tmerged_data <- surv_tmerge(
-    data = data,
-    id = id,
-    age = age,
-    age_death = age_death,
-    outcomes = outcomes
-  )
-
-  prob_cols <- names(tmerged_data)[grepl("^prob", names(tmerged_data))]
-  prob_cols_drop <- sapply(prob_cols, function(name) {
-    all(tmerged_data[[name]] == 1)
-  })
-  prob_cols <- prob_cols[!prob_cols_drop]
-
-  tmerged_data[, prob_cols] <- lapply(tmerged_data[, prob_cols],
-    log,
-    base = 1.1
-  )
-
-  tmerged_data
-}
 
 combine_census <- function(censuses, ids, outcomes) {
   # Select probability of class membership and id's
@@ -181,7 +87,7 @@ create_combined_cox <- function(data,
                                 formulas,
                                 tts) {
   # WARNING: We probably do not need tmerge here, something throwing warnings
-  tmerged_data <- surv_tmerge(
+  tmerged_data <- SLAM::surv_tmerge(
     data = data,
     id = id,
     age = age,
@@ -190,7 +96,10 @@ create_combined_cox <- function(data,
     outcomes = outcomes
   )
 
-  new_class_cols <- names(tmerged_data)[grepl("^new_class", names(tmerged_data))]
+  new_class_cols <- names(tmerged_data)[grepl(
+    "^new_class",
+    names(tmerged_data)
+  )]
   new_class_cols_drop <- sapply(new_class_cols, function(name) {
     all(tmerged_data[[name]] == 1)
   })
@@ -217,8 +126,6 @@ create_combined_cox <- function(data,
   # drop any prob_cols from outcomes
   outcomes <- outcomes[!outcomes %in% prob_cols]
 
-  browser()
-
   rename_formula <- function(form, class_cols, prob_cols) {
     form <- gsub("<probs\\+>", paste(prob_cols, collapse = " + "), form)
     form <- gsub("<probs\\*>", paste(prob_cols, collapse = " * "), form)
@@ -235,10 +142,6 @@ create_combined_cox <- function(data,
     lapply(tt, function(function_string) {
       eval(parse(text = function_string))
     })
-  })
-
-  tt1 <- lapply(tt1, function(function_string) {
-    eval(parse(text = function_string))
   })
 
   cox_outputs <- mapply(SLAM::surv_cox,

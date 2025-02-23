@@ -57,7 +57,7 @@ boot_accuracy <- function(pred_df,
     # f1 <- MLmetrics::F1_Score(y_true = data$class.og, y_pred = data$class.pred)
     # f1 <- f1_score(predicted = data$class.pred, expected = data$class.og)
     f1
-  }, R = 2000, parallel = parallel, ncpus = ncpus)
+  }, R = 100, parallel = parallel, ncpus = ncpus)
 
   bootobj
 }
