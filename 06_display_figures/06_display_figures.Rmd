@@ -2125,7 +2125,7 @@ coxzph_tables <- lapply(rest_index, function(i) {
 
 #### print model output and print cox.zph output - Combined Cox
 
-```{r combined cox model}
+```{r combined cox model print output}
 rest_index <- which(final_models$data_mod == "og")
 for (i in rest_index) {
   models <- final_models[i, "cox_combined_models"][[1]]
@@ -2177,7 +2177,7 @@ kable(coxzph_tables)
 
 #### Plot Shoenfeld Residuals - Combined Cox
 
-```{r plot coxzph individual cox model residuals}
+```{r plot coxzph combined cox model residuals}
 rest_index <- which(final_models$data_mod == "og")
 coxzph_tables <- lapply(rest_index, function(i) {
   models <- final_models[i, "cox_combined_models"][[1]]
