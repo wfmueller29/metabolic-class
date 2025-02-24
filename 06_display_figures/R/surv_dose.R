@@ -69,6 +69,7 @@ kap_plot_all_dose <- function(df,
   } else {
     hr1 <- kap_plot_cox(df, var, age_death = age_death, event = event)
   }
+  pal <- c("black", "cyan2", "red", "orange", "forestgreen")
   surv_object <- survival::Surv(time = df[[age_death]], event = df[[event]])
   formula <- as.formula(paste0("surv_object ~ ", var))
   fit1 <- survminer::surv_fit(formula, data = df)
@@ -83,6 +84,7 @@ kap_plot_all_dose <- function(df,
     legend.title = "Quintile",
     legend = "right",
     title = ptitle,
+    size = 2, 
     #             font.title = c(12, "bold", "black"),
     ggtheme = ggplot2::theme(
       plot.title = ggplot2::element_text(

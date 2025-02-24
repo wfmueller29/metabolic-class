@@ -65,6 +65,7 @@ kap_plot_all <- function(df,
     surv.median.line = "hv",
     # legend.title = "Class",
     legend = "right",
+    size = 2, 
     title = ptitle,
     #             font.title = c(12, "bold", "black"),
     ggtheme = ggplot2::theme(
