@@ -21,6 +21,7 @@ if (length(args) == 0) {
 }
 
 input_path <- args[[1]]
+input_path <- normalizePath(input_path)
 
 config <- yaml::read_yaml(input_path)
 
