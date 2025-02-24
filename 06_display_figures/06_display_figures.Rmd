@@ -877,7 +877,6 @@ rest_combined_cox <- lapply(
     )
   }
 )
-
 ```
 
 ### Dose response
@@ -973,6 +972,17 @@ rest_index <- which(rest_index)[[1]]
 censuses <- final_models[test_index, "filter_cumulative_test_tmerged"][[1]]
 census_names <- names(censuses)
 
+id <- final_models[test_index, "subject"]
+
+censuses <- lapply(censuses, function(census) {
+  order <- order(census[[id]], census[["tstart"]], decreasing = c(FALSE, TRUE))
+  census <- census[order, ]
+  census <- census[!duplicated(census[[id]]), ]
+  census
+
+
+})
+
 dose_plot_cum_validation <- lapply(censuses, function(census) {
   prob_cols <- names(census)[grepl("^prob\\d+", names(census))]
 
@@ -1059,6 +1069,17 @@ rest_index <- which(rest_index)[[1]]
 # 6 to 58 weeks
 censuses <- final_models[test_index, "filter_cumulative_test_tmerged"][[1]]
 census_names <- names(censuses)
+
+id <- final_models[test_index, "subject"]
+
+censuses <- lapply(censuses, function(census) {
+  order <- order(census[[id]], census[["tstart"]], decreasing = c(FALSE, TRUE))
+  census <- census[order, ]
+  census <- census[!duplicated(census[[id]]), ]
+  census
+
+
+})
 
 kap_plot_cum_validation <- lapply(censuses, function(census) {
   class_cols <- names(census)[grepl("^new_class", names(census))]
@@ -1486,14 +1507,26 @@ three model calls
 
 ```{r print combined cox models all data}
 lapply(final_models$cox_combined_models[[rest_index]], function(model) {
-  list(cox_model = model, proportiona_hazards_test = cox.zph(model))
+  tt_terms <- sum(grepl("tt\\(", names(attr(model$terms, "dataClasses"))))
+  if (tt_terms > 0) {
+    output <- list(cox_model = model, proportiona_hazards_test = NULL)
+  } else {
+    output <- list(cox_model = model, proportiona_hazards_test = cox.zph(model))
+  }
+  output
 })
 ```
 
 #### Training Data
 ```{r print combined cox models training}
 lapply(final_models$cox_combined_models[[test_index]], function(model) {
-  list(cox_model = model, proportiona_hazards_test = cox.zph(model))
+  tt_terms <- sum(grepl("tt\\(", names(attr(model$terms, "dataClasses"))))
+  if (tt_terms > 0) {
+    output <- list(cox_model = model, proportiona_hazards_test = NULL)
+  } else {
+    output <- list(cox_model = model, proportiona_hazards_test = cox.zph(model))
+  }
+  output
 })
 tab_no <- tab_no + 1
 ```
@@ -2074,8 +2107,11 @@ for (i in rest_index) {
   cat("\n#############################################################\n")
 
   for (model in models) {
+    tt_terms <- sum(grepl("tt\\(", names(attr(model$terms, "dataClasses"))))
     print(model)
-    print(cox.zph(model))
+    if (!tt_terms > 0) {
+      print(cox.zph(model))
+    }
   }
 }
 ```
@@ -2091,6 +2127,16 @@ coxzph_tables <- lapply(rest_index, function(i) {
 
   zph_tables <- lapply(seq_along(models), function(i) {
     formula <- Reduce(paste, deparse(models[[i]]$formula))
+    model <- models[[i]]
+
+    tt_terms <- sum(grepl("tt\\(", names(attr(model$terms, "dataClasses"))))
+    if (tt_terms > 0) {
+      table <- data.frame(
+        outcome = outcome, data_type = data_mod, Model = i, formula = formula,
+        variables = NA, chisq = NA, df = NA, p = NA
+      )
+      return(table)
+    }
 
     table <- cox.zph(models[[i]])$table
     table <- data.frame(
@@ -2125,6 +2171,11 @@ coxzph_tables <- lapply(rest_index, function(i) {
     model <- models[[i]]
     formula <- Reduce(paste, deparse(model$formula))
 
+    tt_terms <- sum(grepl("tt\\(", names(attr(model$terms, "dataClasses"))))
+    if (tt_terms > 0) {
+      message("Cannot plot residuals for models with tt terms, returning NA")
+      return(NA)
+    }
     coxzph <- cox.zph(model)
     plot(coxzph, main = formula)
   })
@@ -2141,7 +2192,7 @@ source("R/surv_all.R")
 ```{r plot km covs}
 census <- final_models[rest_index, "combined_census"][[1]]
 
-cov_dummy <- config$datasets[[1]]$covariates_dummy
+cov_dummy <- datasets[[1]]$covariates_dummy
 lapply(cov_dummy, function(cov) {
   census[[cov]] <- factor(census[[cov]])
   kap_plot_all(census, cov,
