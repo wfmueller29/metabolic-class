@@ -139,9 +139,13 @@ create_combined_cox <- function(data,
   formulas <- lapply(formulas, as.formula)
 
   tts <- lapply(tts, function(tt) {
-    lapply(tt, function(function_string) {
-      eval(parse(text = function_string))
-    })
+    if (is.null(tt)) {
+      return(NULL)
+    } else {
+      lapply(tt, function(function_string) {
+        eval(parse(text = function_string))
+      })
+    }
   })
 
   cox_outputs <- mapply(SLAM::surv_cox,
