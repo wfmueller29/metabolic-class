@@ -154,6 +154,7 @@ create_combined_cox <- function(data,
       data = tmerged_data,
       time = "tstart",
       time2 = "tstop",
+      id = NULL,
       death = death_censor
     ), SIMPLIFY = FALSE
   )
