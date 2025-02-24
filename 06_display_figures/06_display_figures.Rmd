@@ -960,6 +960,17 @@ dose_plot_panel <- cowplot::plot_grid(title_theme, dose_plot_panel,
 )
 ```
 
+```{r save dose plots}
+for (i in seq_along(dose_plots)) {
+  plot <- dose_plots[[i]]
+  name <- paste0("plot_", i, ".png")
+  output_path <- file.path("output", config$out_tag, "dose_response")
+  dir.create(output_path, recursive = TRUE)
+  output_path <- normalizePath(output_path)
+  ggsave(filename = name, plot = plot, device = "png", path = output_path)
+}
+```
+
 ### Dose Response for test data with cumulative validation data
 
 ```{r cumulative validation dose response, include = FALSE}
@@ -979,8 +990,6 @@ censuses <- lapply(censuses, function(census) {
   census <- census[order, ]
   census <- census[!duplicated(census[[id]]), ]
   census
-
-
 })
 
 dose_plot_cum_validation <- lapply(censuses, function(census) {
@@ -1077,53 +1086,76 @@ censuses <- lapply(censuses, function(census) {
   census <- census[order, ]
   census <- census[!duplicated(census[[id]]), ]
   census
-
-
 })
 
 kap_plot_cum_validation <- lapply(censuses, function(census) {
   class_cols <- names(census)[grepl("^new_class", names(census))]
 
   kap_plots_cum_validation <- lapply(seq_along(class_cols), function(i) {
-    if (config$custom_palette) {
-      kap_plot_all(
-        df = census,
-        var = class_cols[[i]],
-        age_death = config$survival_dataset$age_death,
-        event = config$survival_dataset$event
-      )
-    } else {
-      kap_plot_all(
-        df = census,
-        var = class_cols[[i]],
-        age_death = config$survival_dataset$age_death,
-        event = config$survival_dataset$event
-      )
-    }
+    kap_plots_validation <- kap_plot_all(
+      df = census,
+      var = class_cols[[i]],
+      age_death = config$survival_dataset$age_death,
+      event = config$survival_dataset$event
+    )
   })
+  if (config$custom_palette_train) {
+    j <- 0
+    for (i in seq_along(kap_plots_cum_validation)) {
+      group <- kap_plots_cum_validation[[i]]$plot$data$strata
+      k <- length(unique(group)) + j
+      kap_plots_cum_validation[[i]]$plot <- kap_plots_cum_validation[[i]]$plot +
+        scale_color_manual(
+          values = config$palette_colors_train[j + 1:k],
+          name = "Class",
+          labels = config$legend_labels_train[j + 1:k]
+        )
+      j <- k
+    }
+  }
 
   kap_plots_cum_validation <- lapply(kap_plots_cum_validation, `[[`, "plot")
-
-  kap_plot_cum_validation_panel <- cowplot::plot_grid(
-    plotlist = kap_plots_cum_validation,
-    ncol = length(class_cols),
-    byrow = TRUE,
-    greedy = FALSE,
-    labels = "AUTO"
-  )
-
-  title_theme <- ggdraw() +
-    draw_label(paste(
-      "KM Validation of Test Data",
-      sep = " "
-    ))
-
-  kap_plot_cum_validation_panel <- cowplot::plot_grid(title_theme,
-    kap_plot_cum_validation_panel,
-    rel_heights = c(.05, 1),
-    ncol = 1
-  )
 })
+
+kap_plot_cum_validation_panels <- lapply(
+  seq_along(kap_plot_cum_validation),
+  function(i) {
+    kap_plot_cum_validation_panel <- cowplot::plot_grid(
+      plotlist = kap_plot_cum_validation[[i]],
+      ncol = length(kap_plot_cum_validation[[i]]),
+      byrow = TRUE,
+      greedy = FALSE,
+      labels = "AUTO"
+    )
+
+    title_theme <- ggdraw() +
+      draw_label(paste(
+        "KM Validation of Test Data",
+        names(kap_plot_cum_validation[[i]]),
+        sep = " "
+      ))
+
+    kap_plot_cum_validation_panel <- cowplot::plot_grid(title_theme,
+      kap_plot_cum_validation_panel,
+      rel_heights = c(.05, 1),
+      ncol = 1
+    )
+  }
+)
+```
+
+```{r save km vaidation plots}
+for (i in 3:6) {
+  for (j in seq_along(kap_plot_cum_validation[[i]])) {
+    title <- names(kap_plot_cum_validation)[[i]]
+    plot <- kap_plot_cum_validation[[i]][[j]]
+    name <- paste0("plot_", title, "_", j, "_", ".png")
+    output_path <- file.path("output", config$out_tag, "km_validation")
+    dir.create(output_path, recursive = TRUE)
+    output_path <- normalizePath(output_path)
+    ggsave(filename = name, plot = plot, device = "png", path = output_path)
+  }
+}
 ```
 
 ### Histogram of outcomes for complete data
@@ -1424,30 +1456,31 @@ used to make the KM Curves below
 #### Figure `r as.character(fig_no)`: KM Class Validation @ `r names(kap_plot_cum_validation)[[3]]` weeks
 
 ```{r km cum validation 1, fig.height=6, fig.width=18}
-kap_plot_cum_validation[[3]]
+kap_plot_cum_validation_panels[[3]]
 fig_no <- fig_no + 1
 ```
 
 #### Figure `r as.character(fig_no)`: KM Class Validation @ `r names(kap_plot_cum_validation)[[4]]` weeks
 
 ```{r km cum validation 2, fig.height=6, fig.width=18}
-kap_plot_cum_validation[[4]]
+kap_plot_cum_validation_panels[[4]]
 fig_no <- fig_no + 1
 ```
 
 #### Figure `r as.character(fig_no)`: KM Class Validation @ `r names(kap_plot_cum_validation)[[5]]` weeks
 
 ```{r km cum validation 3, fig.height=6, fig.width=18}
-kap_plot_cum_validation[[5]]
+kap_plot_cum_validation_panels[[5]]
 fig_no <- fig_no + 1
 ```
 
 #### Figure `r as.character(fig_no)`: KM Class Validation @ `r names(kap_plot_cum_validation)[[6]]` weeks
 
 ```{r km cum validation 4, fig.height=6, fig.width=18}
-kap_plot_cum_validation[[6]]
+kap_plot_cum_validation_panels[[6]]
 fig_no <- fig_no + 1
 ```
+
 
 ### Dose Response Validation - Testing Data
 
