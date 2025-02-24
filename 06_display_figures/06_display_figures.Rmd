@@ -860,7 +860,7 @@ test_combined_cox <- lapply(
       "strata\\(", names(attr(model$terms, "dataClasses"))
     )]
     survminer::ggforest(model, final_models$combined_census[[test_index]],
-      main = "HR Testing Combined Cox"
+      main = "HR Training Combined Cox"
     )
   }
 )
@@ -873,7 +873,7 @@ rest_combined_cox <- lapply(
       "strata\\(", names(attr(model$terms, "dataClasses"))
     )]
     survminer::ggforest(model, final_models$combined_census[[rest_index]],
-      main = "HR Testing Combined Cox"
+      main = "HR Complete Combined Cox"
     )
   }
 )
@@ -1158,6 +1158,76 @@ for (i in 3:6) {
 }
 ```
 
+### KM by class test data with cumulative validation data
+
+```{r source surv analysis for km validation, file = 'R/surv_all.R'}
+source("R/surv_all.R")
+```
+
+```{r cumulative validation by kaplan meier class}
+test_index <- final_models$data_mod == "train_test"
+rest_index <- !test_index
+test_index <- which(test_index)[[1]]
+rest_index <- which(rest_index)[[1]]
+
+# 6 to 58 weeks
+censuses <- final_models[test_index, "filter_cumulative_test_tmerged_prediction"][[1]]
+census_names <- names(censuses)
+
+id <- final_models[test_index, "subject"]
+
+censuses <- lapply(censuses, function(census) {
+  order <- order(census[[id]], census[["tstart"]], decreasing = c(FALSE, TRUE))
+  census <- census[order, ]
+  census <- census[!duplicated(census[[id]]), ]
+  census
+})
+
+km_hr_combine_validation <- lapply(seq_along(censuses), function(i) {
+  census <- censuses[[i]]
+  model_select <- 2
+  risk_col <- paste0("risk", model_select)
+  name <- paste0("risk_", model_select, "_cut")
+  name_tile <- paste0("risk_", model_select, "_tertile")
+  census[[name]] <- cut(census[[risk_col]], breaks = 3, dig.lab = 2)
+  census[[name_tile]] <- Hmisc::cut2(census[[risk_col]], digits = 3, g = 3)
+
+  prob_cols_tile <- paste0(prob_cols, "_tile")
+
+  plot <- kap_plot_all(
+    df = census,
+    var = name_tile,
+    age_death = config$survival_dataset$age_death,
+    event = config$survival_dataset$event,
+    ptitle = paste("KM of Tertiled HRs from Combined Cox", names(censuses)[[i]])
+  )$plot +
+    scale_color_manual(
+      values = c("darkgreen", "gold", "darkred"),
+      name = "Tertiles",
+      labels = c(1, 2, 3)
+    )
+
+  plot
+})
+
+names(km_hr_combine_validation) <- names(censuses)
+```
+
+```{r save km combined cox vaidation plots}
+for (i in seq_along(km_hr_combine_validation)) {
+  title <- names(km_hr_combine_validation)[[i]]
+  plot <- km_hr_combine_validation[[i]]
+  name <- paste0("plot_", title, "_", i, ".png")
+  output_path <- file.path(
+    "output",
+    config$out_tag,
+    "km_combined_hr_validation"
+  )
+  dir.create(output_path, recursive = TRUE)
+  output_path <- normalizePath(output_path)
+  ggsave(filename = name, plot = plot, device = "png", path = output_path)
+}
+```
 ### Histogram of outcomes for complete data
 
 ```{r hist outcome, echo = FALSE, include = FALSE}
