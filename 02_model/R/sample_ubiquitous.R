@@ -25,7 +25,7 @@ create_ubiquitous_sample <- function(datasets, size) {
 
   unique_ids <- lapply(ids, unique)
 
-  ubiquitous_ids <- Reduce(intersect, unique_ids)
+  ubiquitous_ids <- Reduce(base::intersect, unique_ids)
 
   ubiquitous_sample <- sample(x = ubiquitous_ids, size = size)
 
