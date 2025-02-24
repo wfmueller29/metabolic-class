@@ -852,41 +852,32 @@ rest_index <- !test_index
 test_index <- which(test_index)[[1]]
 rest_index <- which(rest_index)[[1]]
 
-test_combined_cox <- list(
-  survminer::ggforest(
-    final_models$cox_combined_models[[test_index]][[1]],
-    final_models$combined_census[[test_index]],
-    main = "HR Testing Combined Cox"
-  ),
-  survminer::ggforest(
-    final_models$cox_combined_models[[test_index]][[2]],
-    final_models$combined_census[[test_index]],
-    main = "HR Testing Combined Cox"
-  ),
-  survminer::ggforest(
-    final_models$cox_combined_models[[test_index]][[3]],
-    final_models$combined_census[[test_index]],
-    main = "HR Testing Combined Cox"
-  )
+test_combined_cox <- lapply(
+  final_models$cox_combined_models[[test_index]],
+  function(model) {
+    # This drops strata variables because ggforest will not plot them
+    attr(model$terms, "dataClasses") <- attr(model$terms, "dataClasses")[!grepl(
+      "strata\\(", names(attr(model$terms, "dataClasses"))
+    )]
+    survminer::ggforest(model, final_models$combined_census[[test_index]],
+      main = "HR Testing Combined Cox"
+    )
+  }
 )
 
-rest_combined_cox <- list(
-  survminer::ggforest(
-    final_models$cox_combined_models[[rest_index]][[1]],
-    final_models$combined_census[[rest_index]],
-    main = "HR Complete Data Combined Cox"
-  ),
-  survminer::ggforest(
-    final_models$cox_combined_models[[rest_index]][[2]],
-    final_models$combined_census[[rest_index]],
-    main = "HR Complete Data Combined Cox"
-  ),
-  survminer::ggforest(
-    final_models$cox_combined_models[[rest_index]][[3]],
-    final_models$combined_census[[rest_index]],
-    main = "HR Complete Data Combined Cox"
-  )
+rest_combined_cox <- lapply(
+  final_models$cox_combined_models[[rest_index]],
+  function(model) {
+    # This drops strata variables because ggforest will not plot them
+    attr(model$terms, "dataClasses") <- attr(model$terms, "dataClasses")[!grepl(
+      "strata\\(", names(attr(model$terms, "dataClasses"))
+    )]
+    survminer::ggforest(model, final_models$combined_census[[rest_index]],
+      main = "HR Testing Combined Cox"
+    )
+  }
 )
+
 ```
 
 ### Dose response
