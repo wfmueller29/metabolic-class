@@ -26,9 +26,9 @@ survival_dataset:
   covariates: "sex_M + strain_HET3"
 combined_cox:
   forms:
-    - "~ <class+> + sex * strain"
-    - "~ <probs+> + sex * strata(strain)"
-    - "~ <probs+> + sex * strata(strain) + frailty(idno)"
+    - "~ <class+> + sex + strain"
+    - "~ <probs+> + sex + strata(strain) + frailty(idno)"
+    - "~ <probs+> + sex + strata(strain)"
   tts:
     - NULL
     - NULL
