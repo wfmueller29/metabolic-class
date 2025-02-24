@@ -32,9 +32,7 @@ combined_cox:
   tts:
     - NULL
     - NULL
-    - ["function(x, t, ...) x * log(t + 20) + x * log(t * t + 20)",
-       "function(x, t, ...) x * log(t + 20) + x * log(t * t + 20)",
-       "function(x, t, ...) x * log(t + 20) + x * log(t * t + 20)"]
+    - NULL
 datasets:
 - name: "slam"
   path: "../00b_dataset_mods/output/data/test/slam_bw_og.csv"
