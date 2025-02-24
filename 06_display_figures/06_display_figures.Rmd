@@ -1158,13 +1158,13 @@ for (i in 3:6) {
 }
 ```
 
-### KM by class test data with cumulative validation data
+### KM of Tertiled HRs from combined cox model - Testing Data, Cumulative Subsets 
 
-```{r source surv analysis for km validation, file = 'R/surv_all.R'}
+```{r source surv analysis for combined hr km validation, file = 'R/surv_all.R'}
 source("R/surv_all.R")
 ```
 
-```{r cumulative validation by kaplan meier class}
+```{r cumulative validation by combined cox hr tertile kaplan meier class}
 test_index <- final_models$data_mod == "train_test"
 rest_index <- !test_index
 test_index <- which(test_index)[[1]]
@@ -1203,7 +1203,7 @@ km_hr_combine_validation <- lapply(seq_along(censuses), function(i) {
   )$plot +
     scale_color_manual(
       values = c("darkgreen", "gold", "darkred"),
-      name = "Tertiles",
+      name = "HR Tertiles",
       labels = c(1, 2, 3)
     )
 
