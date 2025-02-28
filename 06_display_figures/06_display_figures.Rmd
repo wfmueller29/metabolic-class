@@ -1952,7 +1952,7 @@ describe_le <- function(data, age_death, event) {
 census_complete <- final_models$combined_census[[1]]
 age_death <- config$survival_dataset$age_death
 event <- config$survival_dataset$event
-filter_vars <- config$datasets[[1]]$covariates
+filter_vars <- config$meta_dataset$covariates
 filtered_dfs <- lapply(filter_vars, function(filter) {
   print(filter)
   unique_values <- unique(census_complete[[filter]])
