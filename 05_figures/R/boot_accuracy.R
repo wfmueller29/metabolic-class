@@ -21,6 +21,11 @@ boot_accuracy <- function(pred_df,
     return(NA)
   }
 
+  if (all(parallel != c("no", "multicore", "snow"))) {
+    # set parallel to no, if it does not match 1 of 3 possible values
+    parallel <- "no"
+  }
+
   bootobj <- boot::boot(data = new_df, statistic = function(data, indices) {
     data <- data[indices, ]
     unique_og <- length(unique(data$class.og))
