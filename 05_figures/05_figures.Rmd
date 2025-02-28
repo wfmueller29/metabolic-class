@@ -1330,7 +1330,7 @@ add_prediction_data <- function(final_models, datasets, filtered_df_name) {
   test_index <- final_models$data_mod == "train_test"
   final_models_test <- final_models[test_index, ]
 
-  age_vars <- rep(config$survival_dataset$age_var, nrow(final_models_test))
+  age_vars <- rep(config$meta_dataset$age_var[[1]], nrow(final_models_test))
   age_vars <- paste0(age_vars, "_ns")
   outcomes <- final_models_test[, "oc"]
   ids <- final_models_test[, "subject"]
