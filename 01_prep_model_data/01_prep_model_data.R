@@ -15,8 +15,9 @@ args <- commandArgs(trailingOnly = TRUE)
 if (length(args) == 0) {
   # args[[1]] <- "input/test_local.yaml"
   # args[[1]] <- "input/slam_age_mb6.yaml"
+  args[[1]] <- "input/slam_age_all.yaml"
   # args[[1]] <- "../x01_external_validation/input/slam_age_all.yaml"
-  args[[1]] <- "../x01_external_validation/input/slam_c16-c18.yaml"
+  # args[[1]] <- "../x01_external_validation/input/slam_c16-c18.yaml"
   warning("No input file provided, using: ", args[[1]])
 }
 
@@ -24,6 +25,17 @@ input_path <- args[[1]]
 input_path <- normalizePath(input_path)
 
 config <- yaml::read_yaml(input_path)
+
+# update config ---------------------------------------------------------------
+
+# Fill prediction_data and meta_dataset info foin each dataset
+config$datasets <- lapply(config$datasets, function(dataset) {
+  dataset$prediction_data <- config$prediction_data
+  dataset <- c(dataset, config$meta_dataset)
+})
+
+
+# Read in yaml if external_validate -------------------------------------------
 
 # if validation, make validation data og data and input datasets test data
 if (!isFALSE(config$external_validate)) {
@@ -40,6 +52,7 @@ if (!isFALSE(config$external_validate)) {
   datasets <- config$datasets
 }
 
+# Input datasets --------------------------------------------------------------
 
 get_extension <- function(datasets) {
   datasets <- lapply(datasets, function(dataset) {
@@ -107,62 +120,9 @@ if (!isFALSE(config$external_validate)) {
   })
   if (all(as.vector(test))) {
     message("Number of columns in training data = validation data")
+  } else {
+    stop("Mismatched number of columns in training and validation data")
   }
-} else {
-  stop("Mismatched number of columns in training and validation data")
-}
-
-
-# convert all variables to correct type ---------------------------------------
-
-convert_variables <- function(datasets) {
-  datasets <- lapply(datasets, function(dataset) {
-    dataset <- convert_factor(dataset)
-    dataset
-  })
-  datasets
-}
-
-convert_numeric <- function(dataset) {
-  numeric_cols <- c(dataset$numeric)
-
-  dataset$data[, numeric_cols] <- lapply(numeric_cols, function(col) {
-    as.numeric(dataset$data[, col])
-  })
-
-  dataset
-}
-
-convert_factor <- function(dataset) {
-  factor_cols <- c(dataset$factor)
-
-  dataset$data[, factor_cols] <- lapply(factor_cols, function(col) {
-    as.factor(dataset$data[, col])
-  })
-
-  dataset
-}
-
-datasets <- convert_variables(datasets)
-if (!isFALSE(config$external_validate)) {
-  validation_datasets <- convert_variables(validation_datasets)
-}
-
-# filter out cases that have NA in the outcome variable -----------------------
-
-filter_na <- function(dataset) {
-  outcome_col <- dataset$outcome
-
-  df <- dataset$data
-
-  dataset$data <- df[!is.na(df[, outcome_col]), ]
-
-  dataset
-}
-
-datasets <- lapply(datasets, filter_na)
-if (!isFALSE(config$external_validate)) {
-  validation_datasets <- lapply(validation_datasets, filter_na)
 }
 
 # generate idno if ID column not coercible to numeric -------------------------
@@ -200,6 +160,61 @@ if (!isFALSE(config$external_validate)) {
     }
   }
 }
+
+# convert all variables to correct type ---------------------------------------
+
+convert_variables <- function(datasets) {
+  datasets <- lapply(datasets, function(dataset) {
+    dataset <- convert_factor(dataset)
+    dataset <- convert_numeric(dataset)
+    dataset
+  })
+  datasets
+}
+
+convert_numeric <- function(dataset) {
+  numeric_cols <- c(dataset$id, dataset$outcome, dataset$age_var)
+
+  dataset$data[, numeric_cols] <- lapply(numeric_cols, function(col) {
+    as.numeric(dataset$data[, col])
+  })
+
+  dataset
+}
+
+convert_factor <- function(dataset) {
+  factor_cols <- c(dataset$factor)
+
+  dataset$data[, factor_cols] <- lapply(factor_cols, function(col) {
+    as.factor(dataset$data[, col])
+  })
+
+  dataset
+}
+
+datasets <- convert_variables(datasets)
+
+if (!isFALSE(config$external_validate)) {
+  validation_datasets <- convert_variables(validation_datasets)
+}
+
+# filter out cases that have NA in the outcome variable -----------------------
+
+filter_na <- function(dataset) {
+  outcome_col <- dataset$outcome
+
+  df <- dataset$data
+
+  dataset$data <- df[!is.na(df[, outcome_col]), ]
+
+  dataset
+}
+
+datasets <- lapply(datasets, filter_na)
+if (!isFALSE(config$external_validate)) {
+  validation_datasets <- lapply(validation_datasets, filter_na)
+}
+
 
 # harmonize the datasets for cohort -------------------------------------------
 
