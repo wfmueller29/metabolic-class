@@ -1,4 +1,5 @@
 install.packages("devtools", repos = "https://cloud.r-project.org")
+install.packages("coxme", repos = "https://cloud.r-project.org")
 install.packages("fastDummies", repos = "https://cloud.r-project.org")
 devtools::install_github("https://github.com/wfmueller29/helphlme.git")
 devtools::install_github("https://github.com/wfmueller29/callframe.git")
