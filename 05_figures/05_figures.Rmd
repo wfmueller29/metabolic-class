@@ -42,9 +42,9 @@ mega_pal <- rep(palette(), 40)
 # for the case when we are not running with RStudio
 if (!exists("params")) {
   params <- list()
-  # params$input_path <- "../04_prediction_data/output/test_local.yaml"
+  params$input_path <- "../04_prediction_data/output/test_local.yaml"
   # params$input_path <- "../04_prediction_data/output/external_validation.yaml"
-  params$input_path <- "../04_prediction_data/output/all.yaml"
+  # params$input_path <- "../04_prediction_data/output/all.yaml"
   # params$input_path <- "../04_prediction_data/output/all_lean.yaml"
   # params$input_path <- "../04_prediction_data/output/mb6.yafl"
   # params$input_path <- "../04_prediction_data/output/all_relative_age.yaml"
@@ -290,8 +290,7 @@ source("R/model_cox.R")
 final_models$cox_models <- lapply(seq_len(nrow(final_models)), function(i) {
   model_cox(
     census = final_models$census[[i]],
-    var = "Class",
-    covariates = final_models$covariates[[i]],
+    formulas = config$individual_cox,
     age_death = config$survival_dataset$age_death,
     censor = config$survival_dataset$event
   )
