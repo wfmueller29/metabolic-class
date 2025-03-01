@@ -12,8 +12,8 @@ set.seed(365)
 args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) == 0) {
-  # input_path <- "../01_prep_model_data/output/test_local.yaml"
-  input_path <- "../01_prep_model_data/output/mb6.yaml"
+  input_path <- "../01_prep_model_data/output/test_local.yaml"
+  # input_path <- "../01_prep_model_data/output/mb6.yaml"
   warning("Using default input file: ", input_path)
 } else {
   input_path <- args[[1]]
