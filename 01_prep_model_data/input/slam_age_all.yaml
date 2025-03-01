@@ -21,6 +21,10 @@ survival_dataset:
   id: "idno"
   age_death: "le_wk"
   event: "dead_censor"
+individual_cox:
+  - "~ Class" 
+  - "~ Class + sex * strain" 
+  - "~ Class + sex + strata(strain)" 
 combined_cox:
   forms:
     - "~ <class+> + sex + strain"
