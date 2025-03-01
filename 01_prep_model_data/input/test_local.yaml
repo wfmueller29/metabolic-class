@@ -1,7 +1,7 @@
 out_tag: test_local
 tag_time: FALSE
-plan: multisession 
-ncpus: 2
+plan: multicore 
+ncpus: 5
 sample_n: 100
 center: TRUE
 scale: FALSE
