@@ -1501,9 +1501,13 @@ fig_no <- fig_no + 1
 
 ### Table `r as.character(tab_no)`: Hazard Ratios - Complete Data
 
-- Model 1: $ Surv ~ Class $
-- Model 2: $ Surv ~ Class + Sex + Strain$
-- Model 3: $ Surv ~ Class + Sex * Strain$
+```{r get indiviual cox model formulas, results = 'asis'}
+formulas <- lapply(final_models$cox_models[[1]], `[[`, "formula")
+
+for (i in seq_along(formulas)) {
+  cat(paste("- Model", i, ":", deparse1(formulas[[i]]), "\n", collapse = " "))
+}
+```
 
 ```{r table hazard ratios, results = 'asis'}
 print_table(.GlobalEnv,
