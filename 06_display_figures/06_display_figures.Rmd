@@ -1197,20 +1197,25 @@ km_hr_combine_validation <- lapply(seq_along(censuses), function(i) {
 
   prob_cols_tile <- paste0(prob_cols, "_tile")
 
-  plot <- kap_plot_all(
-    df = census,
+  output <- SLAM::surv_plot_km(
+    data = census,
     var = name_tile,
     age_death = config$survival_dataset$age_death,
     event = config$survival_dataset$event,
-    ptitle = paste("KM of Tertiled HRs from Combined Cox", names(censuses)[[i]])
-  )$plot +
+    title = paste("KM of Tertiled HRs from Combined Cox", names(censuses)[[i]]),
+    pval = ""
+  )
+
+  plot <- output$plot$plot +
     scale_color_manual(
       values = c("darkgreen", "gold", "darkred"),
       name = "HR Tertiles",
       labels = c(1, 2, 3)
     )
 
-  plot
+  hrs <- output$hr
+
+  list(plot = plot, hrs = hrs)
 })
 
 names(km_hr_combine_validation) <- names(censuses)
