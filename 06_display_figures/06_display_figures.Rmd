@@ -1094,20 +1094,23 @@ censuses <- lapply(censuses, function(census) {
 kap_plot_cum_validation <- lapply(censuses, function(census) {
   class_cols <- names(census)[grepl("^new_class", names(census))]
 
-  kap_plots_cum_validation <- lapply(seq_along(class_cols), function(i) {
-    kap_plots_validation <- kap_plot_all(
-      df = census,
+  outputs <- lapply(seq_along(class_cols), function(i) {
+    kap_plots_validation <- SLAM::surv_plot_km(
+      data = census,
       var = class_cols[[i]],
       age_death = config$survival_dataset$age_death,
-      event = config$survival_dataset$event
+      event = config$survival_dataset$event,
+      pval = ""
     )
   })
+  plots <- lapply(outputs, `[[`, "plot")
+  hrs <- lapply(outputs, `[[`, "hr")
   if (config$custom_palette_train) {
     j <- 0
-    for (i in seq_along(kap_plots_cum_validation)) {
-      group <- kap_plots_cum_validation[[i]]$plot$data$strata
+    for (i in seq_along(plots)) {
+      group <- plots[[i]]$plot$data$strata
       k <- length(unique(group)) + j
-      kap_plots_cum_validation[[i]]$plot <- kap_plots_cum_validation[[i]]$plot +
+      plots[[i]]$plot <- plots[[i]]$plot +
         scale_color_manual(
           values = config$palette_colors_train[j + 1:k],
           name = "Class",
@@ -1117,8 +1120,13 @@ kap_plot_cum_validation <- lapply(censuses, function(census) {
     }
   }
 
-  kap_plots_cum_validation <- lapply(kap_plots_cum_validation, `[[`, "plot")
+  plots <- lapply(plots, `[[`, "plot")
+
+  list(plots = plots, hrs = hrs)
 })
+
+kap_plot_cum_validation_hrs <- lapply(kap_plot_cum_validation, `[[`, "hrs")
+kap_plot_cum_validation <- lapply(kap_plot_cum_validation, `[[`, "plots")
 
 kap_plot_cum_validation_panels <- lapply(
   seq_along(kap_plot_cum_validation),
@@ -1162,10 +1170,6 @@ for (i in 3:6) {
 ```
 
 ### KM of Tertiled HRs from combined cox model - Testing Data, Cumulative Subsets 
-
-```{r source surv analysis for combined hr km validation, file = 'R/surv_all.R'}
-source("R/surv_all.R")
-```
 
 ```{r cumulative validation by combined cox hr tertile kaplan meier class}
 test_index <- final_models$data_mod == "train_test"
@@ -1219,6 +1223,45 @@ km_hr_combine_validation <- lapply(seq_along(censuses), function(i) {
 })
 
 names(km_hr_combine_validation) <- names(censuses)
+
+km_hr_combine_validation_hrs <- lapply(km_hr_combine_validation, `[[`, "hrs")
+km_hr_combine_validation <- lapply(km_hr_combine_validation, `[[`, "plot")
+
+plots <- lapply(km_hr_combine_validation, `[[`, "plot")
+
+indexes <- lapply(
+  config$prediction_data$filter_cumulative$start,
+  function(start) {
+    print(start)
+    print(paste0("^\\[", start))
+    grepl(paste0("^\\[", start), names(plots))
+  }
+)
+km_hr_combine_validation_panels <- lapply(
+  indexes,
+  function(i) {
+    km_hr_combine_validation_panel <- cowplot::plot_grid(
+      plotlist = km_hr_combine_validation[i],
+      ncol = round(sqrt(length(km_hr_combine_validation[i])), digits = 0),
+      byrow = TRUE,
+      greedy = FALSE,
+      labels = "AUTO"
+    )
+
+    title_theme <- ggdraw() +
+      draw_label(paste(
+        "KM Validation of Test Data",
+        names(km_hr_combine_validation[i]),
+        sep = " "
+      ))
+
+    km_hr_combine_validation_panel <- cowplot::plot_grid(title_theme,
+      km_hr_combine_validation_panel,
+      rel_heights = c(.05, 1),
+      ncol = 1
+    )
+  }
+)
 ```
 
 ```{r save km combined cox vaidation plots}
@@ -1236,6 +1279,7 @@ for (i in seq_along(km_hr_combine_validation)) {
   ggsave(filename = name, plot = plot, device = "png", path = output_path)
 }
 ```
+
 ### Histogram of outcomes for complete data
 
 ```{r hist outcome, echo = FALSE, include = FALSE}
@@ -1563,6 +1607,20 @@ kap_plot_cum_validation_panels[[6]]
 fig_no <- fig_no + 1
 ```
 
+### KM Tertiles Predicted Hazard Ratio Validation - Testing Data
+
+The 20% testing data was applied to the 80% training latent class mixed model
+to derive their predicted class assignments. These class assignments were then 
+used to predict hazard ratios for each individual using the training combined
+cox model. These predicted hazard ratios were then tertiled and plotted on KM 
+curves
+
+#### Figure `r as.character(fig_no)`: KM Tertile of Predicted Hazard Ratios
+
+```{r km tertiled hr validation 1, fig.height=24, fig.width=24}
+km_hr_combine_validation_panels
+fig_no <- fig_no + 1
+```
 
 ### Dose Response Validation - Testing Data
 
