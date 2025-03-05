@@ -259,22 +259,24 @@ final_models$census <- lapply(final_models$census, function(df) {
 })
 
 final_models$kap_plot <- lapply(seq_len(nrow(final_models)), function(i) {
-  kap_plot <- kap_plot_all(
-    df = final_models$census[[i]],
+  kap_plot <- SLAM::surv_plot_km(
+    data = final_models$census[[i]],
     var = "Class",
     age_death = config$survival_dataset$age_death,
     event = config$survival_dataset$event,
-    ptitle = paste(final_models$oc_name[[i]],
+    title = paste(final_models$oc_name[[i]],
       final_models$age_var_name[[i]],
       "KM",
       sep = " "
-    )
+    ),
+    pval = ""
   )
 
   kap_plot
 })
 
-final_models$kap_plot
+final_models$kap_plot_hrs <- lapply(final_models$kap_plot, `[[`, "hr")
+final_models$kap_plot <- lapply(final_models$kap_plot, `[[`, "plot")
 ```
 
 ### Create Cox Models
