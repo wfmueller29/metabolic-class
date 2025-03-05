@@ -901,7 +901,7 @@ for (prob_col in prob_cols) {
   name <- paste0(prob_col, "_cut")
   name_tile <- paste0(prob_col, "_tile")
   census[[name]] <- cut(census[[prob_col]], breaks = 5, dig.lab = 2)
-  census[[name_tile]] <- Hmisc::cut2(census[[prob_col]], g = 5)
+  census[[name_tile]] <- Hmisc::cut2(census[[prob_col]], g = 5, digits = 10)
 }
 
 prob_cols_tile <- paste0(prob_cols, "_tile")
@@ -912,33 +912,37 @@ dose_plots <- lapply(seq_along(prob_cols_tile), function(i) {
     return(NA)
   }
   if (config$custom_palette) {
-    kap_plot_all_dose(
-      df = census, var = prob_cols_tile[[i]],
-      age_death = config$survival_dataset$age_death,
-      event = config$survival_dataset$event,
-      color = config$palette_colors[[i]],
-      ptitle = paste(
-        "Probability of ", config$legend_labels[[i]],
-        "Class Quintile"
-      ),
-      class_number = i
-    )
+    label <- config$legend_labels[[i]]
   } else {
-    kap_plot_all_dose(
-      df = census, var = prob_cols_tile[[i]],
-      age_death = config$survival_dataset$age_death,
-      event = config$survival_dataset$event,
-      ptitle = paste("Probability of Class", i, "Quintile"),
-      class_number = i
-    )
+    label <- i
   }
+  SLAM::surv_plot_km(
+    data = census,
+    var = prob_cols_tile[[i]],
+    age_death = config$survival_dataset$age_death,
+    event = config$survival_dataset$event,
+    title = paste("Probability of ", label, "Class Quintile"),
+    pval = "",
+    palette = c("black", "cyan2", "red", "orange", "forestgreen"),
+    legend.title = "Quintile",
+    legend.labs = 1:5
+  )
+})
+
+dose_plots_hrs <- lapply(dose_plots, function(plot) {
+  if (anyNA(plot)) {
+    plot <- NA
+  } else {
+    plot <- plot[["plot"]]$hrs
+  }
+  plot
 })
 
 dose_plots <- lapply(dose_plots, function(plot) {
   if (anyNA(plot)) {
     plot <- NA
   } else {
-    plot <- plot[["plot"]]
+    plot <- plot[["plot"]]$plot
   }
   plot
 })
@@ -1013,26 +1017,18 @@ dose_plot_cum_validation <- lapply(censuses, function(census) {
       return(NA)
     }
     if (config$custom_palette_train) {
-      kap_plot_all_dose(
-        df = census, var = prob_cols_tile[[i]],
-        age_death = config$survival_dataset$age_death,
-        event = config$survival_dataset$event,
-        color = config$palette_colors[[i]],
-        ptitle = paste(
-          "Probability of ", config$legend_labels_train[[i]],
-          "Class Quintile"
-        ),
-        class_number = i
-      )
+      label <- config$legend_labels_train[[i]]
     } else {
-      kap_plot_all_dose(
-        df = census, var = prob_cols_tile[[i]],
-        age_death = config$survival_dataset$age_death,
-        event = config$survival_dataset$event,
-        ptitle = paste("Probability of Class", i, "Quntile"),
-        class_number = i
-      )
+      label <- i
     }
+    SLAM::surv_plot_km(
+      data = census,
+      var = prob_cols_tile[[i]],
+      age_death = config$survival_dataset$age_death,
+      event = config$survival_dataset$event,
+      title = paste("Probability of Class", label, "Quntile"),
+      pval = ""
+    )$plot
   })
 
   dose_plots_cum_validation <- lapply(dose_plots_cum_validation, function(plot) {
