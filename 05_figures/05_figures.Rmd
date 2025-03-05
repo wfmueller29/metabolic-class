@@ -248,10 +248,6 @@ final_models$clean_t1 <- lapply(seq_along(final_models$census), function(i) {
 
 ### Surival Analysis 
 
-```{r source surv analysis, file = 'R/surv.R'}
-source("R/surv.R")
-```
-
 ```{r surv analysis}
 final_models$census <- lapply(final_models$census, function(df) {
   df$Class <- df$new_class
