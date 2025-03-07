@@ -1,8 +1,8 @@
 out_tag: all_only_bw
 tag_time: FALSE
 plan: multicore
-ncpus: 8
-sample_n: FALSE
+ncpus: 10
+sample_n: 100
 center: TRUE
 scale: FALSE
 external_validate: FALSE
@@ -68,7 +68,7 @@ meta_dataset:
     split: .8
 datasets:
 - name: "slam"
-  path: "../00b_dataset_mods/output/data/test/slam_bw_og.csv"
+  path: "../00b_dataset_mods/output/test/data/slam_bw_og.csv"
   outcome: "bw"
   model:
     fixed: "~ age_wk + age_wk2 + sex_F * strain_HET3"
