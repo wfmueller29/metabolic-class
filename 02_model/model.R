@@ -144,6 +144,7 @@ for (dataset in datasets) {
   assign(x = dataset$data_id, value = dataset$data, envir = .GlobalEnv)
 }
 
+start_time <- Sys.time()
 models <- callframe::pmap_cf(cf,
   helphlme::hlme2,
   type = c(
@@ -160,6 +161,11 @@ models <- callframe::pmap_cf(cf,
   pkgs = "helphlme",
   seed = TRUE
 )
+end_time <- Sys.time()
+
+dif_time <- difftime(end_time, start_time, units = "mins")
+
+message(paste0("Elapsed time running models = ", dif_time, " minutes"))
 
 # This is to close background workers
 future::plan(sequential)
