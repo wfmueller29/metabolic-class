@@ -156,7 +156,7 @@ main_all <- glucose %>%
   left_join(surv, by = "idno") %>%
   select(-age_wk)
 
-main_all$age_wk <- (main_all$date - main_all$dob) / 7
+main_all$age_wk <- difftime(main_all$date, main_all$dob, units = "weeks")
 na_index <- is.na(main_all$date) | is.na(main_all$idno)
 main_all <- main_all[!na_index, ]
 
