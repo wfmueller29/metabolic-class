@@ -279,7 +279,7 @@ nmr$idno <- fixID_history(nmr$idno, census)
     - recode old to new idnos 
     
 ```{r slam_survival, warning=FALSE, message=FALSE, echo=FALSE}
-surv <- read.csv("data/survival_2021-12-17.csv") 
+surv <- read.csv("data/survival_2021-12-17.csv")
 # surv <- read.csv("/Users/shiromaej/Box/ISG Code Check/data/slam/Survival.csv")
 surv$tod <- as.Date(surv$tod, "%m/%d/%y")
 surv$tag <- as.character(surv$tag)
@@ -321,10 +321,12 @@ main_all <- glucose %>%
           )
         )
       )
-    ),
-    age_wk = round(((date - dob) / 7), 2) + 1
-  ) %>%
-  filter(!is.na(date) & !is.na(idno))
+    )
+  )
+
+main_all$age_wk <- (main_all$date - main_all$dob) / 7
+na_index <- is.na(main_all$date) | is.na(main_all$idno)
+main_all <- main_all[!na_index, ]
 
 before_age_filter <- nrow(main_all)
 
@@ -415,9 +417,8 @@ census_c16_death <- main_all2 %>%
   select(idno, tag, dob) %>%
   distinct() %>%
   left_join(surv, by = "tag") %>%
-    select(-age_wk) %>%
+  select(-age_wk) %>%
   left_join(main_all2, by = c("idno", "dob")) %>%
-
   group_by(
     idno, cod, dob, sex, strain,
     tod
