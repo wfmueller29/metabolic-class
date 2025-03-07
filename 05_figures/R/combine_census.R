@@ -40,7 +40,7 @@ combine_census <- function(censuses, ids, outcomes) {
   check <- lapply(censuses, function(census) {
     all.equal(census, censuses[[1]])
   })
-  if (length(check == 1)) {
+  if (length(check) == 1) {
     check <- unlist(check)
   } else {
     check <- do.call(all.equal, check)
