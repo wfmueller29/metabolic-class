@@ -18,15 +18,21 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## Analysis 
+
 #### census data read in
-  - input file census.csv (10/30/2019)
-  - edit csv column name 'Animal_ID'
+
+- input file census.csv (10/30/2019)
+- edit csv column name 'Animal_ID'
   
 ```{r slam_census, warning=FALSE, message=FALSE, echo=FALSE}
 # edit csv column name 'Animal_ID'
-census <- read.csv("data/census.csv") %>%
-  # census <- read.csv("/Users/shiromaej/Box/ISG Code Check/data/slam/census.csv") %>%
-  select(idno, animal = Animal_ID, tag, sex, strain, dob, cohort, taghistory)
+census <- read.csv("data/census.csv")
+col_keep <- c(
+  "idno", "Animal_ID", "tag", "sex",
+  "strain", "dob", "cohort", "taghistory"
+)
+census <- census[, col_keep]
+names(census)[names(census) == "Animal_ID"] <- "animal"
 census$dob <- as.Date(census$dob, "%m/%d/%Y")
 census$idno <- as.character(census$idno)
 census$tag <- as.character(census$tag)
@@ -34,102 +40,36 @@ census$taghistory <- as.character(census$taghistory)
 ``` 
 
 #### body weight data read in and clean
-  - input file BW_Temp_FC_All_2019-11-16 (11/16/2019)
-  - input file NMR.csv (10/30/2019)
-  - clean body weights (funny values) 
-    - text to missing 
-    - bw < 10 to missing 
-    - bw > 100 to missing
-  - merge nmr body weights into main body weight dataset (bodywt)
-    - bodywt_nmr
+
+- input file BW_Temp_FC_All_2019-11-16 (11/16/2019)
+- input file NMR.csv (10/30/2019)
+- clean body weights (funny values) 
+  - text to missing 
+  - bw < 10 to missing 
+  - bw > 100 to missing
+- merge nmr body weights into main body weight dataset (bodywt)
+  - bodywt_nmr
   
 ```{r slam_bodyweight, warning=FALSE, message=FALSE, echo=FALSE}
-bodywt <- read.csv("data/BW_Temp_FC_All_2021-12-23.csv") %>%
-  # bodywt <- read.csv("/Users/shiromaej/Box/ISG Code Check/data/slam/BW_Temp_FC_All_2019-11-16.csv") %>%
-  select(idno, date, bw, foodcons, temp)
 
-bodywt <- bodywt %>%
-  mutate(
-    bw = ifelse(bw == "", NA,
-      ifelse(bw == "NA", NA,
-        ifelse(bw == "wholecaedead", NA,
-          ifelse(bw == "MIA", NA,
-            ifelse(bw == "fd5-23", NA,
-              ifelse(bw == "FD", NA,
-                ifelse(bw == "f/d6/7/2018", NA,
-                  ifelse(bw == "f/d2/7/18", NA,
-                    ifelse(bw == "f/d2/27", NA,
-                      ifelse(bw == "DVR", NA,
-                        ifelse(bw == "deadd", NA,
-                          ifelse(bw == "dead5-9-18", NA,
-                            ifelse(bw == "dead5-8-18", NA,
-                              ifelse(bw == "dead5-21-18", NA,
-                                ifelse(bw == "dead5-14", NA,
-                                  ifelse(bw == "dead5-10", NA,
-                                    ifelse(bw == "dead1-30", NA,
-                                      ifelse(bw == "dead", NA,
-                                        ifelse(bw == "Dead", NA,
-                                          ifelse(bw == "DEAD", NA,
-                                            ifelse(bw == "BW", NA,
-                                              ifelse(bw == "culled5-18", NA, as.character(bw))
-                                            )
-                                          )
-                                        )
-                                      )
-                                    )
-                                  )
-                                )
-                              )
-                            )
-                          )
-                        )
-                      )
-                    )
-                  )
-                )
-              )
-            )
-          )
-        )
-      )
-    )
-  )
+bodywt <- read.csv("data/BW_Temp_FC_All_2021-12-23.csv")
+bodywt <- bodywt[, c("idno", "date", "bw", "foodcons", "temp")]
+
 bodywt$date <- as.Date(bodywt$date, "%Y-%m-%d")
-bodywt$bw <- as.numeric(as.character(bodywt$bw))
+bodywt$bw <- as.numeric(bodywt$bw)
 bodywt$idno <- as.character(bodywt$idno)
+
 bw_na_before <- sum(is.na(bodywt$bw))
-bodywt <- bodywt %>%
-  mutate(
-    bw = ifelse(bw < 10, NA,
-      ifelse(bw > 100, NA, bw)
-    )
-  )
+bodywt$bw <- ifelse(bodywt$bw < 10, NA, bodywt$bw)
+bodywt$bw <- ifelse(bodywt$bw > 100, NA, bodywt$bw)
 bw_na_after <- sum(is.na(bodywt$bw))
 
-bodywt <- bodywt %>%
-  filter(!is.na(bw))
+nrow(bodywt)
+bodywt <- bodywt[!is.na(bodywt$bw), ]
+nrow(bodywt)
 
-duplicated_bw <- sum(duplicated(bodywt[c(1, 2)]))
-bodywt <- bodywt[!duplicated(bodywt[c(1, 2)]), ]
-
-## from NMR
-bodywt_nmr <- read.csv("data/nmr_compiled_2021-11-10.csv") %>%
-  select(idno, date, bw)
-
-bodywt_nmr$date <- as.Date(bodywt_nmr$date, "%Y-%m-%d")
-bodywt_nmr$bw <- as.numeric(as.character(bodywt_nmr$bw))
-bodywt_nmr$idno <- as.character(bodywt_nmr$idno)
-bodywt_nmr <- bodywt_nmr %>%
-  mutate(
-    bw = ifelse(bw < 10, NA,
-      ifelse(bw > 100, NA, bw)
-    )
-  )
-
-bodywt <- bodywt %>%
-  full_join(bodywt_nmr)
-
-bodywt <- bodywt[!duplicated(bodywt[c(1, 2)]), ]
+duplicated_bw <- sum(duplicated(bodywt[, c("idno", "date")]))
+bodywt <- bodywt[!duplicated(bodywt[, c("idno", "date")]), ]
 
 hist(bodywt$bw)
 ```
@@ -148,7 +88,7 @@ hist(bodywt$bw)
     
 ```{r slam_glucose, warning=FALSE, message=FALSE, echo=FALSE}
 # edit csv column name 'Stress_Notes'
-glucose <- read.csv("data/gluc_lact_2021-12-01.csv") %>%
+glucose <- read.csv("data/gluc_lact_2021-12-01.csv")
   # glucose <- read.csv("/Users/shiromaej/Box/ISG Code Check/data/slam/Glucose_Lactate.csv") %>%
   select(idno, date, gluc = Glucose) %>%
   mutate(
