@@ -37,7 +37,7 @@ census$dob <- as.Date(census$dob, "%m/%d/%Y")
 census$idno <- as.character(census$idno)
 census$tag <- as.character(census$tag)
 census$taghistory <- as.character(census$taghistory)
-``` 
+```
 
 #### body weight data read in and clean
 
@@ -243,29 +243,83 @@ main_all$age_wk <- as.numeric(main_all$age_wk)
 - Before age filter = `r before_age_filter`
 - After age filter = `r after_age_filter`
 
+
 #### remove id's without dod
 
 ```{r remove date equal dod, warning = FALSE, message = FALSE, echo = FALSE}
-main_all_death <- merge(main_all, surv, by = "tag", all.x = TRUE)
+main_all <- merge(main_all, surv[, c("tag", "tod")], by = "tag", all.x = TRUE)
 
-obs_without_tod <- is.na(main_all_death$tod)
-ids_without_tod <- unique(main_all_death$idno[is.na(main_all_death$tod)])
+obs_without_tod <- is.na(main_all$tod)
+ids_without_tod <- unique(main_all$idno[is.na(main_all$tod)])
 
 obs_before_tod <- nrow(main_all)
 main_all <- main_all[!obs_without_tod, ]
 obs_after_tod <- nrow(main_all)
+
+n_obs_without_tod <- sum(obs_without_tod)
+test <- n_obs_without_tod == obs_before_tod - obs_after_tod
+if (!isTRUE(test)) {
+  stop("An error occured when removing observations without a tod")
+}
+
+message("Number of observations without a tod = ", n_obs_without_tod)
 
 ```
 
 - Observations lost due to no tod = `r obs_before_tod - obs_after_tod`
 - ID without tod = `r ids_without_tod`
 
+
+#### remove obs without date
+
+```{r remove obs without date, warning = FALSE, message = FALSE, echo = FALSE}
+n_na_date <- sum(is.na(main_all$date))
+nrow_before <- nrow(main_all)
+main_all <- main_all[!is.na(main_all$date), ]
+nrow_after <- nrow(main_all)
+test <- n_na_date == nrow_before - nrow_after
+if (!isTRUE(test)) {
+  stop("An error occured in removing NA dates")
+}
+message("Number of observations without a date of observations = ", n_na_date)
+```
+
+- Observations lost due to NA date = `r n_na_date`
+
 #### remove observations with the same tod and date of observation
 
 ```{r remove same date tod, warning = FALSE, message = FALSE, echo = FALSE}
-obs_with_same_tod_date <- main_all_death$tod == main_all_death$date
-sum(obs_with_same_tod_date, na.rm = TRUE)
+obs_same_tod_date <- main_all$tod == main_all$date
+n_obs_same_tod_data <- sum(obs_same_tod_date)
+nrow_before <- nrow(main_all)
+main_all <- main_all[!obs_same_tod_date, ]
+nrow_after <- nrow(main_all)
+test <- n_obs_same_tod_data == nrow_before - nrow_after
+if (!isTRUE(test)) {
+  stop("An error occured in removing dates same as tod")
+}
+message(
+  "Number of observations with same tod and date of obs = ",
+  n_obs_same_tod_data
+)
+
+obs_tod_less_date <- main_all$tod < main_all$date
+n_obs_tod_less_date <- sum(obs_tod_less_date)
+nrow_before <- nrow(main_all)
+main_all <- main_all[!obs_tod_less_date, ]
+nrow_after <- nrow(main_all)
+test <- n_obs_tod_less_date == nrow_before - nrow_after
+if (!isTRUE(test)) {
+  stop("An error occured in removing dates greater than tod")
+}
+message(
+  "Number of observations with tod < date of obs = ",
+  n_obs_tod_less_date
+)
 ```
+
+- Observations with same tod and date of observation = `r n_obs_same_tod_data`
+- Observations with tod less than date of observation = `r n_obs_tod_less_date`
   
 #### restriction to cohorts 1 to 10
 
