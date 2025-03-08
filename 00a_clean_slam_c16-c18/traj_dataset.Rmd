@@ -32,27 +32,23 @@ knitr::opts_chunk$set(echo = TRUE)
     - bodywt_nmr
   
 ```{r slam_bodyweight, warning=FALSE, message=FALSE, echo=FALSE}
-bodywt <- readxl::read_xlsx("data/Body-weight_2025-02-14.xlsx") %>%
-  select(idno, date = date_btf, bw) %>%
-  as.data.frame()
+bodywt <- readxl::read_xlsx("data/Body-weight_2025-02-14.xlsx")
+bodywt <- as.data.frame(bodywt)
+bodywt <- bodywt[, c("idno", "date_btf", "bw")]
+names(bodywt)[names(bodywt) == "date_btf"] <- "date"
 
 bodywt$date <- as.Date(bodywt$date, "%Y-%m-%d")
 
 bw_na_before <- sum(is.na(bodywt$bw))
-bodywt <- bodywt %>%
-  mutate(
-    bw = ifelse(bw < 10, NA,
-      ifelse(bw > 100, NA, bw)
-    )
-  )
+bodywt$bw <- ifelse(bodywt$bw < 10, NA, bodywt$bw)
+bodywt$bw <- ifelse(bodywt$bw > 100, NA, bodywt$bw)
 bw_na_after <- sum(is.na(bodywt$bw))
 
 
-bodywt <- bodywt %>%
-  filter(!is.na(bw))
+bodywt <- bodywt[!is.na(bodywt$bw), ]
 
-duplicated_bw <- sum(duplicated(bodywt[c(1, 2)]))
-bodywt <- bodywt[!duplicated(bodywt[c(1, 2)]), ]
+duplicated_bw <- sum(duplicated(bodywt[, c("idno", "date")]))
+bodywt <- bodywt[!duplicated(bodywt[, c("idno", "date")]), ]
 
 hist(bodywt$bw)
 ```
@@ -72,22 +68,24 @@ hist(bodywt$bw)
     
 ```{r slam_glucose, warning=FALSE, message=FALSE, echo=FALSE}
 # edit csv column name 'Stress_Notes'
-glucose <- readxl::read_xlsx("data/Glucose_2025-02-14.xlsx") %>%
-  select(idno, date = date_glu, gluc = glucose) %>%
-  as.data.frame()
+glucose <- readxl::read_xlsx("data/Glucose_2025-02-14.xlsx")
+glucose <- as.data.frame(glucose)
+glucose <- glucose[, c("idno", "date_glu", "glucose")]
+names(glucose)[names(glucose) == "date_glu"] <- "date"
+names(glucose)[names(glucose) == "glucose"] <- "gluc"
+
 
 glucose$date <- as.Date(glucose$date, "%Y-%m-%d")
 
 gluc_na_before <- sum(is.na(glucose$gluc))
-glucose <- glucose %>%
-  mutate(
-    gluc = ifelse(gluc < 20 | gluc >= 300, NA, gluc)
-  )
-
+glucose$gluc <- ifelse(glucose$gluc < 20, NA, glucose$gluc)
+glucose$gluc <- ifelse(glucose$gluc >= 300, NA, glucose$gluc)
 gluc_na_after <- sum(is.na(glucose$gluc))
-duplicated_gluc <- sum(duplicated(glucose[c(1, 2)]))
 
-glucose <- glucose[!duplicated(glucose[c(1, 2)]), ]
+
+duplicated_gluc <- sum(duplicated(glucose[, c("idno", "date")]))
+glucose <- glucose[!duplicated(glucose[, c("idno", "date")]), ]
+
 
 hist(glucose$gluc)
 ```
@@ -106,21 +104,19 @@ hist(glucose$gluc)
     - lean >= 40 to NA
 
 ```{r slam_nmr, warning=FALSE, message=FALSE, echo=FALSE}
-nmr <- readxl::read_xlsx("data/NMR-fat_2025-02-14.xlsx") %>%
-  select(idno, date = date_nmr, fat) %>%
-  as.data.frame()
+nmr <- readxl::read_xlsx("data/NMR-fat_2025-02-14.xlsx")
+nmr <- as.data.frame(nmr)
+nmr <- nmr[, c("idno", "date_nmr", "fat")]
+names(nmr)[names(nmr) == "date_nmr"] <- "date"
 
 nmr$date <- as.Date(nmr$date, "%Y-%m-%d")
 
 fat_na_before <- sum(is.na(nmr$fat))
-nmr <- nmr %>%
-  mutate(
-    fat = ifelse(fat <= 0, NA, fat)
-  )
+nmr$fat <- ifelse(nmr$fat <= 0, NA, nmr$fat)
 fat_na_after <- sum(is.na(nmr$fat))
 
-duplicated_nmr <- sum(!duplicated(nmr[c(1, 2)]))
-nmr <- nmr[!duplicated(nmr[c(1, 2)]), ]
+duplicated_nmr <- sum(!duplicated(nmr[, c("idno", "date")]))
+nmr <- nmr[!duplicated(nmr[, c("idno", "date")]), ]
 
 hist(nmr$fat)
 ```
@@ -142,6 +138,19 @@ surv$cod <- as.character((surv$cod))
 surv$cohort <- as.numeric(surv$cohort)
 ```
 
+#### Create census from survival dataset
+
+```{r census, warning=FALSE, message=FALSE, echo=FALSE}
+census <- surv[, c("project", "cohort", "sex", "strain", "idno", "tag", "dob")]
+```
+
+#### Make surv like old surv in slam_c1-c10
+
+```{r old surv}
+surv <- surv[, c("tag", "age_wk", "state", "tod", "cod")]
+
+```
+
 #### merging all datasets into a main file and clean
   - glucose
   - bodywt (body weight)
@@ -150,20 +159,18 @@ surv$cohort <- as.numeric(surv$cohort)
   - removal of timepoints before dob or mouse facility arrival date
   
 ```{r slam_main_all, warning=FALSE, message=FALSE, echo=FALSE}
-main_all <- glucose %>%
-  full_join(bodywt, by = c("idno", "date")) %>%
-  full_join(nmr, by = c("idno", "date")) %>%
-  left_join(surv, by = "idno") %>%
-  select(-age_wk)
+main_all <- merge(glucose, bodywt, by = c("idno", "date"), all = TRUE)
+main_all <- merge(main_all, nmr, by = c("idno", "date"), all = TRUE)
+main_all <- merge(main_all, census, by = "idno", all.x = TRUE)
 
 main_all$age_wk <- difftime(main_all$date, main_all$dob, units = "weeks")
 na_index <- is.na(main_all$date) | is.na(main_all$idno)
+message("Number of Observations with NA for date or idno = ", sum(na_index))
 main_all <- main_all[!na_index, ]
 
 before_age_filter <- nrow(main_all)
 
-main_all <- main_all %>%
-  filter(age_wk > 0)
+main_all <- main_all[main_all$age_wk > 0, ]
 
 after_age_filter <- nrow(main_all)
 
@@ -173,6 +180,89 @@ main_all$age_wk <- as.numeric(main_all$age_wk)
 - Before age filter = `r before_age_filter`
 - After age filter = `r after_age_filter`
   
+#### remove id's without dod
+
+```{r remove date equal dod, warning = FALSE, message = FALSE, echo = FALSE}
+main_all <- merge(main_all, surv[, c("tag", "tod")], by = "tag", all.x = TRUE)
+
+obs_without_tod <- is.na(main_all$tod)
+ids_without_tod <- unique(main_all$idno[is.na(main_all$tod)])
+
+obs_before_tod <- nrow(main_all)
+main_all <- main_all[!obs_without_tod, ]
+obs_after_tod <- nrow(main_all)
+
+n_obs_without_tod <- sum(obs_without_tod)
+test <- n_obs_without_tod == obs_before_tod - obs_after_tod
+if (!isTRUE(test)) {
+  stop("An error occured when removing observations without a tod")
+}
+
+message("Number of observations without a tod = ", n_obs_without_tod)
+
+```
+
+- Observations lost due to no tod = `r obs_before_tod - obs_after_tod`
+- ID without tod = `r ids_without_tod`
+
+
+#### remove obs without date
+
+```{r remove obs without date, warning = FALSE, message = FALSE, echo = FALSE}
+n_na_date <- sum(is.na(main_all$date))
+nrow_before <- nrow(main_all)
+main_all <- main_all[!is.na(main_all$date), ]
+nrow_after <- nrow(main_all)
+test <- n_na_date == nrow_before - nrow_after
+if (!isTRUE(test)) {
+  stop("An error occured in removing NA dates")
+}
+message("Number of observations without a date of observations = ", n_na_date)
+```
+
+- Observations lost due to NA date = `r n_na_date`
+
+#### remove observations with the same tod and date of observation
+
+```{r remove same date tod, warning = FALSE, message = FALSE, echo = FALSE}
+obs_same_tod_date <- main_all$tod == main_all$date
+n_obs_same_tod_data <- sum(obs_same_tod_date)
+nrow_before <- nrow(main_all)
+main_all <- main_all[!obs_same_tod_date, ]
+nrow_after <- nrow(main_all)
+test <- n_obs_same_tod_data == nrow_before - nrow_after
+if (!isTRUE(test)) {
+  stop("An error occured in removing dates same as tod")
+}
+message(
+  "Number of observations with same tod and date of obs = ",
+  n_obs_same_tod_data
+)
+
+obs_tod_less_date <- main_all$tod < main_all$date
+n_obs_tod_less_date <- sum(obs_tod_less_date)
+nrow_before <- nrow(main_all)
+main_all <- main_all[!obs_tod_less_date, ]
+nrow_after <- nrow(main_all)
+test <- n_obs_tod_less_date == nrow_before - nrow_after
+if (!isTRUE(test)) {
+  stop("An error occured in removing dates greater than tod")
+}
+message(
+  "Number of observations with tod < date of obs = ",
+  n_obs_tod_less_date
+)
+```
+
+- Observations with same tod and date of observation = `r n_obs_same_tod_data`
+- Observations with tod less than date of observation = `r n_obs_tod_less_date`
+
+#### Remove tod from main_all to not interfere with grandfathered code
+
+```{r remove tod}
+main_all <- main_all[, !names(main_all) %in% "tod"]
+```
+  
 #### no cohort restriction
 
 ```{r slam_ratio, warning=FALSE, message=FALSE, echo=FALSE}
@@ -181,16 +271,22 @@ main_all2 <- main_all # %>% filter(cohort >= 1 & cohort <= 10)
 # getting unique idnos
 main_all2_n <- n_distinct(main_all2$idno)
 
-sexstrain <- main_all2 %>%
-  select(idno, sex, strain) %>%
-  distinct()
+sexstrain <- main_all2[, c("idno", "sex", "strain")]
+sexstrain <- unique(sexstrain)
+rownames(sexstrain) <- seq_len(nrow(sexstrain))
 
 sextable <- table(sexstrain$sex)
 straintable <- table(sexstrain$strain)
 
 # calculate % sex and strain
-slam_sex_ratio <- format(round(((sextable[1] / (sextable[1] + sextable[2])) * 100), 2), nsmall = 2)
-slam_strain_ratio <- format(round(((straintable[1] / (straintable[1] + straintable[2])) * 100), 2), nsmall = 2)
+slam_sex_ratio <- format(
+  round(((sextable[1] / (sextable[1] + sextable[2])) * 100), 2),
+  nsmall = 2
+)
+slam_strain_ratio <- format(
+  round(((straintable[1] / (straintable[1] + straintable[2])) * 100), 2),
+  nsmall = 2
+)
 
 # renamed for isg template
 slam_main_all <- main_all2
@@ -246,8 +342,10 @@ kable(main_all2_desc2, caption = "Age Characteristics", row.names = FALSE, align
 
 ```{r slam_censor_df, warning=FALSE, message=FALSE, echo=FALSE}
 census_c16_death <- main_all2 %>%
-  select(idno, dob) %>%
+  select(idno, tag, dob) %>%
   distinct() %>%
+  left_join(surv, by = "tag") %>%
+  select(-age_wk) %>%
   left_join(main_all2, by = c("idno", "dob")) %>%
   group_by(
     idno, cod, dob, sex, strain,
@@ -261,8 +359,8 @@ census_c16_death <- main_all2 %>%
   ) %>%
   mutate(cod = tolower(cod)) %>%
   mutate(
-    fu_age_wk = floor(((maxdate - firstdate) + 1) / 7),
-    le_wk = floor(((maxdate - dob) + 1) / 7),
+    fu_age_wk = difftime(maxdate, firstdate, units = "weeks"),
+    le_wk = difftime(maxdate, dob, units = "weeks"),
     dead_censor = ifelse(cod == "found dead", 1,
       ifelse(cod == "per pi", 1,
         ifelse(cod == "per vet", 1,
