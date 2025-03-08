@@ -15,7 +15,8 @@ args <- commandArgs(trailingOnly = TRUE)
 if (length(args) == 0) {
   # args[[1]] <- "input/test_local.yaml"
   # args[[1]] <- "input/slam_age_mb6.yaml"
-  args[[1]] <- "input/slam_age_all.yaml"
+  # args[[1]] <- "input/slam_age_all.yaml"
+  args[[1]] <- "input/slam_all_only_bw.yaml"
   # args[[1]] <- "../x01_external_validation/input/slam_age_all.yaml"
   # args[[1]] <- "../x01_external_validation/input/slam_c16-c18.yaml"
   warning("No input file provided, using: ", args[[1]])
@@ -215,6 +216,31 @@ if (!isFALSE(config$external_validate)) {
   validation_datasets <- lapply(validation_datasets, filter_na)
 }
 
+
+# test if age => age_death ----------------------------------------------------
+surv_data <- function(dataset) {
+  data <- dataset$data
+  data <- merge(data, surv, by = dataset$id, all.x = TRUE)
+  data
+}
+surv <- read.csv(config$survival_dataset$path)
+
+surv_data <- lapply(datasets, surv_data)
+if (!isFALSE(config$external_validate)) {
+  surv_data_validation <- lapply(datasets, surv_data)
+  surv_data <- c(surv_data, surv_data_validation)
+}
+
+tests <- lapply(surv_data, function(data) {
+  age_death <- config$survival_dataset$age_death
+  age <- config$meta_dataset$age_var[[1]]
+  all(data[, age_death] > data[, age])
+})
+test <- all(unlist(tests))
+
+if (!isTRUE(test)) {
+  stop("Age of observation is >= age death, age < age_death is required")
+}
 
 # harmonize the datasets for cohort -------------------------------------------
 
