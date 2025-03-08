@@ -234,10 +234,7 @@ na_index <- is.na(main_all$date) | is.na(main_all$idno)
 main_all <- main_all[!na_index, ]
 
 before_age_filter <- nrow(main_all)
-
-main_all <- main_all %>%
-  filter(age_wk > 0)
-
+main_all <- main_all[main_all$age_wk > 0, ]
 after_age_filter <- nrow(main_all)
 
 main_all$age_wk <- as.numeric(main_all$age_wk)
@@ -245,29 +242,55 @@ main_all$age_wk <- as.numeric(main_all$age_wk)
 
 - Before age filter = `r before_age_filter`
 - After age filter = `r after_age_filter`
+
+#### remove observations at same time as date of death and id's without dod
+
+```{r remove date = dod}
+main_all_death <- merge(main_all, surv, by = "tag", all.x = TRUE)
+
+obs_without_tod <- is.na(main_all_death$tod)
+ids_wihtout_tod <- unique(main_all_death$idno[is.na(main_all_death$tod)])
+
+obs_before_tod <- nrow(main_all)
+main_all <- main_all[!obs_without_tod, ]
+obs_after_tod <- nrow(main_all)
+
+obs_with_same_tod_date <- main_all_death$tod == main_all_death$date
+sum(obs_with_same_tod_date)
+
+```
+
+- ID without tod = `r ids_without_tod`
   
 #### restriction to cohorts 1 to 10
 
 ```{r slam_ratio, warning=FALSE, message=FALSE, echo=FALSE}
-main_all2 <- main_all %>% filter(cohort >= 1 & cohort <= 10)
+main_all2 <- main_all[main_all$cohort >= 1 & main_all$cohort <= 10, ]
 
 # getting unique idnos
 main_all2_n <- n_distinct(main_all2$idno)
 
-sexstrain <- main_all2 %>%
-  select(idno, sex, strain) %>%
-  distinct()
+sexstrain <- main_all2[, c("idno", "sex", "strain")]
+sexstrain <- unique(sexstrain)
+rownames(sexstrain) <- seq_len(nrow(sexstrain))
 
 sextable <- table(sexstrain$sex)
 straintable <- table(sexstrain$strain)
 
 # calculate % sex and strain
-slam_sex_ratio <- format(round(((sextable[1] / (sextable[1] + sextable[2])) * 100), 2), nsmall = 2)
-slam_strain_ratio <- format(round(((straintable[1] / (straintable[1] + straintable[2])) * 100), 2), nsmall = 2)
+slam_sex_ratio <- format(
+  round(((sextable[1] / (sextable[1] + sextable[2])) * 100), 2),
+  nsmall = 2
+)
+slam_strain_ratio <- format(
+  round(((straintable[1] / (straintable[1] + straintable[2])) * 100), 2),
+  nsmall = 2
+)
 
 # renamed for isg template
 slam_main_all <- main_all2
 ```
+
 
 #### population characteristics
 - `r main_all2_n` mice with valid indices 
