@@ -1,5 +1,5 @@
 # This will run just the 06_display_figures
-# this is for running 4-5
+# this is for running 6
 
 args <- commandArgs(trailingOnly = TRUE)
 
