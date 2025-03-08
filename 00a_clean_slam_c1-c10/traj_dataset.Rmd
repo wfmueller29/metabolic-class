@@ -320,6 +320,12 @@ message(
 
 - Observations with same tod and date of observation = `r n_obs_same_tod_data`
 - Observations with tod less than date of observation = `r n_obs_tod_less_date`
+
+#### Remove tod from main_all to not interfere with grandfathered code
+
+```{r remove tod}
+main_all <- main_all[, !names(main_all) %in% "tod"]
+```
   
 #### restriction to cohorts 1 to 10
 
