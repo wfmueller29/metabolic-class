@@ -68,7 +68,7 @@ meta_dataset:
     split: .8
 datasets:
 - name: "slam"
-  path: "../00b_dataset_mods/output/data/test/slam_bw_og.csv"
+  path: "../00b_dataset_mods/output/slam_c1-c10/data/slam_bw_og.csv"
   outcome: "bw"
   model:
     fixed: "~ age_wk + age_wk2 + sex_F * strain_HET3"
@@ -91,7 +91,7 @@ datasets:
     variable: "cohort"
 
 - name: "slam"
-  path: "../00b_dataset_mods/output/data/test/slam_fat_og.csv"
+  path: "../00b_dataset_mods/output/slam_c1-c10/data/slam_fat_og.csv"
   outcome: "fat"
   model:
     fixed: "~ age_wk + age_wk2"
@@ -113,7 +113,7 @@ datasets:
     variable: "cohort"
 
 - name: "slam"
-  path: "../00b_dataset_mods/output/data/test/slam_gluc_og.csv"
+  path: "../00b_dataset_mods/output/slam_c1-c10/data/slam_gluc_og.csv"
   outcome: "gluc"
   model:
     fixed: "~ age_wk + age_wk2 + sex_F + strain_HET3" 

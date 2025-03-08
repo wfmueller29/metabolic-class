@@ -17,7 +17,7 @@ palette_colors_train: [ "black", "#DF536B", "#61D04F", "midnightblue",
 legend_labels_train: [ "Overweight", "Low-weight", "Mid-Weight", "High-fat",
   "Low-fat", "Mid-fat", "Decline Glucose", "Stable Glucose" ]
 survival_dataset:
-  path: "../00c_survival_data/output/main_cat_surv.csv"
+  path: "../00c_survival_data/output/slam_c1-c10/data/main_cat_surv.csv"
   id: "idno"
   age_death: "le_wk"
   event: "dead_censor"
@@ -68,7 +68,7 @@ meta_dataset:
     split: .8
 datasets:
 - name: "slam"
-  path: "../00b_dataset_mods/output/test/data/slam_bw_og.csv"
+  path: "../00b_dataset_mods/output/slam_c1-c10/data/slam_bw_og.csv"
   outcome: "bw"
   model:
     fixed: "~ age_wk + age_wk2 + sex_F * strain_HET3"
