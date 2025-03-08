@@ -51,7 +51,6 @@ census$taghistory <- as.character(census$taghistory)
   - bodywt_nmr
   
 ```{r slam_bodyweight, warning=FALSE, message=FALSE, echo=FALSE}
-
 bodywt <- read.csv("data/BW_Temp_FC_All_2021-12-23.csv")
 bodywt <- bodywt[, c("idno", "date", "bw", "foodcons", "temp")]
 
@@ -89,47 +88,21 @@ hist(bodywt$bw)
 ```{r slam_glucose, warning=FALSE, message=FALSE, echo=FALSE}
 # edit csv column name 'Stress_Notes'
 glucose <- read.csv("data/gluc_lact_2021-12-01.csv")
-  # glucose <- read.csv("/Users/shiromaej/Box/ISG Code Check/data/slam/Glucose_Lactate.csv") %>%
-  select(idno, date, gluc = Glucose) %>%
-  mutate(
-    dead = ifelse(gluc == "DEAD", 1, NA),
-    gluc = ifelse(gluc == "DEAD", NA,
-      ifelse(gluc == "dead", NA,
-        ifelse(gluc == "missed", NA,
-          ifelse(gluc == "missing", NA,
-            ifelse(gluc == "NOT BLED", NA,
-              ifelse(gluc == "SAC", NA,
-                ifelse(gluc == "89/148", NA,
-                  ifelse(gluc == "", NA,
-                    ifelse(gluc == "no glucose", NA,
-                      ifelse(gluc == "Not accounted for", NA,
-                        ifelse(gluc == "would not bleed", NA,
-                          ifelse(gluc == "", NA, as.character(gluc))
-                        )
-                      )
-                    )
-                  )
-                )
-              )
-            )
-          )
-        )
-      )
-    )
-  )
+
+glucose <- glucose[, c("idno", "date", "Glucose")]
+names(glucose)[names(glucose) == "Glucose"] <- "gluc"
+
 glucose$date <- as.Date(glucose$date, "%Y-%m-%d")
 glucose$gluc <- as.numeric(glucose$gluc)
 glucose$idno <- as.character(glucose$idno)
+
 gluc_na_before <- sum(is.na(glucose$gluc))
-glucose <- glucose %>%
-  mutate(
-    gluc = ifelse(gluc < 20 | gluc >= 300, NA, gluc)
-  )
-
+glucose$gluc <- ifelse(glucose$gluc < 20, NA, glucose$gluc)
+glucose$gluc <- ifelse(glucose$gluc >= 300, NA, glucose$gluc)
 gluc_na_after <- sum(is.na(glucose$gluc))
-duplicated_gluc <- sum(duplicated(glucose[c(1, 2)]))
 
-glucose <- glucose[!duplicated(glucose[c(1, 2)]), ]
+duplicated_gluc <- sum(duplicated(glucose[, c("idno", "date")]))
+glucose <- glucose[!duplicated(glucose[, c("idno", "date")]), ]
 
 hist(glucose$gluc)
 ```
@@ -148,34 +121,23 @@ hist(glucose$gluc)
     - lean >= 40 to NA
 
 ```{r slam_nmr, warning=FALSE, message=FALSE, echo=FALSE}
-nmr <- read.csv("data/nmr_compiled_2021-11-10.csv") %>%
-  # nmr <- read.csv("/Users/shiromaej/Box/ISG Code Check/data/slam/NMR.csv") %>%
-  select(idno, date, fat, lean, fluid)
-
-invalid_fat <- nmr$fat[is.na(as.numeric(as.character(nmr$fat)))]
-
-nmr <- nmr %>%
-  mutate(fat = ifelse(fat %in% invalid_fat, NA, fat))
+nmr <- read.csv("data/nmr_compiled_2021-11-10.csv")
+nmr <- nmr[, c("idno", "date", "fat", "lean", "fluid")]
 
 nmr$date <- as.Date(nmr$date, "%Y-%m-%d")
 nmr$idno <- as.character(nmr$idno)
 nmr$fat <- as.numeric(as.character(nmr$fat))
+
 fat_na_before <- sum(is.na(nmr$fat))
 lean_na_before <- sum(is.na(nmr$lean))
-nmr <- nmr %>%
-  mutate(
-    fat = ifelse(fat <= 0, NA, fat)
-  ) %>%
-  mutate(
-    lean = ifelse(lean <= 5, NA,
-      ifelse(lean >= 40, NA, lean)
-    )
-  )
+nmr$fat <- ifelse(nmr$fat <= 0, NA, nmr$fat)
+nmr$lean <- ifelse(nmr$lean <= 5, NA, nmr$lean)
+nmr$lean <- ifelse(nmr$lean >= 40, NA, nmr$lean)
 fat_na_after <- sum(is.na(nmr$fat))
 lean_na_after <- sum(is.na(nmr$lean))
 
-duplicated_nmr <- sum(!duplicated(nmr[c(1, 2)]))
-nmr <- nmr[!duplicated(nmr[c(1, 2)]), ]
+duplicated_nmr <- sum(!duplicated(nmr[, c("idno", "date")]))
+nmr <- nmr[!duplicated(nmr[, c("idno", "date")]), ]
 
 hist(nmr$fat)
 hist(nmr$lean)
@@ -220,14 +182,12 @@ nmr$idno <- fixID_history(nmr$idno, census)
     
 ```{r slam_survival, warning=FALSE, message=FALSE, echo=FALSE}
 surv <- read.csv("data/survival_2021-12-17.csv")
-# surv <- read.csv("/Users/shiromaej/Box/ISG Code Check/data/slam/Survival.csv")
 surv$tod <- as.Date(surv$tod, "%m/%d/%y")
 surv$tag <- as.character(surv$tag)
 surv$cod <- as.character((surv$cod))
-surv <- surv %>%
-  mutate(tag = ifelse(tag == "R", "179060",
-    ifelse(tag == "L", "179217", tag)
-  ))
+surv <- surv
+surv$tag <- ifelse(surv$tag == "R", "179060", surv$tag)
+surv$tag <- ifelse(surv$tag == "L", "179217", surv$tag)
 ```
 
 #### merging all datasets into a main file and clean
@@ -238,10 +198,38 @@ surv <- surv %>%
   - removal of timepoints before dob or mouse facility arrival date
   
 ```{r slam_main_all, warning=FALSE, message=FALSE, echo=FALSE}
-main_all <- glucose %>%
-  full_join(bodywt, by = c("idno", "date")) %>%
-  full_join(nmr, by = c("idno", "date")) %>%
-  left_join(census, by = "idno") %>%
+main_all <- merge(glucose, bodywt, by = c("idno", "date"), all = TRUE)
+main_all <- merge(main_all, nmr, by = c("idno", "date"), all = TRUE)
+main_all <- merge(main_all, census, by = "idno", all.x = TRUE)
+
+
+cohorts <- c(1:10)
+cohort_start_dates <- c(
+  "2015-11-12", "2016-02-03", "2016-06-06", "2016-08-08", "2016-11-07",
+  "2017-01-11", "2017-03-14", "2017-05-30", "2017-08-22", "2017-11-14"
+)
+
+na_dates_before_cohort_start <- function(index) {
+  if (length(index) == 0L) {
+    function(date) {
+      return(rep(as.Date(NA), length(date)))
+    }
+  } else {
+    i <- index[[1]]
+    function(date) {
+      ifelse(
+        main_all$cohort == cohorts[[i]] & date >= cohort_start_dates[[i]],
+        as.Date(date), na_dates_before_cohort_start(index[-1L])(date)
+      )
+    }
+  }
+}
+
+main_all2 <- main_all
+main_all2$date <- na_dates_before_cohort_start(seq_along(cohorts))(main_all$date)
+main_all2$date <- as.Date(main_all2$date)
+
+main_all <- main_all %>%
   mutate(
     date = if_else(cohort == 1 & date >= "2015-11-12", date,
       if_else(cohort == 2 & date >= "2016-02-03", date,
@@ -263,6 +251,12 @@ main_all <- glucose %>%
       )
     )
   )
+
+all.equal(main_all, main_all2)
+str(main_all)
+str(main_all2)
+check_na(main_all)
+check_na(main_all2)
 
 main_all$age_wk <- difftime(main_all$date, main_all$dob, units = "weeks")
 na_index <- is.na(main_all$date) | is.na(main_all$idno)
