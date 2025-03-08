@@ -243,29 +243,36 @@ main_all$age_wk <- as.numeric(main_all$age_wk)
 - Before age filter = `r before_age_filter`
 - After age filter = `r after_age_filter`
 
-#### remove observations at same time as date of death and id's without dod
+#### remove id's without dod
 
-```{r remove date = dod}
+```{r remove date equal dod, warning = FALSE, message = FALSE, echo = FALSE}
 main_all_death <- merge(main_all, surv, by = "tag", all.x = TRUE)
 
 obs_without_tod <- is.na(main_all_death$tod)
-ids_wihtout_tod <- unique(main_all_death$idno[is.na(main_all_death$tod)])
+ids_without_tod <- unique(main_all_death$idno[is.na(main_all_death$tod)])
 
 obs_before_tod <- nrow(main_all)
 main_all <- main_all[!obs_without_tod, ]
 obs_after_tod <- nrow(main_all)
 
-obs_with_same_tod_date <- main_all_death$tod == main_all_death$date
-sum(obs_with_same_tod_date)
-
 ```
 
+- Observations lost due to no tod = `r obs_before_tod - obs_after_tod`
 - ID without tod = `r ids_without_tod`
+
+#### remove observations with the same tod and date of observation
+
+```{r remove same date tod, warning = FALSE, message = FALSE, echo = FALSE}
+obs_with_same_tod_date <- main_all_death$tod == main_all_death$date
+sum(obs_with_same_tod_date, na.rm = TRUE)
+```
   
 #### restriction to cohorts 1 to 10
 
 ```{r slam_ratio, warning=FALSE, message=FALSE, echo=FALSE}
+obs_before_cohort <- nrow(main_all)
 main_all2 <- main_all[main_all$cohort >= 1 & main_all$cohort <= 10, ]
+obs_after_cohort <- nrow(main_all2)
 
 # getting unique idnos
 main_all2_n <- n_distinct(main_all2$idno)
@@ -359,8 +366,8 @@ census_c16_death <- main_all2 %>%
   ) %>%
   mutate(cod = tolower(cod)) %>%
   mutate(
-    fu_age_wk = floor(((maxdate - firstdate) + 1) / 7),
-    le_wk = floor(((maxdate - dob) + 1) / 7),
+    fu_age_wk = difftime(maxdate, firstdate, units = "weeks"),
+    le_wk = difftime(maxdate, dob, units = "weeks"),
     dead_censor = ifelse(cod == "found dead", 1,
       ifelse(cod == "per pi", 1,
         ifelse(cod == "per vet", 1,
@@ -506,6 +513,12 @@ main_all2 <- main_all2 %>%
 
 ### rename for igs template
 slam_main_all <- main_all2
+```
+
+#### Check main_all2 for observations with the same age_wk and le_wk
+
+```{r obs with same age_wk and le_wk}
+sum(main_all2$le_wk == main_all2$age_wk, na.rm = TRUE)
 ```
 
 ***
