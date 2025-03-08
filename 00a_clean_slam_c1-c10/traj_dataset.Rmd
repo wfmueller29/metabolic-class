@@ -225,38 +225,9 @@ na_dates_before_cohort_start <- function(index) {
   }
 }
 
-main_all2 <- main_all
-main_all2$date <- na_dates_before_cohort_start(seq_along(cohorts))(main_all$date)
-main_all2$date <- as.Date(main_all2$date)
+main_all$date <- na_dates_before_cohort_start(seq_along(cohorts))(main_all$date)
+main_all$date <- as.Date(main_all$date)
 
-main_all <- main_all %>%
-  mutate(
-    date = if_else(cohort == 1 & date >= "2015-11-12", date,
-      if_else(cohort == 2 & date >= "2016-02-03", date,
-        if_else(cohort == 3 & date >= "2016-06-06", date,
-          if_else(cohort == 4 & date >= "2016-08-08", date,
-            if_else(cohort == 5 & date >= "2016-11-07", date,
-              if_else(cohort == 6 & date >= "2017-01-11", date,
-                if_else(cohort == 7 & date >= "2017-03-14", date,
-                  if_else(cohort == 8 & date >= "2017-05-30", date,
-                    if_else(cohort == 9 & date >= "2017-08-22", date,
-                      if_else(cohort == 10 & date >= "2017-11-14", date, as.Date(NA))
-                    )
-                  )
-                )
-              )
-            )
-          )
-        )
-      )
-    )
-  )
-
-all.equal(main_all, main_all2)
-str(main_all)
-str(main_all2)
-check_na(main_all)
-check_na(main_all2)
 
 main_all$age_wk <- difftime(main_all$date, main_all$dob, units = "weeks")
 na_index <- is.na(main_all$date) | is.na(main_all$idno)
