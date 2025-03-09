@@ -73,12 +73,12 @@ model_combined <- function(census,
 model_combined_across <- function(final_models, datasets,
                                   model_name, fixcovs, class) {
   final_models_row <- final_models[final_models$model_name == model_name, ]
-  outcome_df <- final_models_row$dfs[[1]]
   outcome_id <- final_models_row$subject
   outcome <- final_models_row$oc
   dataset_index <- final_models_row$dataset_index
+  outcome_df <- datasets[[dataset_index]]$data
   age_vars <- datasets[[dataset_index]]$age_var
-  fixcovs <- final_models_row$fixcov[[1]]
+  fixcovs <- datasets[[dataset_index]]$fixcovs
   models <- lapply(seq_len(nrow(final_models)), function(i) {
     model_combined(
       census = final_models$census[[i]],
