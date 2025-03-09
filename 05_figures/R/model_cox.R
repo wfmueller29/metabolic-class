@@ -10,8 +10,20 @@ model_cox <- function(census, formulas, age_death, censor) {
   model_list <- lapply(f_list, function(form) {
     form <- paste("surv_object", form)
     form <- as.formula(form)
-    surv_object <- survival::Surv(time = census[[age_death]],
-                                  event = census[[censor]])
+    covariates <- labels(terms(form))
+    tests_no_contrast <- lapply(covariates, function(cov) {
+      length(unique(census[, cov])) == 1
+    })
+    test_no_contrast <- any(unlist(tests_no_contrast))
+    if (isTRUE(test_no_contrast)) {
+      warning("No available contrasts for ", deparse1(form), " returning NA")
+      return(NA)
+    }
+
+    surv_object <- survival::Surv(
+      time = census[[age_death]],
+      event = census[[censor]]
+    )
     survival::coxph(form, data = census)
   })
 
