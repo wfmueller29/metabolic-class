@@ -2213,8 +2213,12 @@ for (i in rest_index) {
   cat("\n#############################################################\n")
 
   for (model in models) {
-    print(model)
-    print(cox.zph(model))
+    if (is.null(model)) {
+      message("model is NA, will not print anything")
+    } else {
+      print(model)
+      print(cox.zph(model))
+    }
   }
 }
 ```
@@ -2230,6 +2234,17 @@ coxzph_tables <- lapply(rest_index, function(i) {
 
   zph_tables <- lapply(seq_along(models), function(i) {
     formula <- Reduce(paste, deparse(models[[i]]$formula))
+
+    if (is.null(models[[i]])) {
+      message("model is NULL, returning NA values in table")
+      table <- data.frame(chisq = NA, df = NA, p = NA)
+      table <- data.frame(
+        outcome = outcome, data_type = data_mod,
+        Model = i, formula = formula, variables = rownames(table), table
+      )
+      rownames(table) <- NULL
+      return(table)
+    }
 
     table <- cox.zph(models[[i]])$table
     table <- data.frame(
@@ -2262,6 +2277,10 @@ coxzph_tables <- lapply(rest_index, function(i) {
 
   lapply(seq_along(models), function(i) {
     model <- models[[i]]
+    if (is.null(model)) {
+      warning("Model is NULL, returning NULL")
+      return(NULL)
+    }
     formula <- Reduce(paste, deparse(model$formula))
 
     coxzph <- cox.zph(model)
