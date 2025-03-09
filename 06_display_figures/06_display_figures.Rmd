@@ -49,7 +49,8 @@ cumulative_legend_palette <- viridis(3, begin = .2, end = .7, direction = -1)
 if (!exists("params")) {
   params <- list()
   # params$input_path <- "../05_figures/output/test_local.yaml"
-  params$input_path <- "../05_figures/output/all_only_bw.yaml"
+  # params$input_path <- "../05_figures/output/all_only_bw.yaml"
+  params$input_path <- "../05_figures/output/20250306_mhet3.yaml"
   # params$input_path <- "../05_figures/output/all.yaml"
   # params$input_path <- "../05_figures/output/all_lean.yaml"
   # params$input_path <- "../05_figures/output/fb6.yaml"
@@ -909,8 +910,8 @@ prob_cols_tile <- paste0(prob_cols, "_tile")
 
 dose_plots <- lapply(seq_along(prob_cols_tile), function(i) {
   if (length(unique(census[[prob_cols_tile[[i]]]])) == 1) {
-    print("returning NA")
-    return(NA)
+    print("returning NULL")
+    return(NULL)
   }
   if (config$custom_palette) {
     label <- config$legend_labels[[i]]
@@ -2078,6 +2079,18 @@ post_prob_table <- lapply(seq_len(nrow(final_models)), function(i) {
   data_type <- final_models$data_mod[[i]]
   model <- final_models$final_model[[i]]
   post_prob <- lcmm::postprob(model)
+  if (isTRUE(all.equal(post_prob, list()))) {
+    warning("Cannot call lcmm::postprob on model where ng = 1, returning NAs")
+    post_prob_table <- data.frame(
+      outcome = outcome,
+      data_type = data_type,
+      label = label,
+      class = NA,
+      check.names = FALSE,
+      row.names = NULL
+    )
+    return(post_prob_table)
+  }
   post_prob_table <- data.frame(
     outcome = outcome,
     data_type = data_type,
