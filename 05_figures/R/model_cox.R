@@ -11,6 +11,8 @@ model_cox <- function(census, formulas, age_death, censor) {
     form <- paste("surv_object", form)
     form <- as.formula(form)
     covariates <- labels(terms(form))
+    covariates <- covariates[!grepl("\\:", covariates )]
+    covariates <- covariates[!grepl("strata\\(", covariates )]
     tests_no_contrast <- lapply(covariates, function(cov) {
       length(unique(census[, cov])) == 1
     })
