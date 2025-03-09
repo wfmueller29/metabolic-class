@@ -2,11 +2,11 @@ out_tag: 20250306_mhet3
 tag_time: FALSE
 plan: multicore
 ncpus: 10
-sample_n: 100
+sample_n: FALSE
 center: TRUE
 scale: FALSE
 external_validate: FALSE
-custom_palette: TRUE
+custom_palette: FALSE
 palette_colors: ["black", "#DF536B", "#61D04F", "midnightblue",
   "#28E2E5", "#CD0BBC", "#FF991C"]
 legend_labels: ["Early Peak BW", "Late Peak BW", "Mid Peak BW", "Early Peak Fat",

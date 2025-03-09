@@ -6,7 +6,7 @@ sample_n: FALSE
 center: TRUE
 scale: FALSE
 external_validate: FALSE
-custom_palette: TRUE
+custom_palette: FALSE
 palette_colors: ["black", "#DF536B", "#61D04F", "midnightblue",
   "#28E2E5", "#CD0BBC", "#FF991C"]
 legend_labels: ["High-weight", "Low-weight", "Mid-fat", "Low-fat",

@@ -2,7 +2,7 @@ out_tag: all_only_bw
 tag_time: FALSE
 plan: multicore
 ncpus: 10
-sample_n: 100
+sample_n: FALSE
 center: TRUE
 scale: FALSE
 external_validate: FALSE
