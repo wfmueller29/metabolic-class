@@ -1,4 +1,4 @@
-out_tag: all
+out_tag: all_20250306
 tag_time: FALSE
 plan: multicore
 ncpus: 10
@@ -120,7 +120,7 @@ datasets:
   path: "../00b_dataset_mods/output/slam_c1-c10/data/slam_gluc_og.csv"
   outcome: "gluc"
   model:
-    fixed: "~ age_wk + age_wk2 + sex_F + strain_HET3" 
+    fixed: "~ age_wk + age_wk2 + sex_F * strain_HET3" 
     fixcov: ["sex_F", "strain_HET3"]
     mixture: "~ age_wk + age_wk2" 
     random: 
