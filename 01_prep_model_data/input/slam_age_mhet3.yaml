@@ -2,7 +2,7 @@ out_tag: 20250306_mhet3
 tag_time: FALSE
 plan: multicore
 ncpus: 10
-sample_n: FALSE
+sample_n: 100
 center: TRUE
 scale: FALSE
 external_validate: FALSE
@@ -68,11 +68,11 @@ meta_dataset:
     split: .8
 datasets:
 - name: "slam"
-  path: "../00b_dataset_mods/output/slam_c1-c10/data/slam_bw_M_HET3.csv"
+  path: "../00b_dataset_mods/output/slam_c1-c10/data/slam_bw_og_M_HET3.csv"
   outcome: "bw"
   model:
     fixed: "~ age_wk + age_wk2"
-    fixcov: ["sex_F", "strain_HET3"]
+    fixcov: NULL
     mixture: "~ age_wk + age_wk2" 
     random: 
       - "~ 1"
@@ -93,7 +93,7 @@ datasets:
     variable: "cohort"
 
 - name: "slam"
-  path: "../00b_dataset_mods/output/slam_c1-c10/data/slam_fat_M_HET3.csv"
+  path: "../00b_dataset_mods/output/slam_c1-c10/data/slam_fat_og_M_HET3.csv"
   outcome: "fat"
   model:
     fixed: "~ age_wk + age_wk2"
@@ -117,11 +117,11 @@ datasets:
     variable: "cohort"
 
 - name: "slam"
-  path: "../00b_dataset_mods/output/slam_c1-c10/data/slam_gluc_M_HET3.csv"
+  path: "../00b_dataset_mods/output/slam_c1-c10/data/slam_gluc_og_M_HET3.csv"
   outcome: "gluc"
   model:
     fixed: "~ age_wk + age_wk2"
-    fixcov: ["sex_F", "strain_HET3"]
+    fixcov: NULL
     mixture: "~ age_wk + age_wk2" 
     random: 
       - "~ 1"

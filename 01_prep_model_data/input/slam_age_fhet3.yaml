@@ -68,11 +68,11 @@ meta_dataset:
     split: .8
 datasets:
 - name: "slam"
-  path: "../00b_dataset_mods/output/slam_c1-c10/data/slam_bw_F_HET3.csv"
+  path: "../00b_dataset_mods/output/slam_c1-c10/data/slam_bw_og_F_HET3.csv"
   outcome: "bw"
   model:
     fixed: "~ age_wk + age_wk2"
-    fixcov: ["sex_F", "strain_HET3"]
+    fixcov: NULL
     mixture: "~ age_wk + age_wk2" 
     random: 
       - "~ 1"
@@ -93,7 +93,7 @@ datasets:
     variable: "cohort"
 
 - name: "slam"
-  path: "../00b_dataset_mods/output/slam_c1-c10/data/slam_fat_F_HET3.csv"
+  path: "../00b_dataset_mods/output/slam_c1-c10/data/slam_fat_og_F_HET3.csv"
   outcome: "fat"
   model:
     fixed: "~ age_wk + age_wk2"
@@ -117,11 +117,11 @@ datasets:
     variable: "cohort"
 
 - name: "slam"
-  path: "../00b_dataset_mods/output/slam_c1-c10/data/slam_gluc_F_HET3.csv"
+  path: "../00b_dataset_mods/output/slam_c1-c10/data/slam_gluc_og_F_HET3.csv"
   outcome: "gluc"
   model:
     fixed: "~ age_wk + age_wk2"
-    fixcov: ["sex_F", "strain_HET3"]
+    fixcov: NULL
     mixture: "~ age_wk + age_wk2" 
     random: 
       - "~ 1"
