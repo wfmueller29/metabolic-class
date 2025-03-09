@@ -90,6 +90,10 @@ create_clean_t1 <- function(df_table,
     t1$pval[matches] <- pvals[[col]]
   }
 
+  if (is.null(columns)) {
+    t1$pval <- NA
+  }
+
   # return cleaned t1
   t1
 }
@@ -104,10 +108,11 @@ create_mle <- function(data,
   surv_fit <- survival::survfit(data = df_main, obj ~ factor(new_class))
 
   df_surv <- survminer::surv_median(surv_fit)
+  df_surv$median <- round(df_surv$median, 0)
   if (ci) {
     df_surv$median <- paste0(
       df_surv$median,
-      " (", df_surv$lower, ", ", df_surv$upper, ")"
+      " (", round(df_surv$lower, 0), ", ", round(df_surv$upper, 0), ")"
     )
   }
   names(df_surv)[names(df_surv) == "strata"] <- "new_class"
