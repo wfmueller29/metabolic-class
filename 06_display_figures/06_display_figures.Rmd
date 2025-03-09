@@ -48,7 +48,8 @@ cumulative_legend_palette <- viridis(3, begin = .2, end = .7, direction = -1)
 # for the case when we are not running with RStudio
 if (!exists("params")) {
   params <- list()
-  params$input_path <- "../05_figures/output/test_local.yaml"
+  # params$input_path <- "../05_figures/output/test_local.yaml"
+  params$input_path <- "../05_figures/output/all_only_bw.yaml"
   # params$input_path <- "../05_figures/output/all.yaml"
   # params$input_path <- "../05_figures/output/all_lean.yaml"
   # params$input_path <- "../05_figures/output/fb6.yaml"
@@ -717,7 +718,7 @@ all_names <- c(
 )
 
 lmes_index <- grepl("^model.*_og_.*across$", names(final_models))
-lmes_list <- final_models[og_index, lmes_index]
+lmes_list <- final_models[og_index, lmes_index, drop = FALSE]
 
 model_list <- lapply(lmes_list, function(row) {
   lapply(row, `[[`, model_display)
