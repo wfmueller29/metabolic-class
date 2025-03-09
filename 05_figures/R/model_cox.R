@@ -16,8 +16,8 @@ model_cox <- function(census, formulas, age_death, censor) {
     })
     test_no_contrast <- any(unlist(tests_no_contrast))
     if (isTRUE(test_no_contrast)) {
-      warning("No available contrasts for ", deparse1(form), " returning NA")
-      return(NA)
+      warning("No available contrasts for ", deparse1(form), " returning NULL")
+      return(NULL)
     }
 
     surv_object <- survival::Surv(
