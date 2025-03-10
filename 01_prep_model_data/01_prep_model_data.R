@@ -329,7 +329,7 @@ if (!isFALSE(config$external_validate)) {
 create_strata_vars <- function(dataset) {
   cat_vars <- dataset$train_test$sample_by
   data <- dataset$data
-  new_col <- apply(data[, cat_vars], 1, paste, collapse = "-")
+  new_col <- apply(data[, cat_vars, drop = FALSE], 1, paste, collapse = "-")
   data[, "sample_by"] <- new_col
   dataset$data <- data
 
