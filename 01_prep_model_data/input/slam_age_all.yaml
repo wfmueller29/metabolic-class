@@ -11,7 +11,7 @@ palette_colors: ["black", "#DF536B", "#61D04F", "midnightblue",
   "#28E2E5", "#CD0BBC", "#FF991C", "gray62"]
 legend_labels: ["Overweight", "Low-weight", "Mid-Weight", "High-fat",
   "Low-fat", "Mid-fat", "Decline Glucose", "Stable Glucose"]
-custom_palette_train: TRUE
+custom_palette_train: FALSE
 palette_colors_train: [ "black", "#DF536B", "#61D04F", "midnightblue",
   "#28E2E5", "#CD0BBC", "#FF991C", "gray62" ]
 legend_labels_train: [ "Overweight", "Low-weight", "Mid-Weight", "High-fat",
