@@ -19,6 +19,9 @@ columns_keep <- c(
 
 itp <- itp[, columns_keep]
 
+# filter itp so le_wk > age_wk
+itp <- itp[itp$le_wk > itp$age_wk, ]
+
 census <- data.frame(
   old_idno = unique(itp$idno),
   idno = seq_len(length(unique(itp$idno)))
