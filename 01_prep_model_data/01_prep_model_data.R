@@ -16,7 +16,8 @@ if (length(args) == 0) {
   # args[[1]] <- "input/test_local.yaml"
   # args[[1]] <- "input/slam_age_mb6.yaml"
   # args[[1]] <- "input/slam_age_all.yaml"
-  args[[1]] <- "input/slam_all_only_bw.yaml"
+  # args[[1]] <- "input/slam_all_only_bw.yaml"
+  args[[1]] <- "input/itp_bw.yaml"
   # args[[1]] <- "../x01_external_validation/input/slam_age_all.yaml"
   # args[[1]] <- "../x01_external_validation/input/slam_c16-c18.yaml"
   warning("No input file provided, using: ", args[[1]])
@@ -123,42 +124,6 @@ if (!isFALSE(config$external_validate)) {
     message("Number of columns in training data = validation data")
   } else {
     stop("Mismatched number of columns in training and validation data")
-  }
-}
-
-# generate idno if ID column not coercible to numeric -------------------------
-
-for (i in seq_along(datasets)) {
-  if (!is.null(datasets[[i]]$generate_idno)) {
-    if (datasets[[i]]$generate_idno) {
-      id <- datasets[[i]]$id
-      data <- datasets[[i]]$data
-      census <- unique(data[, id])
-      census <- as.data.frame(census)
-      names(census) <- id
-      census$idno <- seq_along(census[, 1])
-      data <- merge(data, census, by = id)
-      datasets[[i]]$data <- data
-      datasets[[i]]$id <- "idno"
-    }
-  }
-}
-
-if (!isFALSE(config$external_validate)) {
-  for (i in seq_along(validation_datasets)) {
-    if (!is.null(validation_datasets[[i]]$generate_idno)) {
-      if (validation_datasets[[i]]$generate_idno) {
-        id <- validation_datasets[[i]]$id
-        data <- validation_datasets[[i]]$data
-        census <- unique(data[, id])
-        census <- as.data.frame(census)
-        names(census) <- id
-        census$idno <- seq_along(census[, 1])
-        data <- merge(data, census, by = id)
-        validation_datasets[[i]]$data <- data
-        validation_datasets[[i]]$id <- "idno"
-      }
-    }
   }
 }
 
