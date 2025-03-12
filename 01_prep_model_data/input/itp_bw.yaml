@@ -37,23 +37,21 @@ combined_cox:
 prediction_data:
   filter_interval:
     intervals:
-      - [age_wk_ns: "(0, 57.50)"]
-      - [age_wk_ns: "[57.50,86.25)"]
-      - [age_wk_ns: "[86.25,103.50)"]
-      - [age_wk_ns: "[103.50,Inf)"]
-      - [age_wk_ns: "[57.50,103.50]"]
+      - [age_wk_ns: "(13, 65)"]
+      - [age_wk_ns: "[39, 21)"]
+      - [age_wk_ns: "[65, 117)"]
     names:
   filter_window:
     age_var: "age_wk"
-    start: 6.5 # 1.5 months
-    end: 143.4 # 33 months
-    window_size_vector: [26.1, 39.1, 52.1] # 6, 9, 12 months
-    step: 13 # 3 months
+    start: 13 # 3 months
+    end: 117 # 27 months
+    window_size_vector: [26.1, 52.1, 78] # 6, 12, 18 months
+    step: 26 # 6 months
   filter_cumulative:
     age_var: "age_wk"
-    start_vector: [6.5, 19.6, 32.6, 45.62] #1.5, 4.5, 7.5, 10.5 months
-    end: 143.4 # 33 months
-    step: 13 # 3 months
+    start_vector: [13, 39] # 3 and 9 months
+    end: 117 # 27 months
+    step: 26 # 6 months
   resample:
     age_var: "age_wk"
     fraction_vector: [.75, .667, .5, .337, .25]
