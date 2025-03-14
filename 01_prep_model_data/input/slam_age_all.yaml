@@ -62,7 +62,6 @@ meta_dataset:
   age_var: ["age_wk", "age_wk2"] # these must be in increasing polynomial order
   covariates: ["sex", "strain"]
   covariates_dummy: ["sex_M", "strain_HET3", "sex_F", "strain_B6"]
-  factor: ["cohort"]
   train_test:
     sample_by: ["sex", "strain"]
     split: .8

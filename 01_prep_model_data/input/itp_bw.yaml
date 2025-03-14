@@ -60,7 +60,6 @@ meta_dataset:
   age_var: ["age_wk", "age_wk2"] # these must be in increasing polynomial order
   covariates: ["sex"]
   covariates_dummy: ["sex_M", "sex_F"]
-  factor: ["cohort"]
   train_test:
     sample_by: ["sex"]
     split: .8
@@ -88,5 +87,5 @@ datasets:
   harmonize:
     execute: TRUE
     formula: "~ age_wk + age_wk2 + sex + (1|idno)"
-    variable: "cohort"
+    variable: ["cohort", "site"]
 

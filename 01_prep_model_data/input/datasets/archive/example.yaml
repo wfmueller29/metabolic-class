@@ -19,7 +19,6 @@
 #   outcome: "bw"
 #   age_var: ["age_wk"]
 #   dummy: ["sex", "strain"]
-#   factor: ["cohort"]
 #
 - name: "slam"
   path: "../01_dataset/output/main_all2.RDATA"
@@ -27,7 +26,6 @@
   age_var: ["age_wk", "per_age_wk"]
   id: "idno"
   dummy: ["sex", "strain"]
-  factor: ["cohort"]
   remove_velocity_outliers:
     execute: TRUE
     threshold: 5
@@ -75,7 +73,6 @@
   age_var: ["age_wk", "per_age_wk"]
   id: "idno"
   dummy: ["sex", "strain"]
-  factor: ["cohort"]
   remove_velocity_outliers:
     execute: TRUE
     threshold: 5
@@ -129,7 +126,6 @@
   age_var: ["age_wk", "per_age_wk"]
   id: "idno"
   dummy: ["sex", "strain"]
-  factor: ["cohort"]
   remove_velocity_outliers:
     execute: TRUE
     threshold: 5
@@ -162,7 +158,6 @@
   age_var: ["age_wk", "per_age_wk"]
   id: "idno"
   dummy: ["sex", "strain"]
-  factor: ["cohort"]
   remove_velocity_outliers:
     execute: TRUE
     threshold: 7
@@ -195,7 +190,6 @@
   age_var: ["age_wk", "per_age_wk"]
   id: "idno"
   dummy: ["sex", "strain"]
-  factor: ["cohort"]
   remove_velocity_outliers:
     execute: TRUE
     threshold: 10
@@ -230,7 +224,6 @@
   generate_idno: TRUE
   dummy: ["sex", "strain"]
     "natural_death", "tstart", "tstop", "status"]
-  factor: ["cohort"]
   remove_velocity_outliers:
     execute: FALSE
     threshold: 5

@@ -5,7 +5,6 @@
   age_var: ["age_wk", "per_age_wk"] # we only want one age var per dataset
   id: "idno"
   dummy: ["sex", "strain"]
-  factor: ["cohort"]
   remove_velocity_outliers:
     execute: FALSE
     threshold: 5
@@ -41,7 +40,6 @@
   age_var: ["age_wk", "per_age_wk"]
   id: "idno"
   dummy: ["sex", "strain"]
-  factor: ["cohort"]
   remove_velocity_outliers:
     execute: FALSE
     threshold: 5
@@ -78,7 +76,6 @@
   age_var: ["age_wk", "per_age_wk"]
   id: "idno"
   dummy: ["sex", "strain"]
-  factor: ["cohort"]
   remove_velocity_outliers:
     execute: FALSE
     threshold: 5

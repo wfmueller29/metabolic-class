@@ -14,7 +14,6 @@
   dummy: ["sex", "strain"] 
   # Variables we would like to ensure are numeric
   # Variable we would like to make into factor variables
-  factor: ["cohort"]
   # If "execute" is true, we will subset the data for each object in list
   # "subsets". These subsetted datasets will replace the orginal dataset
   sample_subsets:

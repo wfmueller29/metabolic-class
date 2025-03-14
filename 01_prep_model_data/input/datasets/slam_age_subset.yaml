@@ -5,7 +5,6 @@
   age_var: "age_wk"
   id: "idno"
   dummy: ["sex", "strain"]
-  factor: ["cohort"]
   remove_velocity_outliers:
     execute: FALSE
     threshold: 5
@@ -95,7 +94,6 @@
   age_var: "age_wk"
   id: "idno"
   dummy: ["sex", "strain"]
-  factor: ["cohort"]
   remove_velocity_outliers:
     execute: FALSE
     threshold: 5
@@ -185,7 +183,6 @@
   age_var: "age_wk"
   id: "idno"
   dummy: ["sex", "strain"]
-  factor: ["cohort"]
   remove_velocity_outliers:
     execute: FALSE
     threshold: 5
