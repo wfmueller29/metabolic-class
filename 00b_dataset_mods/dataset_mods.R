@@ -51,7 +51,6 @@ convert_variables <- function(datasets) {
     dataset <- convert_numeric(dataset)
     dataset <- convert_age(dataset)
     dataset <- convert_dummy(dataset)
-    dataset <- convert_factor(dataset)
     dataset
   })
   datasets
@@ -62,16 +61,6 @@ convert_numeric <- function(dataset) {
 
   dataset$data[, numeric_cols] <- lapply(numeric_cols, function(col) {
     as.numeric(dataset$data[, col])
-  })
-
-  dataset
-}
-
-convert_factor <- function(dataset) {
-  factor_cols <- c(dataset$factor)
-
-  dataset$data[, factor_cols] <- lapply(factor_cols, function(col) {
-    as.factor(dataset$data[, col])
   })
 
   dataset
