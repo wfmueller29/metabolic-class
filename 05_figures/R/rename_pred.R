@@ -19,14 +19,7 @@ name_interval <- function(interval_df) {
       )
     )
   )
-  interval_df[, "data_name"] <- factor(new_col, levels = c(
-    "Early Life",
-    "Midlife",
-    "Late life",
-    "Midlife and Late life",
-    "Oldest in Life"
-  ))
-
+  interval_df[, "data_name"] <- factor(new_col)
   interval_df
 }
 
