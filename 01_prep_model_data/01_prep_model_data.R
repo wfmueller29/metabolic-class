@@ -100,7 +100,7 @@ drop_unused_vars <- function(datasets) {
   lapply(datasets, function(dataset) {
     keep_vars <- c(
       dataset$id,
-      dataset$factor,
+      dataset$harmonize$variable,
       dataset$covariates,
       dataset$covariates_dummy,
       dataset$age_var,
@@ -149,7 +149,7 @@ convert_numeric <- function(dataset) {
 }
 
 convert_factor <- function(dataset) {
-  factor_cols <- c(dataset$factor)
+  factor_cols <- c(dataset$harmonize$variable)
 
   dataset$data[, factor_cols] <- lapply(factor_cols, function(col) {
     as.factor(dataset$data[, col])
