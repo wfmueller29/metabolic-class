@@ -17,9 +17,14 @@
 
 
 harmonize <- function(data, formula, outcome, variable) {
+  save_outcome <- paste0(outcome, "_before_harm")
+  data[, save_outcome] <- data[, outcome]
 
   formula <- paste(outcome, formula, collapse = " ")
-  formula <- paste0(formula, " + (1|", variable, ")")
+  form_variable <- lapply(variable, function(var) {
+    variable <- paste0("(1|", var, ")")
+  })
+  formula <- paste(formula, paste(form_variable, collapse = " + "), sep = " + ")
 
   formula <- as.formula(formula)
   model <- lme4::lmer(
@@ -27,18 +32,39 @@ harmonize <- function(data, formula, outcome, variable) {
     data = data
   )
   random_intercept <- lme4::ranef(model)
-  random_intercept_variable <- random_intercept[[variable]]
-  random_intercept_variable <- tibble::rownames_to_column(
-    random_intercept_variable,
-    variable
-  )
-  random_intercept_variable <- as.data.frame(random_intercept_variable)
+  random_intercept_variable <- lapply(variable, function(variable) {
+    random_intercept[[variable]]
+  })
+  random_intercept_variable <- lapply(seq_along(variable), function(i) {
+    df <- tibble::rownames_to_column(
+      random_intercept_variable[[i]],
+      variable[[i]]
+    )
+    names(df)[[2]] <- paste0("intercept_", names(df)[[1]])
+    df
+  })
+  random_intercept_variable <- lapply(random_intercept_variable, as.data.frame)
 
-  data <- base::merge(data, random_intercept_variable, by = variable)
+  for (i in seq_along(variable)) {
+    var <- variable[[i]]
+    data <- base::merge(data, random_intercept_variable[[i]], by = var)
+    data[, outcome] <- data[, outcome] - data[, paste0("intercept_", var)]
+  }
+  intercept_vars <- paste("intercept", variable, sep = "_")
+  intercept_combined <- do.call(`+`, data[, intercept_vars, drop = FALSE])
 
-  save_outcome <- paste0(outcome, "_before_harm")
-  data[, save_outcome] <- data[, outcome]
-  data[, outcome] <- data[, outcome] - data[, "(Intercept)"]
+  should_be_zero <- data[[outcome]] + intercept_combined - data[[save_outcome]]
+  # to correct small rounding error
+  should_be_zero <- round(should_be_zero, 10)
+  test <- should_be_zero == 0
+  if (!isTRUE(all(test))) {
+    stop("There was an error in harmonization")
+  }
+
+  for (var in variable) {
+    data[[outcome]] + data[[paste0("interceptk")]]
+  }
+
 
   data
 }
