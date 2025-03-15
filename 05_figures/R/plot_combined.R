@@ -22,9 +22,8 @@ plot_combined <- function(census, t1, outcome_df, outcome, age, census_id, outco
   ) +
     ggplot2::geom_point(alpha = .1) +
     ggplot2::geom_smooth(
-      method = "gam",
-      formula = y ~ s(x, bs = "cs"),
-      span = .7,
+      method = "loess",
+      span = 1,
       inherit.aes = TRUE
     ) +
     ggplot2::scale_color_manual(values = lej$col) +
