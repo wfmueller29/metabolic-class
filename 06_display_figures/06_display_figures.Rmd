@@ -506,7 +506,7 @@ if (config$custom_palette) {
 
 #### Complete Data
 
-```{r metabolic outcomes by class, fig.height=16, fig.width=24}
+```{r metabolic outcomes by class}
 og_plots_index <- grepl("^plot.*_og_.*across$", names(final_models))
 length_plots <- length(which(og_plots_index))
 
@@ -614,7 +614,7 @@ other_met_panel_train <- cowplot::plot_grid(title_theme, other_met_panel_train,
 
 ### New Figure 1
 
-```{r new figure 1, fig.height = 24, fig.width = 24}
+```{r new figure 1}
 selector <- matrix(seq_len(length_plots * length_plots), nrow = length_plots)
 diag(selector) <- NA
 selector <- t(matrix(t(selector)[which(!is.na(selector))], ncol = length_plots))
@@ -770,7 +770,7 @@ lme_table
 
 - Supplmenet will include same table for glucose and body fat
 
-```{r class prediction panel, fig.height=16, fig.width=16}
+```{r class prediction panel}
 interval_plots <- final_models[og_index, "interval_boot_accuracy_plot"]
 window_plots <- final_models[og_index, "window_boot_accuracy_plot"]
 cumulative_plots <- final_models[og_index, "cumulative_boot_accuracy_plot"]
@@ -890,7 +890,7 @@ rest_combined_cox <- lapply(
 source("R/surv_dose.R")
 ```
 
-```{r dose response, fig.height = 8, fig.width = 8, include = FALSE}
+```{r dose response}
 test_index <- final_models$data_mod == "train_test"
 rest_index <- !test_index
 test_index <- which(test_index)[[1]]
@@ -1410,14 +1410,18 @@ fig_no <- fig_no + 1
 ### Figure `r as.character(fig_no)`: Predicted Observed
 
 #### Complete Data
+```{r heights and widths}
+pred_obs_height <- nrow(final_models) / 2 * 6
+dose_height_width <- sqrt(length(unique(final_models$census[[1]]$class))) * 6
+```
 
-```{r predicted and observed, fig.height=18, fig.width=12}
+```{r predicted and observed, fig.height=pred_obs_height, fig.width=12, eval.after = TRUE}
 pred_obs_panel
 ```
 
 #### Training Data
 
-```{r predicted and observed train, fig.height=18, fig.width=12}
+```{r predicted and observed train, fig.height=pred_obs_height, fig.width=12, eval.after = TRUE}
 pred_obs_panel_train
 fig_no <- fig_no + 1
 ```
@@ -1516,28 +1520,28 @@ tab_no <- tab_no + 1
 
 #### Complete Data
 
-```{r mortality and class, fig.height=18, fig.width=12}
+```{r mortality and class, fig.height=pred_obs_height, fig.width=12, eval.after = TRUE}
 mortality_panel
 fig_no <- fig_no + 1
 ```
 
 #### Training Data
 
-```{r mortality and class training, fig.height=18, fig.width=12}
+```{r mortality and class training, fig.height=pred_obs_height, fig.width=12, eval.after = TRUE}
 mortality_panel_train
 fig_no <- fig_no + 1
 ```
 
 ### Figure `r as.character(fig_no)`: Class, Mortality, and other outcome - Complete Data
 
-```{r class mortality and other outcome, fig.height=24, fig.width=30}
+```{r class mortality and other outcome,  fig.height=pred_obs_height, fig.width=pred_obs_height+6, eval.after = TRUE}
 new_figure1
 fig_no <- fig_no + 1
 ```
 
 ### Figure `r as.character(fig_no)`: Dose Response - Complete Data
 
-```{r dose reponse, fig.height=18, fig.width=18}
+```{r dose reponse, fig.height=dose_height_width, fig.width=dose_height_width, eval.after = TRUE}
 dose_plot_panel
 fig_no <- fig_no + 1
 ```
@@ -1562,7 +1566,7 @@ tab_no <- tab_no + 1
 
 ### Figure `r as.character(fig_no)`: Class Prediction Panel - Complete Data
 
-```{r Class prediction panel, fig.width=30, fig.height=24}
+```{r Class prediction panel, fig.height=pred_obs_height, fig.width=24, eval.after = TRUE}
 class_prediction_panel
 fig_no <- fig_no + 1
 ```
@@ -1575,28 +1579,28 @@ used to make the KM Curves below
 
 #### Figure `r as.character(fig_no)`: KM Class Validation @ `r names(kap_plot_cum_validation)[[3]]` weeks
 
-```{r km cum validation 1, fig.height=6, fig.width=18}
+```{r km cum validation 1, fig.height=6, fig.width=pred_obs_height, eval.after = TRUE}
 kap_plot_cum_validation_panels[[3]]
 fig_no <- fig_no + 1
 ```
 
 #### Figure `r as.character(fig_no)`: KM Class Validation @ `r names(kap_plot_cum_validation)[[4]]` weeks
 
-```{r km cum validation 2, fig.height=6, fig.width=18}
+```{r km cum validation 2, fig.height=6, fig.width=pred_obs_height, eval.after = TRUE}
 kap_plot_cum_validation_panels[[4]]
 fig_no <- fig_no + 1
 ```
 
 #### Figure `r as.character(fig_no)`: KM Class Validation @ `r names(kap_plot_cum_validation)[[5]]` weeks
 
-```{r km cum validation 3, fig.height=6, fig.width=18}
+```{r km cum validation 3, fig.height=6, fig.width=pred_obs_height, eval.after = TRUE}
 kap_plot_cum_validation_panels[[5]]
 fig_no <- fig_no + 1
 ```
 
 #### Figure `r as.character(fig_no)`: KM Class Validation @ `r names(kap_plot_cum_validation)[[6]]` weeks
 
-```{r km cum validation 4, fig.height=6, fig.width=18}
+```{r km cum validation 4, fig.height=6, fig.width=pred_obs_height, eval.after = TRUE}
 kap_plot_cum_validation_panels[[6]]
 fig_no <- fig_no + 1
 ```
@@ -1625,28 +1629,28 @@ below.
 
 #### Figure `r as.character(fig_no)`: Dose Response Cumulative Validation @ `r names(dose_plot_cum_validation)[[3]]` weeks
 
-```{r dose reponse cum validation 1, fig.height=18, fig.width=18}
+```{r dose reponse cum validation 1, fig.height=dose_height_width, fig.width=dose_height_width, eval.after = TRUE}
 dose_plot_cum_validation[[3]]
 fig_no <- fig_no + 1
 ```
 
 #### Figure `r as.character(fig_no)`: Dose Response Cumulative Validation @ `r names(dose_plot_cum_validation)[[4]]` weeks
 
-```{r dose reponse cum validation 2, fig.height=18, fig.width=18}
+```{r dose reponse cum validation 2, fig.height=dose_height_width, fig.width=dose_height_width, eval.after = TRUE}
 dose_plot_cum_validation[[4]]
 fig_no <- fig_no + 1
 ```
 
 #### Figure `r as.character(fig_no)`: Dose Response Cumulative Validation @ `r names(dose_plot_cum_validation)[[5]]` weeks
 
-```{r dose reponse cum validation 3, fig.height=18, fig.width=18}
+```{r dose reponse cum validation 3, fig.height=dose_height_width, fig.width=dose_height_width, eval.after = TRUE}
 dose_plot_cum_validation[[5]]
 fig_no <- fig_no + 1
 ```
 
 #### Figure `r as.character(fig_no)`: Dose Response Cumulative Validation @ `r names(dose_plot_cum_validation)[[6]]` weeks
 
-```{r dose reponse cum validation 4, fig.height=18, fig.width=18}
+```{r dose reponse cum validation 4, fig.height=dose_height_width, fig.width=dose_height_width, eval.after = TRUE}
 dose_plot_cum_validation[[6]]
 fig_no <- fig_no + 1
 ```
