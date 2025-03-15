@@ -1659,148 +1659,56 @@ final_models$filter_window_test_tmerged_summary <- lapply(
 
 #### Create plots of concordances and regression on PI
 
+```{r source plot_concord_lp, file = 'R/plot_lp_concord.R'}
+source("R/plot_lp_concord.R")
+```
+
 ```{r create concordance plots}
-plot_cumulative_concord_lp <- function(data, outcome, color,
-                                       lower_bound, upper_bound, se,
-                                       ylab, xlab, title, legend_title) {
-  ggplot2::ggplot(
-    data = data,
-    mapping = ggplot2::aes(
-      x = as.numeric(.data[[upper_bound]]),
-      y = as.numeric(.data[[outcome]]),
-      color = factor(.data[[color]])
+plot_all_models <- function(final_models, prediction_name, metric, wrap) {
+  data_name <- paste0(prediction_name, "_tmerged_summary")
+  train_test_index <- final_models$data_mod == "train_test"
+
+  data <- final_models[train_test_index, data_name]
+
+  if (metric == "lp") {
+    y <- "coef"
+  } else {
+    y <- metric
+  }
+
+  plots <- lapply(data, function(data) {
+    data[[wrap]] <- as.factor(data[[wrap]])
+    plot <- plot_concord_lp(data,
+      y = y,
+      x = "upper_bound",
+      color = "model",
+      se = "se_coef"
     )
-  ) +
-    ggplot2::geom_line(stat = "identity") +
-    ggplot2::geom_errorbar(
-      ggplot2::aes(
-        x = .data[[upper_bound]],
-        ymin = .data[[outcome]] - 1.96 * .data[[se]],
-        ymax = .data[[outcome]] + 1.96 * .data[[se]]
-      ),
-      stat = "identity",
-      width = 2
-    ) +
-    ggplot2::labs(
-      y = ylab,
-      x = xlab,
-      title = title,
-      color = legend_title
-    ) +
-    ggplot2::facet_wrap(c(lower_bound), nrow = 1)
+    plot <- plot +
+      ggplot2::facet_wrap(~ eval(as.symbol(wrap)), nrow = 1)
+    plot
+  })
+
+  output_name <- paste0(prediction_name, paste0("_", metric, "_plot"))
+  column <- rep(list(NA), times = length(train_test_index))
+  column[train_test_index] <- plots
+  final_models[[output_name]] <- column
+  final_models
 }
 
-plot_window_concord_lp <- function(data, outcome, color,
-                                   window_size, midpoint, se,
-                                   ylab, xlab, title, legend_title) {
-  ggplot2::ggplot(
-    data = data,
-    mapping = ggplot2::aes(
-      x = as.numeric(.data[[midpoint]]),
-      y = as.numeric(.data[[outcome]]),
-      color = factor(.data[[color]])
-    )
-  ) +
-    ggplot2::geom_line(stat = "identity") +
-    ggplot2::geom_errorbar(
-      ggplot2::aes(
-        x = .data[[midpoint]],
-        ymin = .data[[outcome]] - 1.96 * .data[[se]],
-        ymax = .data[[outcome]] + 1.96 * .data[[se]]
-      ),
-      stat = "identity",
-      width = 2
-    ) +
-    ggplot2::labs(
-      y = ylab,
-      x = xlab,
-      title = title,
-      color = legend_title
-    ) +
-    ggplot2::facet_wrap(~ as.factor(window_size), nrow = 1)
-}
-
-prediction_name <- "filter_window_test"
-data_name <- paste0(prediction_name, "_tmerged_summary")
-train_test_index <- final_models$data_mod == "train_test"
-
-data <- final_models[train_test_index, data_name]
-
-lp_plots <- lapply(data, plot_window_concord_lp,
-  outcome = "coef",
-  color = "model",
-  window_size = "window_size",
-  midpoint = "midpoint",
-  se = "se_coef",
-  ylab = "Linear Predictor Coeffecient",
-  xlab = "Age (weeks)",
-  title = "Window LP",
-  legend_title = "Model"
+final_models <- plot_all_models(
+  final_models, "filter_window_test", "lp", "window_size"
+)
+final_models <- plot_all_models(
+  final_models, "filter_window_test", "concord", "window_size"
+)
+final_models <- plot_all_models(
+  final_models, "filter_cumulative_test", "lp", "lower_bound"
+)
+final_models <- plot_all_models(
+  final_models, "filter_cumulative_test", "concord", "lower_bound"
 )
 
-output_name <- paste0(prediction_name, "_lp_plot")
-column <- rep(list(NA), times = length(train_test_index))
-column[train_test_index] <- lp_plots
-final_models[[output_name]] <- column
-
-concord_plots <- lapply(data, plot_window_concord_lp,
-  outcome = "concord",
-  color = "model",
-  window_size = "window_size",
-  midpoint = "midpoint",
-  se = "se_concord",
-  ylab = "Concordance",
-  xlab = "Age (weeks)",
-  title = "Window Concordance",
-  legend_title = "Model"
-)
-
-output_name <- paste0(prediction_name, "_concord_plot")
-column <- rep(list(NA), times = length(train_test_index))
-column[train_test_index] <- concord_plots
-final_models[[output_name]] <- column
-
-
-
-prediction_name <- "filter_cumulative_test"
-data_name <- paste0(prediction_name, "_tmerged_summary")
-train_test_index <- final_models$data_mod == "train_test"
-
-data <- final_models[train_test_index, data_name]
-
-lp_plots <- lapply(data, plot_cumulative_concord_lp,
-  outcome = "coef",
-  color = "model",
-  lower_bound = "lower_bound",
-  upper_bound = "upper_bound",
-  se = "se_coef",
-  ylab = "Linear Predictor Coeffecient",
-  xlab = "Age (weeks)",
-  title = "Cumulative LP",
-  legend_title = "Model"
-)
-
-output_name <- paste0(prediction_name, "_lp_plot")
-column <- rep(list(NA), times = length(train_test_index))
-column[train_test_index] <- lp_plots
-final_models[[output_name]] <- column
-
-concord_plots <- lapply(data, plot_cumulative_concord_lp,
-  outcome = "concord",
-  color = "model",
-  lower_bound = "lower_bound",
-  upper_bound = "upper_bound",
-  se = "se_concord",
-  ylab = "Concordance",
-  xlab = "Age (weeks)",
-  title = "Cumulative Concordance",
-  legend_title = "Model"
-)
-
-output_name <- paste0(prediction_name, "_concord_plot")
-column <- rep(list(NA), times = length(train_test_index))
-column[train_test_index] <- concord_plots
-final_models[[output_name]] <- column
 
 final_models$filter_cumulative_test_lp_plot
 final_models$filter_cumulative_test_concord_plot
@@ -1810,13 +1718,10 @@ final_models$filter_window_test_concord_plot
 
 #### Create plots of concordances and regression on PI with one model
 
-```{r source plot_concord_lp, file = 'R/plot_lp_concord.R'}
-source("R/plot_lp_concord.R")
-```
 
 ```{r create concordance plots for 1 model}
-plot_validation <- function(final_models,
-                            prediction_name, metric, color, model_no) {
+plot_1_model <- function(final_models,
+                         prediction_name, metric, color, model_no) {
   data_name <- paste0(prediction_name, "_tmerged_summary")
   train_test_index <- final_models$data_mod == "train_test"
 
@@ -1836,12 +1741,7 @@ plot_validation <- function(final_models,
     y = y,
     x = "upper_bound",
     color = color,
-    se = "se_coef",
-    ylab = "Linear Predictor Coeffecient",
-    xlab = "Age (weeks)",
-    title = "Window LP",
-    legend_title = "Model"
-  )
+    se = "se_coef")
 
   output_name <- paste0(
     prediction_name,
@@ -1854,16 +1754,16 @@ plot_validation <- function(final_models,
   final_models
 }
 
-final_models <- plot_validation(
+final_models <- plot_1_model(
   final_models, "filter_window_test", "lp", "window_size", 2
 )
-final_models <- plot_validation(
+final_models <- plot_1_model(
   final_models, "filter_window_test", "concord", "window_size", 2
 )
-final_models <- plot_validation(
+final_models <- plot_1_model(
   final_models, "filter_cumulative_test", "lp", "lower_bound", 2
 )
-final_models <- plot_validation(
+final_models <- plot_1_model(
   final_models, "filter_cumulative_test", "concord", "lower_bound", 2
 )
 
