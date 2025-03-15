@@ -131,7 +131,8 @@ make_census <- function(cf_row, dataset) {
 
   # add class_df to main
   census <- data[!duplicated(data[[id]]), ]
-  census_cols <- dataset[c("id", "covariates", "factor", "covariates_dummy")]
+  census_cols <- dataset[c("id", "covariates", "covariates_dummy")]
+  census_cols <- c(census_cols, dataset$harmonize$variable)
   census_cols <- unlist(census_cols, use.names = FALSE)
   census <- census[, census_cols]
   census <- merge(x = census, y = class_df, by = id)

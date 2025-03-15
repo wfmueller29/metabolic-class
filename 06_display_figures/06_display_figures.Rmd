@@ -50,7 +50,7 @@ if (!exists("params")) {
   params <- list()
   # params$input_path <- "../05_figures/output/test_local.yaml"
   # params$input_path <- "../05_figures/output/all_only_bw.yaml"
-  params$input_path <- "../05_figures/output/20250306_all.yaml"
+  params$input_path <- "../05_figures/output/20250306_itp.yaml"
   # params$input_path <- "../05_figures/output/all.yaml"
   # params$input_path <- "../05_figures/output/all_lean.yaml"
   # params$input_path <- "../05_figures/output/fb6.yaml"
