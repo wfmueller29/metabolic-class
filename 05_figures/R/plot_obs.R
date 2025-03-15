@@ -40,9 +40,8 @@ traj_obs <- function(main,
   ) +
     ggplot2::geom_point(alpha = .1) +
     ggplot2::geom_smooth(
-      method = "gam",
-      formula = y ~ s(x, bs = "cs"),
-      span = .7,
+      method = "loess",
+      span = 1,
       mapping = aes_smooth
     ) +
     ggplot2::scale_color_manual(values = lej$col) +
@@ -60,7 +59,8 @@ traj_obs <- function(main,
         hjust = .5
       ),
       plot.margin = ggplot2::unit(c(10, 4, 25, 2), "pt")
-    )
+    ) +
+    ggplot2::scale_size(guide = "none")
 
   return(p)
 }
