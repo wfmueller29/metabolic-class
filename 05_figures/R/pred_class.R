@@ -8,9 +8,26 @@ predict_class <- function(newdata,
                           model) {
   model$call[[1]] <- "hlme"
 
-  prediction <- lcmm::predictClass(
-    model = model,
-    newdata = newdata
+  prediction <- tryCatch(
+    {
+      lcmm::predictClass(
+        model = model,
+        newdata = newdata
+      )
+    },
+    error = function(cond) {
+      browser()
+      errormsg <- conditionMessage(cond)
+      if (errormsg == "the leading minor of order 3 is not positive") {
+        warning("predictClass error, likely due to lack of repeated measures")
+        warning("returning NULL")
+        message("Here's the original error message:")
+        message(conditionMessage(cond))
+        return(NULL)
+      } else {
+        stop(cond)
+      }
+    }
   )
 
   prediction
