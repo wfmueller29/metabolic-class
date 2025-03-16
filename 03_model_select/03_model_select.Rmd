@@ -128,29 +128,9 @@ selected_models <- lapply(cf_nest$cf, function(cf) {
   mo_eval_table <- helphlme::compare_models(models)$table
 
   cf <- cbind(cf, mo_eval_table)
-  cf$smallest_greater_5 <- ifelse(cf[["Smallest Class (%)"]] >= 5, 1, 0)
-  dataset_index <- unique(cf$dataset_index)
-  data_mod <- datasets[[dataset_index]]$data_mod
-  # If train_test, we want to reorder models based upon og, to select
-  # same model strucutre
-  if (data_mod == "train_test") {
-    dataset <- datasets[[dataset_index]]
-    outcome <- dataset$outcome
-    og_index <- lapply(datasets, function(dataset) {
-      all(c(dataset$outcome == outcome, dataset$data_mod == "og"))
-    })
-    og_index <- unlist(og_index, use.names = FALSE)
-    cf_og <- cf_nest$cf[[which(og_index)]]
-    models_og <- cf_og$final_model
-    mo_eval_table_og <- helphlme::compare_models(models_og)$table
 
-    cf_og <- cbind(cf_og, mo_eval_table_og)
-    cf_og$smallest_greater_5 <- ifelse(cf_og[["Smallest Class (%)"]] >= 5, 1, 0)
-    order_vec <- order(-cf_og$smallest_greater_5, cf_og$BIC)
-  } else {
-    order_vec <- order(-cf$smallest_greater_5, cf$BIC)
-  }
-  cf <- cf[order_vec, ]
+  cf$smallest_greater_5 <- ifelse(cf[["Smallest Class (%)"]] >= 5, 1, 0)
+  cf <- cf[order(-cf$smallest_greater_5, cf$BIC), ]
 
   selected_model <- cf[1, ]
 })
