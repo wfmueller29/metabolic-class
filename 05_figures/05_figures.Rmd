@@ -1677,13 +1677,15 @@ plot_all_models <- function(final_models, prediction_name, metric, wrap) {
     y <- metric
   }
 
+  se <- paste0("se_", y)
+
   plots <- lapply(data, function(data) {
     data[[wrap]] <- as.factor(data[[wrap]])
     plot <- plot_concord_lp(data,
       y = y,
       x = "upper_bound",
       color = "model",
-      se = "se_coef"
+      se = se
     )
     plot <- plot +
       ggplot2::facet_wrap(~ eval(as.symbol(wrap)), nrow = 1)
@@ -1738,11 +1740,15 @@ plot_1_model <- function(final_models,
     y <- metric
   }
 
+  se <- paste0("se_", y)
+
+
   plots <- lapply(data, plot_concord_lp,
     y = y,
     x = "upper_bound",
     color = color,
-    se = "se_coef")
+    se = se
+  )
 
   output_name <- paste0(
     prediction_name,
