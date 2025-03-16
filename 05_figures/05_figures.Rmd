@@ -44,7 +44,7 @@ if (!exists("params")) {
   params <- list()
   # params$input_path <- "../04_prediction_data/output/test_local.yaml"
   # params$input_path <- "../04_prediction_data/output/all_only_bw.yaml"
-  params$input_path <- "../04_prediction_data/output/20250306_fhet3.yaml"
+  params$input_path <- "../04_prediction_data/output/20250306_itp.yaml"
   # params$input_path <- "../04_prediction_data/output/20250306_all.yaml"
   # params$input_path <- "../04_prediction_data/output/external_validation.yaml"
   # params$input_path <- "../04_prediction_data/output/all.yaml"
@@ -1261,12 +1261,10 @@ make_test_census <- function(cf_row, dataset) {
 
   # create census from data
   census <- data[!duplicated(data[[id]]), ]
-  harmonize_vars <- dataset$harmonize$variable
-  census_cols <- dataset[c("id", "covariates", "covariates_dummy")]
+  census_cols <- dataset[c("id", "covariates", "factor", "covariates_dummy")]
   census_cols <- unlist(census_cols, use.names = FALSE)
-  census_cols <- c(census_cols, harmonize_vars)
 
-  census <- census[, census_cols, drop = FALSE]
+  census <- census[, census_cols]
   # add survival information to census
   surv_id <- config$survival_dataset$id
 
