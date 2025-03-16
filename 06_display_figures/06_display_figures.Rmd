@@ -403,7 +403,7 @@ if (config$custom_palette_train) {
   }
 }
 kap_plots_train <- lapply(kap_plots_train, `[[`, "plot")
-plot_list <- c(obs_plots, kap_plots_train)
+plot_list <- c(obs_plots_train, kap_plots_train)
 
 mortality_panel_train <- cowplot::plot_grid(
   plotlist = plot_list, nrow = length(kap_plots_train),
