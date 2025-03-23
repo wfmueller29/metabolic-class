@@ -135,6 +135,9 @@ jaxdo_cols <- c(
 )
 jaxdo <- jaxdo[, jaxdo_cols]
 
+jaxdo$sex_M <- ifelse(jaxdo$sex == "M", 1, 0)
+jaxdo$sex_F <- ifelse(jaxdo$sex == "F", 1, 0)
+
 dir.create("output")
 write.csv(surv, "output/jaxdo_surv.csv")
 write.csv(jaxdo, "output/jaxdo_bw_gluc.csv")
