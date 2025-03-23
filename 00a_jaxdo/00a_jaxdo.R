@@ -128,6 +128,7 @@ censor <- c(
 surv$dead_censor <- ifelse(surv$cod %in% found_dead, 1, 0)
 
 surv <- surv[, c("id", "le_wk", "dead_censor")]
+surv <- surv[!duplicated(surv$id), ]
 
 # Create main dataset ---------------------------------------------------------
 jaxdo_cols <- c(
