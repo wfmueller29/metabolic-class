@@ -44,8 +44,8 @@ if (!exists("params")) {
   params <- list()
   # params$input_path <- "../04_prediction_data/output/test_local.yaml"
   # params$input_path <- "../04_prediction_data/output/all_only_bw.yaml"
-  params$input_path <- "../04_prediction_data/output/20250306_fhet3.yaml"
-  # params$input_path <- "../04_prediction_data/output/20250306_all.yaml"
+  # params$input_path <- "../04_prediction_data/output/20250306_fhet3.yaml"
+  params$input_path <- "../04_prediction_data/output/20250306_all.yaml"
   # params$input_path <- "../04_prediction_data/output/external_validation.yaml"
   # params$input_path <- "../04_prediction_data/output/all.yaml"
   # params$input_path <- "../04_prediction_data/output/all_lean.yaml"
@@ -1784,6 +1784,67 @@ final_models$filter_window_test_lp_plot_model2
 final_models$filter_window_test_concord_plot_model2
 ```
 
+#### Create combined test dataframe census
+
+```{r combined test dataframe}
+test_data <- lapply(datasets[train_test_index], `[[`, "test_data")
+models <- final_models[train_test_index, "final_model"]
+outcomes <- final_models[train_test_index, "oc"]
+ids <- final_models[train_test_index, "subject"]
+
+predicted_class <- mapply(predict_class, newdata = test_data, model = models)
+
+test_census <- final_models[train_test_index, "test_census"]
+
+test_census_pred <- mapply(merge,
+  x = test_census,
+  y = predicted_class,
+  by = config$meta_dataset$id
+)
+
+reorder_class <- function(censuses) {
+  i <- 0
+  for (j in seq_along(censuses)) {
+    # generate new_class
+    census <- censuses[[j]]
+    census$new_class <- as.character(census$class + i)
+
+    # Create new prob based off of new_class
+    probs_index <- grepl("^prob", names(census))
+    probs <- names(census)[grepl("^prob", names(census))]
+    probs <- stringr::str_split(probs, pattern = "prob", simplify = TRUE)[, 2]
+    new_probs <- as.numeric(probs) + i
+    new_probs <- paste0("prob", new_probs)
+    names(census)[probs_index] <- new_probs
+
+    uni_class <- length(unique(census$class))
+    i <- uni_class + i
+
+    censuses[[j]] <- census
+  }
+
+  censuses
+}
+
+test_census_pred <- reorder_class(test_census_pred)
+
+combined_test_census <- combine_census(
+  censuses = test_census_pred,
+  outcomes = outcomes,
+  ids = ids
+)
+```
+
+### Get combined complete census and trained census
+
+```{r combined complete and train census}
+combined_complete_census <- final_models[!train_test_index, "combined_census"]
+combined_complete_census <- combined_complete_census[[1]]
+
+combined_train_census <- final_models[train_test_index, "combined_census"]
+combined_train_census <- combined_train_census[[1]]
+```
+
 ### Save R Objects
 
 #### Prune Final Models Before Saving 
@@ -1829,6 +1890,15 @@ final_models_path <- file.path(output_path, "final_models.RDATA")
 
 save(final_models, file = final_models_path)
 
+combined_complete_census_path <- file.path(output_path, "complete_census.csv")
+write.csv(combined_complete_census, combined_complete_census_path)
+
+combined_train_census_path <- file.path(output_path, "train_census.csv")
+write.csv(combined_train_census, combined_train_census_path)
+
+combined_test_census_path <- file.path(output_path, "test_census.csv")
+write.csv(combined_test_census, combined_test_census_path)
+
 # create output file ----------------------------------------------------------
 output_list <- list(
   data_time = format(Sys.time()),
@@ -1840,7 +1910,10 @@ output_list <- list(
   models_path = input$models_path,
   cf_path = input$cf_path,
   final_models_path = final_models_path,
-  csv_path = input$csv_path
+  csv_path = input$csv_path,
+  complete_cenus_path = combined_complete_census_path,
+  train_cenus_path = combined_train_census_path,
+  test_cenus_path = combined_test_census_path
 )
 
 output_list_path <- paste0(file.path("output", config$out_tag), ".yaml")
