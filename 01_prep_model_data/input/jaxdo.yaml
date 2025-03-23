@@ -29,7 +29,7 @@ individual_cox:
 combined_cox:
   forms:
     - "~ <class+> + sex"
-    - "~ <probs+> + sex + frailty(idno)"
+    - "~ <probs+> + sex + frailty(id)"
     - "~ <probs+> + strata(sex)"
   tts:
     - NULL
