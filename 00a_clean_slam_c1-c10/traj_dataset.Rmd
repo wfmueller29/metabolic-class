@@ -263,7 +263,6 @@ if (!isTRUE(test)) {
 }
 
 message("Number of observations without a tod = ", n_obs_without_tod)
-
 ```
 
 - Observations lost due to no tod = `r obs_before_tod - obs_after_tod`
@@ -1122,7 +1121,7 @@ fcn_plotdist_lm <- function(metric, x, y, by, xlabel, ylabel, title) {
     scale_linetype_manual(labels = c("All"), name = "", values = c("solid", "dashed", "solid"), guide = FALSE) +
     scale_color_manual(values = surv_color, name = "Survival\n(% Life Expectancy)")
 }
-``` 
+```
 
 ```{r slam_ss_dist_plots, warning=FALSE, message=FALSE, echo=FALSE, eval=TRUE}
 cbPalette_dot <- c("#f8766d", "#00b0f6", "black")
@@ -1193,14 +1192,14 @@ slam_fig_d13 <- ggarrange(slam_fig_d1, slam_fig_d2, slam_fig_d3,
   common.legend = TRUE,
   legend = "right"
 )
-``` 
+```
 
 ```{r slam_sex_dist_fig, warning=FALSE, message=FALSE, echo=FALSE, eval=TRUE}
 annotate_figure(slam_fig_i13,
   top = text_grob("Trends in Metabolic Indices over the Lifespan by Sex", size = 12, hjust = 0, x = unit(0, "lines")),
   bottom = text_grob("Note: Diamonds represent age at peak index value", size = 9, hjust = 0, x = unit(0, "lines"))
 )
-``` 
+```
  
 *** 
 
@@ -1209,7 +1208,7 @@ annotate_figure(slam_fig_j13,
   top = text_grob("Trends in Metabolic Indices over the Lifespan by Strain", size = 12, hjust = 0, x = unit(0, "lines")),
   bottom = text_grob("Note: Diamonds represent age at peak index value", size = 9, hjust = 0, x = unit(0, "lines"))
 )
-``` 
+```
 
 *** 
 
@@ -1260,7 +1259,7 @@ phases <- rbind(roc_gluc, roc_bw, roc_fat) %>%
   as.data.frame()
 
 colnames(phases) <- c("index", "peak_all", "peak_female", "peak_male", "all", "female", "male", "all2", "female2", "male2")
-``` 
+```
 
 ```{r slam_phase_formatting, warning=FALSE, message=FALSE, echo=FALSE}
 # html output formatting
@@ -1357,6 +1356,30 @@ main_cat_surv <- main_cat_surv_f %>%
   rbind(main_cat_surv_m)
 
 slam_main_cat_surv <- main_cat_surv
+```
+
+### Drop unused variables before saving
+
+```{r drop unused variables}
+keep_cols <- c(
+  "idno",
+  "gluc",
+  "bw",
+  "fat",
+  "sex",
+  "strain",
+  "cohort",
+  "age_wk",
+)
+
+main_all2 <- main_all2[, keep_cols]
+
+keep_cols_surv <- c(
+  "idno",
+  "dead_censor",
+  "le_wk"
+)
+main_cat_surv <- main_cat_surv[, keep_cols_surv]
 ```
 
 ```{r save main_all2}
