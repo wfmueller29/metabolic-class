@@ -45,7 +45,8 @@ if (!exists("params")) {
   # params$input_path <- "../04_prediction_data/output/test_local.yaml"
   # params$input_path <- "../04_prediction_data/output/all_only_bw.yaml"
   # params$input_path <- "../04_prediction_data/output/20250306_fhet3.yaml"
-  params$input_path <- "../04_prediction_data/output/20250306_all.yaml"
+  # params$input_path <- "../04_prediction_data/output/20250306_all.yaml"
+  params$input_path <- "../04_prediction_data/output/20250306_itp.yaml"
   # params$input_path <- "../04_prediction_data/output/external_validation.yaml"
   # params$input_path <- "../04_prediction_data/output/all.yaml"
   # params$input_path <- "../04_prediction_data/output/all_lean.yaml"
@@ -1792,14 +1793,15 @@ models <- final_models[train_test_index, "final_model"]
 outcomes <- final_models[train_test_index, "oc"]
 ids <- final_models[train_test_index, "subject"]
 
-predicted_class <- mapply(predict_class, newdata = test_data, model = models)
+predicted_class <- mapply(predict_class, newdata = test_data, model = models,
+                          SIMPLIFY = FALSE)
 
 test_census <- final_models[train_test_index, "test_census"]
 
 test_census_pred <- mapply(merge,
   x = test_census,
   y = predicted_class,
-  by = config$meta_dataset$id
+  by = config$meta_dataset$id, SIMPLIFY = FALSE
 )
 
 reorder_class <- function(censuses) {
