@@ -17,7 +17,8 @@ if (length(args) == 0) {
   # args[[1]] <- "input/slam_age_mb6.yaml"
   # args[[1]] <- "input/slam_age_all.yaml"
   # args[[1]] <- "input/slam_all_only_bw.yaml"
-  args[[1]] <- "input/itp_bw.yaml"
+  # args[[1]] <- "input/itp_bw.yaml"
+  args[[1]] <- "../inputs/validate/slam_c1-c10_x_slam_c16-c18.yaml"
   # args[[1]] <- "../x01_external_validation/input/slam_age_all.yaml"
   # args[[1]] <- "../x01_external_validation/input/slam_c16-c18.yaml"
   warning("No input file provided, using: ", args[[1]])
@@ -47,6 +48,11 @@ if (!isFALSE(config$external_validate)) {
   validation_input2 <- yaml::read_yaml(validation_input1$input_path)
   validation_input3 <- yaml::read_yaml(validation_input2$input_yaml_path)
   validation_config <- yaml::read_yaml(validation_output$config_path)
+
+  validation_config$datasets <- lapply(validation_config$datasets, function(dataset) {
+    dataset$prediction_data <- validation_config$prediction_data
+    dataset <- c(dataset, validation_config$meta_dataset)
+  })
 
   datasets <- validation_config$datasets
   validation_datasets <- config$datasets
@@ -183,16 +189,23 @@ if (!isFALSE(config$external_validate)) {
 
 
 # test if age => age_death ----------------------------------------------------
-surv_data <- function(dataset) {
+merge_surv_data <- function(dataset, surv) {
   data <- dataset$data
   data <- merge(data, surv, by = dataset$id, all.x = TRUE)
   data
 }
-surv <- read.csv(config$survival_dataset$path)
 
-surv_data <- lapply(datasets, surv_data)
+surv <- read.csv(config$survival_dataset$path)
+surv_data <- lapply(datasets, merge_surv_data, surv)
 if (!isFALSE(config$external_validate)) {
-  surv_data_validation <- lapply(datasets, surv_data)
+  # remember, we swapped datasets and validation_datasets above
+  surv <- read.csv(validation_config$survival_dataset$path)
+  surv_data <- lapply(datasets, merge_surv_data, surv)
+  surv_validation <- read.csv(config$survival_dataset$path)
+  surv_data_validation <- lapply(
+    validation_datasets, merge_surv_data,
+    surv_validation
+  )
   surv_data <- c(surv_data, surv_data_validation)
 }
 
