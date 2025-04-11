@@ -92,26 +92,26 @@ datasets:
     formula: "~ age_wk + age_wk2 + sex + (1|id)"
     variable: "generation"
 
-- name: "jaxdo"
-  path: "/Users/williammueller/programs/metabolic_class/analysis/00a_jaxdo/output/jaxdo_bw_gluc.csv"
-  outcome: "gluc"
-  model:
-    fixed: "~ age_wk + age_wk2"
-    mixture: "~ age_wk + age_wk2" 
-    random: 
-      - "~ 1"
-      - "~ age_wk"
-      - "~ age_wk + age_wk2"
-    idiag: [FALSE, TRUE]
-    nwg: [FALSE, TRUE]
-    ng_max: 5
-  labels:
-    oc_name: "Glucose"
-    oc_units: "(mg/dL)"
-    age_var_name: "Age"
-    age_var_units: "(weeks)"
-    data_name: "SLAM Glucose"
-  harmonize:
-    execute: TRUE
-    formula: "~ age_wk + age_wk2 + sex + (1|id)"
-    variable: "generation"
+# - name: "jaxdo"
+#   path: "/Users/williammueller/programs/metabolic_class/analysis/00a_jaxdo/output/jaxdo_bw_gluc.csv"
+#   outcome: "gluc"
+#   model:
+#     fixed: "~ age_wk + age_wk2"
+#     mixture: "~ age_wk + age_wk2" 
+#     random: 
+#       - "~ 1"
+#       - "~ age_wk"
+#       - "~ age_wk + age_wk2"
+#     idiag: [FALSE, TRUE]
+#     nwg: [FALSE, TRUE]
+#     ng_max: 5
+#   labels:
+#     oc_name: "Glucose"
+#     oc_units: "(mg/dL)"
+#     age_var_name: "Age"
+#     age_var_units: "(weeks)"
+#     data_name: "SLAM Glucose"
+#   harmonize:
+#     execute: TRUE
+#     formula: "~ age_wk + age_wk2 + sex + (1|id)"
+#     variable: "generation"
