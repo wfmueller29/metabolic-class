@@ -46,7 +46,8 @@ if (!exists("params")) {
   # params$input_path <- "../04_prediction_data/output/all_only_bw.yaml"
   # params$input_path <- "../04_prediction_data/output/20250306_fhet3.yaml"
   # params$input_path <- "../04_prediction_data/output/20250306_all.yaml"
-  params$input_path <- "../04_prediction_data/output/20250306_itp.yaml"
+  # params$input_path <- "../04_prediction_data/output/20250306_itp.yaml"
+  params$input_path <- "../04_prediction_data/output/20250410_slam_c1-c10_x_slam_c16-c18.yaml"
   # params$input_path <- "../04_prediction_data/output/external_validation.yaml"
   # params$input_path <- "../04_prediction_data/output/all.yaml"
   # params$input_path <- "../04_prediction_data/output/all_lean.yaml"
@@ -73,6 +74,12 @@ if (!isFALSE(config$external_validate)) {
   input$cf_path <- validation_input$cf_path
   input$final_models_path <- validation_input$final_models_path
   input$csv_path <- validation_input$csv_path
+
+  # read in validation_config -------------------------------------------------
+  validation_input1 <- yaml::read_yaml(validation_input$input_path)
+  validation_input2 <- yaml::read_yaml(validation_input1$input_path)
+  validation_input3 <- yaml::read_yaml(validation_input2$input_yaml_path)
+  validation_config <- yaml::read_yaml(validation_output$config_path)
 }
 ```
 
@@ -111,6 +118,16 @@ if (!isFALSE(config$external_validate)) {
 # load in main_cat_surv
 main_cat_surv <- read.csv(file = config$survival_dataset$path)
 main_cat_surv <- as.data.frame(main_cat_surv)
+
+if (!isFALSE(config$external_validate)) {
+  main_cat_surv <- read.csv(file = config$survival_dataset$path)
+  main_cat_surv <- as.data.frame(main_cat_surv)
+
+  main_cat_surv_validation <- read.csv(validation_config$survival_dataset$path)
+  main_cat_surv_validation <- as.data.frame(main_cat_surv_validation)
+
+  main_cat_surv <- rbind(main_cat_surv, main_cat_surv_validation)
+}
 
 final_models$dfs <- lapply(final_models$data, function(name) {
   datasets[[name]]$data
@@ -1793,8 +1810,10 @@ models <- final_models[train_test_index, "final_model"]
 outcomes <- final_models[train_test_index, "oc"]
 ids <- final_models[train_test_index, "subject"]
 
-predicted_class <- mapply(predict_class, newdata = test_data, model = models,
-                          SIMPLIFY = FALSE)
+predicted_class <- mapply(predict_class,
+  newdata = test_data, model = models,
+  SIMPLIFY = FALSE
+)
 
 test_census <- final_models[train_test_index, "test_census"]
 
