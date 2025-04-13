@@ -3,7 +3,7 @@
 render_model_output <- function(model_dir) {
   output_dir <- normalizePath(file.path("output", model_dir))
   rmarkdown::render(
-    input = "05_figures.Rmd",
+    input = "06_create_figures.Rmd",
     output_dir = output_dir,
     params = list(model_dir = model_dir)
   )

@@ -19,10 +19,20 @@ config <- yaml::read_yaml(args[[1]])
 system2("Rscript", args = c("01_prep_model_data.R", args[[1]]))
 setwd("..")
 
+# 03b -------------------------------------------------------------------------
+
+input_03b <- normalizePath(
+  paste0(file.path("01_prep_model_data/output", config$out_tag), ".yaml")
+)
+
+setwd("03b_create_census")
+system2("Rscript", args = c("create_census.R", input_03b))
+setwd("..")
+
 # 04 -------------------------------------------------------------------------
 
 input_04 <- normalizePath(
-  paste0(file.path("01_prep_model_data/output", config$out_tag), ".yaml")
+  paste0(file.path("03b_create_census/output", config$out_tag), ".yaml")
 )
 
 setwd("04_prediction_data")

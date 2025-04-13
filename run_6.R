@@ -1,4 +1,4 @@
-# This will run just the 06_display_figures
+# This will run just the 07_display_figures
 # this is for running 6
 
 args <- commandArgs(trailingOnly = TRUE)
@@ -14,12 +14,12 @@ config <- yaml::read_yaml(args[[1]])
 
 # 06 --------------------------------------------------------------------------
 input_06 <- normalizePath(
-  paste0(file.path("05_figures/output", config$out_tag), ".yaml")
+  paste0(file.path("06_create_figures/output", config$out_tag), ".yaml")
 )
 
-setwd("06_display_figures")
+setwd("07_display_figures")
 output_dir <- normalizePath(file.path("output", config$out_tag))
-rmarkdown::render("06_display_figures.Rmd",
+rmarkdown::render("07_display_figures.Rmd",
   output_dir = output_dir, params = list(input_path = input_06)
 )
 setwd("..")

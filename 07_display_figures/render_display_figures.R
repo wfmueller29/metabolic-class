@@ -9,7 +9,7 @@ mhet3_dir <- "20220617_052502_mhet3"
 fhet3_dir <- "20220617_033852_fhet3"
 
 rmarkdown::render(
-  input = "06_display_figures.Rmd",
+  input = "07_display_figures.Rmd",
   output_file = "main_figures.html",
   params = list(
     sup = FALSE,
@@ -22,7 +22,7 @@ rmarkdown::render(
 )
 
 rmarkdown::render(
-  input = "06_display_figures.Rmd",
+  input = "07_display_figures.Rmd",
   output_file = "supplemental_figures.html",
   params = list(
     sup = TRUE,

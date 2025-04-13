@@ -104,7 +104,7 @@ final_models$census <- lapply(seq_len(nrow(final_models)), function(i) {
 
 
 # create combined census ------------------------------------------------------
-source("../05_figures/R/combine_census.R")
+source("../06_create_figures/R/combine_census.R")
 
 train_test_index <- (final_models$data_mod == "train_test")
 train_test_names <- final_models[train_test_index, "model_name"]
@@ -163,7 +163,7 @@ final_models$test_census <- lapply(seq_len(nrow(final_models)), function(i) {
 
 
 # create combined test census -------------------------------------------------
-source("../05_figures/R/pred_class.R")
+source("../06_create_figures/R/pred_class.R")
 test_data <- lapply(datasets[train_test_index], `[[`, "test_data")
 models <- final_models[train_test_index, "final_model"]
 outcomes <- final_models[train_test_index, "oc"]
