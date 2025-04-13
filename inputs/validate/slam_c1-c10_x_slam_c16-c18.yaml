@@ -5,7 +5,7 @@ ncpus: 8
 sample_n: FALSE
 center: TRUE
 scale: FALSE
-external_validate: "/Users/williammueller/programs/metabolic_class/analysis/05_figures/output/all.yaml"
+external_validate: "/Users/williammueller/programs/metabolic_class/analysis/06_create_figures/output/all.yaml"
 predict: FALSE
 custom_palette: FALSE
 palette_colors: ["black", "#DF536B", "#61D04F", "midnightblue",

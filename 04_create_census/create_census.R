@@ -6,7 +6,8 @@ args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) == 0) {
   # input_path <- "../03_model_select/output/test_local.yaml"
-  input_path <- "../01_prep_model_data/output/xslam_c16-c18.yaml"
+  # input_path <- "../01_prep_model_data/output/xslam_c16-c18.yaml"
+  input_path <- "../01_prep_model_data/output/20250410_slam_c1-c10_x_slam_c16-c18.yaml"
   # input_path <- "../01_prep_model_data/output/mb6.yaml"
   warning("Using default input file: ", input_path)
 } else {

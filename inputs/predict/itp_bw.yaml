@@ -6,7 +6,7 @@ sample_n: FALSE
 center: TRUE
 scale: FALSE
 external_validate: FALSE
-predict: "../05_figures/output/20250306_itp.yaml"
+predict: "../06_create_figures/output/20250306_itp.yaml"
 custom_palette: FALSE
 palette_colors: ["black", "#DF536B", "#61D04F", "midnightblue",
   "#28E2E5", "#CD0BBC", "#FF991C", "gray62"]
