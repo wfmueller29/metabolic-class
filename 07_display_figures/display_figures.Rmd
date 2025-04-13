@@ -7,7 +7,7 @@ output:
   html_document:
     df_print: paged
 params:
-  input_path: "../05_figures/output/test_local.yaml"
+  input_path: "../06_create_figures/output/test_local.yaml"
 ---
 
 ```{r setup, warning=FALSE, message=FALSE, echo=FALSE}
@@ -48,13 +48,13 @@ cumulative_legend_palette <- viridis(3, begin = .2, end = .7, direction = -1)
 # for the case when we are not running with RStudio
 if (!exists("params")) {
   params <- list()
-  # params$input_path <- "../05_figures/output/test_local.yaml"
-  # params$input_path <- "../05_figures/output/all_only_bw.yaml"
-  params$input_path <- "../05_figures/output/20250306_itp.yaml"
-  # params$input_path <- "../05_figures/output/all.yaml"
-  # params$input_path <- "../05_figures/output/all_lean.yaml"
-  # params$input_path <- "../05_figures/output/fb6.yaml"
-  # params$input_path <- "../05_figures/output/external_validation.yaml"
+  # params$input_path <- "../06_create_figures/output/test_local.yaml"
+  # params$input_path <- "../06_create_figures/output/all_only_bw.yaml"
+  # params$input_path <- "../06_create_figures/output/20250306_itp.yaml"
+  params$input_path <- "../06_create_figures/output/all.yaml"
+  # params$input_path <- "../06_create_figures/output/all_lean.yaml"
+  # params$input_path <- "../06_create_figures/output/fb6.yaml"
+  # params$input_path <- "../06_create_figures/output/external_validation.yaml"
 }
 
 input <- yaml::read_yaml(file = params$input_path)

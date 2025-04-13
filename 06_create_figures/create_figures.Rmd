@@ -6,7 +6,7 @@ output:
   html_document:
     df_print: paged
 params:
-  input_path: "../04_prediction_data/output/test_local.yaml"
+  input_path: "../05_prediction_data/output/test_local.yaml"
 ---
 
 ```{r setup, warning=FALSE, message=FALSE, echo=FALSE, eval = TRUE}
@@ -42,18 +42,18 @@ mega_pal <- rep(palette(), 40)
 # for the case when we are not running with RStudio
 if (!exists("params")) {
   params <- list()
-  # params$input_path <- "../04_prediction_data/output/test_local.yaml"
-  # params$input_path <- "../04_prediction_data/output/all_only_bw.yaml"
-  # params$input_path <- "../04_prediction_data/output/20250306_fhet3.yaml"
-  # params$input_path <- "../04_prediction_data/output/20250306_all.yaml"
-  # params$input_path <- "../04_prediction_data/output/20250306_itp.yaml"
-  params$input_path <- "../04_prediction_data/output/20250410_slam_c1-c10_x_slam_c16-c18.yaml"
-  # params$input_path <- "../04_prediction_data/output/external_validation.yaml"
-  # params$input_path <- "../04_prediction_data/output/all.yaml"
-  # params$input_path <- "../04_prediction_data/output/all_lean.yaml"
-  # params$input_path <- "../04_prediction_data/output/mb6.yafl"
-  # params$input_path <- "../04_prediction_data/output/all_relative_age.yaml"
-  # params$input_path <- "../04_prediction_data/output/test_relative_age.yaml"
+  # params$input_path <- "../05_prediction_data/output/test_local.yaml"
+  # params$input_path <- "../05_prediction_data/output/all_only_bw.yaml"
+  # params$input_path <- "../05_prediction_data/output/20250306_fhet3.yaml"
+  # params$input_path <- "../05_prediction_data/output/20250306_all.yaml"
+  # params$input_path <- "../05_prediction_data/output/20250306_itp.yaml"
+  params$input_path <- "../05_prediction_data/output/20250410_slam_c1-c10_x_slam_c16-c18.yaml"
+  # params$input_path <- "../05_prediction_data/output/external_validation.yaml"
+  # params$input_path <- "../05_prediction_data/output/all.yaml"
+  # params$input_path <- "../05_prediction_data/output/all_lean.yaml"
+  # params$input_path <- "../05_prediction_data/output/mb6.yafl"
+  # params$input_path <- "../05_prediction_data/output/all_relative_age.yaml"
+  # params$input_path <- "../05_prediction_data/output/test_relative_age.yaml"
 }
 
 input <- yaml::read_yaml(file = params$input_path)
