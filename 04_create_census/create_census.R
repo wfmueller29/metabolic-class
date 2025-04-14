@@ -231,7 +231,7 @@ config_path <- input$config_path
 config <- yaml::read_yaml(file = config_path)
 
 output_path <- file.path("output", config$out_tag)
-dir.create(output_path)
+dir.create(output_path, recursive = TRUE)
 output_path <- normalizePath(output_path)
 
 final_models_path <- file.path(output_path, "final_models.RDATA")
@@ -252,7 +252,7 @@ output_list <- list(
   data_time = format(Sys.time()),
   working_directory = getwd(),
   config_path = config_path,
-  input_path = params$input_path,
+  input_path = input_path,
   output_dir_path = output_path,
   datasets_path = input$datasets_path,
   validation_config_path = input$validation_config_path,
