@@ -18,7 +18,8 @@ if (length(args) == 0) {
   # args[[1]] <- "input/slam_age_all.yaml"
   # args[[1]] <- "input/slam_all_only_bw.yaml"
   # args[[1]] <- "input/itp_bw.yaml"
-  args[[1]] <- "../inputs/validate/slam_c1-c10_x_slam_c16-c18.yaml"
+  # args[[1]] <- "../inputs/validate/slam_c1-c10_x_slam_c16-c18.yaml"
+  args[[1]] <- "../inputs/predict/slam_c1-c10_x_slam_c16-c18.yaml"
   # args[[1]] <- "../x01_external_validation/input/slam_age_all.yaml"
   # args[[1]] <- "../x01_external_validation/input/slam_c16-c18.yaml"
   warning("No input file provided, using: ", args[[1]])
@@ -41,18 +42,22 @@ config$datasets <- lapply(config$datasets, function(dataset) {
 # Read in yaml if external_validate -------------------------------------------
 
 # if validation, make validation data og data and input datasets test data
-if (!isFALSE(config$external_validate)) {
-  validation_output <- yaml::read_yaml(config$external_validate)
-  validation_input <- yaml::read_yaml(validation_output$input_path)
-  validation_input1 <- yaml::read_yaml(validation_input$input_path)
-  validation_input2 <- yaml::read_yaml(validation_input1$input_path)
-  validation_input3 <- yaml::read_yaml(validation_input2$input_yaml_path)
+if (!isFALSE(config$external_validate) || !isFALSE(config$predict)) {
+  if (!isFALSE(config$external_validate)) {
+    file <- config$external_validate
+  } else if (!isFALSE(config$predict)) {
+    file <- config$predict
+  }
+  validation_output <- yaml::read_yaml(file)
   validation_config <- yaml::read_yaml(validation_output$config_path)
 
-  validation_config$datasets <- lapply(validation_config$datasets, function(dataset) {
-    dataset$prediction_data <- validation_config$prediction_data
-    dataset <- c(dataset, validation_config$meta_dataset)
-  })
+  validation_config$datasets <- lapply(
+    validation_config$datasets,
+    function(dataset) {
+      dataset$prediction_data <- validation_config$prediction_data
+      dataset <- c(dataset, validation_config$meta_dataset)
+    }
+  )
 
   datasets <- validation_config$datasets
   validation_datasets <- config$datasets
@@ -73,7 +78,7 @@ get_extension <- function(datasets) {
 }
 
 datasets <- get_extension(datasets)
-if (!isFALSE(config$external_validate)) {
+if (!isFALSE(config$external_validate) || !isFALSE(config$predict)) {
   validation_datasets <- get_extension(validation_datasets)
 }
 
@@ -96,7 +101,7 @@ read_rdata <- function(file_name) {
 }
 
 datasets <- read_data(datasets)
-if (!isFALSE(config$external_validate)) {
+if (!isFALSE(config$external_validate) || !isFALSE(config$predict)) {
   validation_datasets <- read_data(validation_datasets)
 }
 
@@ -119,7 +124,7 @@ drop_unused_vars <- function(datasets) {
 
 datasets <- drop_unused_vars(datasets)
 
-if (!isFALSE(config$external_validate)) {
+if (!isFALSE(config$external_validate) || !isFALSE(config$predict)) {
   validation_datasets <- drop_unused_vars(validation_datasets)
   test <- lapply(seq_along(datasets), function(i) {
     data <- datasets[[i]]$data
@@ -166,7 +171,7 @@ convert_factor <- function(dataset) {
 
 datasets <- convert_variables(datasets)
 
-if (!isFALSE(config$external_validate)) {
+if (!isFALSE(config$external_validate) || !isFALSE(config$predict)) {
   validation_datasets <- convert_variables(validation_datasets)
 }
 
@@ -183,7 +188,7 @@ filter_na <- function(dataset) {
 }
 
 datasets <- lapply(datasets, filter_na)
-if (!isFALSE(config$external_validate)) {
+if (!isFALSE(config$external_validate) || !isFALSE(config$predict)) {
   validation_datasets <- lapply(validation_datasets, filter_na)
 }
 
@@ -197,6 +202,8 @@ merge_surv_data <- function(dataset, surv) {
 
 surv <- read.csv(config$survival_dataset$path)
 surv_data <- lapply(datasets, merge_surv_data, surv)
+# we do not need to do this for predict because there should be no surivival
+# data for predict
 if (!isFALSE(config$external_validate)) {
   # remember, we swapped datasets and validation_datasets above
   surv <- read.csv(validation_config$survival_dataset$path)
@@ -220,7 +227,7 @@ if (!isTRUE(test)) {
   stop("Age of observation is >= age death, age < age_death is required")
 }
 
-# harmonize the datasets for cohort -------------------------------------------
+# harmonize the datasets ------------------------------------------------------
 
 source("R/harmonize.R")
 
@@ -272,7 +279,7 @@ harmonize_apply_validate <- function(datasets, validation_datasets) {
 }
 
 harmonized_datasets <- harmonize_apply(datasets)
-if (!isFALSE(config$external_validate)) {
+if (!isFALSE(config$external_validate) || !isFALSE(config$predict)) {
   harmonized_validation_datasets <- harmonize_apply_validate(
     datasets,
     validation_datasets
@@ -280,7 +287,7 @@ if (!isFALSE(config$external_validate)) {
 }
 
 datasets <- harmonized_datasets
-if (!isFALSE(config$external_validate)) {
+if (!isFALSE(config$external_validate) || !isFALSE(config$predict)) {
   validation_datasets <- harmonized_validation_datasets
 }
 
@@ -313,7 +320,7 @@ id_intersect <- function(datasets) {
 }
 
 datasets <- id_intersect(datasets)
-if (!isFALSE(config$external_validate)) {
+if (!isFALSE(config$external_validate) || !isFALSE(config$predict)) {
   validation_datasets <- id_intersect(validation_datasets)
 }
 
@@ -332,7 +339,7 @@ orphaned_ids <- function(datasets) {
 }
 
 datasets_orphans <- orphaned_ids(datasets)
-if (!isFALSE(config$external_validate)) {
+if (!isFALSE(config$external_validate) || !isFALSE(config$predict)) {
   validation_datasets_orphans <- orphaned_ids(validation_datasets)
 }
 
@@ -350,7 +357,7 @@ create_strata_vars <- function(dataset) {
 }
 
 datasets <- lapply(datasets, create_strata_vars)
-if (!isFALSE(config$external_validate)) {
+if (!isFALSE(config$external_validate) || !isFALSE(config$predict)) {
   validation_datasets <- lapply(validation_datasets, create_strata_vars)
 }
 
@@ -399,12 +406,12 @@ create_train_test_validate <- function(dataset, validation_dataset) {
   dataset
 }
 
-if (isFALSE(config$external_validate)) {
+if (isFALSE(config$external_validate) && isFALSE(config$predict)) {
   train_test_datasets <- lapply(
     datasets,
     create_train_test, train_ids, test_ids
   )
-} else if (!isFALSE(config$external_validate)) {
+} else if (!isFALSE(config$external_validate) || !isFALSE(config$predict)) {
   train_test_datasets <- mapply(
     create_train_test_validate,
     datasets, validation_datasets,
@@ -413,9 +420,6 @@ if (isFALSE(config$external_validate)) {
 }
 
 datasets <- c(datasets, train_test_datasets)
-
-# datasets[[4]]$test_data[datasets[[4]]$test_data$cohort == 9, c("cohort", "(Intercept)")]
-# datasets[[4]]$data[datasets[[4]]$data$cohort == 9, c("cohort", "(Intercept)")]
 
 # use prep_hlme to center and scale the data ----------------------------------
 
