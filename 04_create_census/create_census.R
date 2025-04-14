@@ -7,7 +7,8 @@ args <- commandArgs(trailingOnly = TRUE)
 if (length(args) == 0) {
   # input_path <- "../03_model_select/output/test_local.yaml"
   # input_path <- "../01_prep_model_data/output/xslam_c16-c18.yaml"
-  input_path <- "../01_prep_model_data/output/20250410_slam_c1-c10_x_slam_c16-c18.yaml"
+  # input_path <- "../01_prep_model_data/output/20250410_slam_c1-c10_x_slam_c16-c18.yaml"
+  input_path <- "../01_prep_model_data/output/20250410_slam_c1-c10_p_slam_c16-c18.yaml"
   # input_path <- "../01_prep_model_data/output/mb6.yaml"
   warning("Using default input file: ", input_path)
 } else {
@@ -23,8 +24,13 @@ config <- yaml::read_yaml(file = input$config_path)
 # notice if doing external validation, parts of "input" are empty
 # we are going to fill those using paths from our validation file that
 # has run them already
-if (!isFALSE(config$external_validate)) {
-  validation_output <- yaml::read_yaml(config$external_validate)
+if (!isFALSE(config$external_validate) || !isFALSE(config$predict)) {
+  if (!isFALSE(config$external_validate)) {
+    file <- config$external_validate
+  } else if (!isFALSE(config$predict)) {
+    file <- config$predict
+  }
+  validation_output <- yaml::read_yaml(file)
   validation_input <- yaml::read_yaml(validation_output$input_path)
 
   input$models_path <- validation_input$models_path
@@ -36,7 +42,7 @@ load(input$cf_path)
 load(input$datasets_path)
 load(input$final_models_path)
 
-if (!isFALSE(config$external_validate)) {
+if (!isFALSE(config$external_validate) || !isFALSE(config$predict)) {
   # overwrite train_test_models because we are using og models as our training
   # model in external validation
 
