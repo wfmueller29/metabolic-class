@@ -9,7 +9,7 @@ library(tidyverse)
 args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) == 0) {
-  input_path <- "../03_model_select/output/test_local.yaml"
+  input_path <- "../04_create_census/output/test_local.yaml"
   warning("Using default input file: ", input_path)
 } else {
   input_path <- args[[1]]
