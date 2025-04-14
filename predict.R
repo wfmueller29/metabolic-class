@@ -1,13 +1,9 @@
-# Goal: Predict class membership for living mice
-
-
-# Externally Validate
-# This will run everything in order
+# This file will create prediction for external data
 
 args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) == 0) {
-  args[[1]] <- "inputs/validate/slam_c1-c10_x_slam_c16-c18.yaml"
+  args[[1]] <- "01_prep_model_data/input/test_local.yaml"
   warning("No input file provided, using: ", args[[1]])
 }
 
@@ -21,38 +17,37 @@ config <- yaml::read_yaml(args[[1]])
 system2("Rscript", args = c("01_prep_model_data.R", args[[1]]))
 setwd("..")
 
-# 04 -------------------------------------------------------------------------
+# 02 -------------------------------------------------------------------------
 
-input_04 <- normalizePath(
+input_02 <- normalizePath(
   paste0(file.path("01_prep_model_data/output", config$out_tag), ".yaml")
 )
 
-setwd("05_prediction_data")
-system2("Rscript", args = c("create_prediction_data.R", input_04))
+setwd("02_model")
+system2("Rscript", args = c("model.R", input_02))
 setwd("..")
 
-# 05 -------------------------------------------------------------------------
+# 03 -------------------------------------------------------------------------
 
-input_05 <- normalizePath(
-  paste0(file.path("05_prediction_data/output", config$out_tag), ".yaml")
+input_03 <- normalizePath(
+  paste0(file.path("02_model/output", config$out_tag), ".yaml")
 )
 
-setwd("06_create_figures")
+setwd("03_model_select")
 output_dir <- normalizePath(file.path("output", config$out_tag))
-rmarkdown::render("06_create_figures.Rmd",
-  output_dir = output_dir, params = list(input_path = input_05)
+rmarkdown::render("03_model_select.Rmd",
+  output_dir = output_dir, params = list(input_path = input_03)
 )
 setwd("..")
 
-# 06 --------------------------------------------------------------------------
-input_06 <- normalizePath(
-  paste0(file.path("../06_create_figures/output", config$out_tag), ".yaml")
+# 04 -------------------------------------------------------------------------
+
+input_04 <- normalizePath(
+  paste0(file.path("03_model_select/output", config$out_tag), ".yaml")
 )
 
-setwd("../07_display_figures")
-output_dir <- normalizePath(file.path("output", config$out_tag))
-rmarkdown::render("07_display_figures.Rmd",
-  output_dir = output_dir, params = list(input_path = input_06)
-)
-setwd("../x01_external_validation")
+setwd("04_create_census")
+system2("Rscript", args = c("create_census.R", input_04))
+setwd("..")
 
+beepr::beep()
