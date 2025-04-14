@@ -3,7 +3,7 @@
 args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) == 0) {
-  args[[1]] <- "01_prep_model_data/input/test_local.yaml"
+  args[[1]] <- "inputs/predict/slam_c1-c10_p_slam_c16-c18.yaml"
   warning("No input file provided, using: ", args[[1]])
 }
 
@@ -17,33 +17,10 @@ config <- yaml::read_yaml(args[[1]])
 system2("Rscript", args = c("01_prep_model_data.R", args[[1]]))
 setwd("..")
 
-# 02 -------------------------------------------------------------------------
-
-input_02 <- normalizePath(
-  paste0(file.path("01_prep_model_data/output", config$out_tag), ".yaml")
-)
-
-setwd("02_model")
-system2("Rscript", args = c("model.R", input_02))
-setwd("..")
-
-# 03 -------------------------------------------------------------------------
-
-input_03 <- normalizePath(
-  paste0(file.path("02_model/output", config$out_tag), ".yaml")
-)
-
-setwd("03_model_select")
-output_dir <- normalizePath(file.path("output", config$out_tag))
-rmarkdown::render("03_model_select.Rmd",
-  output_dir = output_dir, params = list(input_path = input_03)
-)
-setwd("..")
-
 # 04 -------------------------------------------------------------------------
 
 input_04 <- normalizePath(
-  paste0(file.path("03_model_select/output", config$out_tag), ".yaml")
+  paste0(file.path("01_prep_model_data/output", config$out_tag), ".yaml")
 )
 
 setwd("04_create_census")

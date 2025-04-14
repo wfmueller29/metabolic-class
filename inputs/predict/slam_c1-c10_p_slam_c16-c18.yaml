@@ -1,4 +1,4 @@
-out_tag: 20250410_slam_c1-c10_x_slam_c16-c18
+out_tag: 20250410_slam_c1-c10_p_slam_c16-c18
 tag_time: FALSE
 plan: multicore
 ncpus: 8
