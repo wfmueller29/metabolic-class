@@ -6,6 +6,7 @@ args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) == 0) {
   # input_path <- "../03_model_select/output/test_local.yaml"
+  # input_path <- "../03_model_select/output/20250413_fb6-2_seq.yaml"
   # input_path <- "../01_prep_model_data/output/xslam_c16-c18.yaml"
   # input_path <- "../01_prep_model_data/output/20250410_slam_c1-c10_x_slam_c16-c18.yaml"
   input_path <- "../01_prep_model_data/output/20250410_slam_c1-c10_p_slam_c16-c18.yaml"
@@ -20,14 +21,33 @@ input <- yaml::read_yaml(file = input_path)
 # load in datasets and config -------------------------------------------------
 config <- yaml::read_yaml(file = input$config_path)
 
+# create validation and predict bools -----------------------------------------
+
+bool_external_validate <- is.character(config$external_validate)
+if (bool_external_validate) {
+  if (file.exists(config$external_validate)) {
+    bool_external_validate <- file.exists(config$external_validate)
+  } else {
+    stop("external_validate should either be a path to an output yaml or FALSE")
+  }
+}
+bool_predict <- is.character(config$predict)
+if (bool_predict) {
+  if (file.exists(config$predict)) {
+    bool_predict <- file.exists(config$predict)
+  } else {
+    stop("predict should either be a path to an output yaml or FALSE")
+  }
+}
+
 # fill in if validation -------------------------------------------------------
 # notice if doing external validation, parts of "input" are empty
 # we are going to fill those using paths from our validation file that
 # has run them already
-if (!isFALSE(config$external_validate) || !isFALSE(config$predict)) {
-  if (!isFALSE(config$external_validate)) {
+if (bool_external_validate || bool_predict) {
+  if (bool_external_validate) {
     file <- config$external_validate
-  } else if (!isFALSE(config$predict)) {
+  } else if (bool_predict) {
     file <- config$predict
   }
   validation_output <- yaml::read_yaml(file)
@@ -42,7 +62,7 @@ load(input$cf_path)
 load(input$datasets_path)
 load(input$final_models_path)
 
-if (!isFALSE(config$external_validate) || !isFALSE(config$predict)) {
+if (bool_external_validate || bool_predict) {
   # overwrite train_test_models because we are using og models as our training
   # model in external validation
 

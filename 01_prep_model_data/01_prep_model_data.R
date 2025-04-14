@@ -38,14 +38,32 @@ config$datasets <- lapply(config$datasets, function(dataset) {
   dataset <- c(dataset, config$meta_dataset)
 })
 
+# create validation and predict bools -----------------------------------------
+
+bool_external_validate <- is.character(config$external_validate)
+if (bool_external_validate) {
+  if (file.exists(config$external_validate)) {
+    bool_external_validate <- file.exists(config$external_validate)
+  } else {
+    stop("external_validate should either be a path to an output yaml or FALSE")
+  }
+}
+bool_predict <- is.character(config$predict)
+if (bool_predict) {
+  if (file.exists(config$predict)) {
+    bool_predict <- file.exists(config$predict)
+  } else {
+    stop("predict should either be a path to an output yaml or FALSE")
+  }
+}
 
 # Read in yaml if external_validate -------------------------------------------
 
 # if validation, make validation data og data and input datasets test data
-if (!isFALSE(config$external_validate) || !isFALSE(config$predict)) {
-  if (!isFALSE(config$external_validate)) {
+if (bool_external_validate || bool_predict) {
+  if (bool_external_validate) {
     file <- config$external_validate
-  } else if (!isFALSE(config$predict)) {
+  } else if (bool_predict) {
     file <- config$predict
   }
   validation_output <- yaml::read_yaml(file)
@@ -78,7 +96,7 @@ get_extension <- function(datasets) {
 }
 
 datasets <- get_extension(datasets)
-if (!isFALSE(config$external_validate) || !isFALSE(config$predict)) {
+if (bool_external_validate || bool_predict) {
   validation_datasets <- get_extension(validation_datasets)
 }
 
@@ -101,7 +119,7 @@ read_rdata <- function(file_name) {
 }
 
 datasets <- read_data(datasets)
-if (!isFALSE(config$external_validate) || !isFALSE(config$predict)) {
+if (bool_external_validate || bool_predict) {
   validation_datasets <- read_data(validation_datasets)
 }
 
@@ -124,7 +142,7 @@ drop_unused_vars <- function(datasets) {
 
 datasets <- drop_unused_vars(datasets)
 
-if (!isFALSE(config$external_validate) || !isFALSE(config$predict)) {
+if (bool_external_validate || bool_predict) {
   validation_datasets <- drop_unused_vars(validation_datasets)
   test <- lapply(seq_along(datasets), function(i) {
     data <- datasets[[i]]$data
@@ -171,7 +189,7 @@ convert_factor <- function(dataset) {
 
 datasets <- convert_variables(datasets)
 
-if (!isFALSE(config$external_validate) || !isFALSE(config$predict)) {
+if (bool_external_validate || bool_predict) {
   validation_datasets <- convert_variables(validation_datasets)
 }
 
@@ -188,7 +206,7 @@ filter_na <- function(dataset) {
 }
 
 datasets <- lapply(datasets, filter_na)
-if (!isFALSE(config$external_validate) || !isFALSE(config$predict)) {
+if (bool_external_validate || bool_predict) {
   validation_datasets <- lapply(validation_datasets, filter_na)
 }
 
@@ -204,7 +222,7 @@ surv <- read.csv(config$survival_dataset$path)
 surv_data <- lapply(datasets, merge_surv_data, surv)
 # we do not need to do this for predict because there should be no surivival
 # data for predict
-if (!isFALSE(config$external_validate)) {
+if (bool_external_validate) {
   # remember, we swapped datasets and validation_datasets above
   surv <- read.csv(validation_config$survival_dataset$path)
   surv_data <- lapply(datasets, merge_surv_data, surv)
@@ -279,7 +297,7 @@ harmonize_apply_validate <- function(datasets, validation_datasets) {
 }
 
 harmonized_datasets <- harmonize_apply(datasets)
-if (!isFALSE(config$external_validate) || !isFALSE(config$predict)) {
+if (bool_external_validate || bool_predict) {
   harmonized_validation_datasets <- harmonize_apply_validate(
     datasets,
     validation_datasets
@@ -287,7 +305,7 @@ if (!isFALSE(config$external_validate) || !isFALSE(config$predict)) {
 }
 
 datasets <- harmonized_datasets
-if (!isFALSE(config$external_validate) || !isFALSE(config$predict)) {
+if (bool_external_validate || bool_predict) {
   validation_datasets <- harmonized_validation_datasets
 }
 
@@ -320,7 +338,7 @@ id_intersect <- function(datasets) {
 }
 
 datasets <- id_intersect(datasets)
-if (!isFALSE(config$external_validate) || !isFALSE(config$predict)) {
+if (bool_external_validate || bool_predict) {
   validation_datasets <- id_intersect(validation_datasets)
 }
 
@@ -339,7 +357,7 @@ orphaned_ids <- function(datasets) {
 }
 
 datasets_orphans <- orphaned_ids(datasets)
-if (!isFALSE(config$external_validate) || !isFALSE(config$predict)) {
+if (bool_external_validate || bool_predict) {
   validation_datasets_orphans <- orphaned_ids(validation_datasets)
 }
 
@@ -357,7 +375,7 @@ create_strata_vars <- function(dataset) {
 }
 
 datasets <- lapply(datasets, create_strata_vars)
-if (!isFALSE(config$external_validate) || !isFALSE(config$predict)) {
+if (bool_external_validate || bool_predict) {
   validation_datasets <- lapply(validation_datasets, create_strata_vars)
 }
 
@@ -406,12 +424,12 @@ create_train_test_validate <- function(dataset, validation_dataset) {
   dataset
 }
 
-if (isFALSE(config$external_validate) && isFALSE(config$predict)) {
+if (!bool_external_validate && !bool_predict) {
   train_test_datasets <- lapply(
     datasets,
     create_train_test, train_ids, test_ids
   )
-} else if (!isFALSE(config$external_validate) || !isFALSE(config$predict)) {
+} else if (bool_external_validate || bool_predict) {
   train_test_datasets <- mapply(
     create_train_test_validate,
     datasets, validation_datasets,
