@@ -14,7 +14,7 @@ config <- yaml::read_yaml(args[[1]])
 
 # 07 --------------------------------------------------------------------------
 input_07 <- normalizePath(
-  paste0(file.path("07_create_figures/output", config$out_tag), ".yaml")
+  paste0(file.path("06_create_figures/output", config$out_tag), ".yaml")
 )
 
 setwd("07_display_figures")

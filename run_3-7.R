@@ -47,7 +47,7 @@ setwd("..")
 # 06 -------------------------------------------------------------------------
 
 input_06 <- normalizePath(
-  paste0(file.path("06_prediction_data/output", config$out_tag), ".yaml")
+  paste0(file.path("05_prediction_data/output", config$out_tag), ".yaml")
 )
 
 setwd("06_create_figures")
@@ -59,7 +59,7 @@ setwd("..")
 
 # 07 --------------------------------------------------------------------------
 input_07 <- normalizePath(
-  paste0(file.path("07_create_figures/output", config$out_tag), ".yaml")
+  paste0(file.path("06_create_figures/output", config$out_tag), ".yaml")
 )
 
 setwd("07_display_figures")
