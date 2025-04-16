@@ -21,10 +21,6 @@ itp_rapa$tx <- "rapa"
 # rbind data ------------------------------------------------------------------
 itp_tx_bw <- rbind(itp_control, itp_e2_16m, itp_e2_20m, itp_rapa)
 
-itp_tx_surv <- rbind(
-  itp_control_surv, itp_e2_16m_surv, itp_e2_20m_surv, itp_rapa_surv
-)
-
 itp_tx_control_surv <- rbind(
   itp_e2_20m_surv, itp_control_surv, itp_rapa_surv, itp_e2_16m_surv
 )
