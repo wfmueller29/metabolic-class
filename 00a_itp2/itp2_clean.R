@@ -33,6 +33,18 @@ itp_control_train <- itp_tx_bw[itp_tx_bw[, "cohort"] %in% train_cohorts, ]
 itp_control_train <- itp_control_train[itp_control_train$tx == "control", ]
 itp_control_tx_test <- itp_tx_bw[itp_tx_bw[, "cohort"] %in% test_cohorts, ]
 
+# remove measurements out of range of trainging set from testing set ----------
+
+ggplot2::ggplot(itp_control_tx_test, ggplot2::aes(x = age_wk)) +
+  ggplot2::geom_histogram()
+
+itp_control_tx_test <- itp_control_tx_test[itp_control_tx_test$age_wk > 19, ]
+
+ggplot2::ggplot(itp_control_tx_test, ggplot2::aes(x = age_wk)) +
+  ggplot2::geom_histogram()
+
+
+
 # save csvs -------------------------------------------------------------------
 
 dir.create("output", recursive = TRUE)
