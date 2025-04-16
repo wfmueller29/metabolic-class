@@ -1,0 +1,94 @@
+---
+title: "SLAM Metabolic Class ITP treatment response"
+subtitle: "Cohort 2005, predicted from Cohorts 2010, 2011, 2015, 2016"
+author: "William Mueller, Joshua Preston"
+data: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  html_document:
+    df_print: paged
+--- 
+
+```{r setup, warning=FALSE, message=FALSE, echo=FALSE}
+library(consoler)
+library(SLAM)
+set.seed(365)
+
+# setting global knitr options for r markdown output
+knitr::opts_chunk$set(autodep = TRUE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(cache = FALSE)
+```
+
+# Load in input data
+
+```{r read csv}
+surv <- read.csv("data/itp_tx_control_surv.csv")
+surv <- surv[, c("idno", "le_wk", "dead_censor")]
+
+predicted <- read.csv("data/test_census.csv")
+predicted_keep <- c(
+  "idno",
+  "sex",
+  "sex_M",
+  "sex_F",
+  "cohort",
+  "site",
+  "le_wk",
+  "dead_censor",
+  "prob1",
+  "prob2",
+  "prob3",
+  "new_class_bw"
+)
+predicted <- predicted[, predicted_keep]
+
+tx_info <- read.csv("data/itp_tx_control_test.csv")
+tx_info <- tx_info[, c("idno", "tx")]
+tx_info <- tx_info[!duplicated(tx_info$idno), ]
+```
+
+# Merge predicted and tx response
+
+```{r merge}
+predicted <- merge(tx_info, predicted, by = "idno", all.x = TRUE)
+predicted$tx_cohort <- paste0(predicted$tx, "_", predicted$cohort)
+
+predicted <- predicted[predicted$le_wk > 86, ]
+```
+
+# Create tx KM Curves
+
+```{r km creation, fig.height = 6, fig.width = 18}
+classes <- sort(unique(predicted$new_class_bw))
+
+plots <- lapply(classes, function(class) {
+  index <- predicted$new_class_bw == class
+  data <- predicted[index, ]
+  SLAM::surv_plot_km(data,
+    var = "tx",
+    age_death = "le_wk",
+    event = "dead_censor",
+    title = paste("Predicted Class", class)
+  )$plot
+})
+
+plots <- lapply(plots, `[[`, "plot")
+
+
+title_theme <- cowplot::ggdraw() +
+  cowplot::draw_label("Rapamycin Treatment Response by Predicted Class")
+
+plots_panel <- cowplot::plot_grid(
+  plotlist = plots, nrow = 1, byrow = FALSE,
+  greedy = FALSE, labels = "AUTO"
+)
+
+plots_panel <- cowplot::plot_grid(title_theme, plots_panel,
+  rel_heights = c(.05, 1),
+  ncol = 1
+)
+plots_panel
+```
+
