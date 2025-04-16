@@ -26,10 +26,11 @@ itp_tx_control_surv <- rbind(
 )
 
 # only keep cohorts of interest -----------------------------------------------
-train_cohorts <- c("C2010", "C2011", "C2013")
-test_cohorts <- c("C2005", "C2016")
+train_cohorts <- c("C2010", "C2011", "C2013", "C2016")
+test_cohorts <- c("C2005")
 
 itp_control_train <- itp_tx_bw[itp_tx_bw[, "cohort"] %in% train_cohorts, ]
+itp_control_train <- itp_control_train[itp_control_train$tx == "control", ]
 itp_control_tx_test <- itp_tx_bw[itp_tx_bw[, "cohort"] %in% test_cohorts, ]
 
 # save csvs -------------------------------------------------------------------
