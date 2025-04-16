@@ -5,6 +5,7 @@
 # We are trying to generalize the trajectories pipeline to other datasets
 
 library(tidyverse)
+library(consoler)
 library(helphlme)
 library(rsample)
 set.seed(365)
@@ -20,6 +21,7 @@ if (length(args) == 0) {
   # args[[1]] <- "input/itp_bw.yaml"
   # args[[1]] <- "../inputs/validate/slam_c1-c10_x_slam_c16-c18.yaml"
   args[[1]] <- "../inputs/predict/slam_c1-c10_x_slam_c16-c18.yaml"
+  args[[1]] <- "../inputs/predict/itp_controls_p_treatment.yaml"
   # args[[1]] <- "../x01_external_validation/input/slam_age_all.yaml"
   # args[[1]] <- "../x01_external_validation/input/slam_c16-c18.yaml"
   warning("No input file provided, using: ", args[[1]])
@@ -214,7 +216,13 @@ if (bool_external_validate || bool_predict) {
 # test if age => age_death ----------------------------------------------------
 merge_surv_data <- function(dataset, surv) {
   data <- dataset$data
-  data <- merge(data, surv, by = dataset$id, all.x = TRUE)
+  all(unique(data$idno) %in% unique(data$idno))
+  nrow_before <- nrow(data)
+  data <- base::merge(data, surv, by = dataset$id)
+  test <- nrow(data) == nrow_before
+  if (!test) {
+    stop("Something went wrong in the merge")
+  }
   data
 }
 
