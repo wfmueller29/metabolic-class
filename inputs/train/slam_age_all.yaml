@@ -1,7 +1,7 @@
-out_tag: 20250306_all
+out_tag: 20250426_all_cohort
 tag_time: FALSE
 plan: multicore
-ncpus: 10
+ncpus: 7
 sample_n: FALSE
 center: TRUE
 scale: FALSE
@@ -63,7 +63,7 @@ meta_dataset:
   covariates: ["sex", "strain"]
   covariates_dummy: ["sex_M", "strain_HET3", "sex_F", "strain_B6"]
   train_test:
-    sample_by: ["sex", "strain"]
+    sample_by: ["sex", "strain", "cohort"]
     split: .8
 datasets:
 - name: "slam"

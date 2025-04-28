@@ -1,7 +1,7 @@
-out_tag: itp_C2010_C2011_C2013_C2016_controls
+out_tag: 20250426_itp_C2010_C2011_C2013_C2016_controls_cohort
 tag_time: FALSE
 plan: multicore
-ncpus: 10
+ncpus: 7
 sample_n: FALSE
 center: TRUE
 scale: FALSE
@@ -61,7 +61,7 @@ meta_dataset:
   covariates: ["sex"]
   covariates_dummy: ["sex_M", "sex_F"]
   train_test:
-    sample_by: ["sex"]
+    sample_by: ["sex", "site", "cohort"]
     split: .8
 datasets:
 - name: "slam"

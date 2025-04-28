@@ -1,7 +1,7 @@
-out_tag: 20250306_fb6
+out_tag: 20250426_fb6_cohort
 tag_time: FALSE
 plan: multicore
-ncpus: 10
+ncpus: 7
 sample_n: FALSE
 center: TRUE
 scale: FALSE
@@ -63,7 +63,7 @@ meta_dataset:
   covariates: NULL
   covariates_dummy: NULL
   train_test:
-    sample_by: NULL
+    sample_by: "cohort"
     split: .8
 datasets:
 - name: "slam"
