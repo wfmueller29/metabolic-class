@@ -64,7 +64,7 @@ meta_dataset:
   covariates: ["sex"]
   covariates_dummy: ["sex_M", "sex_F"]
   train_test:
-    sample_by: ["sex"]
+    sample_by: ["sex", "generation"]
     split: .8
 datasets:
 - name: "jaxdo"
