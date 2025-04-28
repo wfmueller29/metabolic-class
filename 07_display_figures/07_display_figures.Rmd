@@ -381,6 +381,13 @@ mortality_panel <- cowplot::plot_grid(title_theme, mortality_panel,
   rel_heights = c(.05, 1),
   ncol = 1
 )
+
+mortality_panel_hr <- lapply(
+  final_models[og_index, "kap_plot_hrs"],
+  function(table) {
+    table$hr_table[, "final", drop = FALSE]
+  }
+)
 ```
 
 #### Training data
@@ -419,6 +426,13 @@ title_theme <- ggdraw() +
 mortality_panel_train <- cowplot::plot_grid(title_theme, mortality_panel_train,
   rel_heights = c(.05, 1),
   ncol = 1
+)
+
+mortality_panel_train_hr <- lapply(
+  final_models[train_index, "kap_plot_hrs"],
+  function(table) {
+    table$hr_table[, "final", drop = FALSE]
+  }
 )
 ```
 
@@ -886,9 +900,6 @@ rest_combined_cox <- lapply(
 
 ### Dose response
 
-```{r source surv analysis, file = 'R/surv_dose.R'}
-source("R/surv_dose.R")
-```
 
 ```{r dose response}
 test_index <- final_models$data_mod == "train_test"
@@ -935,7 +946,7 @@ dose_plots_hrs <- lapply(dose_plots, function(plot) {
   if (anyNA(plot)) {
     plot <- NA
   } else {
-    plot <- plot[["plot"]]$hrs
+    plot <- plot$hr
   }
   plot
 })
@@ -967,6 +978,10 @@ dose_plot_panel <- cowplot::plot_grid(title_theme, dose_plot_panel,
   rel_heights = c(.05, 1),
   ncol = 1
 )
+
+dose_plot_panel_hr <- lapply(dose_plots_hrs, function(table) {
+  table$hr_table[, "final", drop = FALSE]
+})
 ```
 
 ```{r save dose plots}
@@ -1120,6 +1135,17 @@ kap_plot_cum_validation <- lapply(censuses, function(census) {
 })
 
 kap_plot_cum_validation_hrs <- lapply(kap_plot_cum_validation, `[[`, "hrs")
+kap_plot_cum_validation_panels_hr <- lapply(
+  names(kap_plot_cum_validation_hrs),
+  function(name) {
+    subset_hrs <- kap_plot_cum_validation_hrs[[name]]
+    hrs <- lapply(subset_hrs, function(table, name) {
+      table <- table$hr_table[, "final", drop = FALSE]
+      names(table) <- name
+      table
+    }, name = name)
+  }
+)
 kap_plot_cum_validation <- lapply(kap_plot_cum_validation, `[[`, "plots")
 
 kap_plot_cum_validation_panels <- lapply(
@@ -1254,6 +1280,16 @@ km_hr_combine_validation_panels <- lapply(
       rel_heights = c(.05, 1),
       ncol = 1
     )
+  }
+)
+
+km_hr_combine_validation_panels_hr <- lapply(
+  names(km_hr_combine_validation_hrs),
+  function(name) {
+    table <- km_hr_combine_validation_hrs[[name]]
+    table <- table$hr_table[, "final", drop = FALSE]
+    names(table) <- name
+    table
   }
 )
 ```
@@ -1525,11 +1561,23 @@ mortality_panel
 fig_no <- fig_no + 1
 ```
 
+```{r mortality and class hr table, results = 'asis'}
+for (table in mortality_panel_hr) {
+  print(kable(table))
+}
+```
+
 #### Training Data
 
 ```{r mortality and class training, fig.height=pred_obs_height, fig.width=12, eval.after = TRUE}
 mortality_panel_train
 fig_no <- fig_no + 1
+```
+
+```{r mortality and class training hr table, results = 'asis'}
+for (table in mortality_panel_train_hr) {
+  print(kable(table))
+}
 ```
 
 ### Figure `r as.character(fig_no)`: Class, Mortality, and other outcome - Complete Data
@@ -1544,6 +1592,12 @@ fig_no <- fig_no + 1
 ```{r dose reponse, fig.height=dose_height_width, fig.width=dose_height_width, eval.after = TRUE}
 dose_plot_panel
 fig_no <- fig_no + 1
+```
+
+```{r dose response hr table, results = 'asis'}
+for (table in dose_plot_panel_hr) {
+  print(kable(table))
+}
 ```
 
 ### Table `r as.character(tab_no)`: Hazard Ratios - Complete Data
@@ -1618,6 +1672,12 @@ curves
 ```{r km tertiled hr validation 1, fig.height=24, fig.width=24}
 km_hr_combine_validation_panels
 fig_no <- fig_no + 1
+```
+
+```{r km tertiled hr validation hr table, results = 'asis'}
+for (table in km_hr_combine_validation_panels_hr) {
+  print(kable(table))
+}
 ```
 
 ### Dose Response Validation - Testing Data
