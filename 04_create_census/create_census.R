@@ -129,6 +129,42 @@ final_models$census <- lapply(seq_len(nrow(final_models)), function(i) {
   make_census(cf_row, dataset)
 })
 
+# reorder classes of census ---------------------------------------------------
+reorder_class <- function(final_models, mo_names) {
+  x <- final_models
+  all_names <- x$model_name
+  missing_names <- all_names[!(all_names %in% mo_names)]
+  i <- 0
+  for (name in mo_names) {
+    # generate new_class
+    census <- x[x$model_name == name, ]$census
+    census <- unlist(census, recursive = FALSE)
+    census$new_class <- as.character(census$class + i)
+
+    # Create new prob based off of new_class
+    probs_index <- grepl("^prob", names(census))
+    probs <- names(census)[grepl("^prob", names(census))]
+    probs <- stringr::str_split(probs, pattern = "prob", simplify = TRUE)[, 2]
+    new_probs <- as.numeric(probs) + i
+    new_probs <- paste0("prob", new_probs)
+    names(census)[probs_index] <- new_probs
+
+    uni_class <- length(unique(census$class))
+    i <- uni_class + i
+    x[x$model_name == name, ]$census[[1]] <- as.data.frame(census)
+  }
+
+  x
+}
+
+# get model_names that are not train_test
+train_test_index <- (final_models$data_mod == "train_test")
+renumber_train_test <- final_models[train_test_index, "model_name"]
+renumber_rest <- final_models[!train_test_index, "model_name"]
+
+final_models <- reorder_class(final_models, renumber_train_test)
+final_models <- reorder_class(final_models, renumber_rest)
+
 
 # create combined census ------------------------------------------------------
 source("../06_create_figures/R/combine_census.R")
