@@ -49,6 +49,7 @@ datasets_path <- input$datasets_path
 load(file = cf_path)
 load(file = models_path)
 load(file = datasets_path)
+config <- yaml::read_yaml(input$config_path)
 ```
 
 ```{r group models into lists}
@@ -122,18 +123,59 @@ for (i in seq_len(number_of_datasets)) {
 ```
 
 ```{r select model in nest}
-selected_models <- lapply(cf_nest$cf, function(cf) {
+train_index <- sapply(datasets, `[[`, "data_mod") == "train_test"
+complete_index <- !train_index
+
+# params
+complete_ng <- config$complete_ng
+train_ng <- config$train_ng
+
+complete_ng_bool <- length(complete_ng) == length(which(complete_index))
+complete_ng_bool <- is.numeric(complete_ng) && complete_ng_bool
+if (!complete_ng_bool) {
+  complete_ng <- FALSE
+}
+train_ng_bool <- length(train_ng) == length(which(train_index))
+train_ng_bool <- is.numeric(train_ng) && train_ng_bool
+train_ng_bool <- train_ng_bool || identical(train_ng, "complete_ng")
+if (!train_ng_bool) {
+  train_ng <- FALSE
+}
+
+select_model <- function(cf, ng = FALSE) {
   data_id <- unique(cf$data)
   models <- cf$final_model
   mo_eval_table <- helphlme::compare_models(models)$table
 
   cf <- cbind(cf, mo_eval_table)
+  # select model based on ng
+  if (is.numeric(ng) && (length(ng) == 1L)) {
+    cf <- cf[cf$ng == ng, ]
+  }
 
   cf$smallest_greater_5 <- ifelse(cf[["Smallest Class (%)"]] >= 5, 1, 0)
   cf <- cf[order(-cf$smallest_greater_5, cf$BIC), ]
 
   selected_model <- cf[1, ]
-})
+}
+
+selected_models_complete <- mapply(select_model,
+  cf = cf_nest$cf[complete_index], ng = complete_ng, SIMPLIFY = FALSE
+)
+
+sapply(selected_models_complete, `[[`, "k")
+
+if (train_ng == "complete_ng") {
+  train_ng <- sapply(selected_models_complete, `[[`, "k")
+}
+
+selected_models_train <- mapply(select_model,
+  cf = cf_nest$cf[train_index], ng = train_ng, SIMPLIFY = FALSE
+)
+
+sapply(selected_models_train, `[[`, "k")
+
+selected_models <- c(selected_models_complete, selected_models_train)
 
 selected_models <- do.call(rbind, selected_models)
 ```
