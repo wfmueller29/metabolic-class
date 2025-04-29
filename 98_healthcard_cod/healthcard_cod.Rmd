@@ -1,0 +1,32 @@
+---
+title: "SLAM Metabolic Class COD and healthcard"
+author: "William Mueller"
+data: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  html_document:
+    df_print: paged
+--- 
+
+```{r setup, warning=FALSE, message=FALSE, echo=FALSE}
+library(consoler)
+library(SLAM)
+set.seed(365)
+
+# setting global knitr options for r markdown output
+knitr::opts_chunk$set(autodep = TRUE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(cache = FALSE)
+```
+
+# Load in input data
+
+```{r read in censuses}
+census_04_path <- "/Users/williammueller/programs/metabolic_class/analysis/04_create_census/output/20250426_all_cohort/complete_census.csv"
+census_06_path <- "/Users/williammueller/programs/metabolic_class/analysis/06_create_figures/output/20250426_all_cohort/complete_census.csv"
+
+census_04 <- read.csv(census_04_path)
+census_06 <- read.csv(census_06_path)
+```
+
