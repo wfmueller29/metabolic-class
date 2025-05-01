@@ -113,6 +113,6 @@ peek(healthcard)
 
 healthcard$tag %in% str_splcensus$tag_history
 apply(healthcard[, 20:68], 2, sum)
-healthcard_sum <- aggregate(healthcard, by = list(healthcard$tag), sum)
+healthcard_sum <- aggregate(healthcard[, 20:68], by = list(healthcard$tag), sum)
 ```
 
