@@ -23,22 +23,25 @@ knitr::opts_chunk$set(cache = FALSE)
 # Load in input data
 
 ```{r read in censuses}
-census_04_path <- "/Users/williammueller/programs/metabolic_class/analysis/04_create_census/output/20250426_all_cohort/complete_census.csv"
-census_06_path <- "/Users/williammueller/programs/metabolic_class/analysis/06_create_figures/output/20250426_all_cohort/complete_census.csv"
-healthcard_path <- "/Users/williammueller/programs/metabolic_class/analysis/98_healthcard_cod/data/SLAM Healthcard.xlsx"
+class_census_path <- "../04_create_census/output/20250426_all_cohort/complete_census.csv"
+census_path <- "data/census.csv"
+healthcard_path <- "data/SLAM Healthcard.xlsx"
 
-census_04 <- read.csv(census_04_path)
-census_06 <- read.csv(census_06_path)
+class_census <- read.csv(class_census_path)
+census <- read.csv(census_path)
 healthcard <- readxl::read_xlsx(healthcard_path)
+healthcard <- as.data.frame(healthcard)
+
+census <- consoler::rename(census, c(animal_id = "Animal_ID", tag_history = "taghistory"))
 ```
 
 ## Clean Healthcard
 
 ```{r clean healthcard}
 new_names <- c(
-  tag = "tag", dod = "Date of Death",
-  created_data = "Created Date",
-  recovery_data = "Recovery Date", condition = "Condition"
+  tag = "Tag", dod = "Date of Death",
+  created_date = "Created Date",
+  recovery_date = "Recovery Date", condition = "Condition"
 )
 
 healthcard <- consoler::rename(healthcard, new_names)
@@ -96,7 +99,20 @@ clean_conditions$other <- c("Other")
 clean_conditions$enlarged_bladder <- c("enlarged bladder")
 clean_conditions$tail_issue <- c("Tail Issue")
 
+for (name in names(clean_conditions)) {
+  conditions <- clean_conditions[[name]]
+  healthcard$condition[healthcard$condition %in% conditions] <- name
+}
 
-healthcard
+healthcard <- fastDummies::dummy_cols(healthcard, "condition",
+  omit_colname_prefix = TRUE
+)
+
+healthcard <- merge(census, healthcard, by = "tag", all.y = TRUE)
+peek(healthcard)
+
+healthcard$tag %in% str_splcensus$tag_history
+apply(healthcard[, 20:68], 2, sum)
+healthcard_sum <- aggregate(healthcard, by = list(healthcard$tag), sum)
 ```
 
