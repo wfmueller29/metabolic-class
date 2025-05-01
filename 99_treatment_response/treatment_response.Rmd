@@ -66,14 +66,26 @@ classes <- sort(unique(predicted$new_class_bw))
 plots <- lapply(classes, function(class) {
   index <- predicted$new_class_bw == class
   data <- predicted[index, ]
-  SLAM::surv_plot_km(data,
+  plot_km <- SLAM::surv_plot_km(data,
     var = "tx",
     age_death = "le_wk",
     event = "dead_censor",
-    title = paste("Predicted Class", class)
-  )$plot
+    title = paste("Predicted Class", class),
+    pval = "",
+    surv.median.line = "v"
+  )
+  plot <- plot_km$plot$plot +
+    ggplot2::scale_color_manual(
+      labels = c("Control", "Rapamycin"),
+      values = c("tx=control" = "navyblue", "tx=rapa" = "indianred1")
+    ) +
+    ggplot2::geom_vline(xintercept = 86, color = "indianred") +
+    ggplot2::theme_bw()
+  hrs <- plot_km$hr
+  list(plot = plot, hr = hrs)
 })
 
+hrs <- lapply(plots, `[[`, "hr")
 plots <- lapply(plots, `[[`, "plot")
 
 
@@ -90,5 +102,17 @@ plots_panel <- cowplot::plot_grid(title_theme, plots_panel,
   ncol = 1
 )
 plots_panel
+```
+
+```{r print hrs, results = 'asis'}
+hrs <- lapply(
+  hrs,
+  function(table) {
+    table$hr_table[, "final", drop = FALSE]
+  }
+)
+for (table in hrs) {
+  print(kableExtra::kable(table))
+}
 ```
 
