@@ -51,7 +51,9 @@ if (!exists("params")) {
   # params$input_path <- "../06_create_figures/output/test_local.yaml"
   # params$input_path <- "../06_create_figures/output/all_only_bw.yaml"
   # params$input_path <- "../06_create_figures/output/20250306_itp.yaml"
-  params$input_path <- "../06_create_figures/output/all.yaml"
+  # params$input_path <- "../06_create_figures/output/all.yaml"
+  params$input_path <- "../06_create_figures/output/20250426_itp_C2010_C2011_C2013_C2016_controls_cohort.yaml"
+
   # params$input_path <- "../06_create_figures/output/all_lean.yaml"
   # params$input_path <- "../06_create_figures/output/fb6.yaml"
   # params$input_path <- "../06_create_figures/output/external_validation.yaml"
@@ -524,7 +526,7 @@ if (config$custom_palette) {
 og_plots_index <- grepl("^plot.*_og_.*across$", names(final_models))
 length_plots <- length(which(og_plots_index))
 
-og_plots <- final_models[og_index, og_plots_index]
+og_plots <- final_models[og_index, og_plots_index, drop = FALSE]
 
 
 if (config$custom_palette) {
@@ -578,7 +580,7 @@ other_met_panel <- cowplot::plot_grid(title_theme, other_met_panel,
 train_plots_index <- grepl("^plot.*_og_.*across$", names(final_models))
 length_plots <- length(which(train_plots_index))
 
-train_plots <- final_models[train_index, train_plots_index]
+train_plots <- final_models[train_index, train_plots_index, drop = FALSE]
 
 
 if (config$custom_palette) {
