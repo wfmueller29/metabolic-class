@@ -38,6 +38,9 @@ window_legend_labels <- c("2 measures", "3 measures", "4 measures")
 
 cumulative_legend <- TRUE
 cumulative_legend_palette <- viridis(3, begin = .2, end = .7, direction = -1)
+
+max_age <- 150
+max_age_km <- 200
 ```
 
 ## Analysis
@@ -52,7 +55,8 @@ if (!exists("params")) {
   # params$input_path <- "../06_create_figures/output/all_only_bw.yaml"
   # params$input_path <- "../06_create_figures/output/20250306_itp.yaml"
   # params$input_path <- "../06_create_figures/output/all.yaml"
-  params$input_path <- "../06_create_figures/output/20250426_itp_C2010_C2011_C2013_C2016_controls_cohort.yaml"
+  # params$input_path <- "../06_create_figures/output/20250426_itp_C2010_C2011_C2013_C2016_controls_cohort.yaml"
+  params$input_path <- "../06_create_figures/output/20250426_all_cohort.yaml"
 
   # params$input_path <- "../06_create_figures/output/all_lean.yaml"
   # params$input_path <- "../06_create_figures/output/fb6.yaml"
@@ -118,6 +122,12 @@ if (config$custom_palette) {
   }
 }
 
+obs_plots <- lapply(obs_plots, function(plot) {
+  plot +
+    ggplot2::theme_bw() +
+    ggplot2::coord_cartesian(xlim = c(0, max_age), ylim = c(0, NA))
+})
+
 pred_plots <- lapply(pred_plots, ggdraw, clip = "on")
 
 title_theme <- ggdraw() +
@@ -158,6 +168,12 @@ if (config$custom_palette_train) {
     j <- k
   }
 }
+
+obs_plots_train <- lapply(obs_plots_train, function(plot) {
+  plot +
+    ggplot2::theme_bw() +
+    ggplot2::coord_cartesian(xlim = c(0, max_age), ylim = c(0, NA))
+})
 
 pred_plots_train <- lapply(pred_plots_train, ggdraw, clip = "on")
 
@@ -366,6 +382,13 @@ if (config$custom_palette) {
   }
 }
 kap_plots <- lapply(kap_plots, `[[`, "plot")
+
+kap_plots <- lapply(kap_plots, function(plot) {
+  plot +
+    ggplot2::theme_bw() +
+    ggplot2::coord_cartesian(xlim = c(0, max_age_km), ylim = c(0, NA))
+})
+
 plot_list <- c(obs_plots, kap_plots)
 
 mortality_panel <- cowplot::plot_grid(
@@ -412,6 +435,11 @@ if (config$custom_palette_train) {
   }
 }
 kap_plots_train <- lapply(kap_plots_train, `[[`, "plot")
+kap_plots <- lapply(kap_plots, function(plot) {
+  plot +
+    ggplot2::theme_bw() +
+    ggplot2::coord_cartesian(xlim = c(0, max_age_km), ylim = c(0, NA))
+})
 plot_list <- c(obs_plots_train, kap_plots_train)
 
 mortality_panel_train <- cowplot::plot_grid(
@@ -554,6 +582,12 @@ if (config$custom_palette) {
 
 og_plots <- unlist(og_plots, recursive = FALSE)
 
+og_plots <- lapply(og_plots, function(plot) {
+  plot +
+    ggplot2::theme_bw() +
+    ggplot2::coord_cartesian(xlim = c(0, max_age), ylim = c(0, NA))
+})
+
 other_met_panel <- cowplot::plot_grid(
   plotlist = og_plots,
   nrow = length(which(og_index)),
@@ -640,10 +674,10 @@ unique_plots <- og_plots[selector]
 new_figure1_plot_list <- c(obs_plots, kap_plots, unique_plots)
 
 
-new_figure1_plot_list <- lapply(new_figure1_plot_list, function(p) {
-  p +
-    coord_cartesian(xlim = c(0, NA), ylim = c(0, NA))
-})
+# new_figure1_plot_list <- lapply(new_figure1_plot_list, function(p) {
+#   p +
+#     coord_cartesian(xlim = c(0, NA), ylim = c(0, NA))
+# })
 
 
 new_figure1 <- cowplot::plot_grid(
@@ -817,12 +851,12 @@ interval_plots <- lapply(interval_plots, function(plot) {
 
 window_plots <- lapply(window_plots, function(plot) {
   plot +
-    coord_cartesian(xlim = c(0, NA), ylim = c(0, 1))
+    coord_cartesian(xlim = c(0, max_age), ylim = c(0, 1))
 })
 
 cumulative_plots <- lapply(cumulative_plots, function(plot) {
   plot +
-    coord_cartesian(xlim = c(0, NA), ylim = c(0, 1))
+    coord_cartesian(xlim = c(0, max_age), ylim = c(0, 1))
 })
 
 resampled_plots <- lapply(resampled_plots, function(plot) {
@@ -940,7 +974,8 @@ dose_plots <- lapply(seq_along(prob_cols_tile), function(i) {
     pval = "",
     palette = c("black", "cyan2", "red", "orange", "forestgreen"),
     legend.title = "Quintile",
-    legend.labs = 1:5
+    legend.labs = 1:5,
+    surv.median.line = "none"
   )
 })
 
@@ -960,6 +995,12 @@ dose_plots <- lapply(dose_plots, function(plot) {
     plot <- plot[["plot"]]$plot
   }
   plot
+})
+
+dose_plots <- lapply(dose_plots, function(plot) {
+  plot +
+    ggplot2::theme_bw() +
+    ggplot2::coord_cartesian(xlim = c(0, max_age_km), ylim = c(0, NA))
 })
 
 dose_plot_panel <- cowplot::plot_grid(
@@ -1046,6 +1087,7 @@ dose_plot_cum_validation <- lapply(censuses, function(census) {
       age_death = config$survival_dataset$age_death,
       event = config$survival_dataset$event,
       title = paste("Probability of Class", label, "Quntile"),
+    surv.median.line = "none",
       pval = ""
     )$plot
   })
@@ -1058,6 +1100,15 @@ dose_plot_cum_validation <- lapply(censuses, function(census) {
     }
     plot
   })
+
+  dose_plots_cum_validation <- lapply(
+    dose_plots_cum_validation,
+    function(plot) {
+      plot +
+        ggplot2::theme_bw() +
+        ggplot2::coord_cartesian(xlim = c(0, max_age_km), ylim = c(0, NA))
+    }
+  )
 
   dose_plot_cum_validation_panel <- cowplot::plot_grid(
     plotlist = dose_plots_cum_validation,
@@ -1111,6 +1162,7 @@ kap_plot_cum_validation <- lapply(censuses, function(census) {
       var = class_cols[[i]],
       age_death = config$survival_dataset$age_death,
       event = config$survival_dataset$event,
+    surv.median.line = "none",
       pval = ""
     )
   })
@@ -1132,6 +1184,11 @@ kap_plot_cum_validation <- lapply(censuses, function(census) {
   }
 
   plots <- lapply(plots, `[[`, "plot")
+  plots <- lapply(plots, function(plot) {
+    plot +
+      ggplot2::theme_bw() +
+      ggplot2::coord_cartesian(xlim = c(0, max_age_km), ylim = c(0, NA))
+  })
 
   list(plots = plots, hrs = hrs)
 })
@@ -1149,6 +1206,7 @@ kap_plot_cum_validation_panels_hr <- lapply(
   }
 )
 kap_plot_cum_validation <- lapply(kap_plot_cum_validation, `[[`, "plots")
+
 
 kap_plot_cum_validation_panels <- lapply(
   seq_along(kap_plot_cum_validation),
@@ -1229,6 +1287,7 @@ km_hr_combine_validation <- lapply(seq_along(censuses), function(i) {
     age_death = config$survival_dataset$age_death,
     event = config$survival_dataset$event,
     title = paste("KM of Tertiled HRs from Combined Cox", names(censuses)[[i]]),
+    surv.median.line = "none",
     pval = ""
   )
 
@@ -1248,6 +1307,12 @@ names(km_hr_combine_validation) <- names(censuses)
 
 km_hr_combine_validation_hrs <- lapply(km_hr_combine_validation, `[[`, "hrs")
 km_hr_combine_validation <- lapply(km_hr_combine_validation, `[[`, "plot")
+
+km_hr_combine_validation <- lapply(km_hr_combine_validation, function(plot) {
+  plot +
+    ggplot2::theme_bw() +
+    ggplot2::coord_cartesian(xlim = c(0, max_age_km), ylim = c(0, NA))
+})
 
 plots <- lapply(km_hr_combine_validation, `[[`, "plot")
 
