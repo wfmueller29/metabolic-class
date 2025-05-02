@@ -72,14 +72,15 @@ plots <- lapply(classes, function(class) {
     event = "dead_censor",
     title = paste("Predicted Class", class),
     pval = "",
-    surv.median.line = "v"
+    surv.median.line = "none"
   )
   plot <- plot_km$plot$plot +
     ggplot2::scale_color_manual(
+      name = "",
       labels = c("Control", "Rapamycin"),
       values = c("tx=control" = "navyblue", "tx=rapa" = "indianred1")
     ) +
-    ggplot2::geom_vline(xintercept = 86, color = "indianred") +
+    # ggplot2::geom_vline(xintercept = 86, color = "indianred") +
     ggplot2::theme_bw()
   hrs <- plot_km$hr
   list(plot = plot, hr = hrs)
@@ -104,6 +105,21 @@ plots_panel <- cowplot::plot_grid(title_theme, plots_panel,
 plots_panel
 ```
 
+```{r save dose plots}
+for (i in seq_along(plots)) {
+  plot <- plots[[i]]
+  name <- paste0("plot_", i, ".png")
+  output_path <- file.path("output", "treatment_response")
+  dir.create(output_path, recursive = TRUE)
+  output_path <- normalizePath(output_path)
+  ggplot2::ggsave(
+    filename = name, plot = plot, device = "png", path = output_path,
+    width = 6,
+    height = 6
+  )
+}
+```
+
 ```{r print hrs, results = 'asis'}
 hrs <- lapply(
   hrs,
@@ -115,4 +131,5 @@ for (table in hrs) {
   print(kableExtra::kable(table))
 }
 ```
+
 
