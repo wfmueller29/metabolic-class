@@ -31,7 +31,8 @@ plot_boot_accuracy_interval <- function(accuracy_interval_df,
       ggplot2::geom_errorbar(
         ggplot2::aes(x = data_name, ymin = lower_ci, ymax = upper_ci),
         stat = "identity",
-        width = 0.4
+        width = 0.4,
+        size = 2
       ) +
       # ggsignif::geom_signif(
       #   comparisons = comparisons, annotations = "*", margin_top = .1,
@@ -41,7 +42,8 @@ plot_boot_accuracy_interval <- function(accuracy_interval_df,
         y = ylab,
         x = xlab,
         title = title
-      )
+      ) +
+      ggplot2::theme_bw()
   } else {
     plot <- NA
   }
@@ -63,18 +65,21 @@ plot_boot_accuracy_window <- function(accuracy_window_df,
         color = factor(window_size)
       )
     ) +
-      ggplot2::geom_line(stat = "identity") +
+      ggplot2::geom_line(stat = "identity", size = 2) +
       ggplot2::geom_errorbar(
         ggplot2::aes(x = average, ymin = lower_ci, ymax = upper_ci),
         stat = "identity",
-        width = 4
+        width = 4,
+        size = 1,
+        position = dodge
       ) +
       ggplot2::labs(
         y = ylab,
         x = xlab,
         title = title,
         color = legend_title
-      )
+      ) +
+      ggplot2::theme_bw()
   } else {
     plot <- NA
   }
@@ -97,19 +102,22 @@ plot_boot_accuracy_threshold <- function(accuracy_threshold_df,
         color = factor(lower_bound)
       )
     ) +
-      ggplot2::geom_line(stat = "identity") +
-      ggplot2::geom_point(stat = "identity") +
+      ggplot2::geom_line(stat = "identity", size = 1) +
+      # ggplot2::geom_point(stat = "identity") +
       ggplot2::geom_errorbar(
         ggplot2::aes(x = upper_bound, ymin = lower_ci, ymax = upper_ci),
         stat = "identity",
-        width = 4
+        width = 4,
+        size = 1,
+        position = dodge
       ) +
       ggplot2::labs(
         y = ylab,
         x = xlab,
         title = title,
         color = legend_title
-      )
+      ) +
+      ggplot2::theme_bw()
   } else {
     plot <- NA
   }
@@ -127,18 +135,20 @@ plot_boot_accuracy_sample <- function(accuracy_sample_df,
       data = accuracy_sample_df,
       mapping = ggplot2::aes(x = sample_per_id, y = accuracy)
     ) +
-      ggplot2::geom_line(stat = "identity") +
-      ggplot2::geom_point(stat = "identity") +
+      ggplot2::geom_line(stat = "identity", size = 1.5) +
+      # ggplot2::geom_point(stat = "identity") +
       ggplot2::geom_errorbar(
         ggplot2::aes(x = sample_per_id, ymin = lower_ci, ymax = upper_ci),
         stat = "identity",
-        width = .05
+        width = .05,
+        size = 1
       ) +
       ggplot2::labs(
         y = ylab,
         x = xlab,
         title = title
-      )
+      ) +
+      ggplot2::theme_bw()
   } else {
     plot <- NA
   }
