@@ -211,6 +211,7 @@ final_models$kap_plot <- lapply(seq_len(nrow(final_models)), function(i) {
       "KM",
       sep = " "
     ),
+    surv.median.line = "none",
     pval = ""
   )
 
@@ -866,7 +867,7 @@ final_models$window_boot_accuracy_plot <- lapply(
   seq_len(nrow(final_models)),
   function(i) {
     plot_boot_accuracy_window(final_models$window_accuracy_df[[i]],
-      xlab = "Age (weeks)",
+      xlab = "Upper Bound Age (weeks)",
       ylab = "Accuracy",
       title = paste(
         "Classification Accuracy using",
