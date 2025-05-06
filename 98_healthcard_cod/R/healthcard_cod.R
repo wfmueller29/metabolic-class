@@ -1,294 +1,1001 @@
-# Author: William Mueller
-# Purpose: The purpose of this file is to add necropsy, pathology, and
-# healthcard information to the census
-# the previous glucose paper so they can be modeled
-library(tidyverse)
-library(readxl)
+---
+title: "SLAM Metabolic Class COD and healthcard"
+author: "William Mueller, Joshua Preston"
+data: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  html_document:
+    df_print: paged
+--- 
 
-# load in main_cat_surv
-load("data/main_cat_surv.RDATA")
+```{r setup, warning=FALSE, message=FALSE, echo=FALSE}
+  library(consoler)
+  library(SLAM)
+  library(dplyr)
+  library(tidyr)
+  library(purrr)
+  library(broom)
+  library(scales)
+  library(pheatmap)
+  library(RColorBrewer)
+  library(survminer)
+  library(survival)
+  library(gridtext)
+  library(gridExtra)
+  library(grid)
+  library(ggplot2)
+  library(svglite)
+  set.seed(365)
 
-# read in csv's
-dvr <- readxl::read_xlsx("data/Record of DVR Reports.xlsx")
-dvr_health <- readxl::read_xlsx(
-  "data/Record of DVR Reports with Healthcards 2.xlsx"
-)
-health <- readxl::read_xlsx("data/SLAM Healthcard.xlsx")
-census <- read.csv("data/census.csv") %>%
-  rename(animal_id = Animal_ID)
+  # setting global knitr options for r markdown output
+  knitr::opts_chunk$set(autodep = TRUE)
+  knitr::opts_chunk$set(warning = FALSE)
+  knitr::opts_chunk$set(message = FALSE)
+  knitr::opts_chunk$set(echo = FALSE)
+  knitr::opts_chunk$set(cache = FALSE)
 
-tags <- census %>%
-  select(tag, idno)
-
-# clean datasets
-# clean dvr
-dvr <- dvr %>%
-  select(
-    tag = `Mouse Tag`,
-    cohort,
-    path_report_number = `Path Report Number`,
-    date_recieved = `Date received by DVR`,
-    sex = Sex,
-    strain = Strain,
-    age_mo = `Age (MO)`,
-    dod = DOD,
-    cod = COD,
-    cod_coded = `COD Coded`,
-    slides = Slides
-  ) %>%
-  left_join(tags, by = "tag")
-
-# clean health
-health <- health %>%
-  select(
-    tag = Tag,
-    dod = `Date of Death`,
-    date_created = `Created Date`,
-    date_recovered = `Recovery Date`,
-    condition = Condition
-  ) %>%
-  left_join(tags, by = "tag")
-
-
-# fix id's and check if it improves current id's
-fixID_history <- function(idno, census) {
-  census <- census %>%
-    separate(taghistory, c("th1", "th2", "th3", "th4", "th5", "th6"), sep = ",", extra = "warn")
-
-  idnos <- trimws(idno)
-  idnos[idnos %in% census$animal_id] <- census$idno[match(idnos[idnos %in% census$animal_id], census$animal_id)]
-  idnos[idnos %in% census$tag] <- census$idno[match(idnos[idnos %in% census$tag], census$tag)]
-  idnos[idnos %in% census$th1] <- census$idno[match(idnos[idnos %in% census$th1], census$th1)]
-  idnos[idnos %in% census$th2] <- census$idno[match(idnos[idnos %in% census$th2], census$th2)]
-  idnos[idnos %in% census$th3] <- census$idno[match(idnos[idnos %in% census$th3], census$th3)]
-  idnos[idnos %in% census$th4] <- census$idno[match(idnos[idnos %in% census$th4], census$th4)]
-  idnos[idnos %in% census$th5] <- census$idno[match(idnos[idnos %in% census$th5], census$th5)]
-  idnos[idnos %in% census$th6] <- census$idno[match(idnos[idnos %in% census$th6], census$th6)]
-
-  return(idnos)
-}
-health_idno_fix <- fixID_history(health$tag, census = census)
-dvr_idno_fix <- fixID_history(dvr$tag, census = census)
-
-# we can see that fixing id's does not improve current id's
-table(health_idno_fix == health$idno)
-table(dvr_idno_fix == dvr$idno)
-table(is.na(health$idno))
-table(is.na(dvr$idno))
-
-# lets now add tags to main_cat_surv
-main_cat_surv <- main_cat_surv %>%
-  mutate(idno = as.numeric(idno)) %>%
-  left_join(tags, by = "idno")
-
-# source strings.R
-source("R/strings.R")
-
-# unique health condition
-unique(health$condition)
-health$condition_clean <- clean_string(health$condition)
-unique(health$condition_clean)
-sort(unique(health$condition_clean))
-
-health <- health %>%
-  mutate(condition_clean = ifelse(
-    condition_clean == "ear problems", "ear problem",
-    ifelse(
-      condition_clean == "eye issue", "eye problem",
-      ifelse(condition_clean == "dehydration", "dehydrated",
-        ifelse(condition_clean == "lesions", "lesion",
-          ifelse(condition_clean == "lethargy", "lethargic",
-            ifelse(condition_clean == "low body temperature", "low temperature",
-              ifelse(condition_clean == "prolpase", "prolapse",
-                ifelse(condition_clean == "losing weight", "weight loss",
-                  ifelse(condition_clean == "slow moving", "lethargic",
-                    ifelse(condition_clean == "thin/hunched", "thin",
-                      ifelse(condition_clean == "prolapsed penis", "prolapse",
-                        ifelse(condition_clean == "rectal prolapse", "prolapse",
-                          ifelse(condition_clean == "penile prolapse",
-                            "prolapse",
-                            ifelse(condition_clean == "tramatic injury",
-                              "traumatic injury",
-                              condition_clean
-                            )
-                          )
-                        )
-                      )
-                    )
-                  )
-                )
-              )
-            )
-          )
-        )
-      )
+  # Setting global class and bin colors for plots
+    class_colors <- c(
+      "1" = "#f2605d", # red
+      "2" = "#36b22b", # green
+      "3" = "#5087fe" # blue
     )
-  ))
-
-
-health <- health %>%
-  mutate(condition_clean = ifelse(
-    condition_clean == "favoring hindlinb", "abnormal gait",
-    ifelse(
-      condition_clean == "swollen feet" |
-        condition_clean == "swollen hindfoot" |
-        condition_clean == "swollen testicle" |
-        condition_clean == "swollen feet",
-      "swelling",
-      ifelse(condition_clean == "enlarged testicle" |
-        condition_clean == "enlarged bladder",
-      "enlarged organs",
-      ifelse(condition_clean == "cloudy/tinted urine", "discolored urine",
-        ifelse(condition_clean == "unsteady gait",
-          "abnormal gait",
-          condition_clean
-        )
-      )
-      )
+    bin_colors <- c(
+      "0" = "#5be996", # green
+      "1" = "#f2d14c", # yellow
+      "2" = "#efa52e", # darker yellow-orange
+      "3" = "#f06151", # red
+      "4" = "#982215", # dark red
+      "5+" = "#350202" # dark dark red
     )
-  ))
-
-sort(unique(health$condition_clean))
-
-# clean up dvr cod
-dvr_cod_df <- dvr_cod_protocol(dvr$cod)
-head(dvr_cod_df)
-dvr <- cbind(dvr, dvr_cod_df)
-
-# clean up cod_coded
-dvr <- dvr %>%
-  mutate(cod_coded = ifelse(cod_coded == "Neoplastic", "N",
-    ifelse(cod_coded == "Both Non-Neoplastic + Neoplastic", "NN + N",
-      ifelse(cod_coded == "NN&NN Non-Neoplastic", "NN + NN",
-        ifelse(cod_coded == "Non-Neoplastic", "NN",
-          ifelse(cod_coded == "N&N Neoplastic", "N + N",
-            ifelse(cod_coded == "N+NN+N", "N + NN + N",
-              ifelse(cod_coded == "Nx3 Neoplastic", "N + N + N", cod_coded)
-            )
-          )
-        )
-      )
+    bin_colors_per_yr <- c(
+      "[0]" = "#5be996", # green
+      "(0–0.5)" = "#f2d14c", # yellow
+      "[0.5–1)" = "#efa52e", # darker yellow-orange
+      "[1–2)" = "#f06151", # red
+      "[2–4)" = "#982215", # dark red
+      "≥4" = "#350202" # dark dark red
     )
-  ))
+```
+# Load in input data
+```{r read in censuses}
+  class_census_path <- "98_healthcard_cod/R/data/20250426_all_cohort/complete_census.csv"
+  census_path <- "98_healthcard_cod/R/data/census.csv"
+  healthcard_path <- "98_healthcard_cod/R/data/SLAM Healthcard reconciled.xlsx"
 
-sort(unique(dvr$cod_1))
-
-save(dvr, file = "output/dvr.RDATA")
-save(health, file = "output/health.RDATA")
-save(main_cat_surv, file = "output/main_cat_surv.RDATA")
+  class_census <- read.csv(class_census_path)
+  census <- read.csv(census_path)
+  healthcard <- as.data.frame(readxl::read_xlsx(healthcard_path, sheet = "Healthcard"))
 
 
-# #### Healthcard Cleaning
-# ```{r healthcard}
-# now we have to add the health card information. lets convert it to wide format
-# so that we can add it to the subject summary
-# create wave for health
-health <- health %>%
-  group_by(tag) %>%
-  arrange(date_created) %>%
-  mutate(wave = row_number()) %>%
-  ungroup()
-health <- as.data.frame(health)
+  census <- consoler::rename(census, c(animal_id = "Animal_ID", tag_history = "taghistory"))
+```
 
-health_wide <- pivot_wider(health,
-  id_cols = c("idno", "tag", "dod"),
-  names_from = "wave",
-  names_prefix = "condition_",
-  values_from = "condition_clean"
-)
-health_wide <- as.data.frame(health_wide)
+## Clean Healthcard
+```{r clean healthcard}
+  new_names <- c(
+    tag = "Tag", dod = "Date of Death",
+    created_date = "Created Date",
+    recovery_date = "Recovery Date",
+    condition = "Condition",
+    idno_rec = "idno"
+  )
+  healthcard <- consoler::rename(healthcard, new_names) %>% # trim whitespace
+    mutate(condition = str_trim(condition))
 
-health_wide_heat <- pivot_wider(health,
-  id_cols = c("idno", "tag", "dod"),
-  names_from = "condition_clean",
-  values_from = "condition_clean"
-)
-health_wide <- as.data.frame(health_wide)
+  unique(healthcard$condition)
+  clean_conditions <- list()
+  clean_conditions$fighting <- c("Fighting", "fighting")
+  clean_conditions$dermatitis <- c("Dermatitis", "Skin Reaction", "Red Skin")
+  clean_conditions$alopecia <- c("Alopecia/Barbering")
+  clean_conditions$trauma <- c("traumatic injury", "Tramatic Injury", "Traumatic Injury")
+  clean_conditions$dehydration <- c("Dehydrated", "Dehydration")
+  clean_conditions$seizure <- c("Seizure")
+  clean_conditions$edema <- c("Swelling", "Swollen Feet", "edema", "Edema", "Swollen Hindfoot")
+  clean_conditions$flood <- c("Flooded Cage", "cage flood", "Cage Flood")
+  clean_conditions$mass <- c("Mass", "mass", "Mass (size in mm)", "Mass ")
+  clean_conditions$prolapse <- c("Prolapse", "prolapse", "Prolapse (rectal/genital)", "Prolapsed Penis", "Rectal Prolapse", "Prolapse ", "Penile Prolapse", "prolpase")
+  clean_conditions$lesion <- c("Lesion", "lesion", "Lesions")
+  clean_conditions$weight_loss <- c("Weight Loss", "weight loss", "Losing Weight")
+  clean_conditions$bleed <- c("Bleeding", "Rectal Bleeding", "Nose Bleeding", "bleeding", "Vaginal Bleeding")
+  clean_conditions$irritation <- c("Irritation")
+  clean_conditions$lethargy <- c("Lethargy", "lethargy", "Lethargic", "Slow Moving")
+  clean_conditions$hunch <- c("Hunched Posture", "Thin/Hunched")
+  clean_conditions$dyspnea <- c("Dyspnea", "dyspnea", "Dyspnea ", "Increased RR", "Dyspnea (Labored Breathing)")
+  clean_conditions$distented_abdomen <- c("Distended Abdomen")
+  clean_conditions$abscess <- c("Abscess")
+  clean_conditions$paralysis <- c("Paralysis")
+  clean_conditions$eye_problem <- c("Eye Problem", "eye problem", "Eye Issue")
+  clean_conditions$ear_problem <- c("Ear Problem", "Ear Problems")
+  clean_conditions$head_tilt <- c("Head Tilt", "head tilt")
+  clean_conditions$discharge <- c("Discharge", "Vaginal Discharge")
+  clean_conditions$moribund <- c("Moribund", "moribund", "Moribund ", "Moribund (near death)")
+  clean_conditions$urinary <- c("Urinary Distress", "Urine Staining", "Excessive Urination", "Unable to Urinate", "Discolored Urine", "Cloudy/Tinted Urine")
+  clean_conditions$gait <- c("Abnormal Gait", "Unsteady Gait", "Hindlimb Weakness", "Favoring Hindlimb")
+  clean_conditions$malocclusion <- c("Malocclusion")
+  clean_conditions$hernia <- c("Hernia")
+  clean_conditions$swollen_testicle <- c("Swollen Testicle", "Enlarged testicle")
+  clean_conditions$thin <- c("Thin")
+  clean_conditions$skin_tag <- c("Skin Tag")
+  clean_conditions$hypoglycemic <- c("Low Glucose","hypoglycemic")
+  clean_conditions$cyanotic <- c("Cyanotic")
+  clean_conditions$organomegaly <- c("Enlarged Organs")
+  clean_conditions$permanent_defect <- c("Permanent Defect")
+  clean_conditions$hydrocehpalus <- c("Hydrocephalus")
+  clean_conditions$diarrhea <- c("Diarrhea")
+  clean_conditions$nutritional_support <- c("Nutritional Support")
+  clean_conditions$low_temp <- c("Low Temperature", "Low body temperature")
+  clean_conditions$na <- c(NA)
+  clean_conditions$blood_in_cage <- c("Blood in Cage")
+  clean_conditions$red_paws <- c("Red Paws")
+  clean_conditions$paralysis <- c("paralysis","Paralysis")
+  clean_conditions$behavior <- c("odd behavior")
+  clean_conditions$other <- c("Other")
+  clean_conditions$enlarged_bladder <- c("enlarged bladder")
+  clean_conditions$tail_issue <- c("Tail Issue")
 
-health_wide_heat <- health_wide_heat
+  # Ensure there are no unmapped conditions
+  mapped_conditions <- unlist(clean_conditions, use.names = FALSE)
+  mapped_conditions <- trimws(mapped_conditions)
+  unique_conditions <- trimws(unique(healthcard$condition))
+  unmapped <- setdiff(unique_conditions, mapped_conditions)
+  unmapped
 
-col_of_interest <- 4:length(health_wide_heat)
 
-health_wide_heat[, col_of_interest] <- lapply(
-  health_wide_heat[, col_of_interest],
-  function(col) {
-    ifelse(col == "NULL", 0, 1)
+  for (name in names(clean_conditions)) {
+    conditions <- clean_conditions[[name]]
+    healthcard$condition[healthcard$condition %in% conditions] <- name
   }
-)
 
-count <- as.data.frame(apply(health_wide_heat[, col_of_interest], 2, sum))
-
-count
-
-names(count) <- "n"
-count$condition <- rownames(count)
-rownames(count) <- NULL
-
-# select interesting healthcard
-count <- arrange(count, -n)
-
-# save healthcard count
-write.csv(count, file = "output/conditions_and_counts.csv")
-# ```
-
-
-# #### Create Summary Dataframe
-# ```{r create summary dataframe}
-merge_dvr <- dvr %>%
-  select(idno, cod, dod, cod_coded, cod_1:cod_4_parens)
-
-merge_health <- health_wide_heat %>%
-  select(-dod, -idno)
-
-main_cat_surv_prep <- main_cat_surv %>%
-  select(
-    -tag,
-    -sex,
-    -strain,
-    dead_censor,
-    fu_age_wk,
-    le_wk,
-    cod,
-    lastdate,
-    maxdate,
-    tod
+  healthcard <- fastDummies::dummy_cols(healthcard, "condition",
+    omit_colname_prefix = TRUE
   )
-main_cat_surv_prep <- as.data.frame(main_cat_surv_prep)
 
-subject_sum <- census %>%
-  left_join(main_cat_surv_prep, by = "idno") %>%
-  mutate(idno = as.numeric(idno)) %>%
-  left_join(merge_dvr, by = "idno")
+  healthcard_final <- as_tibble(merge(census, healthcard, by = "tag", all.y = TRUE)) %>%
+    select(idno, idno_rec, everything(), -c(X, Comments, name, cage, eartag, "Created By", "Entered By"))
+```
 
+## Process healthcard to prep for graphing- EOL
+```{r process healthcard}
+  # Clean up and pare HC
+  HC_relevant <- healthcard_final %>%
+    select(idno_rec, created_date, recovery_date, abscess:weight_loss) %>%
+    dplyr::rename(idno = idno_rec) %>%
+    mutate(recovery_date = as.Date(recovery_date)) %>%
+    mutate(created_date = as.Date(as.numeric(created_date), origin = "1899-12-30"))
 
-# check na's after merging
-apply(apply(subject_sum, 2, is.na), 2, sum)
+  # Get a count of each mouses number of HCs
+  hc_counts <- HC_relevant %>%
+    count(idno, name = "num_HC")
+    
+  # Now assign the counts and HCs to the full class census
+  classes_i <- as_tibble(class_census) %>%
+    mutate(any_HC = if_else(idno %in% HC_relevant$idno, 1, 0)) %>%
+    left_join(HC_relevant, by = "idno") %>%
+    left_join(hc_counts, by = "idno") %>%
+    mutate(num_HC = replace_na(num_HC, 0)) %>%
+    arrange(desc(num_HC)) %>%
+    mutate(
+      tod = as.Date(tod), # ensure `tod` is Date class
+      condition_length = as.integer(coalesce(recovery_date, tod) - created_date),
+      condition_to_death = as.integer(tod - created_date)
+    )
 
-# obs goe from 1304 to 1310, so their are duplicates, lets find these duplicates
-# and choose the correct one
-id <- subject_sum$idno
-subject_sum[duplicated(id) | duplicated(id, fromLast = TRUE), ]
+  # Get a count of each condition, and pull those with only 5 issues or less
+  condition_counts <- classes_i %>%
+    summarise(across(abscess:weight_loss, ~ sum(.x, na.rm = TRUE))) %>%
+    pivot_longer(cols = everything(), names_to = "condition", values_to = "count") %>%
+    arrange(count) %>%
+    filter(count <= 5) %>%
+    pull(condition)
 
-# if there a duplicates, we are going to take the observation with the cod.y
-# that is not NA or Undetermined. If there is no NA or undetermined, we are
-# going to take the observation with the later dod
-subject_sum <- subject_sum %>%
-  group_by(idno) %>%
-  # cod_effective is 0 if "undetermined" or is.na
-  mutate(cod_effective = ifelse(cod.y == "Undetermined" | is.na(cod.y), 0, 1)) %>%
-  arrange(desc(cod_effective), desc(dod)) %>%
-  distinct(idno, .keep_all = TRUE) %>%
-  ungroup() %>%
-  as.data.frame() %>%
-  rename(
-    cod_census = cod.x,
-    cod_dvr = cod.y
-  ) %>%
+  # Now remove those conditions from the dataset
+  classes <- classes_i %>%
+    select(condition_to_death, condition_length, any_HC, num_HC, idno, new_class_bw, cod, tod, created_date:weight_loss, -c(all_of(condition_counts))) %>%
+    arrange(desc(condition_to_death))
+
+  # Create versions which is only EOL (within 4 months of death) healthcards
+  valid_hc_rows_EOL <- classes %>%
+    filter(condition_to_death > 122)
+    
+  hc_long_EOL <- valid_hc_rows_EOL %>%
+    pivot_longer(cols = abscess:weight_loss, names_to = "condition", values_to = "has_condition") %>%
+    filter(has_condition == 1) %>% 
+    distinct(idno, condition, new_class_bw) # Only counts condition once
+  animals_with_conditions_EOL <- hc_long_EOL %>%
+    distinct(idno)
+
+  all_animals_EOL <- classes %>%
+    distinct(idno, new_class_bw)
+
+  no_eol_hc <- all_animals_EOL %>% # Anti-join to get animals with no qualifying conditions
+    anti_join(animals_with_conditions_EOL, by = "idno") %>%
+    mutate(condition = "no_EOL_HCs")
+
+  EOL_hc_final <- bind_rows(hc_long_EOL, no_eol_hc) # Bind to condition table
+```
+
+## Calculate chi-square or fisher's p-values for EOL
+```{r run chi square and fisher's}
+  # Chi square and fisher's for EOL conditions
+  EOL_results <- EOL_hc_final %>%
+  mutate(present = 1) %>%
+  complete(idno, condition, new_class_bw, fill = list(present = 0)) %>% # ensure all combinations
+  pivot_wider(names_from = condition, values_from = present, values_fill = 0) %>%
+  pivot_longer(cols = -c(idno, new_class_bw), names_to = "condition", values_to = "present") %>%
+  group_by(condition) %>%
+  nest() %>%
   mutate(
-    female = ifelse(sex == "F", 1, 0),
-    het3 = ifelse(strain == "HET3", 1, 0)
+    test = map(data, ~ {
+      tab <- table(.x$present, .x$new_class_bw)
+      if (any(tab < 5)) {
+        fisher.test(tab)
+      } else {
+        chisq.test(tab)
+      }
+    }),
+    tidy = map(test, broom::tidy)
+  ) %>%
+  unnest(tidy) %>%
+  select(condition, method, p.value, statistic) %>%
+  arrange(p.value)
+```
+
+## Calculate prevalence of conditions for graphing for EOL, join p-values
+```{r calculate prevalence, assign p-values}
+  # Calculate prevalence for EOL, join p-values from above
+  class_totals_EOL <- EOL_hc_final %>%
+    distinct(idno, new_class_bw) %>%
+    count(new_class_bw, name = "denominator")
+
+  condition_counts_EOL <- EOL_hc_final %>%
+    distinct(idno, new_class_bw, condition) %>%
+    count(condition, new_class_bw, name = "numerator")
+
+  plot_data_EOL_i <- condition_counts_EOL %>%
+    left_join(class_totals_EOL, by = "new_class_bw") %>%
+    mutate(prevalence = (numerator / denominator) * 100) %>%
+    left_join(EOL_results %>% select(condition, p.value), by = "condition") %>%
+    mutate(sig_label = case_when(
+      p.value <= 0.001 ~ "***",
+      p.value <= 0.01 ~ "**",
+      p.value <= 0.05 ~ "*",
+      TRUE ~ ""
+    ))
+
+  # Calculate prevalence for EOL, join p-values from above
+  class_totals_LL <- LL_hc_final %>%
+    distinct(idno, new_class_bw) %>%
+    count(new_class_bw, name = "denominator")
+  condition_counts_LL <- LL_hc_final %>%
+    distinct(idno, new_class_bw, condition) %>%
+    count(condition, new_class_bw, name = "numerator")
+  plot_data_LL_i <- condition_counts_LL %>%
+    left_join(class_totals_LL, by = "new_class_bw") %>%
+    mutate(prevalence = (numerator / denominator) * 100) %>%
+    left_join(LL_results %>% select(condition, p.value), by = "condition") %>%
+    mutate(sig_label = case_when(
+      p.value <= 0.001 ~ "***",
+      p.value <= 0.01 ~ "**",
+      p.value <= 0.05 ~ "*",
+      TRUE ~ ""
+    ))
+```
+
+## Clean the names of the conditions in both for plotting
+```{r clean the conditions, assign p-values}
+  # Create a vector to clean all names in the dataset
+  conditions_subset <- classes %>% # Find the unique column names for conditions
+    select(abscess:weight_loss) %>%
+    colnames()
+  condition_renames <- c(
+    abscess = "Abscess",
+    hypoglycemic = "Hypoglycemic",
+    bleed = "Bleeding",
+    dehydration = "Dehydration",
+    dermatitis = "Dermatitis",
+    distented_abdomen = "Distended Abdomen",
+    dyspnea = "Dyspnea",
+    ear_problem = "Ear Problem",
+    edema = "Edema",
+    eye_problem = "Eye Problem",
+    fighting = "Fighting",
+    flood = "Cage Flooding",
+    gait = "Gait Abnormality",
+    head_tilt = "Head Tilt",
+    hunch = "Hunched Posture",
+    lesion = "Lesion",
+    lethargy = "Lethargy",
+    low_glucose = "Low Glucose",
+    low_temp = "Low Temperature",
+    malocclusion = "Malocclusion",
+    mass = "Mass",
+    moribund = "Moribund",
+    nutritional_support = "Nutritional Support",
+    paralysis = "Paralysis",
+    permanent_defect = "Permanent Defect",
+    prolapse = "Prolapse",
+    seizure = "Seizure",
+    swollen_testicle = "Swollen Testicle",
+    trauma = "Trauma",
+    urinary = "Urinary Problem",
+    weight_loss = "Weight Loss",
+    no_EOL_HCs = "No EOL Healthcards",
+    no_lifelong_HCs = "No Lifelong Healthcards"
   )
 
-subject_sum <- subject_sum %>%
-  left_join(merge_health, by = "tag")
-# ```
+  # Now rename conditions in both datasets according to the above
+  plot_data_EOL <- plot_data_EOL_i %>%
+    mutate(condition = recode(condition, !!!condition_renames))
+  unique(plot_data_EOL$condition)
+  ```
+
+## Divide EOL datasets into significant and non-significant, plot
+```{r divide into sig and NS, assign p-values}
+  # Divide into sig and NS
+  EOL_sig <- plot_data_EOL %>%
+    filter(p.value < 0.05) %>%
+    filter(condition != "No EOL Healthcards") %>%
+    bind_rows(tibble(
+      condition = "Lesion",
+      new_class_bw = 1,
+      numerator = 0,
+      denominator = 124, # match class 1’s denominator
+      prevalence = 0,
+      p.value = 5.38e-6, # use same p-value as others for Lesion
+      sig_label = "***"
+    )) %>%
+      arrange(condition, new_class_bw)
+  EOL_NS <- plot_data_EOL %>%
+    filter(is.na(p.value) | p.value >= 0.05)
+  no_EOL_prevalence <- plot_data_EOL %>%
+    filter(condition == "No EOL Healthcards") %>%
+    mutate(label = paste0("Class ", new_class_bw, ": ", round(prevalence, 1), "%")) %>%
+    pull(label) %>%
+    paste(collapse = "\n")
+  # Plot EOL significant
+  EOL_sig_plot_unified <- ggplot(EOL_sig, aes(x = condition, y = prevalence, fill = factor(new_class_bw))) +
+    geom_bar(stat = "identity", position = position_dodge(width = 0.8)) +
+    # geom_text(aes(label = sig_label, y = prevalence * 1.02),
+    #   position = position_dodge(width = 0.8),
+    #   vjust = 0, size = 4
+    # ) +
+    scale_y_continuous(
+      labels = scales::percent_format(scale = 1),
+      expand = expansion(mult = c(0, 0.15))
+    ) +
+    scale_fill_manual(values = class_colors, name = "Class") +
+    labs(
+      x = "Condition",
+      y = "Prevalence (%)",
+      fill = "Class",
+      title = "Health Issues Differing by Class in Final 4 Months of Life"
+    ) +
+    theme_minimal(base_size = 16) +
+    theme(
+      axis.text.x = element_text(face = "bold",angle = 45, hjust = 1, size = 15),
+      plot.title = element_text(face = "bold", size = 18),
+      axis.title = element_text(face = "bold", size = 16),
+      legend.title = element_text(face = "bold", size = 16)
+    ) + 
+  annotate(
+    "text",
+    x = Inf, y = Inf,
+    hjust = 1, vjust = 1.5,
+    label = paste("No EOL HCs prevalence:\n", no_EOL_prevalence),
+    size = 4.5, fontface = "bold"
+  )
+  # Now count EOL conditions per mouse, bin, count mice per bin
+  eol_bin_counts <- EOL_hc_final %>%
+    mutate(n_conditions = if_else(condition == "no_EOL_HCs", 0L, 1L)) %>%
+    group_by(idno, new_class_bw) %>%
+    summarise(n_conditions = sum(n_conditions), .groups = "drop") %>%
+    mutate(
+      condition_bin = case_when(
+        n_conditions == 0 ~ "0",
+        n_conditions == 1 ~ "1",
+        n_conditions == 2 ~ "2",
+        n_conditions == 3 ~ "3",
+        n_conditions == 4 ~ "4",
+        n_conditions >= 5 ~ "5+"
+      ),
+      condition_bin = factor(condition_bin, levels = c("0", "1", "2", "3", "4", "5+"))
+    ) %>%
+    count(new_class_bw, condition_bin, name = "count")
+  eol_bin_props <- eol_bin_counts %>%
+    group_by(new_class_bw) %>%
+    mutate(prop = count / sum(count)) %>%
+    ungroup()
+  # Plot the bins
+  ggplot(eol_bin_props, aes(x = factor(new_class_bw), y = prop, fill = condition_bin)) +
+    geom_bar(stat = "identity", position = "stack") +
+    scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+    scale_fill_manual(values = bin_colors, name = "HCs at EOL") +
+    labs(
+      title = "Proportion of Mice in Each Class by EOL Condition Bin",
+      x = "Class",
+      y = "Proportion of Mice"
+    ) +
+    theme_minimal(base_size = 14) +
+    theme(
+      plot.title = element_text(size = 18, face = "bold", hjust = 0.5),
+      axis.title = element_text(face = "bold", size = 14),
+      axis.text = element_text(size = 12),
+      legend.title = element_text(face = "bold"),
+      legend.text = element_text(size = 12)
+    )
+  ```
+
+
+## Examine lifelong healthcards accounting for incidence (non-condition specific)
+```{r Incidence study}
+  #* Now, create a lifelong healthcard
+    HC_relevant_LL <- classes_i %>%
+      select(idno,le_wk,new_class_bw,created_date,recovery_date, tod,abscess:condition_to_death,-na) 
+    total_HCs_LL <- HC_relevant_LL %>%
+      rowwise() %>%
+      mutate(total_conditions = sum(c_across(abscess:weight_loss), na.rm = TRUE)) %>%
+      ungroup() %>%
+      group_by(idno) %>%
+      summarise(total_conditions = sum(total_conditions, na.rm = TRUE))  
+  #* Calculate incidence, raw and as proportion, and as binned
+    hc_lifespan_data <- total_HCs_LL %>%
+      left_join(class_census %>% select(idno, new_class_bw, le_wk), by = "idno") %>%
+      mutate(
+        hc_per_yr = total_conditions / (le_wk/52)
+      ) %>%
+      mutate(
+        condition_bin = case_when(
+          total_conditions == 0 ~ "0",
+          total_conditions == 1 ~ "1",
+          total_conditions == 2 ~ "2",
+          total_conditions == 3 ~ "3",
+          total_conditions == 4 ~ "4",
+          total_conditions >= 5 ~ "5+"
+        )
+      ) %>%
+      mutate(condition_bin = factor(condition_bin, levels = c("0", "1", "2", "3", "4", "5+")
+      )) %>%
+      mutate(hc_yr_bin = case_when(
+        hc_per_yr == 0 ~ "[0]",
+        hc_per_yr < 0.5 ~ "(0–0.5)",
+        hc_per_yr < 1.0 ~ "[0.5–1)",
+        hc_per_yr < 2 ~ "[1–2)",
+        hc_per_yr < 4 ~ "[2–4)",
+        TRUE ~ "≥4"
+      )) %>%
+        mutate(hc_yr_bin = factor(hc_yr_bin, levels = c("[0]", "(0–0.5)", "[0.5–1)", "[1–2)", "[2–4)", "≥4")))
+  #* Plot raw counts over lifetime
+    raw_counts_LL_HCs <- ggplot(hc_lifespan_data, aes(x = condition_bin, fill = factor(new_class_bw))) +
+    geom_bar(position = "stack") +
+    scale_fill_manual(values = c("#f2605d", "#36b22b", "#5087fe"), name = "Class") +
+    labs(
+      title = "Bins of Mice by Number of Conditions (Raw Counts)",
+      x = "Number of Health Conditions",
+      y = "Number of Mice"
+    ) +
+    theme_minimal(base_size = 14) +
+    theme(
+      plot.title = element_text(size = 18, face = "bold", hjust = 0.5),
+      axis.title = element_text(face = "bold", size = 16),
+      axis.text = element_text(size = 12),
+      legend.title = element_text(face = "bold", size = 16)
+    )
+
+  #* Count mice in each bin per class, plot as proportions
+    #- Count
+      bin_counts <- hc_lifespan_data %>%
+        count(new_class_bw, condition_bin, name = "count")
+      class_totals <- hc_lifespan_data %>%
+        count(new_class_bw, name = "total")
+      bin_props <- bin_counts %>%
+        left_join(class_totals, by = "new_class_bw") %>%
+        mutate(proportion = count / total)
+    #- Graph with regular bars stacked
+      proportion_LL_HCs <- ggplot(bin_props, aes(x = condition_bin, y = proportion, fill = factor(new_class_bw))) +
+        geom_bar(stat = "identity", position = "stack") +
+        scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+        scale_fill_manual(values = c("#f2605d", "#36b22b", "#5087fe"), name = "Class") +
+        labs(
+          title = "Bins of Mice by Number of Conditions (Proportions)",
+          x = "Number of Health Conditions",
+          y = "Proportion of Mice"
+        ) +
+        theme_minimal(base_size = 14) +
+        theme(
+          plot.title = element_text(size = 18, face = "bold", hjust = 0.5),
+          axis.title = element_text(face = "bold", size = 14),
+          axis.text = element_text(size = 12)
+      )
+    #- Graph with stacked proportions/parts of whole
+      bin_props_stacked <- hc_lifespan_data %>%
+        count(new_class_bw, condition_bin, name = "count") %>%
+        group_by(new_class_bw) %>%
+        mutate(proportion = count / sum(count)) %>%
+        ungroup()
+
+      proportion_LL_HCs_stacked <- ggplot(bin_props_stacked, aes(x = factor(new_class_bw), y = proportion, fill = condition_bin)) +
+        geom_bar(stat = "identity", position = "stack") +
+        scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+        scale_fill_manual(values = bin_colors, name = "# of HCs") +
+        labs(
+          title = "Distribution of Condition Burden by Class",
+          x = "Class",
+          y = "Proportion of Mice"
+        ) +
+        unified_plot_theme
+  #* Plot time-normalized incidence
+    bin_props_yr <- hc_lifespan_data %>%
+      count(new_class_bw, hc_yr_bin, name = "count") %>%
+      group_by(new_class_bw) %>%
+      mutate(total = sum(count), proportion = count / total) %>%
+      ungroup()
+    proportion_LL_HCs_per_year <- ggplot(bin_props_yr, aes(x = factor(new_class_bw), y = proportion, fill = hc_yr_bin)) +
+      geom_bar(stat = "identity", position = "stack") +
+      scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+      scale_fill_manual(values = bin_colors_per_yr, name = "HCs/Yr") +
+      labs(
+        title = "Distribution of Condition Incidence (per Year) by Class",
+        x = "Class",
+        y = "Proportion of Mice"
+      ) +
+      theme_minimal(base_size = 14) +
+      theme(
+        plot.title = element_text(size = 18, face = "bold", hjust = 0.5),
+        axis.title = element_text(face = "bold", size = 14),
+        axis.text = element_text(size = 12),
+        legend.title = element_text(face = "bold"),
+        legend.text = element_text(size = 12)
+      )
+```
+
+## Examine cumulative HC free
+```{r HC free study}
+  #* Prepare cumulative incidence tibble
+    #- Bring in the DOB from the census
+      census <- as_tibble(census) %>%
+        mutate(dob = as.Date(dob, format = "%m/%d/%Y")) %>%
+        select(idno, dob)
+    #- Create a time-to-event tibble and join DOB
+      HC_relevant_LL <- classes_i %>%
+        left_join(census, by = "idno") %>%
+        mutate(
+          le_days = le_wk * 7,
+          event_day = as.integer(created_date - dob) # days since birth
+        ) %>%
+        select(idno, tod,dob, created_date, le_days, new_class_bw, event_day, abscess:condition_to_death) %>%
+        arrange(desc(event_day))
+    #- Compute first event per mouse or censor at le_days if none
+      cumulative_df_fixed <- HC_relevant_LL %>%
+        group_by(idno, new_class_bw, dob, le_days) %>%
+        reframe(
+          first_event_day = if (all(is.na(event_day))) NA_integer_ else min(event_day, na.rm = TRUE),
+          event_day = if (all(is.na(event_day))) le_days else min(event_day, na.rm = TRUE)
+        ) %>%
+        mutate(
+          Class = factor(new_class_bw, levels = c(1, 2, 3)),
+          event = if_else(is.na(first_event_day), 0, 1),
+          pct_lifespan = event_day / le_days
+        ) %>%
+        filter(is.finite(pct_lifespan), pct_lifespan >= 0, pct_lifespan <= 1)
+    #- Compute cumulative proportion disease-free by class, fixed denominator, raw days
+      cumulative_class_curves_day <- cumulative_df_fixed %>%
+        group_by(Class) %>%
+        arrange(event_day, .by_group = TRUE) %>%
+        mutate(
+          class_n = n(),
+          prop_disease_free_day = 1 - cumsum(event) / class_n
+        ) %>%
+        ungroup()
+    #- Compute cumulative proportion disease-free by class, fixed denominator, % lifespan
+      cumulative_class_curves_pct <- cumulative_df_fixed %>%
+        group_by(Class) %>%
+        arrange(pct_lifespan, .by_group = TRUE) %>%
+        mutate(
+          class_n = n(),
+          prop_disease_free_pct = 1 - cumsum(event) / class_n
+        ) %>%
+        ungroup()
+  #* Plot
+    #- As raw days
+      days_HCfree <- ggplot(cumulative_class_curves, aes(x = event_day, y = prop_disease_free, color = Class)) +
+        geom_step(size = 1.1) +
+        scale_color_manual(values = class_colors) +
+        labs(
+          title = "Cumulative Proportion of Mice HC-free Over Time",
+          x = "Days Since Birth",
+          y = "Proportion HC-Free",
+          color = "Class"
+        ) +
+        theme_minimal(base_size = 14) +
+        theme(
+          plot.title = element_text(face = "bold", size = 16, hjust = 0.5),
+          axis.title = element_text(face = "bold"),
+          legend.title = element_text(face = "bold")
+        ) +
+        ylim(0, 1)
+    #- As % LE
+    percent_LE_HCfree <- ggplot(cumulative_class_curves_pct, aes(x = pct_lifespan, y = prop_disease_free_pct, color = Class)) +
+      geom_step(size = 1.1) +
+      scale_color_manual(values = class_colors) +
+      labs(
+        title = "Cumulative Proportion of Mice HC-free Over % of Lifespan",
+        x = "% Lifespan",
+        y = "Proportion HC-Free",
+        color = "Class"
+      ) +
+      theme_minimal(base_size = 14) +
+      theme(
+        plot.title = element_text(face = "bold", size = 16, hjust = 0.5),
+        axis.title = element_text(face = "bold"),
+        legend.title = element_text(face = "bold")
+      ) +
+      ylim(0, 1)
+```
+
+## Examine cumulative incidence
+```{r Cumulative HCs study}
+  #* Compute cumulative HC tibbles
+    #- Compute class sizes
+      class_sizes <- classes_i %>%
+        distinct(idno, new_class_bw) %>%
+        count(new_class_bw, name = "class_size") %>%
+        mutate(Class = factor(new_class_bw, levels = c(1, 2, 3)))
+    #- Compute a version for only mice who had HCs
+      cumulative_HC_day_events_only <- HC_relevant_LL %>%
+        filter(!is.na(event_day)) %>% # excludes mice with 0 events
+        mutate(Class = factor(new_class_bw, levels = c(1, 2, 3))) %>%
+        group_by(Class) %>%
+        mutate(class_size = n_distinct(idno)) %>%
+        group_by(Class, event_day) %>%
+        summarise(
+          total_HC = n(),
+          class_size = first(class_size),
+          .groups = "drop"
+        ) %>%
+        arrange(Class, event_day) %>%
+        group_by(Class) %>%
+        mutate(
+          cum_HC = cumsum(total_HC),
+          cum_HC_per_mouse_events_only = cum_HC / class_size
+        ) %>%
+        ungroup()
+    #- Compute a version which considers all mice
+      cumulative_HC_day_all_mice <- HC_relevant_LL %>%
+        filter(!is.na(event_day)) %>%
+        mutate(Class = factor(new_class_bw, levels = c(1, 2, 3))) %>%
+        group_by(Class, event_day) %>%
+        summarise(total_HC = n(), .groups = "drop") %>%
+        left_join(class_sizes, by = "Class") %>%
+        arrange(Class, event_day) %>%
+        group_by(Class) %>%
+        mutate(
+          cum_HC = cumsum(total_HC),
+          cum_HC_per_mouse_all = cum_HC / class_size
+        ) %>%
+        ungroup()
+  #* Plots
+  #- Including only mice with HCs
+    cum_inc_HCmice <- ggplot(cumulative_HC_day_events_only, aes(x = event_day, y = cum_HC_per_mouse_events_only, color = Class)) +
+      geom_step(size = 1.1) +
+      scale_color_manual(values = class_colors) +
+      labs(
+        title = "Cumulative HCs per Mouse (Only Mice With Events)",
+        x = "Days Since Birth",
+        y = "Cumulative HCs / Mouse",
+        color = "Class"
+      ) +
+      theme_minimal(base_size = 14)
+  #- Including mice who never had HC
+    cum_inc_allmice <- ggplot(cumulative_HC_day_all_mice, aes(x = event_day, y = cum_HC_per_mouse_all, color = Class)) +
+      geom_step(size = 1.1) +
+      scale_color_manual(values = class_colors) +
+      labs(
+        title = "Cumulative HCs per Mouse (Including Mice with No Events)",
+        x = "Days Since Birth",
+        y = "Cumulative HCs / Mouse",
+        color = "Class"
+      ) +
+      theme_minimal(base_size = 14)
+```
+
+## Examine clusters of conditions
+```{r plot clusters and heatmaps}
+  #* Examine overrepresentation of any HC in classes, only counting once per mouse
+    #- Select relevant columns from HC data
+      HC_relevant_LL_clusters <- HC_relevant_LL %>%
+        select(idno, new_class_bw, abscess:weight_loss)
+    #- Pivot long, count conditions
+      long_cond <- HC_relevant_LL_clusters %>%
+        pivot_longer(cols = -c(idno, new_class_bw), names_to = "condition", values_to = "present") %>%
+        filter(present == 1) %>%
+        distinct(idno, new_class_bw, condition)
+      cond_counts <- long_cond %>%
+        count(new_class_bw, condition, name = "num_mice_with_condition")
+    #- Get total number of unique mice per class, calculate prevalence
+      class_totals <- HC_relevant_LL_clusters %>%
+        distinct(idno, new_class_bw) %>%
+        count(new_class_bw, name = "n_mice")
+      cond_prevalence <- cond_counts %>%
+        left_join(class_totals, by = "new_class_bw") %>%
+        mutate(prevalence = num_mice_with_condition / n_mice * 100)
+    #- Identify conditions to keep (over 1% prevalence in all classes)
+      conditions_to_keep <- cond_prevalence %>%
+        group_by(condition) %>%
+        summarise(max_prevalence = max(prevalence)) %>%
+        filter(max_prevalence > 1) %>%
+        pull(condition)
+    #- Retain only those conditions
+      HC_LL_filtered <- HC_relevant_LL_clusters %>%
+        select(idno, new_class_bw, all_of(conditions_to_keep))
+    #- Count number of unique mice with each condition in each class
+      cond_cluster_counts <- HC_LL_filtered %>%
+        pivot_longer(cols = -c(idno, new_class_bw), names_to = "condition", values_to = "present") %>%
+        filter(present == 1) %>%
+        distinct(idno, new_class_bw, condition) %>%
+        count(new_class_bw, condition, name = "num_mice_with_condition")
+    #- Calculate prevalence per class
+      cond_cluster_prevalence <- cond_cluster_counts %>%
+        left_join(class_totals, by = "new_class_bw") %>%
+        mutate(prevalence = num_mice_with_condition / n_mice * 100)
+    #- Prepare wide binary format for chi-squared/Fisher's test
+      cond_test_input <- HC_LL_filtered %>%
+        pivot_longer(cols = -c(idno, new_class_bw), names_to = "condition", values_to = "present") %>%
+        group_by(condition) %>%
+        nest()
+    #- Run chi-squared or Fisher’s test per condition
+      cond_cluster_tests <- cond_test_input %>%
+        mutate(
+          test = map(data, ~ {
+            tab <- table(.x$present, .x$new_class_bw)
+            # Check expected counts from chi-sq test
+            expected <- suppressWarnings(chisq.test(tab)$expected)
+            if (any(expected < 5)) {
+              fisher.test(tab)
+            } else {
+              chisq.test(tab)
+            }
+          }),
+          tidy = map(test, broom::tidy)
+        ) %>%
+        unnest(tidy) %>%
+        select(condition, method, p.value, statistic) %>%
+        arrange(p.value)
+    #- Join p-values back to prevalence table, rename with clean names
+      cond_cluster_results_clean <- cond_cluster_prevalence %>%
+        left_join(cond_cluster_tests, by = "condition") %>%
+        mutate(
+          Significance = if_else(p.value <= 0.05, "Y", "N"),
+          condition = recode(condition, !!!condition_renames)
+        )
+    #- Create condition matrix
+    condition_matrix <- cond_cluster_results_clean %>%
+      select(new_class_bw, condition, prevalence) %>%
+      pivot_wider(names_from = new_class_bw, values_from = prevalence) %>%
+      column_to_rownames("condition") %>%
+      as.matrix()
+    condition_matrix[is.na(condition_matrix)] <- 0
+  #* Create heatmap
+    #- Format display numbers to one decimal place,rename col labels
+      display_vals <- format(round(condition_matrix, 1), nsmall = 1)
+      colnames(condition_matrix) <- paste("Class", colnames(condition_matrix))
+    #- Create row annotation for significance
+      sig_annot <- cond_cluster_results_clean %>%
+        distinct(condition, Significance) %>%
+        column_to_rownames("condition")
+      colnames(sig_annot) <- "Significant Difference"
+      annotation_colors <- list(
+        "Significant Difference" = c("Y" = "black", "N" = "white")
+      )
+    #- Plot heatmap
+      heatmap_grob <- pheatmap::pheatmap(
+        condition_matrix,
+        scale = "none", # Fix inconsistent coloring
+        cluster_rows = TRUE,
+        cluster_cols = TRUE,
+        annotation_row = sig_annot,
+        annotation_colors = annotation_colors,
+        annotation_legend = TRUE,
+        annotation_names_row = FALSE,
+        display_numbers = display_vals,
+        number_color = "gray20",
+        fontsize_row = 13,
+        fontsize_col = 13,
+        fontsize_number = 10,
+        angle_col = 0,
+        legend = FALSE
+      )
+```
+
+## Examine clusters of conditions but normalize by time
+```{r plot clusters and heatmaps norm by time}
+  #* Examine overrepresentation, but norm by time
+    #- Reshape and include lifespan
+      condition_cols <- names(HC_relevant_LL)[which(names(HC_relevant_LL) == "abscess"):which(names(HC_relevant_LL) == "weight_loss")]
+    #- Create full idno × condition table including 0s, then compute rate per year
+      long_cond_all <- HC_relevant_LL %>%
+        select(idno, new_class_bw, le_days, all_of(condition_cols)) %>%
+        pivot_longer(cols = all_of(condition_cols), names_to = "condition", values_to = "present") %>%
+        mutate(present = replace_na(present, 0)) %>%
+        group_by(idno, new_class_bw, condition, le_days) %>%
+        summarise(n = sum(present), .groups = "drop") %>%
+        mutate(
+          le_years = le_days / 365.25,
+          rate_per_year = n / le_years
+        )
+    #- Compute average rate per condition and class
+      cond_class_rates <- long_cond_all %>%
+        group_by(new_class_bw, condition) %>%
+        summarise(mean_rate = mean(rate_per_year), .groups = "drop")
+    #- Now compute p values via Kruskal-Wallis test
+      cond_test_input_norm <- long_cond_all %>%
+        filter(condition %in% conditions_to_keep)
+      cond_cluster_tests_norm <- cond_test_input_norm %>%
+        group_by(condition) %>%
+        nest() %>%
+        mutate(
+          test = map(data, ~ kruskal.test(rate_per_year ~ as.factor(new_class_bw), data = .x)),
+          tidy = map(test, broom::tidy)
+        ) %>%
+        unnest(tidy) %>%
+        select(condition, p.value, statistic, method = method)
+    #- Filter down to only the common conditions defined earlier
+      filtered_rates <- cond_class_rates %>%
+        filter(condition %in% conditions_to_keep) %>%
+        left_join(cond_cluster_tests_norm, by = "condition") %>%
+          mutate(
+            Significance = if_else(p.value <= 0.05, "Y", "N"),
+            condition = recode(condition, !!!condition_renames)
+          )
+    #- Now structure matrix for heatmap
+    condition_matrix_norm <- filtered_rates %>%
+      select(new_class_bw, condition, mean_rate) %>% # Keep only numeric data
+      pivot_wider(names_from = new_class_bw, values_from = mean_rate) %>%
+      replace(is.na(.), 0) %>%
+      column_to_rownames("condition") %>%
+      as.matrix()
+  #* Create heatmap
+    #- Format display numbers to one decimal place,rename col labels
+      colnames(condition_matrix_norm) <- paste("Class", colnames(condition_matrix_norm))
+      display_vals_norm <- format(round(condition_matrix_norm, 2), nsmall = 2)
+    #- Create row annotation for significance
+      sig_annot_timed <- filtered_rates %>%
+        distinct(condition, Significance) %>%
+        column_to_rownames("condition")
+      colnames(sig_annot_timed) <- "Significant Difference"
+      annotation_colors_timed <- list(
+        "Significant Difference" = c("Y" = "black", "N" = "white")
+      )
+    #- Plot heatmap
+      heatmap_timed <- pheatmap::pheatmap(
+        condition_matrix_norm,
+        scale = "none", # Fix inconsistent coloring
+        cluster_rows = TRUE,
+        cluster_cols = TRUE,
+        annotation_row = sig_annot_timed,
+        annotation_colors = annotation_colors_timed,
+        annotation_legend = TRUE,
+        annotation_names_row = FALSE,
+        display_numbers = display_vals_norm,
+        number_color = "gray20",
+        fontsize_row = 13,
+        fontsize_col = 13,
+        fontsize_number = 10,
+        angle_col = 0,
+        legend = TRUE # You probably want this to show the color key now
+      )
+```     
+
+## Compile plots
+```{r compiled plots}
+  # Unified theme
+  unified_plot_theme <- theme_minimal(base_size = 18) +
+    theme(
+      plot.title = element_text(size = 18, face = "bold", hjust = 0.5),
+      axis.title = element_text(size = 16, face = "bold"),
+      axis.text = element_text(size = 13),
+      legend.title = element_text(size = 16, face = "bold"),
+      legend.text = element_text(size = 13, face = "bold")
+    )
+  #* Start a PDF device, compile all the pages
+  pdf("Healthcard_Figures.pdf", width = 8.5, height = 11, onefile = TRUE)
+
+    # Helper: top-left caption only (no plot shift)
+    draw_top_left_caption <- function(fig_num, caption_text) {
+      title_part <- paste0("Healthcard Figure ", fig_num, ".")
+      grid.text(
+        label = title_part,
+        x = unit(0.01, "npc"),
+        y = unit(0.99, "npc"),
+        hjust = 0, vjust = 1,
+        gp = gpar(fontsize = 13, fontface = "bold.italic")
+      )
+      grid.text(
+        label = paste(strwrap(caption_text, width = 100), collapse = "\n"),
+        x = unit(0.01, "npc"),
+        y = unit(0.965, "npc"),
+        hjust = 0, vjust = 1,
+        gp = gpar(fontsize = 13, fontface = "italic")
+      )
+    }
+
+    # --- Figure 1: EOL_sig_plot_unified ---
+    grid.newpage()
+    draw_top_left_caption(1, "Prevalence of conditions that differed between classes at the end of life.")
+    pushViewport(viewport(width = 0.8, height = 0.8))
+    g1 <- arrangeGrob(
+      EOL_sig_plot_unified + unified_plot_theme +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1)),
+      nullGrob(),
+      heights = c(0.6, 0.3)
+    )
+    grid.draw(g1)
+    popViewport()
+
+    # --- Figure 2 ---
+    grid.newpage()
+    draw_top_left_caption(2, "Distribution of number of conditions per mouse accross classes expressed as raw counts (upper panel) and proportions of the class size (lower panel).")
+    pushViewport(viewport(width = 0.8, height = 0.8))
+    g2 <- arrangeGrob(
+      raw_counts_LL_HCs + unified_plot_theme,
+      proportion_LL_HCs + unified_plot_theme,
+      heights = c(0.45, 0.45),
+      ncol = 1
+    )
+    grid.draw(g2)
+    popViewport()
+
+    # --- Figure 3 ---
+    grid.newpage()
+    draw_top_left_caption(3, "Parts-of-whole distribution of condition burden per mouse accross classes expressed as prevalence (upper panel) and time-normalized incidence, i.e., health conditions per year (lower panel).")
+    pushViewport(viewport(width = 0.8, height = 0.8))
+    g3 <- arrangeGrob(
+      proportion_LL_HCs_stacked + unified_plot_theme,
+      proportion_LL_HCs_per_year + unified_plot_theme,
+      heights = c(0.45, 0.45),
+      ncol = 1
+    )
+    grid.draw(g3)
+    popViewport()
+
+    # --- Figure 4 ---
+    grid.newpage()
+    draw_top_left_caption(4, "Cumulative proportion of mice without any health conditions/health cards over the lifespan, expressed according to time (upper panel) and as a percentage of the entire lifespan (lower panel).")
+    pushViewport(viewport(width = 0.8, height = 0.8))
+    g4 <- arrangeGrob(
+      days_HCfree + unified_plot_theme,
+      percent_LE_HCfree + unified_plot_theme,
+      heights = c(0.45, 0.45),
+      ncol = 1
+    )
+    grid.draw(g4)
+    popViewport()
+
+    # --- Figure 5 ---
+    grid.newpage()
+    draw_top_left_caption(5, "Cumulative incidence of health conditions/health cards per mouse over time with only mice who ever had HCs (top panel) and including mice who never had HCs (bottom panel).")
+    pushViewport(viewport(width = 0.8, height = 0.8))
+    g5 <- arrangeGrob(
+      cum_inc_HCmice + unified_plot_theme,
+      cum_inc_allmice + unified_plot_theme,
+      heights = c(0.45, 0.45),
+      ncol = 1
+    )
+    grid.draw(g5)
+    popViewport()
+
+    # --- Figure 6 ---
+    grid.newpage()
+    draw_top_left_caption(6, "Heatmap with clustering of prevalence of specific conditions accross classes. Black rectangular annotations on the left indicate significant differences between groups. Prevalence per class are printed in the individual squares.")
+    pushViewport(viewport(width = 0.80, height = 0.75))
+    grid.draw(heatmap_grob$gtable)
+    popViewport()
+
+    # --- Figure 7 ---
+    grid.newpage()
+    draw_top_left_caption(7, "Heatmap with clustering of time-normalized incidence, i.e., specific health conditions per year, accross classes. Black rectangular annotations on the left indicate significant differences between groups. Incidence per class (condition events/yr) are printed in the squares.")
+    pushViewport(viewport(width = 0.85, height = 0.75))
+    grid.draw(heatmap_timed$gtable)
+    popViewport()
+  #* Close the PDF device
+  dev.off()
+```  
