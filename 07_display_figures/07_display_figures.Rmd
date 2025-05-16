@@ -702,14 +702,19 @@ new_figure1 <- cowplot::plot_grid(title_theme, new_figure1,
 
 ```{r save plots from above chunk}
 for (i in seq_along(new_figure1_plot_list)) {
-  plot <- new_figure1_plot_list[[i]]
+  plot <- new_figure1_plot_list[[i]] +
+    theme(legend.position = "none")
   name <- paste0("plot_", i, ".png")
   output_path <- file.path("output", config$out_tag, "outcome")
   dir.create(output_path, recursive = TRUE)
   output_path <- normalizePath(output_path)
 
 
-  ggsave(filename = name, plot = plot, device = "png", path = output_path)
+  ggsave(
+    filename = name, plot = plot, device = "png", path = output_path,
+    height = 6,
+    width = 5
+  )
 }
 ```
 
@@ -888,14 +893,19 @@ class_prediction_panel <- cowplot::plot_grid(title_theme,
 
 ```{r save plots from chunk above}
 for (i in seq_along(plot_list)) {
-  plot <- plot_list[[i]]
+  plot <- plot_list[[i]] +
+    theme(legend.position = "none")
   name <- paste0("plot_", i, ".png")
   output_path <- file.path("output", config$out_tag, "classification")
   dir.create(output_path, recursive = TRUE)
   output_path <- normalizePath(output_path)
 
 
-  ggsave(filename = name, plot = plot, device = "png", path = output_path)
+  ggsave(
+    filename = name, plot = plot, device = "png", path = output_path,
+    height = 6,
+    width = 6
+  )
 }
 ```
 
@@ -1034,7 +1044,11 @@ for (i in seq_along(dose_plots)) {
   output_path <- file.path("output", config$out_tag, "dose_response")
   dir.create(output_path, recursive = TRUE)
   output_path <- normalizePath(output_path)
-  ggsave(filename = name, plot = plot, device = "png", path = output_path)
+  ggsave(
+    filename = name, plot = plot, device = "png", path = output_path,
+    height = 6,
+    width = 6
+  )
 }
 ```
 
@@ -1087,7 +1101,7 @@ dose_plot_cum_validation <- lapply(censuses, function(census) {
       age_death = config$survival_dataset$age_death,
       event = config$survival_dataset$event,
       title = paste("Probability of Class", label, "Quntile"),
-    surv.median.line = "none",
+      surv.median.line = "none",
       pval = ""
     )$plot
   })
@@ -1162,7 +1176,7 @@ kap_plot_cum_validation <- lapply(censuses, function(census) {
       var = class_cols[[i]],
       age_death = config$survival_dataset$age_death,
       event = config$survival_dataset$event,
-    surv.median.line = "none",
+      surv.median.line = "none",
       pval = ""
     )
   })
@@ -1244,7 +1258,11 @@ for (i in 3:6) {
     output_path <- file.path("output", config$out_tag, "km_validation")
     dir.create(output_path, recursive = TRUE)
     output_path <- normalizePath(output_path)
-    ggsave(filename = name, plot = plot, device = "png", path = output_path)
+    ggsave(
+      filename = name, plot = plot, device = "png", path = output_path,
+      height = 6,
+      width = 6
+    )
   }
 }
 ```
@@ -1373,7 +1391,11 @@ for (i in seq_along(km_hr_combine_validation)) {
   )
   dir.create(output_path, recursive = TRUE)
   output_path <- normalizePath(output_path)
-  ggsave(filename = name, plot = plot, device = "png", path = output_path)
+  ggsave(
+    filename = name, plot = plot, device = "png", path = output_path,
+    height = 6,
+    width = 6
+  )
 }
 ```
 
@@ -2013,7 +2035,10 @@ for (i in seq_along(p)) {
   output_path <- normalizePath(output_path)
 
 
-  ggsave(filename = name, plot = plot, device = "png", path = output_path)
+  ggsave(filename = name, plot = plot, device = "png", path = output_path,
+    height = 6,
+    width = 6
+)
 }
 ```
 
