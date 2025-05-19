@@ -19,9 +19,10 @@ if (length(args) == 0) {
   # args[[1]] <- "input/slam_age_all.yaml"
   # args[[1]] <- "input/slam_all_only_bw.yaml"
   # args[[1]] <- "input/itp_bw.yaml"
+  args[[1]] <- "../inputs/train/slam_age_all.yaml"
   # args[[1]] <- "../inputs/validate/slam_c1-c10_x_slam_c16-c18.yaml"
-  args[[1]] <- "../inputs/predict/slam_c1-c10_x_slam_c16-c18.yaml"
-  args[[1]] <- "../inputs/predict/itp_controls_p_treatment.yaml"
+  # args[[1]] <- "../inputs/predict/slam_c1-c10_x_slam_c16-c18.yaml"
+  # args[[1]] <- "../inputs/predict/itp_controls_p_treatment.yaml"
   # args[[1]] <- "../x01_external_validation/input/slam_age_all.yaml"
   # args[[1]] <- "../x01_external_validation/input/slam_c16-c18.yaml"
   warning("No input file provided, using: ", args[[1]])
@@ -214,9 +215,15 @@ if (bool_external_validate || bool_predict) {
 
 
 # test if age => age_death ----------------------------------------------------
+# Note: If this is an external validation, we only want to check this for
+# our external validation data, because the the orginal data
+# already had this done when running train.R
+
+# first we need to merge surviavl and our data, making sure that all our
+# data has survivorship information
 merge_surv_data <- function(dataset, surv) {
   data <- dataset$data
-  all(unique(data$idno) %in% unique(data$idno))
+  all(unique(data$idno) %in% unique(surv$idno))
   nrow_before <- nrow(data)
   data <- base::merge(data, surv, by = dataset$id)
   test <- nrow(data) == nrow_before
@@ -226,20 +233,12 @@ merge_surv_data <- function(dataset, surv) {
   data
 }
 
-surv <- read.csv(config$survival_dataset$path)
-surv_data <- lapply(datasets, merge_surv_data, surv)
-# we do not need to do this for predict because there should be no surivival
-# data for predict
 if (bool_external_validate) {
-  # remember, we swapped datasets and validation_datasets above
-  surv <- read.csv(validation_config$survival_dataset$path)
+  surv <- read.csv(config$survival_dataset$path)
+  surv_data <- lapply(validation_datasets, merge_surv_data, surv)
+} else if (isFALSE(bool_predict)) {
+  surv <- read.csv(config$survival_dataset$path)
   surv_data <- lapply(datasets, merge_surv_data, surv)
-  surv_validation <- read.csv(config$survival_dataset$path)
-  surv_data_validation <- lapply(
-    validation_datasets, merge_surv_data,
-    surv_validation
-  )
-  surv_data <- c(surv_data, surv_data_validation)
 }
 
 tests <- lapply(surv_data, function(data) {
@@ -389,11 +388,18 @@ if (bool_external_validate || bool_predict) {
 
 # create determine training ids and testing ids
 get_train_test_id <- function(datasets) {
-  split_data <- rsample::group_initial_split(
-    data = datasets[[1]]$data,
-    prop = datasets[[1]]$train_test$split,
-    strata = "sample_by",
-    group = datasets[[1]]$id
+  split_data <- withCallingHandlers(
+    expr = {
+      rsample::group_initial_split(
+        data = datasets[[1]]$data,
+        prop = datasets[[1]]$train_test$split,
+        strata = "sample_by",
+        group = datasets[[1]]$id
+      )
+    },
+    warning = function(w) {
+      stop("Warning turned into error: ", conditionMessage(w), call. = FALSE)
+    }
   )
 
   train_data <- rsample::training(split_data)
