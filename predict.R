@@ -14,7 +14,8 @@ cat("This is our input file:", args[[1]], "\n")
 
 setwd("01_prep_model_data")
 config <- yaml::read_yaml(args[[1]])
-system2("Rscript", args = c("01_prep_model_data.R", args[[1]]))
+exit_code <- system2("Rscript", args = c("01_prep_model_data.R", args[[1]]))
+if (exit_code != 0) stop("Error was thrown from system2 command")
 setwd("..")
 
 # 04 -------------------------------------------------------------------------
@@ -24,7 +25,8 @@ input_04 <- normalizePath(
 )
 
 setwd("04_create_census")
-system2("Rscript", args = c("create_census.R", input_04))
+exit_code <- system2("Rscript", args = c("create_census.R", input_04))
+if (exit_code != 0) stop("Error was thrown from system2 command")
 setwd("..")
 
 beepr::beep()
