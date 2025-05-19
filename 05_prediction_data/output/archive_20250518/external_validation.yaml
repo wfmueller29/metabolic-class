@@ -1,0 +1,10 @@
+data_time: 2025-02-21 22:02:21
+working_directory: /Users/williammueller/programs/metabolic_class/analysis/05_prediction_data
+config_path: /Users/williammueller/programs/metabolic_class/analysis/x01_external_validation/input/slam_age_all.yaml
+input_path: /Users/williammueller/programs/metabolic_class/analysis/01_prep_model_data/output/external_validation.yaml
+output_dir_path: /Users/williammueller/programs/metabolic_class/analysis/05_prediction_data/output/external_validation
+datasets_path: /Users/williammueller/programs/metabolic_class/analysis/05_prediction_data/output/external_validation/datasets.RDATA
+models_path: ~
+cf_path: ~
+final_models_path: ~
+csv_path: ~

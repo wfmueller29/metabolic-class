@@ -1,0 +1,13 @@
+data_time: 2025-04-13 22:20:52
+working_directory: /Users/williammueller/programs/metabolic_class/analysis/06_create_figures
+config_path: /Users/williammueller/programs/metabolic_class/analysis/inputs/train/slam_age_fb6-2_par.yaml
+input_path: /Users/williammueller/programs/metabolic_class/analysis/05_prediction_data/output/20250413_fb6-2_par.yaml
+output_dir_path: /Users/williammueller/programs/metabolic_class/analysis/06_create_figures/output/20250413_fb6-2_par
+datasets_path: /Users/williammueller/programs/metabolic_class/analysis/05_prediction_data/output/20250413_fb6-2_par/datasets.RDATA
+models_path: /Users/williammueller/programs/metabolic_class/analysis/02_model/output/20250413_fb6-2_par/models.RDATA
+cf_path: /Users/williammueller/programs/metabolic_class/analysis/02_model/output/20250413_fb6-2_par/cf.RDATA
+final_models_path: /Users/williammueller/programs/metabolic_class/analysis/06_create_figures/output/20250413_fb6-2_par/final_models.RDATA
+csv_path: /Users/williammueller/programs/metabolic_class/analysis/03_model_select/output/20250413_fb6-2_par/final_models.csv
+complete_cenus_path: /Users/williammueller/programs/metabolic_class/analysis/06_create_figures/output/20250413_fb6-2_par/complete_census.csv
+train_cenus_path: /Users/williammueller/programs/metabolic_class/analysis/06_create_figures/output/20250413_fb6-2_par/train_census.csv
+test_cenus_path: /Users/williammueller/programs/metabolic_class/analysis/06_create_figures/output/20250413_fb6-2_par/test_census.csv

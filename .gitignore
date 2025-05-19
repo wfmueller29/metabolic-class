@@ -1,4 +1,5 @@
 **/05_figures_cache/*
+*.Rapp.history
 .gitignore
 .Rproj.user
 *.md

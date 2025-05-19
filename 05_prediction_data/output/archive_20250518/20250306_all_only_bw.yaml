@@ -1,0 +1,10 @@
+data_time: 2025-03-09 10:44:11
+working_directory: /Users/williammueller/programs/metabolic_class/analysis/05_prediction_data
+config_path: /Users/williammueller/programs/metabolic_class/analysis/01_prep_model_data/input/slam_all_only_bw.yaml
+input_path: /Users/williammueller/programs/metabolic_class/analysis/03_model_select/output/20250306_all_only_bw.yaml
+output_dir_path: /Users/williammueller/programs/metabolic_class/analysis/05_prediction_data/output/20250306_all_only_bw
+datasets_path: /Users/williammueller/programs/metabolic_class/analysis/05_prediction_data/output/20250306_all_only_bw/datasets.RDATA
+models_path: /Users/williammueller/programs/metabolic_class/analysis/02_model/output/20250306_all_only_bw/models.RDATA
+cf_path: /Users/williammueller/programs/metabolic_class/analysis/02_model/output/20250306_all_only_bw/cf.RDATA
+final_models_path: /Users/williammueller/programs/metabolic_class/analysis/03_model_select/output/20250306_all_only_bw/final_models.RDATA
+csv_path: /Users/williammueller/programs/metabolic_class/analysis/03_model_select/output/20250306_all_only_bw/final_models.csv

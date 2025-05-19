@@ -1,0 +1,10 @@
+data_time: 2025-04-27 17:35:01
+working_directory: /Users/williammueller/programs/metabolic_class/analysis/05_prediction_data
+config_path: /Users/williammueller/programs/metabolic_class/analysis/inputs/train/itp_C2010_C2011_C2013_C2016_controls.yaml
+input_path: /Users/williammueller/programs/metabolic_class/analysis/04_create_census/output/20250426_itp_C2010_C2011_C2013_C2016_controls_cohort.yaml
+output_dir_path: /Users/williammueller/programs/metabolic_class/analysis/05_prediction_data/output/20250426_itp_C2010_C2011_C2013_C2016_controls_cohort
+datasets_path: /Users/williammueller/programs/metabolic_class/analysis/05_prediction_data/output/20250426_itp_C2010_C2011_C2013_C2016_controls_cohort/datasets.RDATA
+models_path: /Users/williammueller/programs/metabolic_class/analysis/02_model/output/20250426_itp_C2010_C2011_C2013_C2016_controls_cohort/models.RDATA
+cf_path: /Users/williammueller/programs/metabolic_class/analysis/02_model/output/20250426_itp_C2010_C2011_C2013_C2016_controls_cohort/cf.RDATA
+final_models_path: /Users/williammueller/programs/metabolic_class/analysis/04_create_census/output/20250426_itp_C2010_C2011_C2013_C2016_controls_cohort/final_models.RDATA
+csv_path: /Users/williammueller/programs/metabolic_class/analysis/03_model_select/output/20250426_itp_C2010_C2011_C2013_C2016_controls_cohort/final_models.csv

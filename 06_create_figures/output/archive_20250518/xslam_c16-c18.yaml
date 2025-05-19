@@ -1,0 +1,10 @@
+data_time: 2025-02-21 21:41:05
+working_directory: /Users/williammueller/programs/metabolic_class/analysis/06_create_figures
+config_path: /Users/williammueller/programs/metabolic_class/analysis/x01_external_validation/input/slam_c16-c18.yaml
+input_path: /Users/williammueller/programs/metabolic_class/analysis/05_prediction_data/output/xslam_c16-c18.yaml
+output_dir_path: /Users/williammueller/programs/metabolic_class/analysis/06_create_figures/output/xslam_c16-c18
+datasets_path: /Users/williammueller/programs/metabolic_class/analysis/05_prediction_data/output/xslam_c16-c18/datasets.RDATA
+models_path: /Users/williammueller/programs/metabolic_class/analysis/02_model/output/all/models.RDATA
+cf_path: /Users/williammueller/programs/metabolic_class/analysis/02_model/output/all/cf.RDATA
+final_models_path: /Users/williammueller/programs/metabolic_class/analysis/06_create_figures/output/xslam_c16-c18/final_models.RDATA
+csv_path: /Users/williammueller/programs/metabolic_class/analysis/03_model_select/output/all/final_models.csv

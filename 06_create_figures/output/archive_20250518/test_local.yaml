@@ -1,0 +1,10 @@
+data_time: 2025-03-04 21:04:20
+working_directory: /Users/williammueller/programs/metabolic_class/analysis/06_create_figures
+config_path: /Users/williammueller/programs/metabolic_class/analysis/01_prep_model_data/input/test_local.yaml
+input_path: /Users/williammueller/programs/metabolic_class/analysis/05_prediction_data/output/test_local.yaml
+output_dir_path: /Users/williammueller/programs/metabolic_class/analysis/06_create_figures/output/test_local
+datasets_path: /Users/williammueller/programs/metabolic_class/analysis/05_prediction_data/output/test_local/datasets.RDATA
+models_path: /Users/williammueller/programs/metabolic_class/analysis/02_model/output/test_local/models.RDATA
+cf_path: /Users/williammueller/programs/metabolic_class/analysis/02_model/output/test_local/cf.RDATA
+final_models_path: /Users/williammueller/programs/metabolic_class/analysis/06_create_figures/output/test_local/final_models.RDATA
+csv_path: /Users/williammueller/programs/metabolic_class/analysis/03_model_select/output/test_local/final_models.csv

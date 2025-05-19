@@ -1,0 +1,10 @@
+data_time: 2025-03-06 18:27:43
+working_directory: /Users/williammueller/programs/metabolic_class/analysis/05_prediction_data
+config_path: /Users/williammueller/programs/metabolic_class/analysis/01_prep_model_data/input/slam_age_all.yaml
+input_path: /Users/williammueller/programs/metabolic_class/analysis/03_model_select/output/all.yaml
+output_dir_path: /Users/williammueller/programs/metabolic_class/analysis/05_prediction_data/output/all
+datasets_path: /Users/williammueller/programs/metabolic_class/analysis/05_prediction_data/output/all/datasets.RDATA
+models_path: /Users/williammueller/programs/metabolic_class/analysis/02_model/output/all/models.RDATA
+cf_path: /Users/williammueller/programs/metabolic_class/analysis/02_model/output/all/cf.RDATA
+final_models_path: /Users/williammueller/programs/metabolic_class/analysis/03_model_select/output/all/final_models.RDATA
+csv_path: /Users/williammueller/programs/metabolic_class/analysis/03_model_select/output/all/final_models.csv

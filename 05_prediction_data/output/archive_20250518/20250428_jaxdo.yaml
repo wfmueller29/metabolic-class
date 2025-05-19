@@ -1,0 +1,10 @@
+data_time: 2025-04-28 19:51:57
+working_directory: /Users/williammueller/programs/metabolic_class/analysis/05_prediction_data
+config_path: /Users/williammueller/programs/metabolic_class/analysis/inputs/train/jaxdo.yaml
+input_path: /Users/williammueller/programs/metabolic_class/analysis/04_create_census/output/20250428_jaxdo.yaml
+output_dir_path: /Users/williammueller/programs/metabolic_class/analysis/05_prediction_data/output/20250428_jaxdo
+datasets_path: /Users/williammueller/programs/metabolic_class/analysis/05_prediction_data/output/20250428_jaxdo/datasets.RDATA
+models_path: /Users/williammueller/programs/metabolic_class/analysis/02_model/output/20250428_jaxdo/models.RDATA
+cf_path: /Users/williammueller/programs/metabolic_class/analysis/02_model/output/20250428_jaxdo/cf.RDATA
+final_models_path: /Users/williammueller/programs/metabolic_class/analysis/04_create_census/output/20250428_jaxdo/final_models.RDATA
+csv_path: /Users/williammueller/programs/metabolic_class/analysis/03_model_select/output/20250428_jaxdo/final_models.csv
