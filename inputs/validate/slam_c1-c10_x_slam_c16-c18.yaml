@@ -5,14 +5,16 @@ ncpus: 8
 sample_n: FALSE
 center: TRUE
 scale: FALSE
-external_validate: "/Users/williammueller/programs/metabolic_class/analysis/06_create_figures/output/all.yaml"
+complete_ng: NULL
+train_ng: "complete_ng"
+external_validate: "/Users/williammueller/programs/metabolic_class/analysis/06_create_figures/output/20250426_all_cohort.yaml"
 predict: FALSE
-custom_palette: FALSE
+custom_palette: TRUE
 palette_colors: ["black", "#DF536B", "#61D04F", "midnightblue",
   "#28E2E5", "#CD0BBC", "#FF991C", "gray62"]
 legend_labels: ["Overweight", "Low-weight", "Mid-Weight", "High-fat",
   "Low-fat", "Mid-fat", "Decline Glucose", "Stable Glucose"]
-custom_palette_train: FALSE
+custom_palette_train: TRUE
 palette_colors_train: [ "black", "#DF536B", "#61D04F", "midnightblue",
   "#28E2E5", "#CD0BBC", "#FF991C", "gray62" ]
 legend_labels_train: [ "Overweight", "Low-weight", "Mid-Weight", "High-fat",

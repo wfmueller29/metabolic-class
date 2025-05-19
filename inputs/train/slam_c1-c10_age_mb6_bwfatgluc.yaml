@@ -1,18 +1,18 @@
-out_tag: 20250426_fb6_cohort
+out_tag: slam_c1-c10_age_mb6_bwfatgluc
 tag_time: FALSE
 plan: multicore
-ncpus: 7
+ncpus: 8
 sample_n: FALSE
 center: TRUE
 scale: FALSE
 complete_ng: NULL
 train_ng: "complete_ng"
 external_validate: FALSE
-custom_palette: TRUE
+custom_palette: FALSE
 palette_colors: ["black", "#DF536B", "#61D04F", "midnightblue",
   "#28E2E5", "#CD0BBC"]
 legend_labels: ["Early Peak BW", "Late Peak BW", "Low BW", "High-fat",
-  "Low-fat", "Stable Glucose"]
+  "Low-fat",  "Stable Glucose"]
 custom_palette_train: FALSE
 palette_colors_train: [ "black", "#DF536B", "#61D04F", "midnightblue",
   "#28E2E5", "#CD0BBC", "#FF991C", "gray62" ]
@@ -65,11 +65,11 @@ meta_dataset:
   covariates: NULL
   covariates_dummy: NULL
   train_test:
-    sample_by: "cohort"
+    sample_by: NULL
     split: .8
 datasets:
 - name: "slam"
-  path: "../00b_dataset_mods/output/slam_c1-c10/data/slam_bw_og_F_B6.csv"
+  path: "../00b_dataset_mods/output/slam_c1-c10/data/slam_bw_og_M_B6.csv"
   outcome: "bw"
   model:
     fixed: "~ age_wk + age_wk2"
@@ -94,7 +94,7 @@ datasets:
     variable: "cohort"
 
 - name: "slam"
-  path: "../00b_dataset_mods/output/slam_c1-c10/data/slam_fat_og_F_B6.csv"
+  path: "../00b_dataset_mods/output/slam_c1-c10/data/slam_fat_og_M_B6.csv"
   outcome: "fat"
   model:
     fixed: "~ age_wk + age_wk2"
@@ -118,7 +118,7 @@ datasets:
     variable: "cohort"
 
 - name: "slam"
-  path: "../00b_dataset_mods/output/slam_c1-c10/data/slam_gluc_og_F_B6.csv"
+  path: "../00b_dataset_mods/output/slam_c1-c10/data/slam_gluc_og_M_B6.csv"
   outcome: "gluc"
   model:
     fixed: "~ age_wk + age_wk2"

@@ -1,19 +1,19 @@
-out_tag: 20250426_mb6_cohort
+out_tag: slam_c1-c10_age_all_bwfatgluc
 tag_time: FALSE
 plan: multicore
-ncpus: 7
+ncpus: 8
 sample_n: FALSE
 center: TRUE
 scale: FALSE
 complete_ng: NULL
 train_ng: "complete_ng"
 external_validate: FALSE
-custom_palette: FALSE
+custom_palette: TRUE
 palette_colors: ["black", "#DF536B", "#61D04F", "midnightblue",
-  "#28E2E5", "#CD0BBC"]
-legend_labels: ["Early Peak BW", "Late Peak BW", "Low BW", "High-fat",
-  "Low-fat",  "Stable Glucose"]
-custom_palette_train: FALSE
+  "#28E2E5", "#CD0BBC", "#FF991C", "gray62"]
+legend_labels: ["Overweight", "Low-weight", "Mid-Weight", "High-fat",
+  "Low-fat", "Mid-fat", "Decline Glucose", "Stable Glucose"]
+custom_palette_train: TRUE
 palette_colors_train: [ "black", "#DF536B", "#61D04F", "midnightblue",
   "#28E2E5", "#CD0BBC", "#FF991C", "gray62" ]
 legend_labels_train: [ "Overweight", "Low-weight", "Mid-Weight", "High-fat",
@@ -25,13 +25,13 @@ survival_dataset:
   event: "dead_censor"
 individual_cox:
   - "~ Class" 
-  - "~ Class" 
-  - "~ Class" 
+  - "~ Class + sex * strain" 
+  - "~ Class + sex + strata(strain)" 
 combined_cox:
   forms:
-    - "~ <class+>"
-    - "~ <probs+> + frailty(idno)"
-    - "~ <probs+>"
+    - "~ <class+> + sex + strain"
+    - "~ <probs+> + sex + strata(strain) + frailty(idno)"
+    - "~ <probs+> + sex + strata(strain)"
   tts:
     - NULL
     - NULL
@@ -58,22 +58,22 @@ prediction_data:
     step: 13 # 3 months
   resample:
     age_var: "age_wk"
-    fraction_vector: [.75, .667, .5, .337, .25]
+    fraction_vector: [.125, .25, .375, .5, .625, .75, .875, 1]
 meta_dataset:
   id: "idno"
   age_var: ["age_wk", "age_wk2"] # these must be in increasing polynomial order
-  covariates: NULL
-  covariates_dummy: NULL
+  covariates: ["sex", "strain"]
+  covariates_dummy: ["sex_M", "strain_HET3", "sex_F", "strain_B6"]
   train_test:
-    sample_by: "cohort"
+    sample_by: ["sex", "strain"]
     split: .8
 datasets:
 - name: "slam"
-  path: "../00b_dataset_mods/output/slam_c1-c10/data/slam_bw_og_M_B6.csv"
+  path: "../00b_dataset_mods/output/slam_c1-c10/data/slam_bw_og.csv"
   outcome: "bw"
   model:
-    fixed: "~ age_wk + age_wk2"
-    fixcov: NULL
+    fixed: "~ age_wk + age_wk2 + sex_F * strain_HET3"
+    fixcov: ["sex_F", "strain_HET3"]
     mixture: "~ age_wk + age_wk2" 
     random: 
       - "~ 1"
@@ -90,11 +90,11 @@ datasets:
     data_name: "SLAM Body Weight"
   harmonize:
     execute: TRUE
-    formula: "~ age_wk + age_wk2 + (1|idno)"
+    formula: "~ age_wk + age_wk2 + sex * strain + (1|idno)"
     variable: "cohort"
 
 - name: "slam"
-  path: "../00b_dataset_mods/output/slam_c1-c10/data/slam_fat_og_M_B6.csv"
+  path: "../00b_dataset_mods/output/slam_c1-c10/data/slam_fat_og.csv"
   outcome: "fat"
   model:
     fixed: "~ age_wk + age_wk2"
@@ -114,15 +114,15 @@ datasets:
     data_name: "SLAM Body Fat"
   harmonize:
     execute: TRUE
-    formula: "~ age_wk + age_wk2 + (1|idno)"
+    formula: "~ age_wk + age_wk2 + sex * strain + (1|idno)"
     variable: "cohort"
 
 - name: "slam"
-  path: "../00b_dataset_mods/output/slam_c1-c10/data/slam_gluc_og_M_B6.csv"
+  path: "../00b_dataset_mods/output/slam_c1-c10/data/slam_gluc_og.csv"
   outcome: "gluc"
   model:
-    fixed: "~ age_wk + age_wk2"
-    fixcov: NULL
+    fixed: "~ age_wk + age_wk2 + sex_F * strain_HET3" 
+    fixcov: ["sex_F", "strain_HET3"]
     mixture: "~ age_wk + age_wk2" 
     random: 
       - "~ 1"
@@ -139,5 +139,5 @@ datasets:
     data_name: "SLAM Glucose"
   harmonize:
     execute: TRUE
-    formula: "~ age_wk + age_wk2 + (1|idno)"
+    formula: "~ age_wk + age_wk2 + sex * strain + (1|idno)"
     variable: "cohort"

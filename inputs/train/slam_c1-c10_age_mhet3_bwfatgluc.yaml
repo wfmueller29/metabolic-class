@@ -1,7 +1,7 @@
-out_tag: 20250426_mhet3_cohort
+out_tag: slam_c1-c10_age_mhet3_bwfatgluc
 tag_time: FALSE
 plan: multicore
-ncpus: 7
+ncpus: 8
 sample_n: FALSE
 center: TRUE
 scale: FALSE
@@ -65,7 +65,7 @@ meta_dataset:
   covariates: NULL
   covariates_dummy: NULL
   train_test:
-    sample_by: "cohort"
+    sample_by: NULL
     split: .8
 datasets:
 - name: "slam"

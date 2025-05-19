@@ -1,7 +1,7 @@
-out_tag: 20250426_itp_C2010_C2011_C2013_C2016_controls_cohort
+out_tag: itp_c10c11c13c16_age_controls_bw
 tag_time: FALSE
 plan: multicore
-ncpus: 7
+ncpus: 8
 sample_n: FALSE
 center: TRUE
 scale: FALSE
