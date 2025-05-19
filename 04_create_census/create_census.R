@@ -8,8 +8,8 @@ if (length(args) == 0) {
   # input_path <- "../03_model_select/output/test_local.yaml"
   # input_path <- "../03_model_select/output/20250413_fb6-2_seq.yaml"
   # input_path <- "../01_prep_model_data/output/xslam_c16-c18.yaml"
-  # input_path <- "../01_prep_model_data/output/20250410_slam_c1-c10_x_slam_c16-c18.yaml"
-  input_path <- "../01_prep_model_data/output/20250410_slam_c1-c10_p_slam_c16-c18.yaml"
+  input_path <- "../01_prep_model_data/output/20250410_slam_c1-c10_x_slam_c16-c18.yaml"
+  # input_path <- "../01_prep_model_data/output/20250410_slam_c1-c10_p_slam_c16-c18.yaml"
   # input_path <- "../01_prep_model_data/output/mb6.yaml"
   warning("Using default input file: ", input_path)
 } else {
@@ -38,6 +38,20 @@ if (bool_predict) {
   } else {
     stop("predict should either be a path to an output yaml or FALSE")
   }
+}
+
+# replace what is needed for external_valdiation
+if (bool_external_validate) {
+  validation_output <- yaml::read_yaml(config$external_validate)
+  validation_input <- yaml::read_yaml(validation_output$input_path)
+
+  input$models_path <- validation_input$models_path
+  input$cf_path <- validation_input$cf_path
+  input$final_models_path <- validation_input$final_models_path
+  input$csv_path <- validation_input$csv_path
+
+  # read in validation_config -------------------------------------------------
+  validation_config <- yaml::read_yaml(validation_output$config_path)
 }
 
 # fill in if validation -------------------------------------------------------
@@ -90,6 +104,31 @@ if (bool_external_validate || bool_predict) {
 # load in main_cat_surv
 main_cat_surv <- read.csv(file = config$survival_dataset$path)
 main_cat_surv <- as.data.frame(main_cat_surv)
+
+# if external_validate rbind validation survival with original survial
+if (bool_external_validate) {
+  validation_column <- c(
+    config$survival_dataset$id,
+    config$survival_dataset$age_death,
+    config$survival_dataset$event
+  )
+  main_cat_surv <- main_cat_surv[, validation_column]
+
+  main_cat_surv_og <- read.csv(file = validation_config$survival_dataset$path)
+  og_column <- c(
+    validation_config$survival_dataset$id,
+    validation_config$survival_dataset$age_death,
+    validation_config$survival_dataset$event
+  )
+  main_cat_surv_og <- main_cat_surv_og[, og_column]
+
+  if (!all(og_column == validation_column)) {
+    stop("Validation survival does not have same variable names as training
+         survival")
+  }
+
+  main_cat_surv <- rbind(main_cat_surv, main_cat_surv_og)
+}
 
 final_models$dfs <- lapply(final_models$data, function(name) {
   datasets[[name]]$data
@@ -277,9 +316,13 @@ combined_test_census <- combine_census(
   ids = ids
 )$census
 
-column <- as.list(rep(NA, nrow(final_models)))
-column[train_test_index] <- combined_test_census
-final_models$combined_test_census <- column
+final_models$combined_test_census <- lapply(train_test_index, function(bool) {
+  if (bool) {
+    return(combined_test_census)
+  } else {
+    return(NA)
+  }
+})
 
 # create single combined censuses ---------------------------------------------
 combined_complete_census <- final_models[!train_test_index, "combined_census"]
@@ -288,18 +331,18 @@ combined_complete_census <- combined_complete_census[[1]]
 combined_train_census <- final_models[train_test_index, "combined_census"]
 combined_train_census <- combined_train_census[[1]]
 
-# save combined censuses as csv -----------------------------------------------
-config_path <- input$config_path
-config <- yaml::read_yaml(file = config_path)
-
+# save r objects --------------------------------------------------------------
 output_path <- file.path("output", config$out_tag)
 dir.create(output_path, recursive = TRUE)
 output_path <- normalizePath(output_path)
 
 final_models_path <- file.path(output_path, "final_models.RDATA")
-
 save(final_models, file = final_models_path)
 
+main_cat_surv_path <- file.path(output_path, "main_cat_surv.RDATA")
+save(main_cat_surv, file = main_cat_surv_path)
+
+# save combined censuses as csv -----------------------------------------------
 combined_complete_census_path <- file.path(output_path, "complete_census.csv")
 write.csv(combined_complete_census, combined_complete_census_path)
 
@@ -313,7 +356,7 @@ write.csv(combined_test_census, combined_test_census_path)
 output_list <- list(
   data_time = format(Sys.time()),
   working_directory = getwd(),
-  config_path = config_path,
+  config_path = input$config_path,
   input_path = input_path,
   output_dir_path = output_path,
   datasets_path = input$datasets_path,
@@ -322,9 +365,10 @@ output_list <- list(
   cf_path = input$cf_path,
   final_models_path = final_models_path,
   csv_path = input$csv_path,
-  complete_cenus_path = combined_complete_census_path,
-  train_cenus_path = combined_train_census_path,
-  test_cenus_path = combined_test_census_path
+  main_cat_surv_path = main_cat_surv_path,
+  complete_census_path = combined_complete_census_path,
+  train_census_path = combined_train_census_path,
+  test_census_path = combined_test_census_path
 )
 
 output_list_path <- paste0(file.path("output", config$out_tag), ".yaml")
