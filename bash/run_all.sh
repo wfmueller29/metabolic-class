@@ -1,8 +1,8 @@
 #!/bin/zsh
 
-Rscript train.R inputs/train/slam_age_all.yaml ; \
-Rscript train.R inputs/train/slam_age_mb6.yaml ; \
-Rscript train.R inputs/train/slam_age_mhet3.yaml ; \
-Rscript train.R inputs/train/slam_age_fb6.yaml ; \
-Rscript train.R inputs/train/slam_age_fhet3.yaml ; \
-Rscript train.R inputs/train/itp2_bw.yaml
+Rscript train.R inputs/train/slam_c1-c10_age_all_bwfatgluc.yaml ; \
+Rscript train.R inputs/train/slam_c1-c10_age_fb6_bwfatgluc.yaml ; \
+Rscript train.R inputs/train/slam_c1-c10_age_fhet3_bwfatgluc.yaml ; \
+Rscript train.R inputs/train/slam_c1-c10_age_mb6_bwfatgluc.yaml ; \
+Rscript train.R inputs/train/slam_c1-c10_age_mhet3_bwfatgluc.yaml ; \
+Rscript train.R inputs/train/itp_c10c11c13c16_age_controls_bw.yaml
