@@ -60,74 +60,14 @@ input <- yaml::read_yaml(file = params$input_path)
 config <- yaml::read_yaml(input$config_path)
 ```
 
-```{r external validation}
-# notice if doing external validation, parts of "input" are empty
-# we are going to fill those using paths from our validation file that
-# has run them already
-# WARNING: This might be slightly dangerous, as we should also reexecute
-# the entire model pathway for our external dataset.
-if (!isFALSE(config$external_validate)) {
-  validation_output <- yaml::read_yaml(config$external_validate)
-  validation_input <- yaml::read_yaml(validation_output$input_path)
-
-  input$models_path <- validation_input$models_path
-  input$cf_path <- validation_input$cf_path
-  input$final_models_path <- validation_input$final_models_path
-  input$csv_path <- validation_input$csv_path
-
-  # read in validation_config -------------------------------------------------
-  validation_input1 <- yaml::read_yaml(validation_input$input_path)
-  validation_input2 <- yaml::read_yaml(validation_input1$input_path)
-  validation_input3 <- yaml::read_yaml(validation_input2$input_yaml_path)
-  validation_config <- yaml::read_yaml(validation_output$config_path)
-}
-```
-
 ### Load Models
 
 ```{r load models}
 load(input$cf_path)
 load(input$datasets_path)
 load(input$final_models_path)
-
-if (!isFALSE(config$external_validate)) {
-  # overwrite train_test_models because we are using og models as our training
-  # model in external validation
-
-  # values we need to overwrite
-  data_mod <- final_models$data_mod
-  model_name <- final_models$model_name
-  data <- final_models$data
-  data_id <- final_models$data_id
-  dataset_index <- final_models$dataset_index
-
-  og_models <- final_models[final_models$data_mod == "og", ]
-  final_models <- rbind(og_models, og_models)
-  if (!all(final_models$data_mod == "og")) {
-    stop("All our models for external validation are not based off original
-         dataset")
-  }
-
-  final_models$data_mod <- data_mod
-  final_models$model_name <- model_name
-  final_models$data <- data
-  final_models$data_id <- data_id
-  final_models$dataset_index <- dataset_index
-}
-
 # load in main_cat_surv
-main_cat_surv <- read.csv(file = config$survival_dataset$path)
-main_cat_surv <- as.data.frame(main_cat_surv)
-
-if (!isFALSE(config$external_validate)) {
-  main_cat_surv <- read.csv(file = config$survival_dataset$path)
-  main_cat_surv <- as.data.frame(main_cat_surv)
-
-  main_cat_surv_validation <- read.csv(validation_config$survival_dataset$path)
-  main_cat_surv_validation <- as.data.frame(main_cat_surv_validation)
-
-  main_cat_surv <- rbind(main_cat_surv, main_cat_surv_validation)
-}
+load(input$main_cat_surv_path)
 
 final_models$dfs <- lapply(final_models$data, function(name) {
   datasets[[name]]$data
@@ -1697,7 +1637,10 @@ drop_patterns <- c(
   "_results$"
 )
 
-drop_columns <- do.call(c, lapply(drop_patterns, grep, names(final_models)))
+drop_columns <- do.call(
+  base::c,
+  lapply(drop_patterns, grep, names(final_models))
+)
 
 final_models_pruned <- final_models[, -drop_columns]
 
@@ -1742,13 +1685,15 @@ output_list <- list(
   input_path = params$input_path,
   output_dir_path = output_path,
   datasets_path = input$datasets_path,
+  validation_config_path = input$validation_config_path,
   models_path = input$models_path,
   cf_path = input$cf_path,
   final_models_path = final_models_path,
   csv_path = input$csv_path,
-  complete_cenus_path = combined_complete_census_path,
-  train_cenus_path = combined_train_census_path,
-  test_cenus_path = combined_test_census_path
+  main_cat_surv_path = input$main_cat_surv_path,
+  complete_cenus_path = input$complete_census_path,
+  train_cenus_path = input$train_census_path,
+  test_cenus_path = input$test_census_path
 )
 
 output_list_path <- paste0(file.path("output", config$out_tag), ".yaml")
