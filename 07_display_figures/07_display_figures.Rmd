@@ -40,7 +40,7 @@ cumulative_legend <- TRUE
 cumulative_legend_palette <- viridis(3, begin = .2, end = .7, direction = -1)
 
 max_age <- 150
-max_age_km <- 200
+max_age_km <- NA
 ```
 
 ## Analysis
