@@ -58,7 +58,7 @@ prediction_data:
     step: 13 # 3 months
   resample:
     age_var: "age_wk"
-    fraction_vector: [.75, .667, .5, .337, .25]
+    fraction_vector: [.125, .25, .375, .5, .625, .75, .875, 1]
 meta_dataset:
   id: "idno"
   age_var: ["age_wk", "age_wk2"] # these must be in increasing polynomial order
