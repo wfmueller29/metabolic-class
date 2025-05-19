@@ -9,7 +9,8 @@ library(tidyverse)
 args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) == 0) {
-  input_path <- "../04_create_census/output/test_local.yaml"
+  # input_path <- "../04_create_census/output/test_local.yaml"
+  input_path <- "../04_create_census/output/20250410_slam_c1-c10_x_slam_c16-c18.yaml"
   warning("Using default input file: ", input_path)
 } else {
   input_path <- args[[1]]
@@ -79,10 +80,15 @@ output_list <- list(
   input_path = input_path,
   output_dir_path = output_dir_path,
   datasets_path = datasets_path,
+  validation_config_path = input$validation_config_path,
   models_path = input$models_path,
   cf_path = input$cf_path,
   final_models_path = input$final_models_path,
-  csv_path = input$csv_path
+  csv_path = input$csv_path,
+  main_cat_surv_path = input$main_cat_surv_path,
+  complete_cenus_path = input$complete_census_path,
+  train_cenus_path = input$train_census_path,
+  test_cenus_path = input$test_census_path
 )
 
 output_list_path <- paste0(file.path("output", config$out_tag), ".yaml")
