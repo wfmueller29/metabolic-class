@@ -1,13 +1,13 @@
-out_tag: 20250410_slam_c1-c10_x_slam_c16-c18
+out_tag: slam_c1-10_x_slam_c16-18_age_bwfatgluc
 tag_time: FALSE
 plan: multicore
-ncpus: 8
+ncpus: 7
 sample_n: FALSE
 center: TRUE
 scale: FALSE
 complete_ng: NULL
 train_ng: "complete_ng"
-external_validate: "/Users/williammueller/programs/metabolic_class/analysis/06_create_figures/output/20250426_all_cohort.yaml"
+external_validate: "/Users/williammueller/programs/metabolic_class/analysis/06_create_figures/output/slam_c1-c10_age_all_bwfatgluc.yaml"
 predict: FALSE
 custom_palette: TRUE
 palette_colors: ["black", "#DF536B", "#61D04F", "midnightblue",
