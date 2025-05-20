@@ -810,6 +810,7 @@ lme_table <- lapply(seq_along(model_list), function(i) {
     wrap.labels = 50,
     show.icc = FALSE,
     show.r2 = FALSE,
+    digits = 4,
     show.ngroups = FALSE,
     show.obs = FALSE,
     dv.labels = oc_names_list[[i]],
