@@ -56,7 +56,8 @@ if (!exists("params")) {
   # params$input_path <- "../06_create_figures/output/20250306_itp.yaml"
   # params$input_path <- "../06_create_figures/output/all.yaml"
   # params$input_path <- "../06_create_figures/output/20250426_itp_C2010_C2011_C2013_C2016_controls_cohort.yaml"
-  params$input_path <- "../06_create_figures/output/20250426_all_cohort.yaml"
+  # params$input_path <- "../06_create_figures/output/20250426_all_cohort.yaml"
+  params$input_path <- "../06_create_figures/output/slam_c1-c10_age_fb6_bwfatgluc.yaml"
 
   # params$input_path <- "../06_create_figures/output/all_lean.yaml"
   # params$input_path <- "../06_create_figures/output/fb6.yaml"
@@ -1214,6 +1215,9 @@ kap_plot_cum_validation_panels_hr <- lapply(
   function(name) {
     subset_hrs <- kap_plot_cum_validation_hrs[[name]]
     hrs <- lapply(subset_hrs, function(table, name) {
+      if (is.null(table)) {
+        return(NA)
+      }
       table <- table$hr_table[, "final", drop = FALSE]
       names(table) <- name
       table
@@ -2036,10 +2040,11 @@ for (i in seq_along(p)) {
   output_path <- normalizePath(output_path)
 
 
-  ggsave(filename = name, plot = plot, device = "png", path = output_path,
+  ggsave(
+    filename = name, plot = plot, device = "png", path = output_path,
     height = 6,
     width = 6
-)
+  )
 }
 ```
 
