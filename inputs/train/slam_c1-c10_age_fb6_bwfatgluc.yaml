@@ -8,7 +8,7 @@ scale: FALSE
 complete_ng: NULL
 train_ng: "complete_ng"
 external_validate: FALSE
-custom_palette: TRUE
+custom_palette: FALSE
 palette_colors: ["black", "#DF536B", "#61D04F", "midnightblue",
   "#28E2E5", "#CD0BBC"]
 legend_labels: ["Early Peak BW", "Late Peak BW", "Low BW", "High-fat",

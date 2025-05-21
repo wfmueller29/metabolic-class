@@ -59,7 +59,7 @@ meta_dataset:
   covariates: ["sex"]
   covariates_dummy: ["sex_M", "sex_F"]
   train_test:
-    sample_by: ["sex", "site", "cohort"]
+    sample_by: ["sex", "site"]
     split: .8
 datasets:
 - name: "slam"
