@@ -1,0 +1,392 @@
+---
+title: "SLAM Metabolic Class Supplmental Figures - `r config$out_tag` Mice"
+subtitle: "External Validation: `r config$external_validate`"
+author: "William Mueller"
+data: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  html_document:
+    df_print: paged
+params:
+  input_path: "../06_create_figures/output/slam_c1-c10_age_all_bwfatgluc.yaml"
+---
+
+```{r setup, warning=FALSE, message=FALSE, echo=FALSE}
+library(helphlme)
+library(tidyverse)
+library(kableExtra)
+library(survival)
+library(survminer)
+library(ggplotify)
+library(sjPlot)
+library(lme4)
+library(cowplot)
+library(RColorBrewer)
+library(viridis)
+library(consoler)
+set.seed(365)
+
+# setting global knitr options for r markdown output
+knitr::opts_chunk$set(autodep = TRUE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(cache = FALSE)
+
+window_legend <- TRUE
+window_legend_palette <- magma(3, begin = .2, end = .7, direction = -1)
+window_legend_labels <- c("2 measures", "3 measures", "4 measures")
+
+cumulative_legend <- TRUE
+cumulative_legend_palette <- viridis(3, begin = .2, end = .7, direction = -1)
+
+max_age <- 150
+max_age_km <- NA
+```
+
+```{r read input yaml}
+# for the case when we are not running with RStudio
+if (!exists("params")) {
+  params <- list()
+  # params$input_path <- "../06_create_figures/output/test_local.yaml"
+  # params$input_path <- "../06_create_figures/output/all_only_bw.yaml"
+  # params$input_path <- "../06_create_figures/output/20250306_itp.yaml"
+  # params$input_path <- "../06_create_figures/output/all.yaml"
+  # params$input_path <- "../06_create_figures/output/20250426_itp_C2010_C2011_C2013_C2016_controls_cohort.yaml"
+  # params$input_path <- "../06_create_figures/output/20250426_all_cohort.yaml"
+  params$input_path <- "../06_create_figures/output/slam_c1-c10_age_fb6_bwfatgluc.yaml"
+
+  # params$input_path <- "../06_create_figures/output/all_lean.yaml"
+  # params$input_path <- "../06_create_figures/output/fb6.yaml"
+  # params$input_path <- "../06_create_figures/output/external_validation.yaml"
+}
+
+input <- yaml::read_yaml(file = params$input_path)
+```
+
+```{r load models}
+load(input$datasets_path)
+load(input$final_models_path)
+config <- yaml::read_yaml(input$config_path)
+
+
+# load in main_cat_surv
+main_cat_surv <- read.csv(file = config$survival_dataset$path)
+main_cat_surv <- as.data.frame(main_cat_surv)
+
+final_models$dfs <- lapply(final_models$data, function(name) {
+  datasets[[name]]$data
+})
+```
+
+```{r how they work, fig.height=5, fig.width=10}
+p1 <- final_models[, "spag_plot"][[1]]
+p3 <- final_models[, "traj_obs"][[1]]
+
+how_it_works <- cowplot::plot_grid(p1, p3, nrow = 1)
+```
+
+```{r validation data}
+plot_validation <- function(data1,
+                            data2,
+                            age_var,
+                            outcome,
+                            age_name,
+                            outcome_name) {
+  ggplot2::ggplot(
+    data = data1,
+    mapping = ggplot2::aes(
+      x = eval(as.symbol((age_var))),
+      y = eval(as.symbol(outcome))
+    )
+  ) +
+    ggplot2::geom_point(alpha = .03, color = "navy") +
+    ggplot2::geom_point(
+      data = data2,
+      mapping = ggplot2::aes(
+        x = eval(as.symbol((age_var))),
+        y = eval(as.symbol(outcome))
+      ),
+      alpha = .5,
+      color = "navy"
+    ) +
+    ggplot2::labs(
+      x = age_name,
+      y = outcome_name
+    )
+}
+
+
+datasets <- lapply(datasets, function(dataset) {
+  data1 <- dataset$data
+  outcome <- dataset$outcome
+  age_var <- dataset$age_var[[1]]
+  age_var <- paste0(age_var, "_ns")
+  age_var_name <- paste(
+    dataset$labels$age_var_name,
+    dataset$labels$age_var_units
+  )
+  outcome_name <- paste(
+    dataset$labels$oc_name,
+    dataset$labels$oc_units
+  )
+
+  prediction_data <- dataset$prediction_data$data
+
+  dataset$validation_plots <- lapply(prediction_data, function(data) {
+    lapply(data, plot_validation,
+      data1 = data1,
+      age = age_var, outcome = outcome,
+      age_name = age_var_name,
+      outcome_name = outcome_name
+    )
+  })
+
+  dataset
+})
+```
+
+```{r hist outcome, echo = FALSE, include = FALSE}
+hist_outcome_plots <- lapply(datasets, function(dataset) {
+  data <- dataset$data
+  outcome <- dataset$outcome
+  data_mod <- dataset$data_mod
+  ggplot2::ggplot(data = data, aes_string(x = outcome)) +
+    ggplot2::geom_histogram() +
+    ggplot2::labs(title = data_mod)
+})
+
+hist_outcome_plot_panel <- cowplot::plot_grid(
+  plotlist = hist_outcome_plots,
+  nrow = round(sqrt(length(datasets))),
+  byrow = TRUE,
+  greedy = FALSE,
+  labels = "AUTO"
+)
+
+title_theme <- ggdraw() +
+  draw_label(paste(
+    "Histograms of outcomes for complete and training data",
+    sep = " "
+  ))
+
+hist_outcome_plot_panel <- cowplot::plot_grid(title_theme,
+  hist_outcome_plot_panel,
+  rel_heights = c(.05, 1),
+  ncol = 1
+)
+```
+
+```{r hist log outcome, echo = FALSE, include = FALSE}
+hist_log_outcome_plots <- lapply(datasets, function(dataset) {
+  data <- dataset$data
+  outcome <- dataset$outcome
+  outcome <- paste0("log(", outcome, ")")
+  data_mod <- dataset$data_mod
+  ggplot2::ggplot(data = data, aes_string(x = outcome)) +
+    ggplot2::geom_histogram() +
+    ggplot2::labs(title = data_mod)
+})
+
+hist_log_outcome_plot_panel <- cowplot::plot_grid(
+  plotlist = hist_log_outcome_plots,
+  nrow = round(sqrt(length(datasets))),
+  byrow = TRUE,
+  greedy = FALSE,
+  labels = "AUTO"
+)
+
+title_theme <- ggdraw() +
+  draw_label(paste(
+    "Histograms of log(outcomes) for complete and training data",
+    sep = " "
+  ))
+
+hist_log_outcome_plot_panel <- cowplot::plot_grid(title_theme,
+  hist_log_outcome_plot_panel,
+  rel_heights = c(.05, 1),
+  ncol = 1
+)
+```
+
+```{r hist prob, echo = FALSE, include = FALSE}
+rest_index <- final_models$data_mod == "og"
+census <- final_models[rest_index, "combined_census"][[1]]
+
+prob_cols <- names(census)[grepl("^prob\\d+$", names(census))]
+
+
+hist_plots <- lapply(prob_cols, function(prob_col) {
+  ggplot2::ggplot(data = census, aes_string(x = prob_col)) +
+    ggplot2::geom_histogram()
+})
+
+hist_plot_panel <- cowplot::plot_grid(
+  plotlist = hist_plots,
+  nrow = round(sqrt(length(prob_cols))),
+  byrow = TRUE,
+  greedy = FALSE,
+  labels = "AUTO"
+)
+
+title_theme <- ggdraw() +
+  draw_label(paste(
+    "Histograms of probabilites of class membership for all subjects",
+    sep = " "
+  ))
+
+hist_plot_panel <- cowplot::plot_grid(title_theme, hist_plot_panel,
+  rel_heights = c(.05, 1),
+  ncol = 1
+)
+```
+
+```{r initiate figure and table number}
+fig_no <- 1
+tab_no <- 1
+figs <- list()
+```
+
+### Figure `r as.character(fig_no)`: How it works
+
+```{r how it works, fig.width = 12, fig.height = 6}
+figs$how_it_works <- how_it_works
+how_it_works
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Kaplan Meier by Harmonizer
+
+This may explain our trouble externally validating with cohorts 9 and 10, since
+both have lower levels of survival
+
+```{r kap plot by harmonize}
+figs$harmonize_km <- lapply(
+  config$datasets[[1]]$harmonize$variable,
+  function(var) {
+    fig <- SLAM::surv_plot_km(census, var,
+      age_death = config$survival_dataset$age_death,
+      event = config$survival_dataset$event
+    )
+    table <- kable(fig$hr$hr_table[, "final", drop = FALSE])
+    plot <- fig$plot
+    list(plot, table)
+  }
+)
+figs$harmonize_km
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+```{r heights and widths}
+pred_obs_height <- nrow(final_models) / 2 * 6
+dose_height_width <- sqrt(length(unique(final_models$census[[1]]$class))) * 6
+```
+
+### Figure `r as.character(fig_no)`: KM plots of covariates - complete data
+
+```{r plot km covs}
+census <- final_models[rest_index, "combined_census"][[1]]
+
+cov_dummy <- datasets[[1]]$covariates_dummy
+figs$cov_km <- lapply(cov_dummy, function(cov) {
+  census[[cov]] <- factor(census[[cov]])
+  fig <- SLAM::surv_plot_km(census, cov,
+    age_death = config$survival_dataset$age_death,
+    event = config$survival_dataset$event
+  )
+  table <- kable(fig$hr$hr_table[, "final", drop = FALSE])
+  plot <- fig$plot
+  list(plot, table)
+})
+figs$cov_km
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Histogram of Outcome Variables - Complete and Training Data
+
+```{r disply hist outcome panel, fig.height=12, fig.width=12}
+figs$hist_outcome_plot_panel <- hist_outcome_plot_panel
+figs$hist_outcome_plot_panel
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Histogram of log transform of outcome Variables - Complete and Training Data
+
+```{r disply hist log outcome panel, fig.height=12, fig.width=12}
+figs$hist_log_outcome_plot_panel <- hist_log_outcome_plot_panel
+figs$hist_log_outcome_plot_panel
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Histogram of probability of class membership - Complete Data
+
+```{r disply hist class prob panel, fig.height=12, fig.width=12}
+figs$hist_plot_panel <- hist_plot_panel
+figs$hist_plot_panel
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Display Testing Data - Cumulative
+
+```{r cumulative validation plots, fig.width = 36, fig.height = 36}
+plots <- datasets[[1]]$validation_plots[[1]]
+figs$cumulative_validation <- plot_grid(plotlist = plots)
+figs$cumulative_validation
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Display Testing Data - Window
+
+```{r window validation plots, fig.width = 36, fig.height = 36}
+plots <- datasets[[1]]$validation_plots[[2]]
+figs$window_validation <- plot_grid(plotlist = plots)
+figs$window_validation
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Display Testing Data - Interval
+
+```{r interval validation plots, fig.width = 36, fig.height = 36}
+plots <- datasets[[1]]$validation_plots[[3]]
+figs$interval_validation <- plot_grid(plotlist = plots)
+figs$interval_validation
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Display Testing Data - Proportion Resampled
+
+
+```{r resampled validation plots, fig.width = 36, fig.height = 36}
+plots <- datasets[[1]]$validation_plots[[4]]
+figs$proportion_validation <- plot_grid(plotlist = plots)
+figs$proportion_validation
+fig_no <- fig_no + 1
+```
+
+```{r save figs}
+output_path <- file.path("output", config$out_tag)
+dir.create(output_path)
+output_path <- normalizePath(output_path)
+
+save(figs, file = file.path(output_path, "figs.RDATA"))
+```
+

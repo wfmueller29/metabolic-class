@@ -1,0 +1,648 @@
+---
+title: "SLAM Metabolic Class Supplemental Tables - `r config$out_tag` Mice"
+subtitle: "External Validation: `r config$external_validate`"
+author: "William Mueller"
+data: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  html_document:
+    df_print: paged
+params:
+  input_path: "../06_create_figures/output/test_local.yaml"
+---
+
+```{r setup, warning=FALSE, message=FALSE, echo=FALSE}
+library(helphlme)
+library(tidyverse)
+library(kableExtra)
+library(survival)
+library(survminer)
+library(ggplotify)
+library(sjPlot)
+library(lme4)
+library(cowplot)
+library(RColorBrewer)
+library(viridis)
+library(consoler)
+set.seed(365)
+
+# setting global knitr options for r markdown output
+knitr::opts_chunk$set(autodep = TRUE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(cache = FALSE)
+
+window_legend <- TRUE
+window_legend_palette <- magma(3, begin = .2, end = .7, direction = -1)
+window_legend_labels <- c("2 measures", "3 measures", "4 measures")
+
+cumulative_legend <- TRUE
+cumulative_legend_palette <- viridis(3, begin = .2, end = .7, direction = -1)
+
+max_age <- 150
+max_age_km <- NA
+```
+
+## Analysis
+
+### Load Input File
+
+```{r read input yaml}
+# for the case when we are not running with RStudio
+if (!exists("params")) {
+  params <- list()
+  # params$input_path <- "../06_create_figures/output/test_local.yaml"
+  # params$input_path <- "../06_create_figures/output/all_only_bw.yaml"
+  # params$input_path <- "../06_create_figures/output/20250306_itp.yaml"
+  # params$input_path <- "../06_create_figures/output/all.yaml"
+  # params$input_path <- "../06_create_figures/output/20250426_itp_C2010_C2011_C2013_C2016_controls_cohort.yaml"
+  # params$input_path <- "../06_create_figures/output/20250426_all_cohort.yaml"
+  params$input_path <- "../06_create_figures/output/slam_c1-c10_age_fb6_bwfatgluc.yaml"
+
+  # params$input_path <- "../06_create_figures/output/all_lean.yaml"
+  # params$input_path <- "../06_create_figures/output/fb6.yaml"
+  # params$input_path <- "../06_create_figures/output/external_validation.yaml"
+}
+
+input <- yaml::read_yaml(file = params$input_path)
+```
+
+### Load Models
+
+```{r load models}
+load(input$datasets_path)
+load(input$final_models_path)
+config <- yaml::read_yaml(input$config_path)
+
+
+# load in main_cat_surv
+main_cat_surv <- read.csv(file = config$survival_dataset$path)
+main_cat_surv <- as.data.frame(main_cat_surv)
+
+final_models$dfs <- lapply(final_models$data, function(name) {
+  datasets[[name]]$data
+})
+```
+
+```{r initiate figure and table number}
+fig_no <- 1
+tab_no <- 1
+tabs <- list()
+```
+
+### Supplemental Table `r as.character(tab_no)`: Descriptive Statistics of Outcomes, Age, Measure Frequency, and Age Difference Between measures for complete, training, and testing datasets
+
+```{r describe prob class, results = 'asis'}
+rest_index <- final_models$data_mod == "og"
+census <- final_models[rest_index, "combined_census"][[1]]
+tabs$combined_census <- kable(psych::describe(census))
+tabs$combined_census
+```
+
+
+## Display Dataset/Model informaton 
+
+Do this for complete dataset, training dataset, testing dataset.
+
+- Number of observations per outcome
+- Number of subjects per outcome
+- Number of sujbects excluded for completeness
+
+```{r dataset information, results = 'asis'}
+make_wave <- function(data, id, age_var) {
+  data <- data %>%
+    dplyr::group_by(!!sym(id)) %>%
+    dplyr::arrange(!!sym(age_var)) %>%
+    dplyr::mutate(wave = dplyr::row_number()) %>%
+    dplyr::mutate(dif_time = !!sym(age_var) - lag(!!sym(age_var))) %>%
+    dplyr::ungroup() %>%
+    as.data.frame()
+
+  data
+}
+
+summarise_dataset <- function(dataset, data_name) {
+  data <- dataset[[data_name]]
+  if (is.null(data)) {
+    return(NULL)
+  }
+  data_id <- dataset$data_id
+  data_mod <- dataset$data_mod
+  if (data_mod == "train_test" && data_name == "data") {
+    data_name <- "training_data"
+  }
+
+  id <- dataset$id
+  age <- paste0(dataset$age[[1]], "_ns")
+  if (data_name == "missing_data") {
+    age <- dataset$age[[1]]
+  }
+  outcome <- dataset$outcome
+  unique_id <- length(unique(data[[id]]))
+  data <- make_wave(data, id, age)
+  sum <- round(psych::describe(data[, c(outcome, age, "wave", "dif_time")]), 2)
+  rownames(sum) <- c(outcome, age, "wave", "dif_time")
+  sum <- cbind(rownames(sum), data.frame(sum, row.names = NULL))
+  names(sum)[1] <- "variables"
+  sum <- data.frame(unique_id = rep(unique_id, nrow(sum)), sum)
+  sum <- data.frame(outcome = rep(outcome, nrow(sum)), sum)
+  sum <- data.frame(data_id = rep(data_id, nrow(sum)), sum)
+  sum <- data.frame(data_name = rep(data_name, nrow(sum)), sum)
+  sum
+}
+
+
+sum_data <- do.call(rbind, lapply(datasets, summarise_dataset, "data"))
+rownames(sum_data) <- NULL
+sum_missing <- do.call(
+  rbind,
+  lapply(datasets, summarise_dataset, "missing_data")
+)
+rownames(sum_missing) <- NULL
+sum_test <- do.call(rbind, lapply(datasets, summarise_dataset, "test_data"))
+rownames(sum_test) <- NULL
+```
+
+#### Complete and Training Data
+
+```{r dataset info complete and training, results = 'asis'}
+kable(sum_data)
+```
+
+#### Missing Data from Complete and Training Data
+
+```{r dataset info missing complete and training, results = 'asis'}
+kable(sum_missing)
+```
+
+#### Testing Data
+
+```{r dataset info testing data, results = 'asis'}
+kable(sum_test)
+```
+
+### Census information
+
+- Study Demographics
+- Median Life Expectancy
+
+```{r census information, results = 'asis'}
+describe_le <- function(data, age_death, event) {
+  surv_object <- survival::Surv(time = data[[age_death]], event = data[[event]])
+  surv_fit <- survival::survfit(surv_object ~ 1)
+  quant_surv <- quantile(surv_fit)
+  names(quant_surv$quantile) <- c("Q1", "Median", "Q3")
+  names(quant_surv$lower) <- c("Lower Q1", "Lower Median", "Lower Q3")
+  names(quant_surv$upper) <- c("Upper Q1", "Upper Median", "Upper Q3")
+  quant_surv <- lapply(quant_surv, t)
+  quant_surv <- lapply(quant_surv, as.data.frame)
+  names(quant_surv) <- NULL
+  quant_surv <- do.call(cbind, quant_surv)
+  quant_surv <- data.frame(n = surv_fit$n, quant_surv)
+  quant_surv$conf_int <- surv_fit$conf.int
+  quant_surv$conf_type <- surv_fit$conf.type
+  quant_surv$type <- surv_fit$type
+  quant_surv
+}
+census_complete <- final_models$combined_census[[1]]
+age_death <- config$survival_dataset$age_death
+event <- config$survival_dataset$event
+filter_vars <- config$meta_dataset$covariates
+filtered_dfs <- lapply(filter_vars, function(filter) {
+  print(filter)
+  unique_values <- unique(census_complete[[filter]])
+
+  filtered_dfs <- lapply(unique_values, function(value) {
+    print(value)
+    census_complete[census_complete[[filter]] == value, ]
+  })
+  names(filtered_dfs) <- unique_values
+  filtered_dfs
+})
+names(filtered_dfs) <- filter_vars
+filtered_dfs <- unlist(filtered_dfs, recursive = FALSE)
+
+data <- c(list(all = census_complete), filtered_dfs)
+# peek(data)
+
+table_mle <- lapply(data, describe_le, age_death, event)
+table_mle <- do.call(rbind, table_mle)
+
+kable(table_mle)
+```
+
+### LCMM information 
+
+Include latent class model fit statistics
+
+#### LCMM - Concise Table
+
+```{r lcmm concise, results = 'asis'}
+table <- helphlme::compare_models(final_models$final_model)$table
+table <- data.frame(
+  outcome = final_models$oc,
+  data_type = final_models$data_mod,
+  table
+)
+kable(table)
+```
+
+#### LCMM - Verbose Table
+
+```{r lcmm model information}
+for (i in seq_len(nrow(final_models))) {
+  label <- paste(final_models$oc[[i]], final_models$data_mod[[i]])
+  cat("#############################################################\n")
+  cat(label)
+  cat("\n#############################################################\n")
+  model <- final_models$final_model[[i]]
+  summary(model)
+  lcmm::postprob(model)
+}
+```
+
+#### LCMM - Average Posterior Classifcation Probabilites
+
+```{r lcmm model average posterior probs, results = 'asis'}
+post_prob_table <- lapply(seq_len(nrow(final_models)), function(i) {
+  label <- paste(final_models$oc[[i]], final_models$data_mod[[i]])
+  outcome <- final_models$oc[[i]]
+  data_type <- final_models$data_mod[[i]]
+  model <- final_models$final_model[[i]]
+  post_prob <- lcmm::postprob(model)
+  if (isTRUE(all.equal(post_prob, list()))) {
+    warning("Cannot call lcmm::postprob on model where ng = 1, returning NAs")
+    post_prob_table <- data.frame(
+      outcome = outcome,
+      data_type = data_type,
+      label = label,
+      class = NA,
+      check.names = FALSE,
+      row.names = NULL
+    )
+    return(post_prob_table)
+  }
+  post_prob_table <- data.frame(
+    outcome = outcome,
+    data_type = data_type,
+    label = label,
+    class = row.names(post_prob[[2]]),
+    t(post_prob[[1]]),
+    post_prob[[2]],
+    t(post_prob[[3]]),
+    check.names = FALSE,
+    row.names = NULL
+  )
+  post_prob_table
+})
+post_prob_table <- data.table::rbindlist(post_prob_table, fill = TRUE)
+post_prob_table <- as.data.frame(post_prob_table)
+kable(post_prob_table)
+```
+
+#### LCMM - Model residual plots
+
+```{r plot model residuals, fig.height = 12, fig.width = 12}
+for (i in seq_len(nrow(final_models))) {
+  title <- paste(final_models$data_mod[[i]], final_models$oc[[i]])
+  model <- final_models$final_model[[i]]
+  cat("##### ")
+  cat(title)
+  cat("\n")
+
+  plot(model, which = "residuals", var.time = "age_wk_ns", title = title)
+}
+```
+
+#### LCMM - Compare all possible models
+
+```{r compare all models, results = 'asis'}
+load(input$models_path)
+load(input$cf_path)
+all_models <- helphlme::compare_models(models)$table
+all_models <- data.frame(
+  model_number = all_models[, 1],
+  data = cf$data,
+  fixed_effects = cf$fixed,
+  mixture = cf$mixture,
+  all_models[, 2:length(all_models)],
+  check.names = FALSE
+)
+all_models$`Smallest Class (%)` <- round(all_models$`Smallest Class (%)`, 2)
+kable(all_models)
+```
+
+### Chi-squared information
+
+```{r chi squared information }
+for (i in seq_len(nrow(final_models))) {
+  title <- paste(final_models$data_mod[[i]], final_models$oc[[i]])
+  chi_test <- final_models$chi_test[[i]]
+  cat("#############################################################\n")
+  cat(title)
+  cat("\n#############################################################\n")
+  print(chi_test)
+}
+```
+
+### LME information
+
+- Selected model - `r model_display`
+
+```{r lme information}
+for (models in model_list) {
+  for (model in models) {
+    cat("#############################################################\n")
+    print(model@call)
+    cat("\n#############################################################\n")
+    print(model)
+    print(summary(model))
+    print(plot(model))
+  }
+}
+```
+
+### LME table
+
+- Selected model - `r model_display`
+
+```{r lme table}
+table_list <- lapply(model_list, function(models) {
+  lapply(models, function(model) {
+    model_sum <- summary(model)
+    data.frame(
+      call = as.character(model@call)[2],
+      title = model_sum$methTitle,
+      loglik = model_sum$logLik,
+      n_groups = model_sum$n,
+      sigma = model_sum$sigma,
+      AICtab = model_sum$AICtab,
+      optimizer = model@optinfo$optimizer,
+      conv = model@optinfo$conv$opt
+    )
+  })
+})
+
+table_list <- unlist(table_list, recursive = FALSE)
+lme_table <- do.call(rbind, table_list)
+kable(lme_table)
+```
+
+### Individual Cox Model
+
+#### print model output and print cox.zph output
+
+```{r individual cox model}
+rest_index <- which(final_models$data_mod == "og")
+for (i in rest_index) {
+  models <- final_models[i, "cox_models"][[1]]
+  outcome <- final_models[i, "oc"]
+  data_mod <- final_models[i, "data_mod"]
+  title <- paste(outcome, data_mod)
+  cat("#############################################################\n")
+  print(title)
+  cat("\n#############################################################\n")
+
+  for (model in models) {
+    if (is.null(model)) {
+      message("model is NA, will not print anything")
+    } else {
+      print(model)
+      print(cox.zph(model))
+    }
+  }
+}
+```
+
+#### Table coxzph Individual Cox Model Fits
+
+```{r table coxzph individual cox model, results = 'asis'}
+rest_index <- which(final_models$data_mod == "og")
+coxzph_tables <- lapply(rest_index, function(i) {
+  models <- final_models[i, "cox_models"][[1]]
+  outcome <- final_models[i, "oc"]
+  data_mod <- final_models[i, "data_mod"]
+
+  zph_tables <- lapply(seq_along(models), function(i) {
+    formula <- Reduce(paste, deparse(models[[i]]$formula))
+
+    if (is.null(models[[i]])) {
+      message("model is NULL, returning NA values in table")
+      table <- data.frame(chisq = NA, df = NA, p = NA)
+      table <- data.frame(
+        outcome = outcome, data_type = data_mod,
+        Model = i, formula = formula, variables = rownames(table), table
+      )
+      rownames(table) <- NULL
+      return(table)
+    }
+
+    table <- cox.zph(models[[i]])$table
+    table <- data.frame(
+      outcome = outcome, data_type = data_mod, Model = i, formula = formula,
+      variables = rownames(table), table
+    )
+    rownames(table) <- NULL
+    table$chisq <- round(table$chisq, 4)
+    table$p <- round(table$p, 4)
+
+    table
+  })
+  zph_tables <- do.call(rbind, zph_tables)
+
+  zph_tables
+})
+
+coxzph_tables <- do.call(rbind, coxzph_tables)
+kable(coxzph_tables)
+```
+
+#### Plot Shoenfeld Residuals
+
+```{r plot coxzph individual cox model residuals}
+rest_index <- which(final_models$data_mod == "og")
+coxzph_tables <- lapply(rest_index, function(i) {
+  models <- final_models[i, "cox_models"][[1]]
+  outcome <- final_models[i, "oc"]
+  data_mod <- final_models[i, "data_mod"]
+
+  lapply(seq_along(models), function(i) {
+    model <- models[[i]]
+    if (is.null(model)) {
+      warning("Model is NULL, returning NULL")
+      return(NULL)
+    }
+    formula <- Reduce(paste, deparse(model$formula))
+
+    coxzph <- cox.zph(model)
+    plot(coxzph, main = formula)
+  })
+})
+```
+
+### Combined Cox Model
+
+#### print model output and print cox.zph output - Combined Cox
+
+```{r combined cox model print output}
+rest_index <- which(final_models$data_mod == "og")
+for (i in rest_index) {
+  models <- final_models[i, "cox_combined_models"][[1]]
+  outcome <- final_models[i, "oc"]
+  data_mod <- final_models[i, "data_mod"]
+  title <- paste(outcome, data_mod)
+  cat("#############################################################\n")
+  print(title)
+  cat("\n#############################################################\n")
+
+  for (model in models) {
+    tt_terms <- sum(grepl("tt\\(", names(attr(model$terms, "dataClasses"))))
+    print(model)
+    if (!tt_terms > 0) {
+      print(cox.zph(model))
+    }
+  }
+}
+```
+
+#### Table coxzph Individual Cox Model Fits - Combined Cox
+
+```{r table coxzph combined cox model, results = 'asis'}
+rest_index <- which(final_models$data_mod == "og")
+coxzph_tables <- lapply(rest_index, function(i) {
+  models <- final_models[i, "cox_combined_models"][[1]]
+  outcome <- final_models[i, "oc"]
+  data_mod <- final_models[i, "data_mod"]
+
+  zph_tables <- lapply(seq_along(models), function(i) {
+    formula <- Reduce(paste, deparse(models[[i]]$formula))
+    model <- models[[i]]
+
+    tt_terms <- sum(grepl("tt\\(", names(attr(model$terms, "dataClasses"))))
+    if (tt_terms > 0) {
+      table <- data.frame(
+        outcome = outcome, data_type = data_mod, Model = i, formula = formula,
+        variables = NA, chisq = NA, df = NA, p = NA
+      )
+      return(table)
+    }
+
+    table <- cox.zph(models[[i]])$table
+    table <- data.frame(
+      outcome = outcome, data_type = data_mod, Model = i, formula = formula,
+      variables = rownames(table), table
+    )
+    rownames(table) <- NULL
+    table$chisq <- round(table$chisq, 4)
+    table$p <- round(table$p, 4)
+
+    table
+  })
+  zph_tables <- do.call(rbind, zph_tables)
+
+  zph_tables
+})
+
+coxzph_tables <- do.call(rbind, coxzph_tables)
+kable(coxzph_tables)
+```
+
+#### Plot Shoenfeld Residuals - Combined Cox
+
+```{r plot coxzph combined cox model residuals}
+rest_index <- which(final_models$data_mod == "og")
+coxzph_tables <- lapply(rest_index, function(i) {
+  models <- final_models[i, "cox_combined_models"][[1]]
+  outcome <- final_models[i, "oc"]
+  data_mod <- final_models[i, "data_mod"]
+
+  lapply(seq_along(models), function(i) {
+    model <- models[[i]]
+    formula <- Reduce(paste, deparse(model$formula))
+
+    tt_terms <- sum(grepl("tt\\(", names(attr(model$terms, "dataClasses"))))
+    if (tt_terms > 0) {
+      message("Cannot plot residuals for models with tt terms, returning NA")
+      return(NA)
+    }
+    coxzph <- cox.zph(model)
+    plot(coxzph, main = formula)
+  })
+})
+```
+
+
+#### KM plots of covariates - complete data
+
+```{r source surv analysis for covs, file = 'R/surv_all.R'}
+source("R/surv_all.R")
+```
+
+```{r plot km covs}
+census <- final_models[rest_index, "combined_census"][[1]]
+
+cov_dummy <- datasets[[1]]$covariates_dummy
+lapply(cov_dummy, function(cov) {
+  census[[cov]] <- factor(census[[cov]])
+  kap_plot_all(census, cov,
+    age_death = config$survival_dataset$age_death,
+    event = config$survival_dataset$event
+  )
+})
+```
+
+### Figure `r as.character(fig_no)`: Histogram of Outcome Variables - Complete and Training Data
+
+```{r disply hist outcome panel, fig.height=12, fig.width=12}
+hist_outcome_plot_panel
+fig_no <- fig_no + 1
+```
+
+### Figure `r as.character(fig_no)`: Histogram of log transform of outcome Variables - Complete and Training Data
+
+```{r disply hist log outcome panel, fig.height=12, fig.width=12}
+hist_log_outcome_plot_panel
+fig_no <- fig_no + 1
+```
+
+### Figure `r as.character(fig_no)`: Histogram of probability of class membership - Complete Data
+
+```{r disply hist class prob panel, fig.height=12, fig.width=12}
+hist_plot_panel
+fig_no <- fig_no + 1
+```
+
+### Figure `r as.character(fig_no)`: Display Testing Data
+
+This is a check that we provided the correct validation data
+
+#### Cumulative
+
+```{r cumulative validation plots, fig.width = 36, fig.height = 36}
+plots <- datasets[[1]]$validation_plots[[1]]
+plot_grid(plotlist = plots)
+```
+
+#### Window
+
+```{r window validation plots, fig.width = 36, fig.height = 36}
+plots <- datasets[[1]]$validation_plots[[2]]
+plot_grid(plotlist = plots)
+```
+
+#### Interval
+
+```{r interval validation plots, fig.width = 36, fig.height = 36}
+plots <- datasets[[1]]$validation_plots[[3]]
+plot_grid(plotlist = plots)
+```
+
+#### Proportion Resampled
+
+```{r resampled validation plots, fig.width = 36, fig.height = 36}
+plots <- datasets[[1]]$validation_plots[[4]]
+plot_grid(plotlist = plots)
+
+fig_no <- fig_no + 1
+```
+
