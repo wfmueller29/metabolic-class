@@ -43,7 +43,12 @@ itp_control_tx_test <- itp_control_tx_test[itp_control_tx_test$age_wk > 19, ]
 ggplot2::ggplot(itp_control_tx_test, ggplot2::aes(x = age_wk)) +
   ggplot2::geom_histogram()
 
+# remove body weight measurements from after the treatment from test set ------
 
+itp_control_tx_test <- itp_control_tx_test[itp_control_tx_test$age_wk < 90, ]
+
+ggplot2::ggplot(itp_control_tx_test, ggplot2::aes(x = age_wk)) +
+  ggplot2::geom_histogram()
 
 # save csvs -------------------------------------------------------------------
 
