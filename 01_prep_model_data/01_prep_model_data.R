@@ -19,10 +19,10 @@ if (length(args) == 0) {
   # args[[1]] <- "input/slam_age_all.yaml"
   # args[[1]] <- "input/slam_all_only_bw.yaml"
   # args[[1]] <- "input/itp_bw.yaml"
-  args[[1]] <- "../inputs/train/slam_age_all.yaml"
+  # args[[1]] <- "../inputs/train/slam_age_all.yaml"
   # args[[1]] <- "../inputs/validate/slam_c1-c10_x_slam_c16-c18.yaml"
   # args[[1]] <- "../inputs/predict/slam_c1-c10_x_slam_c16-c18.yaml"
-  # args[[1]] <- "../inputs/predict/itp_controls_p_treatment.yaml"
+  args[[1]] <- "../inputs/predict/itp_controls_p_treatment.yaml"
   # args[[1]] <- "../x01_external_validation/input/slam_age_all.yaml"
   # args[[1]] <- "../x01_external_validation/input/slam_c16-c18.yaml"
   warning("No input file provided, using: ", args[[1]])
@@ -241,15 +241,18 @@ if (bool_external_validate) {
   surv_data <- lapply(datasets, merge_surv_data, surv)
 }
 
-tests <- lapply(surv_data, function(data) {
-  age_death <- config$survival_dataset$age_death
-  age <- config$meta_dataset$age_var[[1]]
-  all(data[, age_death] > data[, age])
-})
-test <- all(unlist(tests))
+# there should be no survival data if bool_predict is TRUE
+if (isFALSE(bool_predict)) {
+  tests <- lapply(surv_data, function(data) {
+    age_death <- config$survival_dataset$age_death
+    age <- config$meta_dataset$age_var[[1]]
+    all(data[, age_death] > data[, age])
+  })
+  test <- all(unlist(tests))
 
-if (!isTRUE(test)) {
-  stop("Age of observation is >= age death, age < age_death is required")
+  if (!isTRUE(test)) {
+    stop("Age of observation is >= age death, age < age_death is required")
+  }
 }
 
 # harmonize the datasets ------------------------------------------------------
