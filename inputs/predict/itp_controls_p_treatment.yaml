@@ -6,7 +6,7 @@ sample_n: FALSE
 center: TRUE
 scale: FALSE
 external_validate: FALSE
-predict: "/Users/williammueller/programs/metabolic_class/analysis/06_create_figures/output/itp_C2010_C2011_C2013_C2016_controls.yaml"
+predict: "/Users/williammueller/programs/metabolic_class/analysis/06_create_figures/output/itp_c10c11c13c16_age_controls_bw.yaml"
 custom_palette: FALSE
 palette_colors: ["black", "#DF536B", "#61D04F", "midnightblue",
   "#28E2E5", "#CD0BBC", "#FF991C", "gray62"]

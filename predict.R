@@ -3,7 +3,8 @@
 args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) == 0) {
-  args[[1]] <- "inputs/predict/slam_c1-c10_p_slam_c16-c18.yaml"
+  # args[[1]] <- "inputs/predict/slam_c1-c10_p_slam_c16-c18.yaml"
+  args[[1]] <- "inputs/predict/itp_controls_p_treatment.yaml"
   warning("No input file provided, using: ", args[[1]])
 }
 
