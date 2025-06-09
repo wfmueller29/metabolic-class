@@ -1617,7 +1617,7 @@ print_table <- function(env, table_name, title) {
   return(table)
 }
 
-print_table(.GlobalEnv,
+print_table(environment(),
   table_name = "t1_df",
   title = "Demographics by Metabolic Index and Class"
 )
@@ -1629,7 +1629,7 @@ tab_no <- tab_no + 1
 #### Training Data
 
 ```{r table whos in each class train, results = 'asis'}
-print_table(.GlobalEnv,
+print_table(environment(),
   table_name = "t1_df_train",
   title = "Demographics by Metabolic Index and Class"
 )
@@ -1760,7 +1760,7 @@ for (i in seq_along(formulas)) {
 
 ```{r table hazard ratios, results = 'asis'}
 save_figtabs$hr_table <- hr_table
-print_table(.GlobalEnv,
+print_table(environment(),
   table_name = "hr_table",
   title = "Table of Hazard Ratios by Metabolic Indices"
 )
