@@ -1588,6 +1588,7 @@ dose_height_width <- sqrt(length(unique(final_models$census[[1]]$class))) * 6
 ```{r predicted and observed, fig.height=pred_obs_height, fig.width=12, eval.after = TRUE}
 pred_obs_panel
 save_figtabs$pred_obs_panel <- pred_obs_panel
+rm(pred_obs_panel)
 ```
 
 #### Training Data
@@ -1595,6 +1596,7 @@ save_figtabs$pred_obs_panel <- pred_obs_panel
 ```{r predicted and observed train, fig.height=pred_obs_height, fig.width=12, eval.after = TRUE}
 pred_obs_panel_train
 save_figtabs$pred_obs_panel_train <- pred_obs_panel_train
+rm(pred_obs_panel_train)
 fig_no <- fig_no + 1
 ```
 
@@ -1625,6 +1627,7 @@ print_table(environment(),
 )
 
 save_figtabs$t1_df <- t1_df
+rm(t1_df)
 tab_no <- tab_no + 1
 ```
 
@@ -1636,6 +1639,7 @@ print_table(environment(),
   title = "Demographics by Metabolic Index and Class"
 )
 save_figtabs$t1_df_train <- t1_df_train
+rm(t1_df_train)
 ```
 
 ### Figure `r as.character(fig_no)`: Metabolic Classes with Other Metabolic Metrics
@@ -1645,6 +1649,7 @@ save_figtabs$t1_df_train <- t1_df_train
 ```{r plot classes by other outcomes, fig.height=18, fig.width=24}
 save_figtabs$other_met_panel <- other_met_panel
 other_met_panel
+rm(other_met_panel)
 ```
 
 #### Training Data
@@ -1652,6 +1657,7 @@ other_met_panel
 ```{r plot classes by other outcomes train, fig.height=18, fig.width=24}
 save_figtabs$other_met_panel_train <- other_met_panel_train
 other_met_panel_train
+rm(other_met_panel_train)
 fig_no <- fig_no + 1
 ```
 
@@ -1662,12 +1668,14 @@ fig_no <- fig_no + 1
 ```{r heatmap of census with out covariate, fig.height=12, fig.width=12}
 save_figtabs$heatmap2 <- heatmap2
 heatmap2
+rm(heatmap2)
 ```
 
 #### With Covariates
 
 ```{r heatmap of census with covariate, fig.height=12, fig.width=12}
 save_figtabs$heatmap1 <- heatmap1
+rm(heatmap1)
 heatmap1
 fig_no <- fig_no + 1
 ```
@@ -1702,6 +1710,7 @@ tab_no <- tab_no + 1
 ```{r mortality and class, fig.height=pred_obs_height, fig.width=12, eval.after = TRUE}
 save_figtabs$mortality_panel <- mortality_panel
 mortality_panel
+rm(mortality_panel)
 fig_no <- fig_no + 1
 ```
 
@@ -1717,6 +1726,7 @@ for (table in mortality_panel_hr) {
 ```{r mortality and class training, fig.height=pred_obs_height, fig.width=12, eval.after = TRUE}
 save_figtabs$mortality_panel_train <- mortality_panel_train
 mortality_panel_train
+rm(mortality_panel_train)
 fig_no <- fig_no + 1
 ```
 
@@ -1732,6 +1742,7 @@ for (table in mortality_panel_train_hr) {
 ```{r class mortality and other outcome,  fig.height=pred_obs_height, fig.width=pred_obs_height+6, eval.after = TRUE}
 save_figtabs$new_figure1 <- new_figure1
 new_figure1
+rm(new_figure1)
 fig_no <- fig_no + 1
 ```
 
@@ -1740,6 +1751,7 @@ fig_no <- fig_no + 1
 ```{r dose reponse, fig.height=dose_height_width, fig.width=dose_height_width, eval.after = TRUE}
 save_figtabs$dose_plot_panel <- dose_plot_panel
 dose_plot_panel
+rm(dose_plot_panel)
 fig_no <- fig_no + 1
 ```
 
@@ -1774,6 +1786,7 @@ tab_no <- tab_no + 1
 ```{r Class prediction panel, fig.height=pred_obs_height, fig.width=24, eval.after = TRUE}
 save_figtabs$class_prediction_panel <- class_prediction_panel
 class_prediction_panel
+rm(class_prediction_panel)
 fig_no <- fig_no + 1
 ```
 
@@ -1810,6 +1823,7 @@ fig_no <- fig_no + 1
 ```{r km cum validation 4, fig.height=6, fig.width=pred_obs_height, eval.after = TRUE}
 kap_plot_cum_validation_panels[[6]]
 fig_no <- fig_no + 1
+rm(kap_plot_cum_validation_panels)
 ```
 
 ### KM Tertiles Predicted Hazard Ratio Validation - Testing Data
@@ -1825,6 +1839,7 @@ curves
 ```{r km tertiled hr validation 1, fig.height=24, fig.width=24}
 save_figtabs$km_hr_combine_validation_panels <- km_hr_combine_validation_panels
 km_hr_combine_validation_panels
+rm(km_hr_combine_validation_panels)
 fig_no <- fig_no + 1
 ```
 
@@ -1868,6 +1883,7 @@ fig_no <- fig_no + 1
 
 ```{r dose reponse cum validation 4, fig.height=dose_height_width, fig.width=dose_height_width, eval.after = TRUE}
 dose_plot_cum_validation[[6]]
+rm(dose_plot_cum_validation)
 fig_no <- fig_no + 1
 ```
 
@@ -1940,6 +1956,7 @@ if (config$custom_palette) {
 ```{r combined cox forrest plots all data}
 save_figtabs$rest_combined_cox <- rest_combined_cox
 rest_combined_cox
+rm(rest_combined_cox)
 ```
 
 #### Training data
@@ -1959,6 +1976,7 @@ if (config$custom_palette_train) {
 ```{r combined cox forrest plots training}
 save_figtabs$test_combined_cox <- test_combined_cox
 test_combined_cox
+rm(test_combined_cox)
 fig_no <- fig_no + 1
 ```
 
@@ -2093,6 +2111,7 @@ if (window_legend && cumulative_legend) {
 p
 combine_cox_validation_figs <- p
 save_figtabs$combine_cox_validation_figs <- combine_cox_validation_figs
+rm(combine_cox_validation_figs)
 
 fig_no <- fig_no + 1
 ```
@@ -2136,6 +2155,7 @@ model2_grid <- cowplot::plot_grid(title_theme, model2_grid,
 
 save_figtabs$model2_grid <- model2_grid
 model2_grid
+rm(model2_grid)
 ```
 
 ## Display Dataset/Model informaton 
@@ -2206,6 +2226,7 @@ rownames(sum_test) <- NULL
 ```{r dataset info complete and training, results = 'asis'}
 save_figtabs$sum_data <- sum_data
 kable(sum_data)
+rm(sum_data)
 ```
 
 #### Missing Data from Complete and Training Data
@@ -2213,6 +2234,7 @@ kable(sum_data)
 ```{r dataset info missing complete and training, results = 'asis'}
 save_figtabs$sum_missing <- sum_missing
 kable(sum_missing)
+rm(sum_missing)
 ```
 
 #### Testing Data
@@ -2220,6 +2242,7 @@ kable(sum_missing)
 ```{r dataset info testing data, results = 'asis'}
 save_figtabs$sum_test <- sum_test
 kable(sum_test)
+rm(sum_test)
 ```
 
 ### Census information
@@ -2271,6 +2294,7 @@ table_mle <- do.call(rbind, table_mle)
 
 save_figtabs$table_mle <- table_mle
 kable(table_mle)
+rm(table_mle)
 ```
 
 ### LCMM information 
@@ -2288,6 +2312,7 @@ lcmm_table <- data.frame(
 )
 save_figtabs$lcmm_table <- lcmm_table
 kable(lcmm_table)
+rm(lcmm_table)
 ```
 
 #### LCMM - Verbose Table
@@ -2342,6 +2367,7 @@ post_prob_table <- data.table::rbindlist(post_prob_table, fill = TRUE)
 post_prob_table <- as.data.frame(post_prob_table)
 save_figtabs$post_prob_table <- post_prob_table
 kable(post_prob_table)
+rm(post_prob_table)
 ```
 
 #### LCMM - Model residual plots
@@ -2375,6 +2401,7 @@ all_models <- data.frame(
 all_models$`Smallest Class (%)` <- round(all_models$`Smallest Class (%)`, 2)
 save_figtabs$all_models_table <- all_models
 kable(all_models)
+rm(all_models)
 ```
 
 ### Chi-squared information
@@ -2432,6 +2459,7 @@ table_list <- unlist(table_list, recursive = FALSE)
 lme_table <- do.call(rbind, table_list)
 save_figtabs$lme_table <- lme_table
 kable(lme_table)
+rm(lme_table)
 ```
 
 ### Individual Cox Model
@@ -2502,6 +2530,7 @@ coxzph_tables <- lapply(rest_index, function(i) {
 coxzph_tables <- do.call(rbind, coxzph_tables)
 save_figtabs$individual_coxzph_tables <- coxzph_tables
 kable(coxzph_tables)
+rm(coxzph_tables)
 ```
 
 #### Plot Shoenfeld Residuals
@@ -2594,6 +2623,7 @@ coxzph_tables <- lapply(rest_index, function(i) {
 coxzph_tables <- coxzph_tables[[1]]
 save_figtabs$combined_coxzph_tables <- coxzph_tables
 kable(coxzph_tables)
+rm(coxzph_tables)
 ```
 
 #### Plot Shoenfeld Residuals - Combined Cox
@@ -2626,6 +2656,7 @@ coxzph_tables <- lapply(rest_index, function(i) {
 ```{r disply hist outcome panel, fig.height=12, fig.width=12}
 save_figtabs$hist_outcome_plot_panel <- hist_outcome_plot_panel
 hist_outcome_plot_panel
+rm(hist_outcome_plot_panel)
 fig_no <- fig_no + 1
 ```
 
@@ -2634,6 +2665,7 @@ fig_no <- fig_no + 1
 ```{r disply hist log outcome panel, fig.height=12, fig.width=12}
 save_figtabs$hist_log_outcome_plot_panel <- hist_log_outcome_plot_panel
 hist_log_outcome_plot_panel
+rm(hist_log_outcome_plot_panel)
 fig_no <- fig_no + 1
 ```
 
@@ -2642,6 +2674,7 @@ fig_no <- fig_no + 1
 ```{r disply hist class prob panel, fig.height=12, fig.width=12}
 save_figtabs$hist_plot_panel <- hist_plot_panel
 hist_plot_panel
+rm(hist_plot_panel)
 fig_no <- fig_no + 1
 ```
 
@@ -2655,6 +2688,7 @@ This is a check that we provided the correct validation data
 plots <- datasets[[1]]$validation_plots[[1]]
 plot_grid(plotlist = plots)
 save_figtabs$cumulative_validation_lots <- plots
+rm(plots)
 ```
 
 #### Window
@@ -2663,6 +2697,7 @@ save_figtabs$cumulative_validation_lots <- plots
 plots <- datasets[[1]]$validation_plots[[2]]
 plot_grid(plotlist = plots)
 save_figtabs$window_validation_lots <- plots
+rm(plots)
 ```
 
 #### Interval
@@ -2671,6 +2706,7 @@ save_figtabs$window_validation_lots <- plots
 plots <- datasets[[1]]$validation_plots[[3]]
 plot_grid(plotlist = plots)
 save_figtabs$interval_validation_lots <- plots
+rm(plots)
 ```
 
 #### Proportion Resampled
@@ -2679,6 +2715,7 @@ save_figtabs$interval_validation_lots <- plots
 plots <- datasets[[1]]$validation_plots[[4]]
 plot_grid(plotlist = plots)
 save_figtabs$resampled_validation_lots <- plots
+rm(plots)
 
 fig_no <- fig_no + 1
 ```
