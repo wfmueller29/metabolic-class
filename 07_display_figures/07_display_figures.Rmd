@@ -820,6 +820,7 @@ lme_table <- lapply(seq_along(model_list), function(i) {
 })
 
 lme_table
+rm(rows)
 ```
 
 ### Class Prediction Panel
@@ -1534,7 +1535,7 @@ save_figtabs$harmonize_km <- lapply(
       age_death = config$survival_dataset$age_death,
       event = config$survival_dataset$event
     )
-    table <- kable(fig$hr$hr_table[, "final", drop = FALSE])
+    table <- fig$hr$hr_table[, "final", drop = FALSE]
     plot <- fig$plot
     list(plot, table)
   }
@@ -1557,7 +1558,7 @@ save_figtabs$cov_km <- lapply(cov_dummy, function(cov) {
     age_death = config$survival_dataset$age_death,
     event = config$survival_dataset$event
   )
-  table <- kable(fig$hr$hr_table[, "final", drop = FALSE])
+  table <- fig$hr$hr_table[, "final", drop = FALSE]
   plot <- fig$plot
   list(plot, table)
 })
@@ -2498,7 +2499,7 @@ coxzph_tables <- lapply(rest_index, function(i) {
 })
 
 coxzph_tables <- do.call(rbind, coxzph_tables)
-save_figtabs$indvidual_coxzph_tables <- coxzph_tables
+save_figtabs$individual_coxzph_tables <- coxzph_tables
 kable(coxzph_tables)
 ```
 
@@ -2588,7 +2589,8 @@ coxzph_tables <- lapply(rest_index, function(i) {
   zph_tables
 })
 
-coxzph_tables <- do.call(rbind, coxzph_tables)
+# coxzph_tables <- do.call(rbind, coxzph_tables)
+coxzph_tables <- coxzph_tables[[1]]
 save_figtabs$combined_coxzph_tables <- coxzph_tables
 kable(coxzph_tables)
 ```
@@ -2678,5 +2680,26 @@ plot_grid(plotlist = plots)
 save_figtabs$resampled_validation_lots <- plots
 
 fig_no <- fig_no + 1
+```
+
+### Clean up environment
+
+```{r clean environment}
+peek()
+rm(list = setdiff(ls(), c("final_models", "save_figtabs")))
+final_models <- final_models$census
+peek()
+```
+
+### Save environment
+
+```{r save}
+output_path <- file.path("output", config$out_tag)
+dir.create(output_path)
+output_path <- normalizePath(output_path)
+ 
+workspace_path <- file.path(output_path, "workspace.RDATA")
+
+save.image(file = workspace_path)
 ```
 
