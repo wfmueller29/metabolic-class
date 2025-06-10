@@ -1,6 +1,6 @@
 ---
 title: "SLAM Metabolic Class Supplmental Figures"
-author: "William Mueller"
+author: "William Mueller, Joshua Preston"
 data: "`r format(Sys.time(), '%Y %B %d')`"
 output:
   html_document:
@@ -21,6 +21,8 @@ library(RColorBrewer)
 library(viridis)
 library(consoler)
 library(flextable)
+library(future)
+library(future.apply)
 set.seed(365)
 
 # setting global knitr options for r markdown output
@@ -44,55 +46,47 @@ held_out_path <- "../06_create_figures/output/slam_c1-10_x_slam_c16-18_age_bwfat
 config <- NULL
 ```
 
-```{r sup figs load models}
-all_env <- new.env()
-rmarkdown::render("../07_display_figures/07_display_figures.Rmd",
-  envir = all_env,
-  params = list(input_path = all_path),
-  quiet = TRUE
+```{r sup figs load models, include = FALSE}
+# Define a named list of input paths and environment names
+render_tasks <- list(
+  all_env = all_path,
+  fb6_env = fb6_path,
+  fhet3_env = fhet3_path,
+  mb6_env = mb6_path,
+  mhet3_env = mhet3_path,
+  itp_env = itp_path,
+  held_out_env = held_out_path
 )
-fb6_env <- new.env()
-rmarkdown::render("../07_display_figures/07_display_figures.Rmd",
-  envir = fb6_env,
-  params = list(input_path = fb6_path),
-  quiet = TRUE
-)
-fhet3_env <- new.env()
-rmarkdown::render("../07_display_figures/07_display_figures.Rmd",
-  envir = fhet3_env,
-  params = list(input_path = fhet3_path),
-  quiet = TRUE
-)
-mb6_env <- new.env()
-rmarkdown::render("../07_display_figures/07_display_figures.Rmd",
-  envir = mb6_env,
-  params = list(input_path = mb6_path),
-  quiet = TRUE
-)
-mhet3_env <- new.env()
-rmarkdown::render("../07_display_figures/07_display_figures.Rmd",
-  envir = mhet3_env,
-  params = list(input_path = mhet3_path),
-  quiet = TRUE
-)
-itp_env <- new.env()
-rmarkdown::render("../07_display_figures/07_display_figures.Rmd",
-  envir = itp_env,
-  params = list(input_path = itp_path),
-  quiet = TRUE
-)
-held_out_env <- new.env()
-rmarkdown::render("../07_display_figures/07_display_figures.Rmd",
-  envir = held_out_env,
-  params = list(input_path = held_out_path),
-  quiet = TRUE
-)
+
+# This sets up multi-session workers
+future::plan(multisession, workers = 2L)
+
+future_lapply(names(render_tasks), function(env_name) {
+  env <- new.env()
+  assign("config", NULL, envir = env)
+  input_path <- render_tasks[[env_name]]
+  rmarkdown::render(
+    "../07_display_figures/07_display_figures.Rmd",
+    envir = env,
+    params = list(input_path = input_path),
+    quiet = FALSE,
+    output_dir = paste0("output_", env_name)
+  )
+  assign(env_name, env, envir = .GlobalEnv)
+})
 ```
 
 ```{r sup figs fig no }
 fig_no <- 1
 tab_no <- 1
+max_width <- 6.5
 ```
+
+\newpage
+
+\tableofcontents
+
+\newpage
 
 ### Figure `r as.character(fig_no)`: How it works
 
@@ -110,7 +104,15 @@ both have lower levels of survival
 
 ```{r sup figs kap plot by harmonize}
 all_env$save_figtabs$harmonize_km[[1]][[1]]
-flextabe(all_env$save_figtabs$harmonize_km[[1]][[2]])
+table <- all_env$save_figtabs$harmonize_km[[1]][[2]]
+table <- cbind(Cohort = rownames(table), table)
+flextable(table) %>%
+  theme_vanilla() %>%
+  fontsize(size = 5, part = "all") %>%
+  autofit() %>%
+  fit_to_width(max_width = max_width) %>%
+  padding(padding = 1, part = "all") %>%
+  set_table_properties(layout = "autofit", width = 0)
 fig_no <- fig_no + 1
 ```
 
@@ -124,9 +126,18 @@ dose_height_width <- sqrt(length(unique_class)) * 6
 
 ### Figure `r as.character(fig_no)`: KM plots of covariates - By Sex
 
-```{r sup figs plot km covs}
+```{r sup figs plot km covs sex}
 all_env$save_figtabs$cov_km[[1]][[1]]
-flextable(all_env$save_figtabs$cov_km[[1]][[2]])
+table <- all_env$save_figtabs$cov_km[[1]][[2]]
+table <- cbind(Sex = rownames(table), table)
+flextable(table) %>%
+  theme_vanilla() %>%
+  fontsize(size = 5, part = "all") %>%
+  autofit() %>%
+  fit_to_width(max_width = max_width) %>%
+  padding(padding = 1, part = "all") %>%
+  padding(padding = 1, part = "all") %>%
+  set_table_properties(layout = "autofit", width = 0)
 
 fig_no <- fig_no + 1
 ```
@@ -135,9 +146,18 @@ fig_no <- fig_no + 1
 
 ### Figure `r as.character(fig_no)`: KM plots of covariates - By Strain
 
-```{r sup figs plot km covs}
+```{r sup figs plot km covs strain}
 all_env$save_figtabs$cov_km[[2]][[1]]
-flextable(all_env$save_figtabs$cov_km[[2]][[2]])
+table <- all_env$save_figtabs$cov_km[[2]][[2]]
+table <- cbind(Strain = rownames(table), table)
+flextable(table) %>%
+  theme_vanilla() %>%
+  fontsize(size = 5, part = "all") %>%
+  autofit() %>%
+  fit_to_width(max_width = max_width) %>%
+  padding(padding = 1, part = "all") %>%
+  padding(padding = 1, part = "all") %>%
+  set_table_properties(layout = "autofit", width = 0)
 
 fig_no <- fig_no + 1
 ```
@@ -195,7 +215,7 @@ fig_no <- fig_no + 1
 ### Figure `r as.character(fig_no)`: Display Testing Data - Interval
 
 ```{r sup figs interval validation plots, fig.width = 36, fig.height = 36}
-plot_grid(plotlist = all_env$save_figtabs$interval_validation_lots)
+cowplot::plot_grid(plotlist = all_env$save_figtabs$interval_validation_lots)
 fig_no <- fig_no + 1
 ```
 
@@ -205,7 +225,7 @@ fig_no <- fig_no + 1
 
 
 ```{r sup figs resampled validation plots, fig.width = 36, fig.height = 36}
-plot_grid(plotlist = all_env$save_figtabs$resampled_validation_lots)
+cowplot::plot_grid(plotlist = all_env$save_figtabs$resampled_validation_lots)
 fig_no <- fig_no + 1
 ```
 
@@ -240,7 +260,8 @@ flextable(round(all_env$save_figtabs$describe_census, digits = 3)) %>%
   theme_vanilla() %>%
   fontsize(size = 7.5, part = "all") %>%
   autofit() %>%
-  fit_to_width(width = 6.5) %>%
+  fit_to_width(max_width = max_width) %>%
+  padding(padding = 1, part = "all") %>%
   set_table_properties(layout = "autofit", width = 0)
 
 
@@ -249,7 +270,7 @@ tab_no <- 1 + tab_no
 
 \newpage
 
-### Supplemental Table `r as.character(tab_no)`: Descriptive Statistics of Outcomes, Age, Measure Frequency, and Age Difference Between measures for complete, training, and testing datasets
+### Supplemental Table `r as.character(tab_no)`: Descriptive Statistics SLAM C1-C10 datasets
 
 ```{r sup_tables dataset info complete and training, results = 'asis'}
 flextable(rbind(
@@ -259,7 +280,30 @@ flextable(rbind(
   theme_vanilla() %>%
   fontsize(size = 5, part = "all") %>%
   autofit() %>%
-  fit_to_width(width = 6.5) %>%
+  fit_to_width(max_width = max_width) %>%
+  padding(padding = 1, part = "all") %>%
+  set_table_properties(
+    layout = "autofit", width = 0,
+    opts_pdf = list(arraystretch = 1.25)
+  )
+
+tab_no <- 1 + tab_no
+```
+
+\newpage
+
+### Supplemental Table `r as.character(tab_no)`: Descriptive Statistics SLAM C16-C18 datasets
+
+```{r sup_tables held_out dataset info complete and training, results = 'asis'}
+flextable(rbind(
+  held_out_env$save_figtabs$sum_data,
+  held_out_env$save_figtabs$sum_test
+)) %>%
+  theme_vanilla() %>%
+  fontsize(size = 5, part = "all") %>%
+  autofit() %>%
+  fit_to_width(max_width = max_width) %>%
+  padding(padding = 1, part = "all") %>%
   set_table_properties(layout = "autofit", width = 0)
 
 tab_no <- 1 + tab_no
@@ -267,14 +311,15 @@ tab_no <- 1 + tab_no
 
 \newpage
 
-### Supplemental Table `r as.character(tab_no)`: Missing Data Descriptive Statistics of Outcomes, Age, Measure Frequency, and Age Difference Between measures for complete, training, and testing datasets
+### Supplemental Table `r as.character(tab_no)`: Missing Data Descriptive Statistics SLAM C1-C10 datasets
 
 ```{r sup_tables dataset info missing complete and training, results = 'asis'}
 flextable(all_env$save_figtabs$sum_missing) %>%
   theme_vanilla() %>%
   fontsize(size = 5, part = "all") %>%
   autofit() %>%
-  fit_to_width(width = 6.5) %>%
+  fit_to_width(max_width = max_width) %>%
+  padding(padding = 1, part = "all") %>%
   set_table_properties(layout = "autofit", width = 0)
 
 
@@ -291,7 +336,8 @@ flextable(all_env$save_figtabs$table_mle) %>%
   theme_vanilla() %>%
   fontsize(size = 6.5, part = "all") %>%
   autofit() %>%
-  fit_to_width(width = 6.5) %>%
+  fit_to_width(max_width = max_width) %>%
+  padding(padding = 1, part = "all") %>%
   set_table_properties(layout = "autofit", width = 0)
 
 tab_no <- 1 + tab_no
@@ -310,6 +356,7 @@ all_env$save_figtabs$lcmm_table %>%
   fontsize(size = 5.5, part = "all") %>%
   autofit() %>%
   fit_to_width(width = 6.5) %>%
+  padding(padding = 1, part = "all") %>%
   set_table_properties(layout = "autofit", width = 0)
 
 tab_no <- 1 + tab_no
@@ -324,7 +371,8 @@ flextable(all_env$save_figtabs$post_prob_table) %>%
   theme_vanilla() %>%
   fontsize(size = 7.5, part = "all") %>%
   autofit() %>%
-  fit_to_width(width = 6.5) %>%
+  fit_to_width(max_width = max_width) %>%
+  padding(padding = 1, part = "all") %>%
   set_table_properties(layout = "autofit", width = 0)
 
 tab_no <- 1 + tab_no
@@ -339,7 +387,8 @@ flextable(all_env$save_figtabs$all_models_table) %>%
   fontsize(size = 3, part = "all") %>%
   autofit() %>%
   theme_vanilla() %>%
-  fit_to_width(width = 6.5) %>%
+  fit_to_width(max_width = max_width) %>%
+  padding(padding = 1, part = "all") %>%
   set_table_properties(layout = "autofit", width = 0)
 
 tab_no <- 1 + tab_no
@@ -358,7 +407,8 @@ all_env$save_figtabs$lme_table %>%
   theme_vanilla() %>%
   fontsize(size = 6.5, part = "all") %>%
   autofit() %>%
-  fit_to_width(width = 6.5) %>%
+  fit_to_width(max_width = max_width) %>%
+  padding(padding = 1, part = "all") %>%
   set_table_properties(layout = "autofit", width = 0)
 
 tab_no <- 1 + tab_no
@@ -373,7 +423,8 @@ flextable(all_env$save_figtabs$individual_coxzph_tables) %>%
   theme_vanilla() %>%
   fontsize(size = 5.5, part = "all") %>%
   autofit() %>%
-  fit_to_width(width = 6.5) %>%
+  fit_to_width(max_width = max_width) %>%
+  padding(padding = 1, part = "all") %>%
   set_table_properties(layout = "autofit", width = 0)
 
 tab_no <- 1 + tab_no
@@ -391,7 +442,8 @@ all_env$save_figtabs$combined_coxzph_tables %>%
   theme_vanilla()
 fontsize(size = 5.5, part = "all") %>%
   autofit() %>%
-  fit_to_width(width = 6.5) %>%
+  fit_to_width(max_width = max_width) %>%
+  padding(padding = 1, part = "all") %>%
   set_table_properties(layout = "autofit", width = 0) %>%
   tab_no() <- 1 + tab_no
 ```
