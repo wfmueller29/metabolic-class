@@ -1611,7 +1611,7 @@ fig_no <- fig_no + 1
 
 ### Figure `r as.character(fig_no)`: How it works
 
-```{r how it works, fig.width = 12, fig.height = 6}
+```{r how it works, fig.width = 6, fig.height = 6}
 how_it_works
 
 # store for later -------------------------------------------------------------
@@ -1621,7 +1621,7 @@ output_path <- file.path("output", config$out_tag, "how_it_works")
 dir.create(output_path, recursive = TRUE)
 file_name <- file.path(output_path, name)
 
-cowplot::save_plot(filename = file_name, plot = plot, ncol = 2, nrow = 1)
+cowplot::save_plot(filename = file_name, plot = plot, ncol = 2, nrow = 2)
 dev.off()
 
 # rm(how_it_works)
@@ -1635,7 +1635,8 @@ fig_no <- fig_no + 1
 ```{r heights and widths}
 rows <- nrow(final_models) / 2
 pred_obs_height <- nrow(final_models) / 2 * 6
-unique_class <- length(unique(final_models$census[[1]]$class))
+unique_class <- length(
+                       which(grepl("^prob\\d+$", names(final_models$combined_census[[1]]))))
 dose_height_width <- sqrt(unique_class) * 6
 ```
 
@@ -2810,7 +2811,7 @@ cowplot::save_plot(
   filename = file_name,
   plot = plot,
   ncol = rows,
-  nrow = round(sqrt(length(datasets)))
+  nrow = rows
 )
 dev.off()
 
@@ -2834,7 +2835,7 @@ cowplot::save_plot(
   filename = file_name,
   plot = plot,
   ncol = rows,
-  nrow = round(sqrt(length(datasets)))
+  nrow = rows
 )
 dev.off()
 
@@ -2857,7 +2858,7 @@ file_name <- file.path(output_path, name)
 cowplot::save_plot(
   filename = file_name, plot = plot,
   ncol = round(sqrt(unique_class)),
-  nrow = round(sqrt(unique_class))
+  nrow = round(sqrt(unique_class)) + 1
 )
 dev.off()
 
@@ -2887,7 +2888,8 @@ index <- first_numbers %in% first_number
 length_index <- length(which(index))
 cum_validation_plots <- cum_validation_plots[index]
 
-plot <- plot_grid(plotlist = cum_validation_plots)
+plot <- plot_grid(plotlist = cum_validation_plots,
+                  ncol = round(sqrt(length_index)))
 plot
 
 # store for later -------------------------------------------------------------
@@ -2899,7 +2901,7 @@ file_name <- file.path(output_path, name)
 cowplot::save_plot(
   filename = file_name, plot = plot,
   ncol = round(sqrt(length_index)),
-  nrow = round(sqrt(length_index))
+  nrow = round(sqrt(length_index)) + 1
 )
 dev.off()
 
@@ -2934,7 +2936,8 @@ length_index <- length(which(index))
 window_validation_plots <- window_validation_plots[index]
 peek(window_validation_plots)
 
-plot <- plot_grid(plotlist = window_validation_plots)
+plot <- plot_grid(plotlist = window_validation_plots,
+                  ncol = round(sqrt(length_index)))
 plot
 
 # store for later -------------------------------------------------------------
@@ -2946,7 +2949,7 @@ file_name <- file.path(output_path, name)
 cowplot::save_plot(
   filename = file_name, plot = plot,
   ncol = round(sqrt(length_index)),
-  nrow = round(sqrt(length_index))
+  nrow = round(sqrt(length_index)) + 1
 )
 dev.off()
 
@@ -2957,10 +2960,11 @@ dev.off()
 
 ```{r interval validation plots, fig.width = 36, fig.height = 36}
 interval_validation_plots <- datasets[[1]]$validation_plots[[3]]
-plot <- plot_grid(plotlist = interval_validation_plots)
-plot
 
 rowcol <- round(sqrt(length(interval_validation_plots)))
+
+plot <- plot_grid(plotlist = interval_validation_plots, ncol = rowcol)
+plot
 
 # store for later -------------------------------------------------------------
 name <- paste0("interval_validation_plots", ".png")
@@ -2970,7 +2974,7 @@ file_name <- file.path(output_path, name)
 
 cowplot::save_plot(
   filename = file_name, plot = plot,
-  nrow = rowcol,
+  nrow = rowcol + 1,
   ncol = rowcol
 )
 dev.off()
@@ -2982,10 +2986,11 @@ rm(interval_validation_plots)
 
 ```{r resampled validation plots, fig.width = 36, fig.height = 36}
 resampled_validation_plots <- datasets[[1]]$validation_plots[[4]]
-plot <- plot_grid(plotlist = resampled_validation_plots)
-plot
 
 rowcol <- round(sqrt(length(resampled_validation_plots)))
+
+plot <- plot_grid(plotlist = resampled_validation_plots, ncol = rowcol)
+plot
 
 # store for later -------------------------------------------------------------
 name <- paste0("resampled_validation_plots", ".png")
@@ -2995,7 +3000,7 @@ file_name <- file.path(output_path, name)
 
 cowplot::save_plot(
   filename = file_name, plot = plot,
-  nrow = rowcol,
+  nrow = rowcol + 1,
   ncol = rowcol
 )
 dev.off()
