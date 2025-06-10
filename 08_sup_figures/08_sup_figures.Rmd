@@ -57,12 +57,12 @@ config <- NULL
 # Define a named list of input paths and environment names
 render_tasks <- list(
   all_env = all_path,
-  # fb6_env = fb6_path,
-  # fhet3_env = fhet3_path,
-  # mb6_env = mb6_path,
-  # mhet3_env = mhet3_path,
-  itp_env = itp_path # ,
-  # held_out_env = held_out_path
+  fb6_env = fb6_path,
+  fhet3_env = fhet3_path,
+  mb6_env = mb6_path,
+  mhet3_env = mhet3_path,
+  itp_env = itp_path,
+  held_out_env = held_out_path
 )
 
 lapply(names(render_tasks), function(env_name) {
@@ -106,7 +106,8 @@ max_width <- 6.5
 ### Figure `r as.character(fig_no)`: How it works
 
 ```{r sup figs how it works, fig.width = 12, fig.height = 6}
-all_env$save_figtabs$how_it_works
+knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/how_it_works/how_it_works.png")
+
 fig_no <- fig_no + 1
 ```
 
@@ -118,8 +119,9 @@ This may explain our trouble externally validating with cohorts 9 and 10, since
 both have lower levels of survival
 
 ```{r sup figs kap plot by harmonize}
-all_env$save_figtabs$harmonize_km[[1]][[1]]
-table <- all_env$save_figtabs$harmonize_km[[1]][[2]]
+knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/harmonize_km/plot_1.png")
+
+table <- all_env$save_figtabs$harmonize_km[[1]]
 table <- cbind(Cohort = rownames(table), table)
 flextable(table) %>%
   theme_vanilla() %>%
@@ -129,6 +131,7 @@ flextable(table) %>%
   padding(padding = 1, part = "all") %>%
   set_table_properties(layout = "autofit", width = 0)
 fig_no <- fig_no + 1
+rm(table)
 ```
 
 \newpage
@@ -142,8 +145,9 @@ dose_height_width <- sqrt(length(unique_class)) * 6
 ### Figure `r as.character(fig_no)`: KM plots of covariates - By Sex
 
 ```{r sup figs plot km covs sex}
-all_env$save_figtabs$cov_km[[1]][[1]]
-table <- all_env$save_figtabs$cov_km[[1]][[2]]
+knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/cov_km/plot_1.png")
+
+table <- all_env$save_figtabs$cov_km[[1]]
 table <- cbind(Sex = rownames(table), table)
 flextable(table) %>%
   theme_vanilla() %>%
@@ -155,6 +159,7 @@ flextable(table) %>%
   set_table_properties(layout = "autofit", width = 0)
 
 fig_no <- fig_no + 1
+rm(table)
 ```
 
 \newpage
@@ -162,8 +167,9 @@ fig_no <- fig_no + 1
 ### Figure `r as.character(fig_no)`: KM plots of covariates - By Strain
 
 ```{r sup figs plot km covs strain}
-all_env$save_figtabs$cov_km[[2]][[1]]
-table <- all_env$save_figtabs$cov_km[[2]][[2]]
+knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/cov_km/plot_2.png")
+
+table <- all_env$save_figtabs$cov_km[[2]]
 table <- cbind(Strain = rownames(table), table)
 flextable(table) %>%
   theme_vanilla() %>%
@@ -175,14 +181,15 @@ flextable(table) %>%
   set_table_properties(layout = "autofit", width = 0)
 
 fig_no <- fig_no + 1
+rm(table)
 ```
 
 \newpage
 
 ### Figure `r as.character(fig_no)`: Histogram of Outcome Variables - Complete and Training Data
 
-```{r sup figs disply hist outcome panel, fig.height=12, fig.width=12}
-all_env$save_figtabs$hist_outcome_plot_panel
+```{r sup figs disply hist outcome panel}
+knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/hist_outcome_plot_panel/hist_outcome_plot_panel.png")
 
 fig_no <- fig_no + 1
 ```
@@ -191,8 +198,8 @@ fig_no <- fig_no + 1
 
 ### Figure `r as.character(fig_no)`: Histogram of log transform of outcome Variables - Complete and Training Data
 
-```{r sup figs disply hist log outcome panel, fig.height=12, fig.width=12}
-all_env$save_figtabs$hist_log_outcome_plot_panel
+```{r sup figs disply hist log outcome panel}
+knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/hist_log_outcome_plot_panel/hist_log_outcome_plot_panel.png")
 
 fig_no <- fig_no + 1
 ```
@@ -202,7 +209,7 @@ fig_no <- fig_no + 1
 ### Figure `r as.character(fig_no)`: Histogram of probability of class membership - Complete Data
 
 ```{r sup figs disply hist class prob panel, fig.height=12, fig.width=12}
-all_env$save_figtabs$hist_plot_panel
+knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/hist_plot_panel/hist_plot_panel.png")
 
 fig_no <- fig_no + 1
 ```
@@ -212,7 +219,8 @@ fig_no <- fig_no + 1
 ### Figure `r as.character(fig_no)`: Display Testing Data - Cumulative
 
 ```{r sup figs cumulative validation plots, fig.width = 36, fig.height = 36}
-cowplot::plot_grid(plotlist = all_env$save_figtabs$cumulative_validation_lots)
+knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/cum_validation_plots/cum_validation_plots.png")
+
 fig_no <- fig_no + 1
 ```
 
@@ -221,7 +229,7 @@ fig_no <- fig_no + 1
 ### Figure `r as.character(fig_no)`: Display Testing Data - Window
 
 ```{r sup figs window validation plots, fig.width = 36, fig.height = 36}
-cowplot::plot_grid(plotlist = all_env$save_figtabs$window_validation_lots)
+knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/window_validation_plots/window_validation_plots.png")
 fig_no <- fig_no + 1
 ```
 
@@ -230,7 +238,7 @@ fig_no <- fig_no + 1
 ### Figure `r as.character(fig_no)`: Display Testing Data - Interval
 
 ```{r sup figs interval validation plots, fig.width = 36, fig.height = 36}
-cowplot::plot_grid(plotlist = all_env$save_figtabs$interval_validation_lots)
+knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/interval_validation_plots/interval_validation_plots.png")
 fig_no <- fig_no + 1
 ```
 
@@ -240,7 +248,8 @@ fig_no <- fig_no + 1
 
 
 ```{r sup figs resampled validation plots, fig.width = 36, fig.height = 36}
-cowplot::plot_grid(plotlist = all_env$save_figtabs$resampled_validation_lots)
+knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/resampled_validation_plots/resampled_validation_plots.png")
+
 fig_no <- fig_no + 1
 ```
 
@@ -310,10 +319,7 @@ tab_no <- 1 + tab_no
 ### Supplemental Table `r as.character(tab_no)`: Descriptive Statistics SLAM C16-C18 datasets
 
 ```{r sup_tables held_out dataset info complete and training, results = 'asis'}
-flextable(rbind(
-  held_out_env$save_figtabs$sum_data,
-  held_out_env$save_figtabs$sum_test
-)) %>%
+flextable(held_out_env$save_figtabs$sum_test) %>%
   theme_vanilla() %>%
   fontsize(size = 5, part = "all") %>%
   autofit() %>%
@@ -370,7 +376,7 @@ all_env$save_figtabs$lcmm_table %>%
   theme_vanilla() %>%
   fontsize(size = 5.5, part = "all") %>%
   autofit() %>%
-  fit_to_width(width = 6.5) %>%
+  fit_to_width(max_width = max_width) %>%
   padding(padding = 1, part = "all") %>%
   set_table_properties(layout = "autofit", width = 0)
 
@@ -454,13 +460,14 @@ all_env$save_figtabs$combined_coxzph_tables %>%
   mutate(df = round(df, digits = 2)) %>%
   select(-outcome) %>%
   flextable() %>%
-  theme_vanilla()
-fontsize(size = 5.5, part = "all") %>%
+  theme_vanilla() %>%
+  fontsize(size = 5.5, part = "all") %>%
   autofit() %>%
   fit_to_width(max_width = max_width) %>%
   padding(padding = 1, part = "all") %>%
-  set_table_properties(layout = "autofit", width = 0) %>%
-  tab_no() <- 1 + tab_no
+  set_table_properties(layout = "autofit", width = 0)
+
+tab_no <- 1 + tab_no
 ```
 
 
