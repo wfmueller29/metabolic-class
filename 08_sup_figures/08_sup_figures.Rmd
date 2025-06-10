@@ -1,16 +1,13 @@
 ---
-title: "SLAM Metabolic Class Supplmental Figures - `r config$out_tag` Mice"
-subtitle: "External Validation: `r config$external_validate`"
+title: "SLAM Metabolic Class Supplmental Figures"
 author: "William Mueller"
 data: "`r format(Sys.time(), '%Y %B %d')`"
 output:
   html_document:
     df_print: paged
-params:
-  input_path: "../06_create_figures/output/slam_c1-c10_age_all_bwfatgluc.yaml"
 ---
 
-```{r setup, warning=FALSE, message=FALSE, echo=FALSE}
+```{r sup figs setup, warning=FALSE, message=FALSE, echo=FALSE}
 library(helphlme)
 library(tidyverse)
 library(kableExtra)
@@ -23,6 +20,7 @@ library(cowplot)
 library(RColorBrewer)
 library(viridis)
 library(consoler)
+library(flextable)
 set.seed(365)
 
 # setting global knitr options for r markdown output
@@ -31,226 +29,75 @@ knitr::opts_chunk$set(warning = FALSE)
 knitr::opts_chunk$set(message = FALSE)
 knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(cache = FALSE)
-
-window_legend <- TRUE
-window_legend_palette <- magma(3, begin = .2, end = .7, direction = -1)
-window_legend_labels <- c("2 measures", "3 measures", "4 measures")
-
-cumulative_legend <- TRUE
-cumulative_legend_palette <- viridis(3, begin = .2, end = .7, direction = -1)
-
-max_age <- 150
-max_age_km <- NA
 ```
 
-```{r read input yaml}
+```{r sup figs read input yaml}
 # for the case when we are not running with RStudio
-if (!exists("params")) {
-  params <- list()
-  # params$input_path <- "../06_create_figures/output/test_local.yaml"
-  # params$input_path <- "../06_create_figures/output/all_only_bw.yaml"
-  # params$input_path <- "../06_create_figures/output/20250306_itp.yaml"
-  # params$input_path <- "../06_create_figures/output/all.yaml"
-  # params$input_path <- "../06_create_figures/output/20250426_itp_C2010_C2011_C2013_C2016_controls_cohort.yaml"
-  # params$input_path <- "../06_create_figures/output/20250426_all_cohort.yaml"
-  params$input_path <- "../06_create_figures/output/slam_c1-c10_age_fb6_bwfatgluc.yaml"
 
-  # params$input_path <- "../06_create_figures/output/all_lean.yaml"
-  # params$input_path <- "../06_create_figures/output/fb6.yaml"
-  # params$input_path <- "../06_create_figures/output/external_validation.yaml"
-}
-
-input <- yaml::read_yaml(file = params$input_path)
+all_path <- "../06_create_figures/output/slam_c1-c10_age_all_bwfatgluc.yaml"
+fb6_path <- "../06_create_figures/output/slam_c1-c10_age_fb6_bwfatgluc.yaml"
+fhet3_path <- "../06_create_figures/output/slam_c1-c10_age_fhet3_bwfatgluc.yaml"
+mb6_path <- "../06_create_figures/output/slam_c1-c10_age_mb6_bwfatgluc.yaml"
+mhet3_path <- "../06_create_figures/output/slam_c1-c10_age_mhet3_bwfatgluc.yaml"
+itp_path <- "../06_create_figures/output/itp_c10c11c13c16_age_controls_bw.yaml"
+held_out_path <- "../06_create_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc.yaml"
+config <- NULL
 ```
 
-```{r load models}
-load(input$datasets_path)
-load(input$final_models_path)
-config <- yaml::read_yaml(input$config_path)
-
-
-# load in main_cat_surv
-main_cat_surv <- read.csv(file = config$survival_dataset$path)
-main_cat_surv <- as.data.frame(main_cat_surv)
-
-final_models$dfs <- lapply(final_models$data, function(name) {
-  datasets[[name]]$data
-})
-```
-
-```{r how they work, fig.height=5, fig.width=10}
-p1 <- final_models[, "spag_plot"][[1]]
-p3 <- final_models[, "traj_obs"][[1]]
-
-how_it_works <- cowplot::plot_grid(p1, p3, nrow = 1)
-```
-
-```{r validation data}
-plot_validation <- function(data1,
-                            data2,
-                            age_var,
-                            outcome,
-                            age_name,
-                            outcome_name) {
-  ggplot2::ggplot(
-    data = data1,
-    mapping = ggplot2::aes(
-      x = eval(as.symbol((age_var))),
-      y = eval(as.symbol(outcome))
-    )
-  ) +
-    ggplot2::geom_point(alpha = .03, color = "navy") +
-    ggplot2::geom_point(
-      data = data2,
-      mapping = ggplot2::aes(
-        x = eval(as.symbol((age_var))),
-        y = eval(as.symbol(outcome))
-      ),
-      alpha = .5,
-      color = "navy"
-    ) +
-    ggplot2::labs(
-      x = age_name,
-      y = outcome_name
-    )
-}
-
-
-datasets <- lapply(datasets, function(dataset) {
-  data1 <- dataset$data
-  outcome <- dataset$outcome
-  age_var <- dataset$age_var[[1]]
-  age_var <- paste0(age_var, "_ns")
-  age_var_name <- paste(
-    dataset$labels$age_var_name,
-    dataset$labels$age_var_units
-  )
-  outcome_name <- paste(
-    dataset$labels$oc_name,
-    dataset$labels$oc_units
-  )
-
-  prediction_data <- dataset$prediction_data$data
-
-  dataset$validation_plots <- lapply(prediction_data, function(data) {
-    lapply(data, plot_validation,
-      data1 = data1,
-      age = age_var, outcome = outcome,
-      age_name = age_var_name,
-      outcome_name = outcome_name
-    )
-  })
-
-  dataset
-})
-```
-
-```{r hist outcome, echo = FALSE, include = FALSE}
-hist_outcome_plots <- lapply(datasets, function(dataset) {
-  data <- dataset$data
-  outcome <- dataset$outcome
-  data_mod <- dataset$data_mod
-  ggplot2::ggplot(data = data, aes_string(x = outcome)) +
-    ggplot2::geom_histogram() +
-    ggplot2::labs(title = data_mod)
-})
-
-hist_outcome_plot_panel <- cowplot::plot_grid(
-  plotlist = hist_outcome_plots,
-  nrow = round(sqrt(length(datasets))),
-  byrow = TRUE,
-  greedy = FALSE,
-  labels = "AUTO"
+```{r sup figs load models}
+all_env <- new.env()
+rmarkdown::render("../07_display_figures/07_display_figures.Rmd",
+  envir = all_env,
+  params = list(input_path = all_path),
+  quiet = TRUE
 )
-
-title_theme <- ggdraw() +
-  draw_label(paste(
-    "Histograms of outcomes for complete and training data",
-    sep = " "
-  ))
-
-hist_outcome_plot_panel <- cowplot::plot_grid(title_theme,
-  hist_outcome_plot_panel,
-  rel_heights = c(.05, 1),
-  ncol = 1
+fb6_env <- new.env()
+rmarkdown::render("../07_display_figures/07_display_figures.Rmd",
+  envir = fb6_env,
+  params = list(input_path = fb6_path),
+  quiet = TRUE
+)
+fhet3_env <- new.env()
+rmarkdown::render("../07_display_figures/07_display_figures.Rmd",
+  envir = fhet3_env,
+  params = list(input_path = fhet3_path),
+  quiet = TRUE
+)
+mb6_env <- new.env()
+rmarkdown::render("../07_display_figures/07_display_figures.Rmd",
+  envir = mb6_env,
+  params = list(input_path = mb6_path),
+  quiet = TRUE
+)
+mhet3_env <- new.env()
+rmarkdown::render("../07_display_figures/07_display_figures.Rmd",
+  envir = mhet3_env,
+  params = list(input_path = mhet3_path),
+  quiet = TRUE
+)
+itp_env <- new.env()
+rmarkdown::render("../07_display_figures/07_display_figures.Rmd",
+  envir = itp_env,
+  params = list(input_path = itp_path),
+  quiet = TRUE
+)
+held_out_env <- new.env()
+rmarkdown::render("../07_display_figures/07_display_figures.Rmd",
+  envir = held_out_env,
+  params = list(input_path = held_out_path),
+  quiet = TRUE
 )
 ```
 
-```{r hist log outcome, echo = FALSE, include = FALSE}
-hist_log_outcome_plots <- lapply(datasets, function(dataset) {
-  data <- dataset$data
-  outcome <- dataset$outcome
-  outcome <- paste0("log(", outcome, ")")
-  data_mod <- dataset$data_mod
-  ggplot2::ggplot(data = data, aes_string(x = outcome)) +
-    ggplot2::geom_histogram() +
-    ggplot2::labs(title = data_mod)
-})
-
-hist_log_outcome_plot_panel <- cowplot::plot_grid(
-  plotlist = hist_log_outcome_plots,
-  nrow = round(sqrt(length(datasets))),
-  byrow = TRUE,
-  greedy = FALSE,
-  labels = "AUTO"
-)
-
-title_theme <- ggdraw() +
-  draw_label(paste(
-    "Histograms of log(outcomes) for complete and training data",
-    sep = " "
-  ))
-
-hist_log_outcome_plot_panel <- cowplot::plot_grid(title_theme,
-  hist_log_outcome_plot_panel,
-  rel_heights = c(.05, 1),
-  ncol = 1
-)
-```
-
-```{r hist prob, echo = FALSE, include = FALSE}
-rest_index <- final_models$data_mod == "og"
-census <- final_models[rest_index, "combined_census"][[1]]
-
-prob_cols <- names(census)[grepl("^prob\\d+$", names(census))]
-
-
-hist_plots <- lapply(prob_cols, function(prob_col) {
-  ggplot2::ggplot(data = census, aes_string(x = prob_col)) +
-    ggplot2::geom_histogram()
-})
-
-hist_plot_panel <- cowplot::plot_grid(
-  plotlist = hist_plots,
-  nrow = round(sqrt(length(prob_cols))),
-  byrow = TRUE,
-  greedy = FALSE,
-  labels = "AUTO"
-)
-
-title_theme <- ggdraw() +
-  draw_label(paste(
-    "Histograms of probabilites of class membership for all subjects",
-    sep = " "
-  ))
-
-hist_plot_panel <- cowplot::plot_grid(title_theme, hist_plot_panel,
-  rel_heights = c(.05, 1),
-  ncol = 1
-)
-```
-
-```{r initiate figure and table number}
+```{r sup figs fig no }
 fig_no <- 1
 tab_no <- 1
-figs <- list()
 ```
 
 ### Figure `r as.character(fig_no)`: How it works
 
-```{r how it works, fig.width = 12, fig.height = 6}
-figs$how_it_works <- how_it_works
-how_it_works
+```{r sup figs how it works, fig.width = 12, fig.height = 6}
+all_env$save_figtabs$how_it_works
 fig_no <- fig_no + 1
 ```
 
@@ -261,48 +108,36 @@ fig_no <- fig_no + 1
 This may explain our trouble externally validating with cohorts 9 and 10, since
 both have lower levels of survival
 
-```{r kap plot by harmonize}
-figs$harmonize_km <- lapply(
-  config$datasets[[1]]$harmonize$variable,
-  function(var) {
-    fig <- SLAM::surv_plot_km(census, var,
-      age_death = config$survival_dataset$age_death,
-      event = config$survival_dataset$event
-    )
-    table <- kable(fig$hr$hr_table[, "final", drop = FALSE])
-    plot <- fig$plot
-    list(plot, table)
-  }
-)
-figs$harmonize_km
+```{r sup figs kap plot by harmonize}
+all_env$save_figtabs$harmonize_km[[1]][[1]]
+flextabe(all_env$save_figtabs$harmonize_km[[1]][[2]])
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+```{r sup figs heights and widths}
+pred_obs_height <- nrow(all_env$final_models) / 2 * 6
+unique_class <- unique(all_env$final_models$census[[1]]$class)
+dose_height_width <- sqrt(length(unique_class)) * 6
+```
+
+### Figure `r as.character(fig_no)`: KM plots of covariates - By Sex
+
+```{r sup figs plot km covs}
+all_env$save_figtabs$cov_km[[1]][[1]]
+flextable(all_env$save_figtabs$cov_km[[1]][[2]])
 
 fig_no <- fig_no + 1
 ```
 
 \newpage
 
-```{r heights and widths}
-pred_obs_height <- nrow(final_models) / 2 * 6
-dose_height_width <- sqrt(length(unique(final_models$census[[1]]$class))) * 6
-```
+### Figure `r as.character(fig_no)`: KM plots of covariates - By Strain
 
-### Figure `r as.character(fig_no)`: KM plots of covariates - complete data
-
-```{r plot km covs}
-census <- final_models[rest_index, "combined_census"][[1]]
-
-cov_dummy <- datasets[[1]]$covariates_dummy
-figs$cov_km <- lapply(cov_dummy, function(cov) {
-  census[[cov]] <- factor(census[[cov]])
-  fig <- SLAM::surv_plot_km(census, cov,
-    age_death = config$survival_dataset$age_death,
-    event = config$survival_dataset$event
-  )
-  table <- kable(fig$hr$hr_table[, "final", drop = FALSE])
-  plot <- fig$plot
-  list(plot, table)
-})
-figs$cov_km
+```{r sup figs plot km covs}
+all_env$save_figtabs$cov_km[[2]][[1]]
+flextable(all_env$save_figtabs$cov_km[[2]][[2]])
 
 fig_no <- fig_no + 1
 ```
@@ -311,9 +146,8 @@ fig_no <- fig_no + 1
 
 ### Figure `r as.character(fig_no)`: Histogram of Outcome Variables - Complete and Training Data
 
-```{r disply hist outcome panel, fig.height=12, fig.width=12}
-figs$hist_outcome_plot_panel <- hist_outcome_plot_panel
-figs$hist_outcome_plot_panel
+```{r sup figs disply hist outcome panel, fig.height=12, fig.width=12}
+all_env$save_figtabs$hist_outcome_plot_panel
 
 fig_no <- fig_no + 1
 ```
@@ -322,9 +156,8 @@ fig_no <- fig_no + 1
 
 ### Figure `r as.character(fig_no)`: Histogram of log transform of outcome Variables - Complete and Training Data
 
-```{r disply hist log outcome panel, fig.height=12, fig.width=12}
-figs$hist_log_outcome_plot_panel <- hist_log_outcome_plot_panel
-figs$hist_log_outcome_plot_panel
+```{r sup figs disply hist log outcome panel, fig.height=12, fig.width=12}
+all_env$save_figtabs$hist_log_outcome_plot_panel
 
 fig_no <- fig_no + 1
 ```
@@ -333,9 +166,8 @@ fig_no <- fig_no + 1
 
 ### Figure `r as.character(fig_no)`: Histogram of probability of class membership - Complete Data
 
-```{r disply hist class prob panel, fig.height=12, fig.width=12}
-figs$hist_plot_panel <- hist_plot_panel
-figs$hist_plot_panel
+```{r sup figs disply hist class prob panel, fig.height=12, fig.width=12}
+all_env$save_figtabs$hist_plot_panel
 
 fig_no <- fig_no + 1
 ```
@@ -344,30 +176,27 @@ fig_no <- fig_no + 1
 
 ### Figure `r as.character(fig_no)`: Display Testing Data - Cumulative
 
-```{r cumulative validation plots, fig.width = 36, fig.height = 36}
-plots <- datasets[[1]]$validation_plots[[1]]
-figs$cumulative_validation <- plot_grid(plotlist = plots)
-figs$cumulative_validation
+```{r sup figs cumulative validation plots, fig.width = 36, fig.height = 36}
+cowplot::plot_grid(plotlist = all_env$save_figtabs$cumulative_validation_lots)
+fig_no <- fig_no + 1
 ```
 
 \newpage
 
 ### Figure `r as.character(fig_no)`: Display Testing Data - Window
 
-```{r window validation plots, fig.width = 36, fig.height = 36}
-plots <- datasets[[1]]$validation_plots[[2]]
-figs$window_validation <- plot_grid(plotlist = plots)
-figs$window_validation
+```{r sup figs window validation plots, fig.width = 36, fig.height = 36}
+cowplot::plot_grid(plotlist = all_env$save_figtabs$window_validation_lots)
+fig_no <- fig_no + 1
 ```
 
 \newpage
 
 ### Figure `r as.character(fig_no)`: Display Testing Data - Interval
 
-```{r interval validation plots, fig.width = 36, fig.height = 36}
-plots <- datasets[[1]]$validation_plots[[3]]
-figs$interval_validation <- plot_grid(plotlist = plots)
-figs$interval_validation
+```{r sup figs interval validation plots, fig.width = 36, fig.height = 36}
+plot_grid(plotlist = all_env$save_figtabs$interval_validation_lots)
+fig_no <- fig_no + 1
 ```
 
 \newpage
@@ -375,18 +204,196 @@ figs$interval_validation
 ### Figure `r as.character(fig_no)`: Display Testing Data - Proportion Resampled
 
 
-```{r resampled validation plots, fig.width = 36, fig.height = 36}
-plots <- datasets[[1]]$validation_plots[[4]]
-figs$proportion_validation <- plot_grid(plotlist = plots)
-figs$proportion_validation
+```{r sup figs resampled validation plots, fig.width = 36, fig.height = 36}
+plot_grid(plotlist = all_env$save_figtabs$resampled_validation_lots)
 fig_no <- fig_no + 1
 ```
 
-```{r save figs}
-output_path <- file.path("output", config$out_tag)
-dir.create(output_path)
-output_path <- normalizePath(output_path)
+\newpage
 
-save(figs, file = file.path(output_path, "figs.RDATA"))
+### Figure `r as.character(fig_no)`: Healthcard Supplemental 1
+
+```{r sup figs hc1 }
+knitr::include_graphics("images/HC Suppl 1.jpg")
 ```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Healthcard Supplemental 2
+
+```{r sup figs hc2 }
+knitr::include_graphics("images/HC Suppl 2.jpg")
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Healthcard Supplemental 3
+
+```{r sup figs hc3 }
+knitr::include_graphics("images/HC Suppl 3.jpg")
+```
+
+### Supplemental Table `r as.character(tab_no)`: Descriptive Census Information
+
+```{r sup_tables describe prob class, results = 'asis'}
+flextable(round(all_env$save_figtabs$describe_census, digits = 3)) %>%
+  theme_vanilla() %>%
+  fontsize(size = 7.5, part = "all") %>%
+  autofit() %>%
+  fit_to_width(width = 6.5) %>%
+  set_table_properties(layout = "autofit", width = 0)
+
+
+tab_no <- 1 + tab_no
+```
+
+\newpage
+
+### Supplemental Table `r as.character(tab_no)`: Descriptive Statistics of Outcomes, Age, Measure Frequency, and Age Difference Between measures for complete, training, and testing datasets
+
+```{r sup_tables dataset info complete and training, results = 'asis'}
+flextable(rbind(
+  all_env$save_figtabs$sum_data,
+  all_env$save_figtabs$sum_test
+)) %>%
+  theme_vanilla() %>%
+  fontsize(size = 5, part = "all") %>%
+  autofit() %>%
+  fit_to_width(width = 6.5) %>%
+  set_table_properties(layout = "autofit", width = 0)
+
+tab_no <- 1 + tab_no
+```
+
+\newpage
+
+### Supplemental Table `r as.character(tab_no)`: Missing Data Descriptive Statistics of Outcomes, Age, Measure Frequency, and Age Difference Between measures for complete, training, and testing datasets
+
+```{r sup_tables dataset info missing complete and training, results = 'asis'}
+flextable(all_env$save_figtabs$sum_missing) %>%
+  theme_vanilla() %>%
+  fontsize(size = 5, part = "all") %>%
+  autofit() %>%
+  fit_to_width(width = 6.5) %>%
+  set_table_properties(layout = "autofit", width = 0)
+
+
+tab_no <- 1 + tab_no
+```
+
+\newpage
+
+### Supplemental Table `r as.character(tab_no)`: Median Life Expectancy Data
+
+```{r sup_tables census information, results = 'asis'}
+flextable(all_env$save_figtabs$table_mle) %>%
+  autofit() %>%
+  theme_vanilla() %>%
+  fontsize(size = 6.5, part = "all") %>%
+  autofit() %>%
+  fit_to_width(width = 6.5) %>%
+  set_table_properties(layout = "autofit", width = 0)
+
+tab_no <- 1 + tab_no
+```
+
+\newpage
+
+### Supplemental Table `r as.character(tab_no)`: LCM Model Information
+
+```{r sup_tables lcmm concise, results = 'asis'}
+all_env$save_figtabs$lcmm_table %>%
+  dplyr::rename(`Smallest Class %` = `Smallest.Class....`) %>%
+  dplyr::mutate(`Smallest Class %` = round(`Smallest Class %`, digits = 3)) %>%
+  flextable() %>%
+  theme_vanilla() %>%
+  fontsize(size = 5.5, part = "all") %>%
+  autofit() %>%
+  fit_to_width(width = 6.5) %>%
+  set_table_properties(layout = "autofit", width = 0)
+
+tab_no <- 1 + tab_no
+```
+
+\newpage
+
+### Supplemental Table `r as.character(tab_no)`: LCM Posterior Probabilities
+
+```{r sup_tables lcmm model average posterior probs, results = 'asis'}
+flextable(all_env$save_figtabs$post_prob_table) %>%
+  theme_vanilla() %>%
+  fontsize(size = 7.5, part = "all") %>%
+  autofit() %>%
+  fit_to_width(width = 6.5) %>%
+  set_table_properties(layout = "autofit", width = 0)
+
+tab_no <- 1 + tab_no
+```
+
+\newpage
+
+### Supplemental Table `r as.character(tab_no)`: Candidate LCMs
+
+```{r sup_tables compare all models, results = 'asis'}
+flextable(all_env$save_figtabs$all_models_table) %>%
+  fontsize(size = 3, part = "all") %>%
+  autofit() %>%
+  theme_vanilla() %>%
+  fit_to_width(width = 6.5) %>%
+  set_table_properties(layout = "autofit", width = 0)
+
+tab_no <- 1 + tab_no
+```
+
+\newpage
+
+### Supplemental Table `r as.character(tab_no)`: LME Information
+
+```{r sup_tables lme table}
+all_env$save_figtabs$lme_table %>%
+  mutate(sigma = round(sigma, digits = 3)) %>%
+  mutate(loglik = round(loglik, digits = 0)) %>%
+  mutate(AICtab = round(AICtab, digits = 0)) %>%
+  flextable() %>%
+  theme_vanilla() %>%
+  fontsize(size = 6.5, part = "all") %>%
+  autofit() %>%
+  fit_to_width(width = 6.5) %>%
+  set_table_properties(layout = "autofit", width = 0)
+
+tab_no <- 1 + tab_no
+```
+
+\newpage
+
+### Supplemental Table `r as.character(tab_no)`: Individual Cox Information
+
+```{r sup_tables table coxzph individual cox model, results = 'asis'}
+flextable(all_env$save_figtabs$individual_coxzph_tables) %>%
+  theme_vanilla() %>%
+  fontsize(size = 5.5, part = "all") %>%
+  autofit() %>%
+  fit_to_width(width = 6.5) %>%
+  set_table_properties(layout = "autofit", width = 0)
+
+tab_no <- 1 + tab_no
+```
+
+\newpage
+
+### Supplemental Table `r as.character(tab_no)`: Combined Cox Information
+
+```{r sup_tables table coxzph combined cox model, results = 'asis'}
+all_env$save_figtabs$combined_coxzph_tables %>%
+  mutate(df = round(df, digits = 2)) %>%
+  select(-outcome) %>%
+  flextable() %>%
+  theme_vanilla()
+fontsize(size = 5.5, part = "all") %>%
+  autofit() %>%
+  fit_to_width(width = 6.5) %>%
+  set_table_properties(layout = "autofit", width = 0) %>%
+  tab_no() <- 1 + tab_no
+```
+
 
