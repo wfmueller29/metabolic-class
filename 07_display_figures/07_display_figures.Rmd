@@ -2686,9 +2686,50 @@ fig_no <- fig_no + 1
 
 ```{r clean environment}
 peek()
-rm(list = setdiff(ls(), c("final_models", "save_figtabs")))
+rm(list = setdiff(ls(), c("final_models", "save_figtabs", "config")))
 final_models <- final_models$census
 peek()
+peek(save_figtabs)
+
+save_figtabs$heatmap1 <- NULL
+save_figtabs$heatmap2 <- NULL
+
+
+# trim cumulative validation plots -------------------------------------------
+peek(save_figtabs$cumulative_validation_lots)
+first <- names(save_figtabs$cumulative_validation_lots)[[1]]
+first_number <- as.numeric(str_extract(first, "\\d+\\.\\d+"))
+first_numbers <- lapply(
+  names(save_figtabs$cumulative_validation_lots),
+  function(name) {
+    as.numeric(str_extract(name, "\\d+\\.\\d+"))
+  }
+)
+index <- first_numbers %in% first_number
+save_figtabs$cumulative_validation_lots <- save_figtabs$cumulative_validation_lots[index]
+
+# trim window validation plots  -----------------------------------------------
+peek(save_figtabs$window_validation_lots)
+
+get_interval_difference <- function(interval_string) {
+  # Remove square brackets
+  clean_string <- gsub("\\[|\\]", "", interval_string)
+  numbers <- strsplit(clean_string, ",")[[1]]
+  nums <- as.numeric(trimws(numbers))
+  difference <- nums[2] - nums[1]
+  return(difference)
+}
+
+differences <- lapply(
+  names(save_figtabs$window_validation_lots),
+  function(name) {
+    as.numeric(get_interval_difference(name))
+  }
+)
+index <- differences %in% differences[[1]]
+save_figtabs$window_validation_lots <- save_figtabs$window_validation_lots[index]
+
+peek(save_figtabs)
 ```
 
 ### Save environment
@@ -2697,7 +2738,7 @@ peek()
 output_path <- file.path("output", config$out_tag)
 dir.create(output_path)
 output_path <- normalizePath(output_path)
- 
+
 workspace_path <- file.path(output_path, "workspace.RDATA")
 
 save.image(file = workspace_path)
