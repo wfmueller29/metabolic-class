@@ -35,14 +35,21 @@ knitr::opts_chunk$set(cache = FALSE)
 
 ```{r sup figs read input yaml}
 # for the case when we are not running with RStudio
+all_path <- "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/workspace.RDATA"
+fb6_path <- "../07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/workspace.RDATA"
+fhet3_path <- "../07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/workspace.RDATA"
+mb6_path <- "../07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/workspace.RDATA"
+mhet3_path <- "../07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/workspace.RDATA"
+itp_path <- "../07_display_figures/output/itp_c10c11c13c16_age_controls_bw/workspace.RDATA"
+held_out_path <- "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/workspace.RDATA"
 
-all_path <- "../06_create_figures/output/slam_c1-c10_age_all_bwfatgluc.yaml"
-fb6_path <- "../06_create_figures/output/slam_c1-c10_age_fb6_bwfatgluc.yaml"
-fhet3_path <- "../06_create_figures/output/slam_c1-c10_age_fhet3_bwfatgluc.yaml"
-mb6_path <- "../06_create_figures/output/slam_c1-c10_age_mb6_bwfatgluc.yaml"
-mhet3_path <- "../06_create_figures/output/slam_c1-c10_age_mhet3_bwfatgluc.yaml"
-itp_path <- "../06_create_figures/output/itp_c10c11c13c16_age_controls_bw.yaml"
-held_out_path <- "../06_create_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc.yaml"
+# all_path <- "../06_create_figures/output/slam_c1-c10_age_all_bwfatgluc.yaml"
+# fb6_path <- "../06_create_figures/output/slam_c1-c10_age_fb6_bwfatgluc.yaml"
+# fhet3_path <- "../06_create_figures/output/slam_c1-c10_age_fhet3_bwfatgluc.yaml"
+# mb6_path <- "../06_create_figures/output/slam_c1-c10_age_mb6_bwfatgluc.yaml"
+# mhet3_path <- "../06_create_figures/output/slam_c1-c10_age_mhet3_bwfatgluc.yaml"
+# itp_path <- "../06_create_figures/output/itp_c10c11c13c16_age_controls_bw.yaml"
+# held_out_path <- "../06_create_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc.yaml"
 config <- NULL
 ```
 
@@ -50,30 +57,38 @@ config <- NULL
 # Define a named list of input paths and environment names
 render_tasks <- list(
   all_env = all_path,
-  fb6_env = fb6_path,
-  fhet3_env = fhet3_path,
-  mb6_env = mb6_path,
-  mhet3_env = mhet3_path,
-  itp_env = itp_path,
-  held_out_env = held_out_path
+  # fb6_env = fb6_path,
+  # fhet3_env = fhet3_path,
+  # mb6_env = mb6_path,
+  # mhet3_env = mhet3_path,
+  itp_env = itp_path # ,
+  # held_out_env = held_out_path
 )
 
-# This sets up multi-session workers
-future::plan(multisession, workers = 2L)
-
-future_lapply(names(render_tasks), function(env_name) {
+lapply(names(render_tasks), function(env_name) {
   env <- new.env()
-  assign("config", NULL, envir = env)
   input_path <- render_tasks[[env_name]]
-  rmarkdown::render(
-    "../07_display_figures/07_display_figures.Rmd",
-    envir = env,
-    params = list(input_path = input_path),
-    quiet = FALSE,
-    output_dir = paste0("output_", env_name)
-  )
+  load(input_path, envir = env)
   assign(env_name, env, envir = .GlobalEnv)
 })
+
+
+# This sets up multi-session workers
+# future::plan(multisession, workers = 2L)
+#
+# future_lapply(names(render_tasks), function(env_name) {
+#   env <- new.env()
+#   assign("config", NULL, envir = env)
+#   input_path <- render_tasks[[env_name]]
+#   rmarkdown::render(
+#     "../07_display_figures/07_display_figures.Rmd",
+#     envir = env,
+#     params = list(input_path = input_path),
+#     quiet = FALSE,
+#     output_dir = paste0("output_", env_name)
+#   )
+#   assign(env_name, env, envir = .GlobalEnv)
+# })
 ```
 
 ```{r sup figs fig no }
