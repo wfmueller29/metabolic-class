@@ -7,7 +7,7 @@ output:
   html_document:
     df_print: paged
 params:
-  input_path: "../06_create_figures/output/slam_c1-c10_age_all_bwfatgluc.yaml"
+  input_path: "../06_create_figures/output/itp_c10c11c13c16_age_controls_bw.yaml"
 ---
 
 ```{r setup, warning=FALSE, message=FALSE, echo=FALSE}
@@ -57,7 +57,8 @@ if (!exists("params")) {
   # params$input_path <- "../06_create_figures/output/all.yaml"
   # params$input_path <- "../06_create_figures/output/20250426_itp_C2010_C2011_C2013_C2016_controls_cohort.yaml"
   # params$input_path <- "../06_create_figures/output/20250426_all_cohort.yaml"
-  params$input_path <- "../06_create_figures/output/slam_c1-c10_age_fb6_bwfatgluc.yaml"
+  # params$input_path <- "../06_create_figures/output/slam_c1-c10_age_fb6_bwfatgluc.yaml"
+  params$input_path <- "../06_create_figures/output/itp_c10c11c13c16_age_controls_bw.yaml"
   # params$input_path <- "../06_create_figures/output/all_lean.yaml"
   # params$input_path <- "../06_create_figures/output/fb6.yaml"
   # params$input_path <- "../06_create_figures/output/external_validation.yaml"
@@ -2685,11 +2686,8 @@ fig_no <- fig_no + 1
 ### Clean up environment
 
 ```{r clean environment}
+# trim heatmaps ---------------------------------------------------------------
 peek()
-rm(list = setdiff(ls(), c("final_models", "save_figtabs", "config")))
-final_models <- final_models$census
-peek()
-peek(save_figtabs)
 
 save_figtabs$heatmap1 <- NULL
 save_figtabs$heatmap2 <- NULL
@@ -2698,7 +2696,7 @@ save_figtabs$heatmap2 <- NULL
 # trim cumulative validation plots -------------------------------------------
 peek(save_figtabs$cumulative_validation_lots)
 first <- names(save_figtabs$cumulative_validation_lots)[[1]]
-first_number <- as.numeric(str_extract(first, "\\d+\\.\\d+"))
+first_number <- as.numeric(str_extract(first, "\\d+|\\d+\\.\\d+"))
 first_numbers <- lapply(
   names(save_figtabs$cumulative_validation_lots),
   function(name) {
@@ -2730,9 +2728,16 @@ index <- differences %in% differences[[1]]
 save_figtabs$window_validation_lots <- save_figtabs$window_validation_lots[index]
 
 peek(save_figtabs)
+
+# remove all excess objects --------------------------------------------------
+peek()
+rm(list = setdiff(ls(), c("final_models", "save_figtabs", "config")))
+final_models <- final_models$census
+peek()
+peek(save_figtabs)
 ```
 
-### Save environment
+### Save R Objects
 
 ```{r save}
 output_path <- file.path("output", config$out_tag)
@@ -2741,6 +2746,6 @@ output_path <- normalizePath(output_path)
 
 workspace_path <- file.path(output_path, "workspace.RDATA")
 
-save.image(file = workspace_path)
+save(final_models, save_figtabs, file = workspace_path)
 ```
 
