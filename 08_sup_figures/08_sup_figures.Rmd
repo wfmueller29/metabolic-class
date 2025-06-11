@@ -1,10 +1,15 @@
 ---
-title: "SLAM Metabolic Class Supplmental Figures"
-author: "William Mueller, Joshua Preston"
+title: "SLAM Metabolic Class Supplemental Figures"
+author: "..."
 data: "`r format(Sys.time(), '%Y %B %d')`"
 output:
   html_document:
     df_print: paged
+geometry:
+  - top=1in
+  - bottom=1in
+  - left=0.5in
+  - right=0.5in
 ---
 
 ```{r sup figs setup, warning=FALSE, message=FALSE, echo=FALSE}
@@ -94,7 +99,7 @@ lapply(names(render_tasks), function(env_name) {
 ```{r sup figs fig no }
 fig_no <- 1
 tab_no <- 1
-max_width <- 6.5
+max_width <- 7
 ```
 
 \newpage
@@ -105,7 +110,7 @@ max_width <- 6.5
 
 ### Figure `r as.character(fig_no)`: How it works
 
-```{r sup figs how it works, fig.width = 12, fig.height = 6}
+```{r sup figs how it works, out.width = "100%"}
 knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/how_it_works/how_it_works.png")
 
 fig_no <- fig_no + 1
@@ -118,18 +123,17 @@ fig_no <- fig_no + 1
 This may explain our trouble externally validating with cohorts 9 and 10, since
 both have lower levels of survival
 
-```{r sup figs kap plot by harmonize}
+```{r sup figs kap plot by harmonize, out.width = "100%"}
 knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/harmonize_km/plot_1.png")
 
 table <- all_env$save_figtabs$harmonize_km[[1]]
 table <- cbind(Cohort = rownames(table), table)
 flextable(table) %>%
   theme_vanilla() %>%
-  fontsize(size = 5, part = "all") %>%
   autofit() %>%
-  fit_to_width(max_width = max_width) %>%
-  padding(padding = 1, part = "all") %>%
-  set_table_properties(layout = "autofit", width = 0)
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
 fig_no <- fig_no + 1
 rm(table)
 ```
@@ -144,19 +148,16 @@ dose_height_width <- sqrt(length(unique_class)) * 6
 
 ### Figure `r as.character(fig_no)`: KM plots of covariates - By Sex
 
-```{r sup figs plot km covs sex}
+```{r sup figs plot km covs sex, out.width = "100%"}
 knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/cov_km/plot_1.png")
 
 table <- all_env$save_figtabs$cov_km[[1]]
 table <- cbind(Sex = rownames(table), table)
 flextable(table) %>%
   theme_vanilla() %>%
-  fontsize(size = 5, part = "all") %>%
   autofit() %>%
-  fit_to_width(max_width = max_width) %>%
-  padding(padding = 1, part = "all") %>%
-  padding(padding = 1, part = "all") %>%
-  set_table_properties(layout = "autofit", width = 0)
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
 fig_no <- fig_no + 1
 rm(table)
@@ -166,19 +167,16 @@ rm(table)
 
 ### Figure `r as.character(fig_no)`: KM plots of covariates - By Strain
 
-```{r sup figs plot km covs strain}
+```{r sup figs plot km covs strain, out.width = "100%"}
 knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/cov_km/plot_2.png")
 
 table <- all_env$save_figtabs$cov_km[[2]]
 table <- cbind(Strain = rownames(table), table)
 flextable(table) %>%
   theme_vanilla() %>%
-  fontsize(size = 5, part = "all") %>%
   autofit() %>%
-  fit_to_width(max_width = max_width) %>%
-  padding(padding = 1, part = "all") %>%
-  padding(padding = 1, part = "all") %>%
-  set_table_properties(layout = "autofit", width = 0)
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
 fig_no <- fig_no + 1
 rm(table)
@@ -188,7 +186,7 @@ rm(table)
 
 ### Figure `r as.character(fig_no)`: Histogram of Outcome Variables - Complete and Training Data
 
-```{r sup figs disply hist outcome panel}
+```{r sup figs disply hist outcome panel, out.width = "100%"}
 knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/hist_outcome_plot_panel/hist_outcome_plot_panel.png")
 
 fig_no <- fig_no + 1
@@ -198,7 +196,7 @@ fig_no <- fig_no + 1
 
 ### Figure `r as.character(fig_no)`: Histogram of log transform of outcome Variables - Complete and Training Data
 
-```{r sup figs disply hist log outcome panel}
+```{r sup figs disply hist log outcome panel, out.width = "100%"}
 knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/hist_log_outcome_plot_panel/hist_log_outcome_plot_panel.png")
 
 fig_no <- fig_no + 1
@@ -208,7 +206,7 @@ fig_no <- fig_no + 1
 
 ### Figure `r as.character(fig_no)`: Histogram of probability of class membership - Complete Data
 
-```{r sup figs disply hist class prob panel, fig.height=12, fig.width=12}
+```{r sup figs disply hist class prob panel, out.width = "100%"}
 knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/hist_plot_panel/hist_plot_panel.png")
 
 fig_no <- fig_no + 1
@@ -218,7 +216,7 @@ fig_no <- fig_no + 1
 
 ### Figure `r as.character(fig_no)`: Display Testing Data - Cumulative
 
-```{r sup figs cumulative validation plots, fig.width = 36, fig.height = 36}
+```{r sup figs cumulative validation plots, out.width = "100%"}
 knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/cum_validation_plots/cum_validation_plots.png")
 
 fig_no <- fig_no + 1
@@ -228,7 +226,7 @@ fig_no <- fig_no + 1
 
 ### Figure `r as.character(fig_no)`: Display Testing Data - Window
 
-```{r sup figs window validation plots, fig.width = 36, fig.height = 36}
+```{r sup figs window validation plots, out.width = "100%"}
 knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/window_validation_plots/window_validation_plots.png")
 fig_no <- fig_no + 1
 ```
@@ -237,7 +235,7 @@ fig_no <- fig_no + 1
 
 ### Figure `r as.character(fig_no)`: Display Testing Data - Interval
 
-```{r sup figs interval validation plots, fig.width = 36, fig.height = 36}
+```{r sup figs interval validation plots, out.width = "100%"}
 knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/interval_validation_plots/interval_validation_plots.png")
 fig_no <- fig_no + 1
 ```
@@ -247,7 +245,7 @@ fig_no <- fig_no + 1
 ### Figure `r as.character(fig_no)`: Display Testing Data - Proportion Resampled
 
 
-```{r sup figs resampled validation plots, fig.width = 36, fig.height = 36}
+```{r sup figs resampled validation plots, out.width = "100%"}
 knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/resampled_validation_plots/resampled_validation_plots.png")
 
 fig_no <- fig_no + 1
@@ -259,6 +257,7 @@ fig_no <- fig_no + 1
 
 ```{r sup figs hc1 }
 knitr::include_graphics("images/HC Suppl 1.jpg")
+fig_no <- fig_no + 1
 ```
 
 \newpage
@@ -267,6 +266,7 @@ knitr::include_graphics("images/HC Suppl 1.jpg")
 
 ```{r sup figs hc2 }
 knitr::include_graphics("images/HC Suppl 2.jpg")
+fig_no <- fig_no + 1
 ```
 
 \newpage
@@ -275,6 +275,7 @@ knitr::include_graphics("images/HC Suppl 2.jpg")
 
 ```{r sup figs hc3 }
 knitr::include_graphics("images/HC Suppl 3.jpg")
+fig_no <- fig_no + 1
 ```
 
 ### Supplemental Table `r as.character(tab_no)`: Descriptive Census Information
@@ -282,15 +283,14 @@ knitr::include_graphics("images/HC Suppl 3.jpg")
 ```{r sup_tables describe prob class, results = 'asis'}
 flextable(round(all_env$save_figtabs$describe_census, digits = 3)) %>%
   theme_vanilla() %>%
-  fontsize(size = 7.5, part = "all") %>%
   autofit() %>%
-  fit_to_width(max_width = max_width) %>%
-  padding(padding = 1, part = "all") %>%
-  set_table_properties(layout = "autofit", width = 0)
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
 
 tab_no <- 1 + tab_no
 ```
+
 
 \newpage
 
@@ -302,30 +302,24 @@ flextable(rbind(
   all_env$save_figtabs$sum_test
 )) %>%
   theme_vanilla() %>%
-  fontsize(size = 5, part = "all") %>%
   autofit() %>%
-  fit_to_width(max_width = max_width) %>%
-  padding(padding = 1, part = "all") %>%
-  set_table_properties(
-    layout = "autofit", width = 0,
-    opts_pdf = list(arraystretch = 1.25)
-  )
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
 tab_no <- 1 + tab_no
 ```
 
 \newpage
 
+
 ### Supplemental Table `r as.character(tab_no)`: Descriptive Statistics SLAM C16-C18 datasets
 
 ```{r sup_tables held_out dataset info complete and training, results = 'asis'}
 flextable(held_out_env$save_figtabs$sum_test) %>%
   theme_vanilla() %>%
-  fontsize(size = 5, part = "all") %>%
   autofit() %>%
-  fit_to_width(max_width = max_width) %>%
-  padding(padding = 1, part = "all") %>%
-  set_table_properties(layout = "autofit", width = 0)
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
 tab_no <- 1 + tab_no
 ```
@@ -337,11 +331,9 @@ tab_no <- 1 + tab_no
 ```{r sup_tables dataset info missing complete and training, results = 'asis'}
 flextable(all_env$save_figtabs$sum_missing) %>%
   theme_vanilla() %>%
-  fontsize(size = 5, part = "all") %>%
   autofit() %>%
-  fit_to_width(max_width = max_width) %>%
-  padding(padding = 1, part = "all") %>%
-  set_table_properties(layout = "autofit", width = 0)
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
 
 tab_no <- 1 + tab_no
@@ -353,13 +345,10 @@ tab_no <- 1 + tab_no
 
 ```{r sup_tables census information, results = 'asis'}
 flextable(all_env$save_figtabs$table_mle) %>%
-  autofit() %>%
   theme_vanilla() %>%
-  fontsize(size = 6.5, part = "all") %>%
   autofit() %>%
-  fit_to_width(max_width = max_width) %>%
-  padding(padding = 1, part = "all") %>%
-  set_table_properties(layout = "autofit", width = 0)
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
 tab_no <- 1 + tab_no
 ```
@@ -374,11 +363,9 @@ all_env$save_figtabs$lcmm_table %>%
   dplyr::mutate(`Smallest Class %` = round(`Smallest Class %`, digits = 3)) %>%
   flextable() %>%
   theme_vanilla() %>%
-  fontsize(size = 5.5, part = "all") %>%
   autofit() %>%
-  fit_to_width(max_width = max_width) %>%
-  padding(padding = 1, part = "all") %>%
-  set_table_properties(layout = "autofit", width = 0)
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
 tab_no <- 1 + tab_no
 ```
@@ -390,11 +377,9 @@ tab_no <- 1 + tab_no
 ```{r sup_tables lcmm model average posterior probs, results = 'asis'}
 flextable(all_env$save_figtabs$post_prob_table) %>%
   theme_vanilla() %>%
-  fontsize(size = 7.5, part = "all") %>%
   autofit() %>%
-  fit_to_width(max_width = max_width) %>%
-  padding(padding = 1, part = "all") %>%
-  set_table_properties(layout = "autofit", width = 0)
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
 tab_no <- 1 + tab_no
 ```
@@ -405,12 +390,12 @@ tab_no <- 1 + tab_no
 
 ```{r sup_tables compare all models, results = 'asis'}
 flextable(all_env$save_figtabs$all_models_table) %>%
-  fontsize(size = 3, part = "all") %>%
-  autofit() %>%
+  # fontsize(size = 3, part = "all") %>%
   theme_vanilla() %>%
-  fit_to_width(max_width = max_width) %>%
-  padding(padding = 1, part = "all") %>%
-  set_table_properties(layout = "autofit", width = 0)
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
 
 tab_no <- 1 + tab_no
 ```
@@ -426,11 +411,9 @@ all_env$save_figtabs$lme_table %>%
   mutate(AICtab = round(AICtab, digits = 0)) %>%
   flextable() %>%
   theme_vanilla() %>%
-  fontsize(size = 6.5, part = "all") %>%
   autofit() %>%
-  fit_to_width(max_width = max_width) %>%
-  padding(padding = 1, part = "all") %>%
-  set_table_properties(layout = "autofit", width = 0)
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
 tab_no <- 1 + tab_no
 ```
@@ -442,11 +425,9 @@ tab_no <- 1 + tab_no
 ```{r sup_tables table coxzph individual cox model, results = 'asis'}
 flextable(all_env$save_figtabs$individual_coxzph_tables) %>%
   theme_vanilla() %>%
-  fontsize(size = 5.5, part = "all") %>%
   autofit() %>%
-  fit_to_width(max_width = max_width) %>%
-  padding(padding = 1, part = "all") %>%
-  set_table_properties(layout = "autofit", width = 0)
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
 tab_no <- 1 + tab_no
 ```
@@ -461,11 +442,9 @@ all_env$save_figtabs$combined_coxzph_tables %>%
   select(-outcome) %>%
   flextable() %>%
   theme_vanilla() %>%
-  fontsize(size = 5.5, part = "all") %>%
   autofit() %>%
-  fit_to_width(max_width = max_width) %>%
-  padding(padding = 1, part = "all") %>%
-  set_table_properties(layout = "autofit", width = 0)
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
 tab_no <- 1 + tab_no
 ```
