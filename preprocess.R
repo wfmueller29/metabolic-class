@@ -11,7 +11,8 @@ system2("Rscript", args = c("dataset_mods.R", "input/slam_c1-c10.yaml"))
 setwd("../00c_survival_data/")
 
 system2("Rscript",
-        args = c("create_survival_data.R ", "input/slam_c1-c10.yaml"))
+  args = c("create_survival_data.R ", "input/slam_c1-c10.yaml")
+)
 
 
 # For c16-c18 -----------------------------------------------------------------
@@ -26,4 +27,10 @@ system2("Rscript", args = c("dataset_mods.R", "input/slam_c16-c18.yaml"))
 setwd("../00c_survival_data/")
 
 system2("Rscript",
-        args = c("create_survival_data.R ", "input/slam_c16-c18.yaml"))
+  args = c("create_survival_data.R ", "input/slam_c16-c18.yaml")
+)
+
+# For itp  --------------------------------------------------------------------
+setwd("../00a_itp/")
+
+system2("Rscripts", args = c("itp2_clean.R"))

@@ -7,7 +7,7 @@ output:
   html_document:
     df_print: paged
 params:
-  input_path: "../06_create_figures/output/test_local.yaml"
+  input_path: "../06_create_figures/output/slam_c1-c10_age_all_bwfatgluc.yaml"
 ---
 
 ```{r setup, warning=FALSE, message=FALSE, echo=FALSE}
@@ -57,8 +57,8 @@ if (!exists("params")) {
   # params$input_path <- "../06_create_figures/output/all.yaml"
   # params$input_path <- "../06_create_figures/output/20250426_itp_C2010_C2011_C2013_C2016_controls_cohort.yaml"
   # params$input_path <- "../06_create_figures/output/20250426_all_cohort.yaml"
-  params$input_path <- "../06_create_figures/output/slam_c1-c10_age_fb6_bwfatgluc.yaml"
-
+  # params$input_path <- "../06_create_figures/output/slam_c1-c10_age_fb6_bwfatgluc.yaml"
+  params$input_path <- "../06_create_figures/output/itp_c10c11c13c16_age_controls_bw.yaml"
   # params$input_path <- "../06_create_figures/output/all_lean.yaml"
   # params$input_path <- "../06_create_figures/output/fb6.yaml"
   # params$input_path <- "../06_create_figures/output/external_validation.yaml"
@@ -821,6 +821,7 @@ lme_table <- lapply(seq_along(model_list), function(i) {
 })
 
 lme_table
+rm(rows)
 ```
 
 ### Class Prediction Panel
@@ -1500,27 +1501,11 @@ hist_plot_panel <- cowplot::plot_grid(title_theme, hist_plot_panel,
 )
 ```
 
-### Descriptive stats of probabilities of class assignments - Complete Data
 
-```{r describe prob class, results = 'asis'}
-census <- final_models[rest_index, "combined_census"][[1]]
-kable(psych::describe(census))
-```
+### Create list for later figure dispaly
 
-### Kaplan Meier by Cohort
-
-This may explain our trouble externally validating with cohorts 9 and 10, since
-both have lower levels of survival
-
-```{r source surv analysis for cohort, file = 'R/surv_all.R'}
-source("R/surv_all.R")
-```
-
-```{r kap plot by cohort}
-kap_plot_all(census, "cohort",
-  age_death = config$survival_dataset$age_death,
-  event = config$survival_dataset$event
-)
+```{r figure lists}
+save_figtabs <- list()
 ```
 
 ## Display Figures
@@ -1530,10 +1515,117 @@ fig_no <- 1
 tab_no <- 1
 ```
 
+### Descriptive stats of probabilities of class assignments - Complete Data
+
+```{r describe prob class, results = 'asis'}
+census <- final_models[rest_index, "combined_census"][[1]]
+save_figtabs$describe_census <- psych::describe(census)
+kable(psych::describe(census))
+```
+
+### Figure `r as.character(fig_no)`: Kaplan Meier by Harmonizer
+
+This may explain our trouble externally validating with cohorts 9 and 10, since
+both have lower levels of survival
+
+```{r kap plot by harmonize}
+harmonize_km <- lapply(
+  config$datasets[[1]]$harmonize$variable,
+  function(var) {
+    fig <- SLAM::surv_plot_km(census, var,
+      age_death = config$survival_dataset$age_death,
+      event = config$survival_dataset$event
+    )
+    table <- fig$hr$hr_table[, "final", drop = FALSE]
+    plot <- fig$plot
+    list(plot, table)
+  }
+)
+harmonize_km
+
+# store for later -------------------------------------------------------------
+save_figtabs$harmonize_km_hrs <- lapply(harmonize_km, function(x) {
+  x[[2]]
+})
+
+for (i in seq_along(harmonize_km)) {
+  plot <- harmonize_km[[i]][[1]]$plot
+  name <- paste0("plot_", i, ".png")
+  output_path <- file.path("output", config$out_tag, "harmonize_km")
+  dir.create(output_path, recursive = TRUE)
+  output_path <- normalizePath(output_path)
+  file_name <- file.path(output_path, name)
+
+  ggsave(filename = name, plot = plot, device = "png", path = output_path)
+  png(file = file_name)
+  plot
+  dev.off()
+}
+rm(harmonize_km)
+
+fig_no <- fig_no + 1
+```
+
+
+### Figure `r as.character(fig_no)`: KM plots of covariates - complete data
+
+```{r plot km covs}
+census <- final_models[rest_index, "combined_census"][[1]]
+
+cov_dummy <- datasets[[1]]$covariates_dummy
+cov_km <- lapply(cov_dummy, function(cov) {
+  census[[cov]] <- factor(census[[cov]])
+  fig <- SLAM::surv_plot_km(census, cov,
+    age_death = config$survival_dataset$age_death,
+    event = config$survival_dataset$event
+  )
+  table <- fig$hr$hr_table[, "final", drop = FALSE]
+  plot <- fig$plot
+  list(plot, table)
+})
+cov_km
+
+# store for later -------------------------------------------------------------
+save_figtabs$cov_km_hrs <- lapply(cov_km, function(x) {
+  x[[2]]
+})
+
+for (i in seq_along(cov_km)) {
+  plot <- cov_km[[i]][[1]]$plot
+  name <- paste0("plot_", i, ".png")
+  output_path <- file.path("output", config$out_tag, "cov_km")
+  dir.create(output_path, recursive = TRUE)
+  output_path <- normalizePath(output_path)
+  file_name <- file.path(output_path, name)
+
+  ggsave(filename = name, plot = plot, device = "png", path = output_path)
+  png(file = file_name)
+  plot
+  dev.off()
+}
+
+rm(cov_km)
+fig_no <- fig_no + 1
+```
+
+
 ### Figure `r as.character(fig_no)`: How it works
 
-```{r how it works, fig.width = 12, fig.height = 6}
+```{r how it works, fig.width = 6, fig.height = 6}
 how_it_works
+
+# store for later -------------------------------------------------------------
+plot <- how_it_works
+name <- paste0("how_it_works", ".png")
+output_path <- file.path("output", config$out_tag, "how_it_works")
+dir.create(output_path, recursive = TRUE)
+file_name <- file.path(output_path, name)
+
+cowplot::save_plot(filename = file_name, plot = plot, ncol = 2, nrow = 2)
+dev.off()
+
+# rm(how_it_works)
+
 fig_no <- fig_no + 1
 ```
 
@@ -1541,18 +1633,45 @@ fig_no <- fig_no + 1
 
 #### Complete Data
 ```{r heights and widths}
+rows <- nrow(final_models) / 2
 pred_obs_height <- nrow(final_models) / 2 * 6
-dose_height_width <- sqrt(length(unique(final_models$census[[1]]$class))) * 6
+unique_class <- length(
+                       which(grepl("^prob\\d+$", names(final_models$combined_census[[1]]))))
+dose_height_width <- sqrt(unique_class) * 6
 ```
 
 ```{r predicted and observed, fig.height=pred_obs_height, fig.width=12, eval.after = TRUE}
 pred_obs_panel
+
+# store for later -------------------------------------------------------------
+plot <- pred_obs_panel
+name <- paste0("pred_obs_panel", ".png")
+output_path <- file.path("output", config$out_tag, "pred_obs_panel")
+dir.create(output_path, recursive = TRUE)
+file_name <- file.path(output_path, name)
+
+cowplot::save_plot(filename = file_name, plot = plot, ncol = 2, nrow = rows)
+dev.off()
+
+# rm(pred_obs_panel)
 ```
 
 #### Training Data
 
 ```{r predicted and observed train, fig.height=pred_obs_height, fig.width=12, eval.after = TRUE}
 pred_obs_panel_train
+
+# store for later -------------------------------------------------------------
+plot <- pred_obs_panel_train
+name <- paste0("pred_obs_panel_train", ".png")
+output_path <- file.path("output", config$out_tag, "pred_obs_panel_train")
+dir.create(output_path, recursive = TRUE)
+file_name <- file.path(output_path, name)
+
+cowplot::save_plot(filename = file_name, plot = plot, ncol = 2, nrow = rows)
+dev.off()
+
+rm(pred_obs_panel_train)
 fig_no <- fig_no + 1
 ```
 
@@ -1577,20 +1696,25 @@ print_table <- function(env, table_name, title) {
   return(table)
 }
 
-print_table(.GlobalEnv,
+print_table(environment(),
   table_name = "t1_df",
   title = "Demographics by Metabolic Index and Class"
 )
+
+save_figtabs$t1_df <- t1_df
+rm(t1_df)
 tab_no <- tab_no + 1
 ```
 
 #### Training Data
 
 ```{r table whos in each class train, results = 'asis'}
-print_table(.GlobalEnv,
+print_table(environment(),
   table_name = "t1_df_train",
   title = "Demographics by Metabolic Index and Class"
 )
+save_figtabs$t1_df_train <- t1_df_train
+rm(t1_df_train)
 ```
 
 ### Figure `r as.character(fig_no)`: Metabolic Classes with Other Metabolic Metrics
@@ -1599,12 +1723,36 @@ print_table(.GlobalEnv,
 
 ```{r plot classes by other outcomes, fig.height=18, fig.width=24}
 other_met_panel
+
+# store for later -------------------------------------------------------------
+plot <- other_met_panel
+name <- paste0("other_met_panel", ".png")
+output_path <- file.path("output", config$out_tag, "other_met_panel")
+dir.create(output_path, recursive = TRUE)
+file_name <- file.path(output_path, name)
+
+cowplot::save_plot(filename = file_name, plot = plot, ncol = rows, nrow = rows)
+dev.off()
+
+rm(other_met_panel)
 ```
 
 #### Training Data
 
 ```{r plot classes by other outcomes train, fig.height=18, fig.width=24}
 other_met_panel_train
+
+# store for later -------------------------------------------------------------
+plot <- other_met_panel_train
+name <- paste0("other_met_panel_train", ".png")
+output_path <- file.path("output", config$out_tag, "other_met_panel_train")
+dir.create(output_path, recursive = TRUE)
+file_name <- file.path(output_path, name)
+
+cowplot::save_plot(filename = file_name, plot = plot, ncol = rows, nrow = rows)
+dev.off()
+
+rm(other_met_panel_train)
 fig_no <- fig_no + 1
 ```
 
@@ -1614,12 +1762,18 @@ fig_no <- fig_no + 1
 
 ```{r heatmap of census with out covariate, fig.height=12, fig.width=12}
 heatmap2
+rm(heatmap2)
+dev.off()
 ```
 
 #### With Covariates
 
 ```{r heatmap of census with covariate, fig.height=12, fig.width=12}
 heatmap1
+
+rm(heatmap1)
+dev.off()
+
 fig_no <- fig_no + 1
 ```
 
@@ -1652,10 +1806,24 @@ tab_no <- tab_no + 1
 
 ```{r mortality and class, fig.height=pred_obs_height, fig.width=12, eval.after = TRUE}
 mortality_panel
+
+# store for later -------------------------------------------------------------
+plot <- mortality_panel
+name <- paste0("mortality_panel", ".png")
+output_path <- file.path("output", config$out_tag, "mortality_panel")
+dir.create(output_path, recursive = TRUE)
+file_name <- file.path(output_path, name)
+
+cowplot::save_plot(filename = file_name, plot = plot, ncol = 2, nrow = rows)
+dev.off()
+
+rm(mortality_panel)
+
 fig_no <- fig_no + 1
 ```
 
 ```{r mortality and class hr table, results = 'asis'}
+save_figtabs$mortality_panel_hr <- mortality_panel_hr
 for (table in mortality_panel_hr) {
   print(kable(table))
 }
@@ -1665,10 +1833,23 @@ for (table in mortality_panel_hr) {
 
 ```{r mortality and class training, fig.height=pred_obs_height, fig.width=12, eval.after = TRUE}
 mortality_panel_train
+
+# store for later -------------------------------------------------------------
+plot <- mortality_panel_train
+name <- paste0("mortality_panel_train", ".png")
+output_path <- file.path("output", config$out_tag, "mortality_panel_train")
+dir.create(output_path, recursive = TRUE)
+file_name <- file.path(output_path, name)
+
+cowplot::save_plot(filename = file_name, plot = plot, ncol = 2, nrow = rows)
+dev.off()
+
+rm(mortality_panel_train)
 fig_no <- fig_no + 1
 ```
 
 ```{r mortality and class training hr table, results = 'asis'}
+save_figtabs$mortality_panel_train_hr <- mortality_panel_train_hr
 for (table in mortality_panel_train_hr) {
   print(kable(table))
 }
@@ -1678,6 +1859,7 @@ for (table in mortality_panel_train_hr) {
 
 ```{r class mortality and other outcome,  fig.height=pred_obs_height, fig.width=pred_obs_height+6, eval.after = TRUE}
 new_figure1
+rm(new_figure1)
 fig_no <- fig_no + 1
 ```
 
@@ -1685,10 +1867,12 @@ fig_no <- fig_no + 1
 
 ```{r dose reponse, fig.height=dose_height_width, fig.width=dose_height_width, eval.after = TRUE}
 dose_plot_panel
+rm(dose_plot_panel)
 fig_no <- fig_no + 1
 ```
 
 ```{r dose response hr table, results = 'asis'}
+save_figtabs$dose_plot_panel_hr <- dose_plot_panel_hr
 for (table in dose_plot_panel_hr) {
   print(kable(table))
 }
@@ -1705,7 +1889,8 @@ for (i in seq_along(formulas)) {
 ```
 
 ```{r table hazard ratios, results = 'asis'}
-print_table(.GlobalEnv,
+save_figtabs$hr_table <- hr_table
+print_table(environment(),
   table_name = "hr_table",
   title = "Table of Hazard Ratios by Metabolic Indices"
 )
@@ -1716,6 +1901,18 @@ tab_no <- tab_no + 1
 
 ```{r Class prediction panel, fig.height=pred_obs_height, fig.width=24, eval.after = TRUE}
 class_prediction_panel
+
+# store for later -------------------------------------------------------------
+plot <- class_prediction_panel
+name <- paste0("class_prediction_panel", ".png")
+output_path <- file.path("output", config$out_tag, "class_prediction_panel")
+dir.create(output_path, recursive = TRUE)
+file_name <- file.path(output_path, name)
+
+cowplot::save_plot(filename = file_name, plot = plot, ncol = 4, nrow = rows)
+dev.off()
+
+rm(class_prediction_panel)
 fig_no <- fig_no + 1
 ```
 
@@ -1751,6 +1948,7 @@ fig_no <- fig_no + 1
 ```{r km cum validation 4, fig.height=6, fig.width=pred_obs_height, eval.after = TRUE}
 kap_plot_cum_validation_panels[[6]]
 fig_no <- fig_no + 1
+rm(kap_plot_cum_validation_panels)
 ```
 
 ### KM Tertiles Predicted Hazard Ratio Validation - Testing Data
@@ -1765,10 +1963,25 @@ curves
 
 ```{r km tertiled hr validation 1, fig.height=24, fig.width=24}
 km_hr_combine_validation_panels
+
+# store for later -------------------------------------------------------------
+for (i in seq_along(km_hr_combine_validation_panels)) {
+  plot <- km_hr_combine_validation_panels[[i]]
+  name <- paste0("km_hr_combine_validation_panels", i, ".png")
+  output_path <- file.path("output", config$out_tag, "km_hr_combine_validation_panels")
+  dir.create(output_path, recursive = TRUE)
+  file_name <- file.path(output_path, name)
+
+  cowplot::save_plot(filename = file_name, plot = plot)
+  dev.off()
+}
+
+# rm(km_hr_combine_validation_panels)
 fig_no <- fig_no + 1
 ```
 
 ```{r km tertiled hr validation hr table, results = 'asis'}
+save_figtabs$km_hr_combine_validation_panels_hr <- km_hr_combine_validation_panels_hr
 for (table in km_hr_combine_validation_panels_hr) {
   print(kable(table))
 }
@@ -1806,6 +2019,7 @@ fig_no <- fig_no + 1
 
 ```{r dose reponse cum validation 4, fig.height=dose_height_width, fig.width=dose_height_width, eval.after = TRUE}
 dose_plot_cum_validation[[6]]
+rm(dose_plot_cum_validation)
 fig_no <- fig_no + 1
 ```
 
@@ -1876,6 +2090,7 @@ if (config$custom_palette) {
 ```
 
 ```{r combined cox forrest plots all data}
+save_figtabs$rest_combined_cox <- rest_combined_cox
 rest_combined_cox
 ```
 
@@ -1913,6 +2128,8 @@ for (i in seq_along(p)) {
   plot
   dev.off()
 }
+rm(test_combined_cox)
+rm(rest_combined_cox)
 ```
 
 ### Table `r as.character(tab_no)`: Combined Cox Feature Importance
@@ -2028,6 +2245,7 @@ if (window_legend && cumulative_legend) {
 }
 p
 
+
 fig_no <- fig_no + 1
 ```
 
@@ -2069,6 +2287,18 @@ model2_grid <- cowplot::plot_grid(title_theme, model2_grid,
 )
 
 model2_grid
+
+# store for later -------------------------------------------------------------
+plot <- model2_grid
+name <- paste0("model2_grid", ".png")
+output_path <- file.path("output", config$out_tag, "model2_grid")
+dir.create(output_path, recursive = TRUE)
+file_name <- file.path(output_path, name)
+
+cowplot::save_plot(filename = file_name, plot = plot, ncol = 2, nrow = 2)
+dev.off()
+
+rm(model2_grid)
 ```
 
 ## Display Dataset/Model informaton 
@@ -2137,19 +2367,25 @@ rownames(sum_test) <- NULL
 #### Complete and Training Data
 
 ```{r dataset info complete and training, results = 'asis'}
+save_figtabs$sum_data <- sum_data
 kable(sum_data)
+rm(sum_data)
 ```
 
 #### Missing Data from Complete and Training Data
 
 ```{r dataset info missing complete and training, results = 'asis'}
+save_figtabs$sum_missing <- sum_missing
 kable(sum_missing)
+rm(sum_missing)
 ```
 
 #### Testing Data
 
 ```{r dataset info testing data, results = 'asis'}
+save_figtabs$sum_test <- sum_test
 kable(sum_test)
+rm(sum_test)
 ```
 
 ### Census information
@@ -2199,7 +2435,9 @@ data <- c(list(all = census_complete), filtered_dfs)
 table_mle <- lapply(data, describe_le, age_death, event)
 table_mle <- do.call(rbind, table_mle)
 
+save_figtabs$table_mle <- table_mle
 kable(table_mle)
+rm(table_mle)
 ```
 
 ### LCMM information 
@@ -2209,13 +2447,15 @@ Include latent class model fit statistics
 #### LCMM - Concise Table
 
 ```{r lcmm concise, results = 'asis'}
-table <- helphlme::compare_models(final_models$final_model)$table
-table <- data.frame(
+lcmm_table <- helphlme::compare_models(final_models$final_model)$table
+lcmm_table <- data.frame(
   outcome = final_models$oc,
   data_type = final_models$data_mod,
-  table
+  lcmm_table
 )
-kable(table)
+save_figtabs$lcmm_table <- lcmm_table
+kable(lcmm_table)
+rm(lcmm_table)
 ```
 
 #### LCMM - Verbose Table
@@ -2268,7 +2508,9 @@ post_prob_table <- lapply(seq_len(nrow(final_models)), function(i) {
 })
 post_prob_table <- data.table::rbindlist(post_prob_table, fill = TRUE)
 post_prob_table <- as.data.frame(post_prob_table)
+save_figtabs$post_prob_table <- post_prob_table
 kable(post_prob_table)
+rm(post_prob_table)
 ```
 
 #### LCMM - Model residual plots
@@ -2300,7 +2542,10 @@ all_models <- data.frame(
   check.names = FALSE
 )
 all_models$`Smallest Class (%)` <- round(all_models$`Smallest Class (%)`, 2)
+save_figtabs$all_models_table <- all_models
 kable(all_models)
+rm(all_models)
+rm(models)
 ```
 
 ### Chi-squared information
@@ -2356,7 +2601,9 @@ table_list <- lapply(model_list, function(models) {
 
 table_list <- unlist(table_list, recursive = FALSE)
 lme_table <- do.call(rbind, table_list)
+save_figtabs$lme_table <- lme_table
 kable(lme_table)
+rm(lme_table)
 ```
 
 ### Individual Cox Model
@@ -2425,7 +2672,9 @@ coxzph_tables <- lapply(rest_index, function(i) {
 })
 
 coxzph_tables <- do.call(rbind, coxzph_tables)
+save_figtabs$individual_coxzph_tables <- coxzph_tables
 kable(coxzph_tables)
+rm(coxzph_tables)
 ```
 
 #### Plot Shoenfeld Residuals
@@ -2514,8 +2763,11 @@ coxzph_tables <- lapply(rest_index, function(i) {
   zph_tables
 })
 
-coxzph_tables <- do.call(rbind, coxzph_tables)
+# coxzph_tables <- do.call(rbind, coxzph_tables)
+coxzph_tables <- coxzph_tables[[1]]
+save_figtabs$combined_coxzph_tables <- coxzph_tables
 kable(coxzph_tables)
+rm(coxzph_tables)
 ```
 
 #### Plot Shoenfeld Residuals - Combined Cox
@@ -2543,29 +2795,27 @@ coxzph_tables <- lapply(rest_index, function(i) {
 ```
 
 
-#### KM plots of covariates - complete data
-
-```{r source surv analysis for covs, file = 'R/surv_all.R'}
-source("R/surv_all.R")
-```
-
-```{r plot km covs}
-census <- final_models[rest_index, "combined_census"][[1]]
-
-cov_dummy <- datasets[[1]]$covariates_dummy
-lapply(cov_dummy, function(cov) {
-  census[[cov]] <- factor(census[[cov]])
-  kap_plot_all(census, cov,
-    age_death = config$survival_dataset$age_death,
-    event = config$survival_dataset$event
-  )
-})
-```
-
 ### Figure `r as.character(fig_no)`: Histogram of Outcome Variables - Complete and Training Data
 
 ```{r disply hist outcome panel, fig.height=12, fig.width=12}
 hist_outcome_plot_panel
+
+# store for later -------------------------------------------------------------
+plot <- hist_outcome_plot_panel
+name <- paste0("hist_outcome_plot_panel", ".png")
+output_path <- file.path("output", config$out_tag, "hist_outcome_plot_panel")
+dir.create(output_path, recursive = TRUE)
+file_name <- file.path(output_path, name)
+
+cowplot::save_plot(
+  filename = file_name,
+  plot = plot,
+  ncol = rows,
+  nrow = rows
+)
+dev.off()
+
+rm(hist_outcome_plot_panel)
 fig_no <- fig_no + 1
 ```
 
@@ -2573,6 +2823,23 @@ fig_no <- fig_no + 1
 
 ```{r disply hist log outcome panel, fig.height=12, fig.width=12}
 hist_log_outcome_plot_panel
+
+# store for later -------------------------------------------------------------
+plot <- hist_log_outcome_plot_panel
+name <- paste0("hist_log_outcome_plot_panel", ".png")
+output_path <- file.path("output", config$out_tag, "hist_log_outcome_plot_panel")
+dir.create(output_path, recursive = TRUE)
+file_name <- file.path(output_path, name)
+
+cowplot::save_plot(
+  filename = file_name,
+  plot = plot,
+  ncol = rows,
+  nrow = rows
+)
+dev.off()
+
+rm(hist_log_outcome_plot_panel)
 fig_no <- fig_no + 1
 ```
 
@@ -2580,6 +2847,22 @@ fig_no <- fig_no + 1
 
 ```{r disply hist class prob panel, fig.height=12, fig.width=12}
 hist_plot_panel
+
+# store for later -------------------------------------------------------------
+plot <- hist_plot_panel
+name <- paste0("hist_plot_panel", ".png")
+output_path <- file.path("output", config$out_tag, "hist_plot_panel")
+dir.create(output_path, recursive = TRUE)
+file_name <- file.path(output_path, name)
+
+cowplot::save_plot(
+  filename = file_name, plot = plot,
+  ncol = round(sqrt(unique_class)),
+  nrow = round(sqrt(unique_class)) + 1
+)
+dev.off()
+
+# rm(hist_plot_panel)
 fig_no <- fig_no + 1
 ```
 
@@ -2590,30 +2873,165 @@ This is a check that we provided the correct validation data
 #### Cumulative
 
 ```{r cumulative validation plots, fig.width = 36, fig.height = 36}
-plots <- datasets[[1]]$validation_plots[[1]]
-plot_grid(plotlist = plots)
+cum_validation_plots <- datasets[[1]]$validation_plots[[1]]
+# trim cumulative validation plots -------------------------------------------
+peek(cum_validation_plots)
+first <- names(cum_validation_plots)[[1]]
+first_number <- as.numeric(str_extract(first, "\\d+|\\d+\\.\\d+"))
+first_numbers <- lapply(
+  names(cum_validation_plots),
+  function(name) {
+    as.numeric(str_extract(name, "\\d+|\\d+\\.\\d+"))
+  }
+)
+index <- first_numbers %in% first_number
+length_index <- length(which(index))
+cum_validation_plots <- cum_validation_plots[index]
+
+plot <- plot_grid(plotlist = cum_validation_plots,
+                  ncol = round(sqrt(length_index)))
+plot
+
+# store for later -------------------------------------------------------------
+name <- paste0("cum_validation_plots", ".png")
+output_path <- file.path("output", config$out_tag, "cum_validation_plots")
+dir.create(output_path, recursive = TRUE)
+file_name <- file.path(output_path, name)
+
+cowplot::save_plot(
+  filename = file_name, plot = plot,
+  ncol = round(sqrt(length_index)),
+  nrow = round(sqrt(length_index)) + 1
+)
+dev.off()
+
+rm(cum_validation_plots)
 ```
 
 #### Window
 
 ```{r window validation plots, fig.width = 36, fig.height = 36}
-plots <- datasets[[1]]$validation_plots[[2]]
-plot_grid(plotlist = plots)
+window_validation_plots <- datasets[[1]]$validation_plots[[2]]
+
+# trim window validation plots  -----------------------------------------------
+peek(window_validation_plots)
+
+get_interval_difference <- function(interval_string) {
+  # Remove square brackets
+  clean_string <- gsub("\\[|\\]", "", interval_string)
+  numbers <- strsplit(clean_string, ",")[[1]]
+  nums <- as.numeric(trimws(numbers))
+  difference <- nums[2] - nums[1]
+  return(difference)
+}
+
+differences <- lapply(
+  names(window_validation_plots),
+  function(name) {
+    as.numeric(get_interval_difference(name))
+  }
+)
+index <- differences %in% differences[[1]]
+length_index <- length(which(index))
+window_validation_plots <- window_validation_plots[index]
+peek(window_validation_plots)
+
+plot <- plot_grid(plotlist = window_validation_plots,
+                  ncol = round(sqrt(length_index)))
+plot
+
+# store for later -------------------------------------------------------------
+name <- paste0("window_validation_plots", ".png")
+output_path <- file.path("output", config$out_tag, "window_validation_plots")
+dir.create(output_path, recursive = TRUE)
+file_name <- file.path(output_path, name)
+
+cowplot::save_plot(
+  filename = file_name, plot = plot,
+  ncol = round(sqrt(length_index)),
+  nrow = round(sqrt(length_index)) + 1
+)
+dev.off()
+
+# rm(window_validation_plots)
 ```
 
 #### Interval
 
 ```{r interval validation plots, fig.width = 36, fig.height = 36}
-plots <- datasets[[1]]$validation_plots[[3]]
-plot_grid(plotlist = plots)
+interval_validation_plots <- datasets[[1]]$validation_plots[[3]]
+
+rowcol <- round(sqrt(length(interval_validation_plots)))
+
+plot <- plot_grid(plotlist = interval_validation_plots, ncol = rowcol)
+plot
+
+# store for later -------------------------------------------------------------
+name <- paste0("interval_validation_plots", ".png")
+output_path <- file.path("output", config$out_tag, "interval_validation_plots")
+dir.create(output_path, recursive = TRUE)
+file_name <- file.path(output_path, name)
+
+cowplot::save_plot(
+  filename = file_name, plot = plot,
+  nrow = rowcol + 1,
+  ncol = rowcol
+)
+dev.off()
+
+rm(interval_validation_plots)
 ```
 
 #### Proportion Resampled
 
 ```{r resampled validation plots, fig.width = 36, fig.height = 36}
-plots <- datasets[[1]]$validation_plots[[4]]
-plot_grid(plotlist = plots)
+resampled_validation_plots <- datasets[[1]]$validation_plots[[4]]
 
-fig_no <- fig_no + 1
+rowcol <- round(sqrt(length(resampled_validation_plots)))
+
+plot <- plot_grid(plotlist = resampled_validation_plots, ncol = rowcol)
+plot
+
+# store for later -------------------------------------------------------------
+name <- paste0("resampled_validation_plots", ".png")
+output_path <- file.path("output", config$out_tag, "resampled_validation_plots")
+dir.create(output_path, recursive = TRUE)
+file_name <- file.path(output_path, name)
+
+cowplot::save_plot(
+  filename = file_name, plot = plot,
+  nrow = rowcol + 1,
+  ncol = rowcol
+)
+dev.off()
+
+rm(resampled_validation_plots)
+```
+
+### Clean up environment
+
+```{r clean environment}
+peek()
+peek(save_figtabs)
+lapply(save_figtabs, lobstr::obj_size)
+
+# remove all excess objects --------------------------------------------------
+peek()
+rm(list = setdiff(ls(), c("final_models", "save_figtabs", "config")))
+final_models <- final_models$census
+peek()
+peek(save_figtabs)
+```
+
+### Save R Objects
+
+```{r save}
+output_path <- file.path("output", config$out_tag)
+dir.create(output_path)
+output_path <- normalizePath(output_path)
+
+workspace_path <- file.path(output_path, "workspace.RDATA")
+
+save(final_models, save_figtabs, file = workspace_path)
 ```
 
