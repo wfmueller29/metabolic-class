@@ -12,7 +12,7 @@ geometry:
   - right=0.5in
 ---
 
-```{r sup figs setup, warning=FALSE, message=FALSE, echo=FALSE}
+```{r figs setup, warning=FALSE, message=FALSE, echo=FALSE}
 library(helphlme)
 library(tidyverse)
 library(kableExtra)
@@ -39,7 +39,7 @@ knitr::opts_chunk$set(cache = FALSE)
 ```
 
 
-```{r sup figs read input yaml}
+```{r figs read input yaml}
 # this loads in all the tables
 all_path <- "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/workspace.RDATA"
 fb6_path <- "../07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/workspace.RDATA"
@@ -52,7 +52,7 @@ held_out_path <- "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfa
 config <- NULL
 ```
 
-```{r sup figs load models, include = FALSE}
+```{r figs load models, include = FALSE}
 # Define a named list of input paths and environment names
 render_tasks <- list(
   all_env = all_path,
@@ -72,7 +72,7 @@ lapply(names(render_tasks), function(env_name) {
 })
 ```
 
-```{r sup figs fig no }
+```{r figs fig no }
 fig_no <- 1
 tab_no <- 1
 max_width <- 7
@@ -112,7 +112,7 @@ annotate_figure_label <- function(image_obj, label) {
 
 ### Figure `r as.character(fig_no)`: Overview
 
-```{r sup figs overview, out.width = "100%"}
+```{r figs overview, out.width = "100%"}
 fig <- list()
 fig$A <- image_read("images/Overview.png")
 save_figure(fig$A, as.character(fig_no), "A")
@@ -329,5 +329,39 @@ final_panel <- image_append(c(row1, row2), stack = TRUE)
 final_panel
 # image_write(final_panel, "output/fig2/panel.png")
 fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Table `r as.character(tab_no)`: SLAM C1-C10 Class Demographics
+
+```{r slam class demographics, results = 'asis'}
+all_env$save_figtabs$t1_df %>%
+  select(-oc_name) %>%
+  mutate(Class = row_names) %>%
+  flextable() %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+tab_no <- 1 + tab_no
+```
+
+\newpage
+
+### Table `r as.character(tab_no)`: ITP Class Demographics
+
+```{r itp class demographics, results = 'asis'}
+itp_env$save_figtabs$t1_df %>%
+  select(-oc_name) %>%
+  mutate(Class = row_names) %>%
+  flextable() %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+tab_no <- 1 + tab_no
 ```
 
