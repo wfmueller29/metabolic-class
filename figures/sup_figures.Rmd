@@ -71,6 +71,19 @@ lapply(names(render_tasks), function(env_name) {
 })
 ```
 
+```{r annotate figure function}
+annotate_figure_label <- function(image_obj, label) {
+  magick::image_annotate(
+    image_obj,
+    text = toupper(label),
+    size = 50,
+    gravity = "northwest",
+    location = "+20+20",
+    color = "black"
+  )
+}
+```
+
 ```{r sup figs fig no }
 fig_no <- 1
 tab_no <- 1
@@ -80,6 +93,297 @@ max_width <- 7
 \newpage
 
 \tableofcontents
+
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Heatmaps
+
+```{r heatmaps, out.width = "100%"}
+fig <- list()
+fig$B <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/heatmap/heatmap1.jpg")
+fig$A <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/heatmap/heatmap2.jpg")
+
+for (label in names(fig)) {
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+
+row1 <- fig$A
+row2 <- fig$B
+
+final_panel <- image_append(c(row1, row2), stack = TRUE)
+
+final_panel
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Reclassifcation analysis
+
+```{r sup reclassifcation analysis, out.width = "100%"}
+knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/class_prediction_panel/class_prediction_panel.png")
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Internal Validation
+
+```{r sup internal validation, out.width = "100%"}
+fig <- list()
+fig$A <- image_read("images/Internal Validation.png")
+fig$B <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/forest/plot_2.png")
+fig$C <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/validation/plot_1.png")
+fig$D <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/validation/plot_3.png")
+fig$E <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/validation/plot_2.png")
+fig$F <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/validation/plot_4.png")
+
+for (label in names(fig)) {
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+
+fig$A <- image_scale(fig$A, "75%")
+fig$B <- image_scale(fig$B, "125%")
+
+# Stack the rows vertically
+row1 <- fig$A
+row2 <- fig$B
+row3 <- image_append(c(fig$C, fig$D), stack = FALSE)
+row4 <- image_append(c(fig$E, fig$F), stack = FALSE)
+
+final_panel <- image_append(c(row1, row2, row3, row4), stack = TRUE)
+
+# View or save
+final_panel
+# image_write(final_panel, "output/fig/panel.png")
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: External Validation
+
+```{r sup external validation, out.width = "100%"}
+fig <- list()
+fig$A <- image_read("images/External Validation.png")
+fig$B <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/forest/plot_2.png")
+fig$C <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/validation/plot_1.png")
+fig$D <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/validation/plot_3.png")
+fig$E <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/validation/plot_2.png")
+fig$F <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/validation/plot_4.png")
+
+for (label in names(fig)) {
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+
+fig$A <- image_scale(fig$A, "75%")
+fig$B <- image_scale(fig$B, "125%")
+
+# Stack the rows vertically
+row1 <- fig$A
+row2 <- fig$B
+row3 <- image_append(c(fig$C, fig$D), stack = FALSE)
+row4 <- image_append(c(fig$E, fig$F), stack = FALSE)
+
+final_panel <- image_append(c(row1, row2, row3, row4), stack = TRUE)
+
+# View or save
+final_panel
+# image_write(final_panel, "output/fig/panel.png")
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Internal Validation KM
+
+```{r sup internal validation km, out.width = "100%"}
+fig <- list()
+fig$A <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 19.5]_1.png")
+fig$B <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 32.5]_2.png")
+fig$C <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 45.5]_3.png")
+fig$D <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 58.5]_4.png")
+fig$E <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 71.5]_5.png")
+fig$F <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 84.5]_6.png")
+fig$G <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 97.5]_7.png")
+fig$H <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 110.5]_8.png")
+fig$I <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 123.5]_9.png")
+fig$J <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 136.5]_10.png")
+
+for (label in names(fig)) {
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+
+# Manually define rows (3 per row, last row only 1 image)
+rows <- list(
+  image_append(image_join(fig$A, fig$B, fig$C)),
+  image_append(image_join(fig$D, fig$E, fig$F)),
+  image_append(image_join(fig$G, fig$H, fig$I)),
+  image_append(image_join(fig$J))
+)
+
+# Stack rows vertically
+final_panel <- image_append(image_join(rows), stack = TRUE)
+
+# View or save
+final_panel
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+
+### Figure `r as.character(fig_no)`: Healthcard Supplemental 1
+
+```{r sup figs hc1 }
+knitr::include_graphics("images/HC Suppl 1.jpg")
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Healthcard Supplemental 2
+
+```{r sup figs hc2 }
+knitr::include_graphics("images/HC Suppl 2.jpg")
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Healthcard Supplemental 3
+
+```{r sup figs hc3 }
+knitr::include_graphics("images/HC Suppl 3.jpg")
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Supplemental Table `r as.character(tab_no)`: Sex/Strain Adjusted Hazards
+
+```{r sex strain adjusted hazards, results = 'asis'}
+flextable(all_env$save_figtabs$hr_table) %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+
+tab_no <- 1 + tab_no
+```
+
+\newpage
+
+### Supplemental Table `r as.character(tab_no)`: Linear Mixed Effects Models
+
+```{r linear mixed effect, results = 'asis'}
+lme_coef_table <- all_env$save_figtabs$lme_coef_table_broom
+lme_coef_table <- lapply(lme_coef_table, function(table) {
+  table <- table %>%
+    mutate(across(ends_with("p.value"), ~ case_when(
+      .x < 0.0001 ~ "< 0.0001",
+      .x < 0.001 ~ "< 0.001",
+      .x < 0.01 ~ "< 0.01",
+      .x < 0.05 ~ "< 0.05",
+      TRUE ~ "-"
+    )))
+  return(table)
+})
+
+# Function to alternate estimate and p.value columns
+reorder_estimate_pvalue <- function(df) {
+  term_col <- "term"
+  all_cols <- names(df)
+  prefixes <- unique(gsub(
+    "_(estimate|p.value)$", "",
+    all_cols[!all_cols %in% term_col]
+  ))
+  new_order <- c(term_col, unlist(lapply(prefixes, function(prefix) {
+    c(paste0(prefix, "_estimate"), paste0(prefix, "_p.value"))
+  })))
+
+  df[, new_order]
+}
+
+# Apply to each table in your list
+lme_coef_table <- lapply(lme_coef_table, reorder_estimate_pvalue)
+
+lme_coef_table <- lapply(lme_coef_table, function(table) {
+  flextable(table) %>%
+    theme_vanilla() %>%
+    autofit() %>%
+    set_table_properties(layout = "autofit") %>%
+    fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+})
+
+lme_coef_table[[1]]
+lme_coef_table[[2]]
+lme_coef_table[[3]]
+
+tab_no <- 1 + tab_no
+```
+
+
+\newpage
+
+### Supplemental Table `r as.character(tab_no)`: Descriptive Statistics SLAM C1-C10 datasets
+
+```{r sup_tables dataset info complete and training, results = 'asis'}
+flextable(rbind(
+  all_env$save_figtabs$sum_data,
+  all_env$save_figtabs$sum_test
+)) %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+tab_no <- 1 + tab_no
+```
+
+
+
+\newpage
+
+### Supplemental Table `r as.character(tab_no)`: Median Life Expectancy Data
+
+```{r sup_tables census information, results = 'asis'}
+flextable(all_env$save_figtabs$table_mle) %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+tab_no <- 1 + tab_no
+```
+
+\newpage
+
+### Supplemental Table `r as.character(tab_no)`: LCM Model Information
+
+```{r sup_tables lcmm concise, results = 'asis'}
+all_env$save_figtabs$lcmm_table %>%
+  dplyr::rename(`Smallest Class %` = `Smallest.Class....`) %>%
+  dplyr::mutate(`Smallest Class %` = round(`Smallest Class %`, digits = 3)) %>%
+  flextable() %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+tab_no <- 1 + tab_no
+```
+
+\newpage
+
+# Extended Supplemental
 
 \newpage
 
@@ -94,9 +398,6 @@ fig_no <- fig_no + 1
 \newpage
 
 ### Figure `r as.character(fig_no)`: Kaplan Meier by Harmonizer
-
-This may explain our trouble externally validating with cohorts 9 and 10, since
-both have lower levels of survival
 
 ```{r sup figs kap plot by harmonize, out.width = "100%"}
 knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/harmonize_km/plot_1.png")
@@ -228,31 +529,6 @@ fig_no <- fig_no + 1
 
 \newpage
 
-### Figure `r as.character(fig_no)`: Healthcard Supplemental 1
-
-```{r sup figs hc1 }
-knitr::include_graphics("images/HC Suppl 1.jpg")
-fig_no <- fig_no + 1
-```
-
-\newpage
-
-### Figure `r as.character(fig_no)`: Healthcard Supplemental 2
-
-```{r sup figs hc2 }
-knitr::include_graphics("images/HC Suppl 2.jpg")
-fig_no <- fig_no + 1
-```
-
-\newpage
-
-### Figure `r as.character(fig_no)`: Healthcard Supplemental 3
-
-```{r sup figs hc3 }
-knitr::include_graphics("images/HC Suppl 3.jpg")
-fig_no <- fig_no + 1
-```
-
 ### Supplemental Table `r as.character(tab_no)`: Descriptive Census Information
 
 ```{r sup_tables describe prob class, results = 'asis'}
@@ -266,26 +542,7 @@ flextable(round(all_env$save_figtabs$describe_census, digits = 3)) %>%
 tab_no <- 1 + tab_no
 ```
 
-
 \newpage
-
-### Supplemental Table `r as.character(tab_no)`: Descriptive Statistics SLAM C1-C10 datasets
-
-```{r sup_tables dataset info complete and training, results = 'asis'}
-flextable(rbind(
-  all_env$save_figtabs$sum_data,
-  all_env$save_figtabs$sum_test
-)) %>%
-  theme_vanilla() %>%
-  autofit() %>%
-  set_table_properties(layout = "autofit") %>%
-  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-
-tab_no <- 1 + tab_no
-```
-
-\newpage
-
 
 ### Supplemental Table `r as.character(tab_no)`: Descriptive Statistics SLAM C16-C18 datasets
 
@@ -310,37 +567,6 @@ flextable(all_env$save_figtabs$sum_missing) %>%
   set_table_properties(layout = "autofit") %>%
   fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
-
-tab_no <- 1 + tab_no
-```
-
-\newpage
-
-### Supplemental Table `r as.character(tab_no)`: Median Life Expectancy Data
-
-```{r sup_tables census information, results = 'asis'}
-flextable(all_env$save_figtabs$table_mle) %>%
-  theme_vanilla() %>%
-  autofit() %>%
-  set_table_properties(layout = "autofit") %>%
-  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-
-tab_no <- 1 + tab_no
-```
-
-\newpage
-
-### Supplemental Table `r as.character(tab_no)`: LCM Model Information
-
-```{r sup_tables lcmm concise, results = 'asis'}
-all_env$save_figtabs$lcmm_table %>%
-  dplyr::rename(`Smallest Class %` = `Smallest.Class....`) %>%
-  dplyr::mutate(`Smallest Class %` = round(`Smallest Class %`, digits = 3)) %>%
-  flextable() %>%
-  theme_vanilla() %>%
-  autofit() %>%
-  set_table_properties(layout = "autofit") %>%
-  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
 tab_no <- 1 + tab_no
 ```
@@ -423,5 +649,3 @@ all_env$save_figtabs$combined_coxzph_tables %>%
 
 tab_no <- 1 + tab_no
 ```
-
-
