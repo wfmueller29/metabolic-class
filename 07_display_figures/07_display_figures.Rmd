@@ -286,14 +286,14 @@ output_path <- file.path("output", config$out_tag, "heatmap")
 dir.create(output_path, recursive = TRUE)
 output_path <- normalizePath(output_path)
 
-file_path <- file.path(output_path, "heatmap1.png")
-jpeg(file = file_path)
-heatmap(as.matrix(census1), margins = c(10, 4))
+file_path <- file.path(output_path, "heatmap1.jpg")
+jpeg(file = file_path, width = 1200, height = 1200, res = 300)
+heatmap(as.matrix(census1), margins = c(6, 4), cexCol = 0.5)
 dev.off()
 
-file_path <- file.path(output_path, "heatmap2.png")
-jpeg(file = file_path)
-heatmap(as.matrix(census2), margins = c(10, 4))
+file_path <- file.path(output_path, "heatmap2.jpg")
+jpeg(file = file_path, width = 1200, height = 1200, res = 300)
+heatmap(as.matrix(census2), margins = c(6, 4), cexCol = 0.5)
 dev.off()
 ```
 
@@ -737,8 +737,8 @@ age_var <- rows$age_var[[1]]
 age_var_name <- rows$age_var_name[[1]]
 age_var_units <- rows$age_var_units[[1]]
 
-age_var2_name <- paste(age_var_name, "2</sup>", sep = "<sup>")
-age_var2_units <- paste(age_var_units, "2</sup>", sep = "<sup>")
+age_var2_name <- paste(age_var_name, "2", sep = "")
+age_var2_units <- paste(age_var_units, "2", sep = "")
 
 age_var2 <- paste(age_var, 2, sep = "")
 age_var_ns <- paste(age_var, "ns", sep = "_")
@@ -815,9 +815,40 @@ lme_table <- lapply(seq_along(model_list), function(i) {
     show.ngroups = FALSE,
     show.obs = FALSE,
     dv.labels = oc_names_list[[i]],
-    title = title
+    title = title,
+    file = NULL
   )
   lme_table
+})
+
+lme_table_broom <- lapply(seq_along(model_list), function(i) {
+  tidy_models <- lapply(seq_along(model_list[[i]]), function(j) {
+    model <- model_list[[i]][[j]]
+    dep_var <- all.vars(formula(model))[1]
+    tidy_model <- broom.mixed::tidy(model, effects = "fixed", conf.int = TRUE) %>%
+      mutate(dependent = dep_var) %>%
+      mutate(model = j) %>%
+      select(dependent, model, everything()) %>%
+      mutate(term = recode(term, !!!all_names))
+  })
+  tidy_models <- lapply(tidy_models, function(model) {
+    model <- model[, c("dependent", "term", "estimate", "p.value")]
+  })
+  #   library(dplyr)
+  # library(tidyr)
+
+  # If your three tibbles are already in a list called `models`
+  # (e.g., models[[1]] = bw, models[[2]] = fat, models[[3]] = gluc)
+
+  tidy_models <- bind_rows(tidy_models) %>%
+    tidyr::pivot_wider(
+      names_from  = dependent,
+      values_from = c(estimate, p.value),
+      names_glue  = "{dependent}_{.value}"
+    ) %>%
+    relocate(term)
+
+  tidy_models
 })
 
 lme_table
@@ -1636,7 +1667,8 @@ fig_no <- fig_no + 1
 rows <- nrow(final_models) / 2
 pred_obs_height <- nrow(final_models) / 2 * 6
 unique_class <- length(
-                       which(grepl("^prob\\d+$", names(final_models$combined_census[[1]]))))
+  which(grepl("^prob\\d+$", names(final_models$combined_census[[1]])))
+)
 dose_height_width <- sqrt(unique_class) * 6
 ```
 
@@ -1797,6 +1829,8 @@ model_calls
 for (table in lme_table) {
   cat(table$knitr)
 }
+save_figtabs$lme_coef_table <- lme_table
+save_figtabs$lme_coef_table_broom <- lme_table_broom
 tab_no <- tab_no + 1
 ```
 
@@ -2888,8 +2922,10 @@ index <- first_numbers %in% first_number
 length_index <- length(which(index))
 cum_validation_plots <- cum_validation_plots[index]
 
-plot <- plot_grid(plotlist = cum_validation_plots,
-                  ncol = round(sqrt(length_index)))
+plot <- plot_grid(
+  plotlist = cum_validation_plots,
+  ncol = round(sqrt(length_index))
+)
 plot
 
 # store for later -------------------------------------------------------------
@@ -2936,8 +2972,10 @@ length_index <- length(which(index))
 window_validation_plots <- window_validation_plots[index]
 peek(window_validation_plots)
 
-plot <- plot_grid(plotlist = window_validation_plots,
-                  ncol = round(sqrt(length_index)))
+plot <- plot_grid(
+  plotlist = window_validation_plots,
+  ncol = round(sqrt(length_index))
+)
 plot
 
 # store for later -------------------------------------------------------------
