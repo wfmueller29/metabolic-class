@@ -10,10 +10,10 @@ train_ng: "complete_ng"
 external_validate: FALSE
 custom_palette: TRUE
 palette_colors: ["navyblue", "maroon", "darkgreen"]
-legend_labels: ["Decline", "Stable", "Increase"]
+legend_labels: ["Early-peak BW", "Stable BW", "Late-peak BW"]
 custom_palette_train: TRUE
 palette_colors_train: ["navyblue", "maroon", "darkgreen"]
-legend_labels_train: ["Decline", "Stable", "Increase"]
+legend_labels_train: ["Early-peak BW", "Stable BW", "Late-peak BW"]
 survival_dataset:
   path: "/Users/williammueller/programs/metabolic_class/analysis/00a_itp2/output/itp_tx_control_surv.csv"
   id: "idno"
