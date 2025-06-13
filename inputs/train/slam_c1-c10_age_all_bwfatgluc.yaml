@@ -98,6 +98,7 @@ datasets:
   outcome: "fat"
   model:
     fixed: "~ age_wk + age_wk2 + sex_F * strain_HET3" 
+    fixcov: ["sex_F", "strain_HET3"]
     mixture: "~ age_wk + age_wk2" 
     random: 
       - "~ 1"

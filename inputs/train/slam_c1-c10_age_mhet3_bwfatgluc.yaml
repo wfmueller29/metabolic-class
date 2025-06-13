@@ -98,6 +98,7 @@ datasets:
   outcome: "fat"
   model:
     fixed: "~ age_wk + age_wk2"
+    fixcov: NULL
     mixture: "~ age_wk + age_wk2" 
     random: 
       - "~ 1"
