@@ -28,7 +28,6 @@ if (ecode != 0) stop("Error was thrown from system2 command")
 
 # Predict ---------------------------------------------------------------------
 yaml_files <- c(
-  "inputs/predict/slam_c1-c10_p_slam_c16-c18.yaml",
   "inputs/predict/itp_controls_p_treatment.yaml"
 )
 
