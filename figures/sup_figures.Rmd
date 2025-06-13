@@ -45,6 +45,7 @@ fb6_path <- "../07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/workspac
 fhet3_path <- "../07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/workspace.RDATA"
 mb6_path <- "../07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/workspace.RDATA"
 mhet3_path <- "../07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/workspace.RDATA"
+het3_path <- "../07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/workspace.RDATA"
 itp_path <- "../07_display_figures/output/itp_c10c11c13c16_age_controls_bw/workspace.RDATA"
 held_out_path <- "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/workspace.RDATA"
 
@@ -59,6 +60,7 @@ render_tasks <- list(
   fhet3_env = fhet3_path,
   mb6_env = mb6_path,
   mhet3_env = mhet3_path,
+  het3_env = het3_path,
   itp_env = itp_path,
   held_out_env = held_out_path
 )
@@ -379,6 +381,322 @@ all_env$save_figtabs$lcmm_table %>%
   fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
 tab_no <- 1 + tab_no
+```
+
+\newpage
+
+# Ammunition
+
+### Figure `r as.character(fig_no)`: Treatment Response
+
+```{r treatment response, out.width = "100%"}
+fig <- list()
+fig$A <- image_read("/Users/williammueller/programs/metabolic_class/analysis/99_treatment_response/output/treatment_response/plot_1.png")
+fig$B <- image_read("/Users/williammueller/programs/metabolic_class/analysis/99_treatment_response/output/treatment_response/plot_2.png")
+fig$C <- image_read("/Users/williammueller/programs/metabolic_class/analysis/99_treatment_response/output/treatment_response/plot_3.png")
+
+for (label in names(fig)) {
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+
+image_append(c(fig$A, fig$B, fig$C), stack = FALSE)
+
+load("../99_treatment_response/output/hr_table/hr_table.RDATA")
+
+do.call(rbind, hrs_table) %>%
+  flextable() %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Defining Metabolic Classes - HET3
+
+```{r define classes het3, out.width = "100%"}
+fig <- list()
+fig$A <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/outcome/plot_1.png")
+fig$B <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/outcome/plot_4.png")
+fig$C <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/outcome/plot_7.png")
+fig$D <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/outcome/plot_10.png")
+fig$E <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/outcome/plot_2.png")
+fig$F <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/outcome/plot_5.png")
+fig$G <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/outcome/plot_8.png")
+fig$H <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/outcome/plot_11.png")
+fig$I <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/outcome/plot_3.png")
+fig$J <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/outcome/plot_6.png")
+fig$K <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/outcome/plot_9.png")
+fig$L <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/outcome/plot_12.png")
+fig$M <- image_read("images/Basic LCM.png")
+
+
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+
+# create table
+hr_table <- do.call(rbind, het3_env$save_figtabs$mortality_panel_hr)
+hr_table <- cbind(Class = rownames(hr_table), hr_table)
+hr_table <- flextable(hr_table) %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+invisible(save_as_image(hr_table, "output/mortality_panel_hr.png", zoom = 10))
+fig$N <- image_read("output/mortality_panel_hr.png")
+fig$N <- image_scale(fig$N, "400%")
+fig$N <- image_border(fig$N, color = "white", geometry = "100x100")
+fig$N <- annotate_figure_label(fig$N, "N")
+
+
+# Build rows of 4 images
+row1 <- image_append(c(fig$A, fig$B, fig$C, fig$D), stack = FALSE)
+row2 <- image_append(c(fig$E, fig$F, fig$G, fig$H), stack = FALSE)
+row3 <- image_append(c(fig$I, fig$J, fig$K, fig$L), stack = FALSE)
+row4 <- image_append(c(fig$M, fig$N))
+# Stack the rows vertically
+final_panel <- image_append(c(row1, row2, row3, row4), stack = TRUE)
+
+# View or save
+final_panel
+# image_write(final_panel, "output/fig/panel.png")
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Defining Metabolic Classes - Female B6
+
+```{r define classes fb6, out.width = "100%"}
+fig <- list()
+fig$A <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_1.png")
+fig$B <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_4.png")
+fig$C <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_7.png")
+fig$D <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_10.png")
+fig$E <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_2.png")
+fig$F <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_5.png")
+fig$G <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_8.png")
+fig$H <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_11.png")
+fig$I <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_3.png")
+fig$J <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_6.png")
+fig$K <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_9.png")
+fig$L <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_12.png")
+fig$M <- image_read("images/Basic LCM.png")
+
+
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+
+# create table
+hr_table <- do.call(rbind, fb6_env$save_figtabs$mortality_panel_hr)
+hr_table <- cbind(Class = rownames(hr_table), hr_table)
+hr_table <- flextable(hr_table) %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+invisible(save_as_image(hr_table, "output/mortality_panel_hr.png", zoom = 10))
+fig$N <- image_read("output/mortality_panel_hr.png")
+fig$N <- image_scale(fig$N, "400%")
+fig$N <- image_border(fig$N, color = "white", geometry = "100x100")
+fig$N <- annotate_figure_label(fig$N, "N")
+
+
+# Build rows of 4 images
+row1 <- image_append(c(fig$A, fig$B, fig$C, fig$D), stack = FALSE)
+row2 <- image_append(c(fig$E, fig$F, fig$G, fig$H), stack = FALSE)
+row3 <- image_append(c(fig$I, fig$J, fig$K, fig$L), stack = FALSE)
+row4 <- image_append(c(fig$M, fig$N))
+# Stack the rows vertically
+final_panel <- image_append(c(row1, row2, row3, row4), stack = TRUE)
+
+# View or save
+final_panel
+# image_write(final_panel, "output/fig/panel.png")
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Defining Metabolic Classes - Female HET3
+
+```{r define classes fhet3, out.width = "100%"}
+fig <- list()
+fig$A <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_1.png")
+fig$B <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_4.png")
+fig$C <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_7.png")
+fig$D <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_10.png")
+fig$E <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_2.png")
+fig$F <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_5.png")
+fig$G <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_8.png")
+fig$H <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_11.png")
+fig$I <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_3.png")
+fig$J <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_6.png")
+fig$K <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_9.png")
+fig$L <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_12.png")
+fig$M <- image_read("images/Basic LCM.png")
+
+
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+
+# create table
+hr_table <- do.call(rbind, fhet3_env$save_figtabs$mortality_panel_hr)
+hr_table <- cbind(Class = rownames(hr_table), hr_table)
+hr_table <- flextable(hr_table) %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+invisible(save_as_image(hr_table, "output/mortality_panel_hr.png", zoom = 10))
+fig$N <- image_read("output/mortality_panel_hr.png")
+fig$N <- image_scale(fig$N, "400%")
+fig$N <- image_border(fig$N, color = "white", geometry = "100x100")
+fig$N <- annotate_figure_label(fig$N, "N")
+
+
+# Build rows of 4 images
+row1 <- image_append(c(fig$A, fig$B, fig$C, fig$D), stack = FALSE)
+row2 <- image_append(c(fig$E, fig$F, fig$G, fig$H), stack = FALSE)
+row3 <- image_append(c(fig$I, fig$J, fig$K, fig$L), stack = FALSE)
+row4 <- image_append(c(fig$M, fig$N))
+# Stack the rows vertically
+final_panel <- image_append(c(row1, row2, row3, row4), stack = TRUE)
+
+# View or save
+final_panel
+# image_write(final_panel, "output/fig/panel.png")
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Defining Metabolic Classes - Male B6
+
+```{r define classes mb6, out.width = "100%"}
+fig <- list()
+fig$A <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_1.png")
+fig$B <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_4.png")
+fig$C <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_7.png")
+fig$D <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_10.png")
+fig$E <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_2.png")
+fig$F <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_5.png")
+fig$G <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_8.png")
+fig$H <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_11.png")
+fig$I <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_3.png")
+fig$J <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_6.png")
+fig$K <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_9.png")
+fig$L <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_12.png")
+fig$M <- image_read("images/Basic LCM.png")
+
+
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+
+# create table
+hr_table <- do.call(rbind, mb6_env$save_figtabs$mortality_panel_hr)
+hr_table <- cbind(Class = rownames(hr_table), hr_table)
+hr_table <- flextable(hr_table) %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+invisible(save_as_image(hr_table, "output/mortality_panel_hr.png", zoom = 10))
+fig$N <- image_read("output/mortality_panel_hr.png")
+fig$N <- image_scale(fig$N, "400%")
+fig$N <- image_border(fig$N, color = "white", geometry = "100x100")
+fig$N <- annotate_figure_label(fig$N, "N")
+
+
+# Build rows of 4 images
+row1 <- image_append(c(fig$A, fig$B, fig$C, fig$D), stack = FALSE)
+row2 <- image_append(c(fig$E, fig$F, fig$G, fig$H), stack = FALSE)
+row3 <- image_append(c(fig$I, fig$J, fig$K, fig$L), stack = FALSE)
+row4 <- image_append(c(fig$M, fig$N))
+# Stack the rows vertically
+final_panel <- image_append(c(row1, row2, row3, row4), stack = TRUE)
+
+# View or save
+final_panel
+# image_write(final_panel, "output/fig/panel.png")
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+
+### Figure `r as.character(fig_no)`: Defining Metabolic Classes - Male HET3
+
+```{r define classes mhet3, out.width = "100%"}
+fig <- list()
+fig$A <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_1.png")
+fig$B <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_4.png")
+fig$C <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_7.png")
+fig$D <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_10.png")
+fig$E <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_2.png")
+fig$F <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_5.png")
+fig$G <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_8.png")
+fig$H <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_11.png")
+fig$I <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_3.png")
+fig$J <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_6.png")
+fig$K <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_9.png")
+fig$L <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_12.png")
+fig$M <- image_read("images/Basic LCM.png")
+
+
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+
+# create table
+hr_table <- do.call(rbind, mhet3_env$save_figtabs$mortality_panel_hr)
+hr_table <- cbind(Class = rownames(hr_table), hr_table)
+hr_table <- flextable(hr_table) %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+invisible(save_as_image(hr_table, "output/mortality_panel_hr.png", zoom = 10))
+fig$N <- image_read("output/mortality_panel_hr.png")
+fig$N <- image_scale(fig$N, "400%")
+fig$N <- image_border(fig$N, color = "white", geometry = "100x100")
+fig$N <- annotate_figure_label(fig$N, "N")
+
+
+# Build rows of 4 images
+row1 <- image_append(c(fig$A, fig$B, fig$C, fig$D), stack = FALSE)
+row2 <- image_append(c(fig$E, fig$F, fig$G, fig$H), stack = FALSE)
+row3 <- image_append(c(fig$I, fig$J, fig$K, fig$L), stack = FALSE)
+row4 <- image_append(c(fig$M, fig$N))
+# Stack the rows vertically
+final_panel <- image_append(c(row1, row2, row3, row4), stack = TRUE)
+
+# View or save
+final_panel
+# image_write(final_panel, "output/fig/panel.png")
+
+fig_no <- fig_no + 1
 ```
 
 \newpage
