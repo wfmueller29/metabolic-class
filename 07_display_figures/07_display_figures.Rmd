@@ -411,7 +411,10 @@ mortality_panel <- cowplot::plot_grid(title_theme, mortality_panel,
 mortality_panel_hr <- lapply(
   final_models[og_index, "kap_plot_hrs"],
   function(table) {
-    table$hr_table[, "final", drop = FALSE]
+    table <- table$hr_table[, "final", drop = FALSE]
+    class_numbers <- as.integer(sub("Class", "", rownames(table)))
+    rownames(table) <- config$legend_labels[class_numbers]
+    table
   }
 )
 ```
