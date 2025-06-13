@@ -106,6 +106,31 @@ plots_panel <- cowplot::plot_grid(title_theme, plots_panel,
 plots_panel
 ```
 
+```{r save hrs }
+hrs_table <- lapply(
+  hrs,
+  function(table) {
+    table <- table$hr_table[, "final", drop = FALSE]
+    table
+  }
+)
+names(hrs_table) <- classes
+
+hrs_table <- lapply(names(hrs_table), function(name) {
+  table <- hrs_table[[name]]
+  table <- cbind(Class = name, Treatment = rownames(table), table)
+  rownames(table) <- NULL
+  table
+})
+
+
+output_path <- file.path("output/hr_table")
+if (!dir.exists(output_path)) {
+  dir.create(output_path, recursive = TRUE)
+}
+save(hrs_table, file = file.path(output_path, "hr_table.RDATA"))
+```
+
 ```{r save dose plots}
 for (i in seq_along(plots)) {
   plot <- plots[[i]]
@@ -122,13 +147,7 @@ for (i in seq_along(plots)) {
 ```
 
 ```{r print hrs, results = 'asis'}
-hrs <- lapply(
-  hrs,
-  function(table) {
-    table$hr_table[, "final", drop = FALSE]
-  }
-)
-for (table in hrs) {
+for (table in hrs_table) {
   print(kableExtra::kable(table))
 }
 ```
