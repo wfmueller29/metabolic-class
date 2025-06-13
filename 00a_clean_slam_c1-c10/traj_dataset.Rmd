@@ -1366,10 +1366,12 @@ keep_cols <- c(
   "gluc",
   "bw",
   "fat",
+  "lean",
   "sex",
   "strain",
   "cohort",
-  "age_wk"
+  "age_wk",
+  "per_age_wk"
 )
 
 main_all2 <- main_all2[, keep_cols]

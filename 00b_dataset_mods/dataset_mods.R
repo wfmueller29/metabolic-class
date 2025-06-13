@@ -3,12 +3,13 @@
 # greatly simplify the modelling pipeline
 
 library(tidyverse)
+library(consoler)
 
 # load in config using file path ----------------------------------------------
 args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) == 0) {
-  args[[1]] <- "input/test.yaml"
+  args[[1]] <- "input/slam_c1-c10.yaml"
 }
 
 datasets <- yaml::read_yaml(args[[1]])

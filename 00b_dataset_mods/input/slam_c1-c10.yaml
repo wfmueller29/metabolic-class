@@ -33,6 +33,7 @@
       - [sex: F, strain: HET3]
       - [sex: M, strain: B6]
       - [sex: F, strain: B6]
+      - [strain: HET3]
 
 - name: "slam"
   path: "../00a_clean_slam_c1-c10/output/main_all2.RDATA"
@@ -68,6 +69,7 @@
       - [sex: F, strain: HET3]
       - [sex: M, strain: B6]
       - [sex: F, strain: B6]
+      - [strain: HET3]
 
 
 - name: "slam"
@@ -104,6 +106,7 @@
       - [sex: F, strain: HET3]
       - [sex: M, strain: B6]
       - [sex: F, strain: B6]
+      - [strain: HET3]
 
 - name: "slam"
   path: "../00a_clean_slam_c1-c10/output/main_all2.RDATA"
@@ -139,3 +142,4 @@
       - [sex: F, strain: HET3]
       - [sex: M, strain: B6]
       - [sex: F, strain: B6]
+      - [strain: HET3]
