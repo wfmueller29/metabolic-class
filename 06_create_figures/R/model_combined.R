@@ -64,7 +64,7 @@ model_combined <- function(census,
   fixeff_list <- list(fixeff0, fixeff0.5, fixeff1, fixeff2, fixeff3)
   formula_list <- lapply(fixeff_list, paste, "+", raneff)
   formula_list <- lapply(formula_list, as.formula)
-  model_list <- lapply(formula_list, lme4::lmer, data = combined_df)
+  model_list <- lapply(formula_list, lmerTest::lmer, data = combined_df)
 
   model_list
 }
