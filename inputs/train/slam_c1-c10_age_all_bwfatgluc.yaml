@@ -11,13 +11,13 @@ external_validate: FALSE
 custom_palette: TRUE
 palette_colors: ["black", "#DF536B", "#61D04F", "midnightblue",
   "#28E2E5", "#CD0BBC", "#FF991C", "gray62"]
-legend_labels: ["Overweight", "Low-weight", "Mid-Weight", "High-fat",
-  "Low-fat", "Mid-fat", "Decline Glucose", "Stable Glucose"]
+legend_labels: ["Early-peak BW", "Stable BW", "Late-peak BW", "Early-peak FM",
+  "Stable FM", "Late-peak FM", "Decline FBG", "Stable FBG"]
 custom_palette_train: TRUE
 palette_colors_train: [ "black", "#DF536B", "#61D04F", "midnightblue",
   "#28E2E5", "#CD0BBC", "#FF991C", "gray62" ]
-legend_labels_train: [ "Overweight", "Low-weight", "Mid-Weight", "High-fat",
-  "Low-fat", "Mid-fat", "Decline Glucose", "Stable Glucose" ]
+legend_labels_train: ["Early-peak BW", "Stable BW", "Late-peak BW", "Early-peak FM",
+  "Stable FM", "Late-peak FM", "Decline FBG", "Stable FBG"]
 survival_dataset:
   path: "../00c_survival_data/output/slam_c1-c10/data/main_cat_surv.csv"
   id: "idno"
@@ -97,7 +97,7 @@ datasets:
   path: "../00b_dataset_mods/output/slam_c1-c10/data/slam_fat_og.csv"
   outcome: "fat"
   model:
-    fixed: "~ age_wk + age_wk2"
+    fixed: "~ age_wk + age_wk2 + sex_F * strain_HET3" 
     mixture: "~ age_wk + age_wk2" 
     random: 
       - "~ 1"
