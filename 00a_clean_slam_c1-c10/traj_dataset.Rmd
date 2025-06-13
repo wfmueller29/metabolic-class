@@ -1369,7 +1369,7 @@ keep_cols <- c(
   "sex",
   "strain",
   "cohort",
-  "age_wk",
+  "age_wk"
 )
 
 main_all2 <- main_all2[, keep_cols]

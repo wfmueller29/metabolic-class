@@ -148,7 +148,6 @@ census <- surv[, c("project", "cohort", "sex", "strain", "idno", "tag", "dob")]
 
 ```{r old surv}
 surv <- surv[, c("tag", "age_wk", "state", "tod", "cod")]
-
 ```
 
 #### merging all datasets into a main file and clean
@@ -199,7 +198,6 @@ if (!isTRUE(test)) {
 }
 
 message("Number of observations without a tod = ", n_obs_without_tod)
-
 ```
 
 - Observations lost due to no tod = `r obs_before_tod - obs_after_tod`
@@ -1297,7 +1295,7 @@ keep_cols <- c(
   "sex",
   "strain",
   "cohort",
-  "age_wk",
+  "age_wk"
 )
 
 main_all2 <- main_all2[, keep_cols]
