@@ -7,7 +7,7 @@ output:
   html_document:
     df_print: paged
 params:
-  input_path: "../06_create_figures/output/slam_c1-c10_age_all_bwfatgluc.yaml"
+  input_path: "../06_create_figures/output/slam_c1-c10_age_fb6_bwfatgluc.yaml"
 ---
 
 ```{r setup, warning=FALSE, message=FALSE, echo=FALSE}
@@ -413,7 +413,9 @@ mortality_panel_hr <- lapply(
   function(table) {
     table <- table$hr_table[, "final", drop = FALSE]
     class_numbers <- as.integer(sub("Class", "", rownames(table)))
-    rownames(table) <- config$legend_labels[class_numbers]
+    if (config$custom_palette) {
+      rownames(table) <- config$legend_labels[class_numbers]
+    }
     table
   }
 )
