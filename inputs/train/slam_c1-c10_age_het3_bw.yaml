@@ -1,4 +1,4 @@
-out_tag: slam_c1-c10_age_het3_bwfatgluc
+out_tag: slam_c1-c10_age_het3_bw
 tag_time: FALSE
 plan: multicore
 ncpus: 8
