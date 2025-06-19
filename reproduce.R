@@ -12,6 +12,7 @@ yaml_files <- c(
   "inputs/train/slam_c1-c10_age_mb6_bwfatgluc.yaml",
   "inputs/train/slam_c1-c10_age_mhet3_bwfatgluc.yaml",
   "inputs/train/slam_c1-c10_age_het3_bwfatgluc.yaml",
+  "inputs/train/slam_c1-c10_age_het3_bw.yaml",
   "inputs/train/itp_c10c11c13c16_age_controls_bw.yaml"
 )
 
@@ -28,7 +29,9 @@ if (ecode != 0) stop("Error was thrown from system2 command")
 
 # Predict ---------------------------------------------------------------------
 yaml_files <- c(
-  "inputs/predict/itp_controls_p_treatment.yaml"
+  "inputs/predict/itp_controls_p_treatment.yaml",
+  "slam_het3_bw_c1-c10_x_slam_c16-c18.yaml",
+  "slam_het3_bw_c1-c10_x_itp_c10c11c13c16.yaml"
 )
 
 for (yaml in yaml_files) {
