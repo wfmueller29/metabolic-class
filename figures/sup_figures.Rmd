@@ -238,47 +238,17 @@ fig_no <- fig_no + 1
 
 \newpage
 
+### Figure `r as.character(fig_no)`: Healthcard Information
 
-### Figure `r as.character(fig_no)`: Healthcard Supplemental 1
-
-```{r sup figs hc1 }
+```{r sup figs michel}
 fig <- list()
-knitr::include_graphics("images/HC Suppl 1.jpg")
-fig$A <- image_read("images/HC Suppl 1.jpg")
+knitr::include_graphics("images/Michel Healthcard.png")
+fig$A <- image_read("images/Michel Healthcard.png")
 for (label in names(fig)) {
   save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
   fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
 }
 
-fig_no <- fig_no + 1
-```
-
-\newpage
-
-### Figure `r as.character(fig_no)`: Healthcard Supplemental 2
-
-```{r sup figs hc2 }
-fig <- list()
-knitr::include_graphics("images/HC Suppl 2.jpg")
-fig$A <- image_read("images/HC Suppl 2.jpg")
-for (label in names(fig)) {
-  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
-  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
-}
-fig_no <- fig_no + 1
-```
-
-\newpage
-
-### Figure `r as.character(fig_no)`: Healthcard Supplemental 3
-
-```{r sup figs hc3 }
-knitr::include_graphics("images/HC Suppl 3.jpg")
-fig$A <- image_read("images/HC Suppl 3.jpg")
-for (label in names(fig)) {
-  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
-  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
-}
 fig_no <- fig_no + 1
 ```
 
@@ -402,6 +372,8 @@ tab_no <- 1 + tab_no
 \newpage
 
 # Ammunition
+
+\newpage
 
 ### Figure `r as.character(fig_no)`: Treatment Response
 
@@ -808,6 +780,37 @@ fig_no <- fig_no + 1
 
 \newpage
 
+### Supplemental Table `r as.character(tab_no)`: Individual Cox Information
+
+```{r sup_tables table coxzph individual cox model, results = 'asis'}
+flextable(all_env$save_figtabs$individual_coxzph_tables) %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+tab_no <- 1 + tab_no
+```
+
+\newpage
+
+### Supplemental Table `r as.character(tab_no)`: Combined Cox Information
+
+```{r sup_tables table coxzph combined cox model, results = 'asis'}
+all_env$save_figtabs$combined_coxzph_tables %>%
+  mutate(df = round(df, digits = 2)) %>%
+  select(-outcome) %>%
+  flextable() %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+tab_no <- 1 + tab_no
+```
+
+\newpage
+
 # Extended Supplemental
 
 \newpage
@@ -1046,32 +1049,47 @@ tab_no <- 1 + tab_no
 
 \newpage
 
-### Supplemental Table `r as.character(tab_no)`: Individual Cox Information
+### Figure `r as.character(fig_no)`: Healthcard Supplemental 1
 
-```{r sup_tables table coxzph individual cox model, results = 'asis'}
-flextable(all_env$save_figtabs$individual_coxzph_tables) %>%
-  theme_vanilla() %>%
-  autofit() %>%
-  set_table_properties(layout = "autofit") %>%
-  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+```{r sup figs hc1 }
+fig <- list()
+knitr::include_graphics("images/HC Suppl 1.jpg")
+fig$A <- image_read("images/HC Suppl 1.jpg")
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
 
-tab_no <- 1 + tab_no
+fig_no <- fig_no + 1
 ```
 
 \newpage
 
-### Supplemental Table `r as.character(tab_no)`: Combined Cox Information
+### Figure `r as.character(fig_no)`: Healthcard Supplemental 2
 
-```{r sup_tables table coxzph combined cox model, results = 'asis'}
-all_env$save_figtabs$combined_coxzph_tables %>%
-  mutate(df = round(df, digits = 2)) %>%
-  select(-outcome) %>%
-  flextable() %>%
-  theme_vanilla() %>%
-  autofit() %>%
-  set_table_properties(layout = "autofit") %>%
-  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-
-tab_no <- 1 + tab_no
+```{r sup figs hc2 }
+fig <- list()
+knitr::include_graphics("images/HC Suppl 2.jpg")
+fig$A <- image_read("images/HC Suppl 2.jpg")
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+fig_no <- fig_no + 1
 ```
 
+\newpage
+
+### Figure `r as.character(fig_no)`: Healthcard Supplemental 3
+
+```{r sup figs hc3 }
+knitr::include_graphics("images/HC Suppl 3.jpg")
+fig$A <- image_read("images/HC Suppl 3.jpg")
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+fig_no <- fig_no + 1
+```
+
+\newpage
