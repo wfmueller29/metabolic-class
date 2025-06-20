@@ -39,8 +39,13 @@ output:
       "2" = "#36b22b", # green
       "3" = "#5087fe" # blue
     )
+    class_colors_final <- c(
+      "Early-Peak-BW" = "#000", # black
+      "Stable BW"     = "#d53b59", # red
+      "Mid-Peak-BW"   = "#53ca3e" # green
+    )
     bin_colors <- c(
-      "0" = "#5be996", # green
+      "0" = "#74ae66", # green
       "1" = "#f2d14c", # yellow
       "2" = "#efa52e", # darker yellow-orange
       "3" = "#f06151", # red
@@ -48,7 +53,7 @@ output:
       "5+" = "#350202" # dark dark red
     )
     bin_colors_per_yr <- c(
-      "[0]" = "#5be996", # green
+      "[0]" = "#74ae66", # green
       "(0–0.5)" = "#f2d14c", # yellow
       "[0.5–1)" = "#efa52e", # darker yellow-orange
       "[1–2)" = "#f06151", # red
@@ -58,16 +63,17 @@ output:
 ```
 # Load in input data
 ```{r read in censuses}
-  census_path <- "/Users/jdp2019/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/census.csv"
-  class_census_path <- "/Users/jdp2019/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/20250426_all_cohort/complete_census.csv"
-  healthcard_path <- "/Users/jdp2019/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/SLAM Healthcard reconciled.xlsx"
-
+  # census_path <- "/Users/jdp2019/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/census.csv"
+  # class_census_path <- "/Users/jdp2019/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/20250426_all_cohort/complete_census.csv"
+  # healthcard_path <- "/Users/jdp2019/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/SLAM Healthcard reconciled.xlsx"
+  census_path <- "/Users/JoshsMacbook2015/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/census.csv"
+  class_census_path <- "/Users/JoshsMacbook2015/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/20250426_all_cohort/complete_census.csv"
+  healthcard_path <- "/Users/JoshsMacbook2015/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/SLAM Healthcard reconciled.xlsx"
   class_census <- read.csv(class_census_path)
   census <- read.csv(census_path)
   healthcard_ii <- as.data.frame(readxl::read_xlsx(healthcard_path, sheet = "Healthcard"))
   census <- consoler::rename(census, c(animal_id = "Animal_ID", tag_history = "taghistory"))
 ```
-
 ## Clean Healthcard
 ```{r clean healthcard}
   #+ Clean Healthcard
@@ -155,7 +161,6 @@ output:
     healthcard_final <- as_tibble(merge(census, healthcard, by = "tag", all.y = TRUE)) %>%
       select(idno, idno_rec, everything(), -c(Comments, name, cage, eartag, "Created By", "Entered By"))
 ```
-
 ## Process healthcard to prep for graphing- EOL
 ```{r process healthcard}
   # Clean up and pare HC
@@ -215,9 +220,8 @@ output:
 
   EOL_hc_final <- bind_rows(hc_long_EOL, no_eol_hc) # Bind to condition table
 ```
-
 ## Calculate chi-square or fisher's p-values for EOL
-```{r run chi square and fisher's}
+```{r run chi square and fisher}
   # Chi square and fisher's for EOL conditions
   EOL_results <- EOL_hc_final %>%
   mutate(present = 1) %>%
@@ -241,7 +245,6 @@ output:
   select(condition, method, p.value, statistic) %>%
   arrange(p.value)
 ```
-
 ## Calculate prevalence of conditions for graphing for EOL, join p-values
 ```{r calculate prevalence, assign p-values}
   # Calculate prevalence for EOL, join p-values from above
@@ -264,25 +267,24 @@ output:
       TRUE ~ ""
     ))
 
-  # Calculate prevalence for EOL, join p-values from above
-  class_totals_LL <- LL_hc_final %>%
-    distinct(idno, new_class_bw) %>%
-    count(new_class_bw, name = "denominator")
-  condition_counts_LL <- LL_hc_final %>%
-    distinct(idno, new_class_bw, condition) %>%
-    count(condition, new_class_bw, name = "numerator")
-  plot_data_LL_i <- condition_counts_LL %>%
-    left_join(class_totals_LL, by = "new_class_bw") %>%
-    mutate(prevalence = (numerator / denominator) * 100) %>%
-    left_join(LL_results %>% select(condition, p.value), by = "condition") %>%
-    mutate(sig_label = case_when(
-      p.value <= 0.001 ~ "***",
-      p.value <= 0.01 ~ "**",
-      p.value <= 0.05 ~ "*",
-      TRUE ~ ""
-    ))
+  # # Calculate prevalence for EOL, join p-values from above
+  # class_totals_LL <- LL_hc_final %>%
+  #   distinct(idno, new_class_bw) %>%
+  #   count(new_class_bw, name = "denominator")
+  # condition_counts_LL <- LL_hc_final %>%
+  #   distinct(idno, new_class_bw, condition) %>%
+  #   count(condition, new_class_bw, name = "numerator")
+  # plot_data_LL_i <- condition_counts_LL %>%
+  #   left_join(class_totals_LL, by = "new_class_bw") %>%
+  #   mutate(prevalence = (numerator / denominator) * 100) %>%
+  #   left_join(LL_results %>% select(condition, p.value), by = "condition") %>%
+  #   mutate(sig_label = case_when(
+  #     p.value <= 0.001 ~ "***",
+  #     p.value <= 0.01 ~ "**",
+  #     p.value <= 0.05 ~ "*",
+  #     TRUE ~ ""
+  #   ))
 ```
-
 ## Clean the names of the conditions in both for plotting
 ```{r clean the conditions, assign p-values}
   # Create a vector to clean all names in the dataset
@@ -432,7 +434,7 @@ output:
 ```{r Incidence study}
   #* Now, create a lifelong healthcard
     HC_relevant_LL <- classes_i %>%
-      select(idno,le_wk,new_class_bw,created_date,recovery_date, tod,abscess:condition_to_death,-na) 
+      select(idno,le_wk,new_class_bw,created_date,recovery_date, tod,abscess:condition_to_death) 
     total_HCs_LL <- HC_relevant_LL %>%
       rowwise() %>%
       mutate(total_conditions = sum(c_across(abscess:weight_loss), na.rm = TRUE)) %>%
@@ -549,7 +551,6 @@ output:
         legend.text = element_text(size = 12)
       )
 ```
-
 ## Examine cumulative HC free
 ```{r HC free study}
   #* Prepare cumulative incidence tibble
@@ -560,6 +561,13 @@ output:
     #- Create a time-to-event tibble and join DOB
       HC_relevant_LL <- classes_i %>%
         left_join(census, by = "idno") %>%
+        mutate(
+          dob = if_else(
+            year(dob) < 100, # badly parsed DOBs have years like 15, 16, etc.
+            update(dob, year = year(dob) + 2000), # convert 0015 → 2015
+            dob
+          )
+        ) %>%
         mutate(
           le_days = le_wk * 7,
           event_day = as.integer(created_date - dob) # days since birth
@@ -599,7 +607,7 @@ output:
         ungroup()
   #* Plot
     #- As raw days
-      days_HCfree <- ggplot(cumulative_class_curves, aes(x = event_day, y = prop_disease_free, color = Class)) +
+      days_HCfree <- ggplot(cumulative_class_curves_day, aes(x = event_day, y = prop_disease_free, color = Class)) +
         geom_step(size = 1.1) +
         scale_color_manual(values = class_colors) +
         labs(
@@ -633,7 +641,6 @@ output:
       ) +
       ylim(0, 1)
 ```
-
 ## Examine cumulative incidence
 ```{r Cumulative HCs study}
   #* Compute cumulative HC tibbles
@@ -644,17 +651,18 @@ output:
         mutate(Class = factor(new_class_bw, levels = c(1, 2, 3)))
     #- Compute a version for only mice who had HCs
       cumulative_HC_day_events_only <- HC_relevant_LL %>%
-        filter(!is.na(event_day)) %>% # excludes mice with 0 events
+        mutate(event_wk = event_day / 7) %>%
+        filter(!is.na(event_wk)) %>% # excludes mice with 0 events
         mutate(Class = factor(new_class_bw, levels = c(1, 2, 3))) %>%
         group_by(Class) %>%
         mutate(class_size = n_distinct(idno)) %>%
-        group_by(Class, event_day) %>%
+        group_by(Class, event_wk) %>%
         summarise(
           total_HC = n(),
           class_size = first(class_size),
           .groups = "drop"
         ) %>%
-        arrange(Class, event_day) %>%
+        arrange(Class, event_wk) %>%
         group_by(Class) %>%
         mutate(
           cum_HC = cumsum(total_HC),
@@ -663,12 +671,13 @@ output:
         ungroup()
     #- Compute a version which considers all mice
       cumulative_HC_day_all_mice <- HC_relevant_LL %>%
-        filter(!is.na(event_day)) %>%
+        mutate(event_wk = event_day / 7) %>%
+        filter(!is.na(event_wk)) %>%
         mutate(Class = factor(new_class_bw, levels = c(1, 2, 3))) %>%
-        group_by(Class, event_day) %>%
+        group_by(Class, event_wk) %>%
         summarise(total_HC = n(), .groups = "drop") %>%
         left_join(class_sizes, by = "Class") %>%
-        arrange(Class, event_day) %>%
+        arrange(Class, event_wk) %>%
         group_by(Class) %>%
         mutate(
           cum_HC = cumsum(total_HC),
@@ -677,29 +686,28 @@ output:
         ungroup()
   #* Plots
   #- Including only mice with HCs
-    cum_inc_HCmice <- ggplot(cumulative_HC_day_events_only, aes(x = event_day, y = cum_HC_per_mouse_events_only, color = Class)) +
+    cum_inc_HCmice <- ggplot(cumulative_HC_day_events_only, aes(x = event_wk, y = cum_HC_per_mouse_events_only, color = Class)) +
       geom_step(size = 1.1) +
       scale_color_manual(values = class_colors) +
       labs(
         title = "Cumulative HCs per Mouse (Only Mice With Events)",
-        x = "Days Since Birth",
+        x = "Weeks Since Birth",
         y = "Cumulative HCs / Mouse",
         color = "Class"
       ) +
       theme_minimal(base_size = 14)
   #- Including mice who never had HC
-    cum_inc_allmice <- ggplot(cumulative_HC_day_all_mice, aes(x = event_day, y = cum_HC_per_mouse_all, color = Class)) +
+    cum_inc_allmice <- ggplot(cumulative_HC_day_all_mice, aes(x = event_wk, y = cum_HC_per_mouse_all, color = Class)) +
       geom_step(size = 1.1) +
       scale_color_manual(values = class_colors) +
       labs(
         title = "Cumulative HCs per Mouse (Including Mice with No Events)",
-        x = "Days Since Birth",
+        x = "Weeks Since Birth",
         y = "Cumulative HCs / Mouse",
         color = "Class"
       ) +
       theme_minimal(base_size = 14)
 ```
-
 ## Examine clusters of conditions
 ```{r plot clusters and heatmaps}
   #* Examine overrepresentation of any HC in classes, only counting once per mouse
@@ -798,7 +806,7 @@ output:
         annotation_colors = annotation_colors,
         annotation_legend = TRUE,
         annotation_names_row = FALSE,
-        display_numbers = display_vals,
+        display_numbers = FALSE,
         number_color = "gray20",
         fontsize_row = 13,
         fontsize_col = 13,
@@ -807,7 +815,6 @@ output:
         legend = FALSE
       )
 ```
-
 ## Examine clusters of conditions but normalize by time
 ```{r plot clusters and heatmaps norm by time}
   #* Examine overrepresentation, but norm by time
@@ -849,7 +856,7 @@ output:
             condition = recode(condition, !!!condition_renames)
           )
     #- Now structure matrix for heatmap
-    condition_matrix_norm <- filtered_rates %>%
+      condition_matrix_norm <- filtered_rates %>%
       select(new_class_bw, condition, mean_rate) %>% # Keep only numeric data
       pivot_wider(names_from = new_class_bw, values_from = mean_rate) %>%
       replace(is.na(.), 0) %>%
@@ -877,7 +884,7 @@ output:
         annotation_colors = annotation_colors_timed,
         annotation_legend = TRUE,
         annotation_names_row = FALSE,
-        display_numbers = display_vals_norm,
+        display_numbers = FALSE,
         number_color = "gray20",
         fontsize_row = 13,
         fontsize_col = 13,
@@ -886,7 +893,6 @@ output:
         legend = TRUE # You probably want this to show the color key now
       )
 ```     
-
 ## Compile plots
 ```{r compiled plots}
   # Unified theme
@@ -1000,4 +1006,132 @@ output:
     popViewport()
   #* Close the PDF device
   dev.off()
+```  
+## Pare and format plots to those actually included in supplemental and make specific changes
+```{r finalized plots}
+  # Function to rewrite class names
+    relabel_classes <- function(df, var) {
+      df %>%
+        mutate({{ var }} := recode_factor(
+          {{ var }},
+          "1" = "Early-Peak-BW",
+          "2" = "Stable BW",
+          "3" = "Mid-Peak-BW"
+        ))
+    }
+  # Apply to relevant datasets
+    bin_props_stacked_final <- relabel_classes(bin_props_stacked, new_class_bw)
+    bin_props_yr_final <- relabel_classes(bin_props_yr, new_class_bw)
+    cumulative_HC_day_events_only_final <- relabel_classes(cumulative_HC_day_events_only, Class)
+    cumulative_HC_day_all_mice_final <- relabel_classes(cumulative_HC_day_all_mice, Class)
+  # Set global plot theme
+    final_plot_theme <- theme_minimal(base_size = 18) +
+      theme(
+        plot.title    = element_text(size = 18, face = "plain", hjust = 0.5),
+        axis.title    = element_text(size = 16, face = "plain"),
+        axis.text     = element_text(size = 13, face = "plain"),
+        legend.title  = element_text(size = 16, face = "plain"),
+        legend.text   = element_text(size = 13, face = "plain"),
+        strip.text    = element_text(size = 14, face = "plain") # if using facets
+      )
+  # Finalize version of S6A (proportion of LL HCs stacked)
+    S6A <- ggplot(bin_props_stacked_final, aes(x = factor(new_class_bw), y = proportion, fill = condition_bin)) +
+      geom_bar(stat = "identity", position = "stack") +
+      scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+      scale_fill_manual(values = bin_colors, name = "# of HCs") +
+      labs(
+        title = "Condition Burden",
+        x = "Class",
+        y = "Proportion of Mice"
+      ) + final_plot_theme
+
+  # Finalize version of S6B (proportion of LL HCs stacked, year normalized)
+    S6B <- ggplot(bin_props_yr_final, aes(x = factor(new_class_bw), y = proportion, fill = hc_yr_bin)) +
+      geom_bar(stat = "identity", position = "stack") +
+      scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+      scale_fill_manual(values = bin_colors_per_yr, name = "HCs/Yr") +
+      labs(
+        title = "Condition Incidence / year",
+        x = "Class",
+        y = "Proportion of Mice"
+      ) + final_plot_theme
+
+  # Use the scale for S6C for next two plots
+    max_y_S6C <- max(cumulative_HC_day_events_only_final$cum_HC_per_mouse_events_only, na.rm = TRUE)
+  # Finalize version of S6C (cumulative incidence of HCs, only mice with events)
+    S6C <- ggplot(cumulative_HC_day_events_only_final, aes(x = event_wk, y = cum_HC_per_mouse_events_only, color = Class)) +
+      geom_step(size = 1.1) +
+      scale_color_manual(values = class_colors_final) +
+      scale_y_continuous(limits = c(0, max_y_S6C)) +
+      labs(
+        title = "Cumulative HCs per Mouse (Only Mice With Events)",
+        x = "Weeks Since Birth",
+        y = "Cumulative HCs / Mouse",
+        color = "Class"
+      ) +
+      final_plot_theme
+
+  # Finalize version of S6D (cumulative incidence of HCs, all mice)
+    S6D <- ggplot(cumulative_HC_day_all_mice_final, aes(x = event_wk, y = cum_HC_per_mouse_all, color = Class)) +
+      geom_step(size = 1.1) +
+      scale_color_manual(values = class_colors_final) +
+      scale_y_continuous(limits = c(0, max_y_S6C)) +
+      labs(
+        title = "Cumulative HCs per Mouse (Including Mice with No Events)",
+        x = "Weeks Since Birth",
+        y = "Cumulative HCs / Mouse",
+        color = "Class"
+      ) +
+      final_plot_theme
+
+  # Finalize version of S6E (cumulative incidence of HCs, all mice)
+    condition_matrix_norm_renamed <- condition_matrix_norm
+    colnames(condition_matrix_norm_renamed) <- recode(
+      colnames(condition_matrix_norm_renamed),
+      "Class 1" = "Early-Peak-BW",
+      "Class 2" = "Stable BW",
+      "Class 3" = "Mid-Peak-BW"
+    )
+    S6E <- pheatmap::pheatmap(
+      condition_matrix_norm_renamed,
+      scale = "none", # Fix inconsistent coloring
+      cluster_rows = TRUE,
+      cluster_cols = TRUE,
+      annotation_row = sig_annot_timed,
+      annotation_colors = annotation_colors_timed,
+      annotation_legend = TRUE,
+      annotation_names_row = FALSE,
+      display_numbers = FALSE,
+      number_color = "gray20",
+      fontsize_row = 13,
+      fontsize_col = 13,
+      fontsize_number = 10,
+      angle_col = 0,
+      legend = TRUE
+    )
+  # Export all plots as high-quality pngs
+    # Create output folder if needed
+    dir.create("Healthcard_PNGs", showWarnings = FALSE)
+    # Define export function
+    export_plot <- function(plot_obj, filename, width = 8.5, height = 11, dpi = 1200) {
+      ggsave(
+        filename = file.path("Healthcard_PNGs", filename),
+        plot = plot_obj,
+        width = width,
+        height = height,
+        dpi = dpi,
+        units = "in",
+        bg = "white" # ensures white background
+      )
+    }
+    # Export ggplot objects
+    export_plot(S6A, "S6A.png")
+    export_plot(S6B, "S6B.png")
+    export_plot(S6C, "S6C.png")
+    export_plot(S6D, "S6D.png")
+    # Export S6E (pheatmap object)
+    png("Healthcard_PNGs/S6E.png", width = 8.5, height = 11, units = "in", res = 1200, bg = "white")
+    grid::grid.newpage()
+    grid::grid.draw(S6E$gtable)
+    dev.off()
 ```  
