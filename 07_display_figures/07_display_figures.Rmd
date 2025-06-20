@@ -2266,7 +2266,7 @@ if (window_legend && cumulative_legend) {
       name = "Window Size",
       labels = window_legend_labels
     ) +
-    coord_cartesian(ylim = c(.5, 1))
+    coord_cartesian(ylim = c(.5, .8))
   p[[3]] <- final_models[!og_index, ]$filter_cumulative_test_lp_plot_model2[[1]] +
     viridis::scale_color_viridis(
       begin = .2,
@@ -2286,7 +2286,7 @@ if (window_legend && cumulative_legend) {
       direction = -1,
       discrete = TRUE
     ) +
-    ggplot2::coord_cartesian(ylim = c(.5, 1)) +
+    ggplot2::coord_cartesian(ylim = c(.5, .8)) +
     ggplot2::labs(color = "Lower Bound (weeks)") +
     theme(legend.title = element_text(size = rel(.8)))
 }
