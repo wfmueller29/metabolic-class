@@ -28,6 +28,7 @@ library(consoler)
 library(flextable)
 library(future)
 library(future.apply)
+library(magick)
 set.seed(365)
 
 # setting global knitr options for r markdown output
@@ -86,6 +87,19 @@ annotate_figure_label <- function(image_obj, label) {
 }
 ```
 
+```{r save figure function}
+save_figure <- function(image_obj, fig_num, label) {
+  dir_path <- file.path("output", "supplemental", paste0("fig", fig_num))
+  file_path <- file.path(dir_path, paste0(fig_num, label, ".png"))
+
+  if (!dir.exists(dir_path)) {
+    dir.create(dir_path, recursive = TRUE)
+  }
+
+  magick::image_write(image_obj, path = file_path, format = "png")
+}
+```
+
 ```{r sup figs fig no }
 fig_no <- 1
 tab_no <- 1
@@ -107,6 +121,7 @@ fig$B <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_
 fig$A <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/heatmap/heatmap2.jpg")
 
 for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
   fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
 }
 
@@ -126,6 +141,13 @@ fig_no <- fig_no + 1
 
 ```{r sup reclassifcation analysis, out.width = "100%"}
 knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/class_prediction_panel/class_prediction_panel.png")
+fig$A <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/class_prediction_panel/class_prediction_panel.png")
+
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+
 
 fig_no <- fig_no + 1
 ```
@@ -144,6 +166,7 @@ fig$E <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_
 fig$F <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/validation/plot_4.png")
 
 for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
   fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
 }
 
@@ -179,6 +202,7 @@ fig$E <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_
 fig$F <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/validation/plot_4.png")
 
 for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
   fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
 }
 
@@ -202,49 +226,17 @@ fig_no <- fig_no + 1
 
 \newpage
 
-### Figure `r as.character(fig_no)`: Internal Validation KM
-
-```{r sup internal validation km, out.width = "100%"}
-fig <- list()
-fig$A <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 19.5]_1.png")
-fig$B <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 32.5]_2.png")
-fig$C <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 45.5]_3.png")
-fig$D <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 58.5]_4.png")
-fig$E <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 71.5]_5.png")
-fig$F <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 84.5]_6.png")
-fig$G <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 97.5]_7.png")
-fig$H <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 110.5]_8.png")
-fig$I <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 123.5]_9.png")
-fig$J <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 136.5]_10.png")
-
-for (label in names(fig)) {
-  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
-}
-
-# Manually define rows (3 per row, last row only 1 image)
-rows <- list(
-  image_append(image_join(fig$A, fig$B, fig$C)),
-  image_append(image_join(fig$D, fig$E, fig$F)),
-  image_append(image_join(fig$G, fig$H, fig$I)),
-  image_append(image_join(fig$J))
-)
-
-# Stack rows vertically
-final_panel <- image_append(image_join(rows), stack = TRUE)
-
-# View or save
-final_panel
-
-fig_no <- fig_no + 1
-```
-
-\newpage
-
 
 ### Figure `r as.character(fig_no)`: Healthcard Supplemental 1
 
 ```{r sup figs hc1 }
 knitr::include_graphics("images/HC Suppl 1.jpg")
+fig$A <- image_read("images/HC Suppl 1.jpg")
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+
 fig_no <- fig_no + 1
 ```
 
@@ -254,6 +246,11 @@ fig_no <- fig_no + 1
 
 ```{r sup figs hc2 }
 knitr::include_graphics("images/HC Suppl 2.jpg")
+fig$A <- image_read("images/HC Suppl 2.jpg")
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
 fig_no <- fig_no + 1
 ```
 
@@ -263,6 +260,11 @@ fig_no <- fig_no + 1
 
 ```{r sup figs hc3 }
 knitr::include_graphics("images/HC Suppl 3.jpg")
+fig$A <- image_read("images/HC Suppl 3.jpg")
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
 fig_no <- fig_no + 1
 ```
 
@@ -396,6 +398,7 @@ fig$B <- image_read("/Users/williammueller/programs/metabolic_class/analysis/99_
 fig$C <- image_read("/Users/williammueller/programs/metabolic_class/analysis/99_treatment_response/output/treatment_response/plot_3.png")
 
 for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
   fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
 }
 
@@ -492,7 +495,6 @@ fig$M <- image_read("images/Basic LCM.png")
 
 
 for (label in names(fig)) {
-  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
   fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
 }
 
@@ -511,6 +513,9 @@ fig$N <- image_scale(fig$N, "400%")
 fig$N <- image_border(fig$N, color = "white", geometry = "100x100")
 fig$N <- annotate_figure_label(fig$N, "N")
 
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+}
 
 # Build rows of 4 images
 row1 <- image_append(c(fig$A, fig$B, fig$C, fig$D), stack = FALSE)
@@ -568,6 +573,10 @@ fig$N <- image_scale(fig$N, "400%")
 fig$N <- image_border(fig$N, color = "white", geometry = "100x100")
 fig$N <- annotate_figure_label(fig$N, "N")
 
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+}
+
 
 # Build rows of 4 images
 row1 <- image_append(c(fig$A, fig$B, fig$C, fig$D), stack = FALSE)
@@ -606,7 +615,6 @@ fig$M <- image_read("images/Basic LCM.png")
 
 
 for (label in names(fig)) {
-  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
   fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
 }
 
@@ -624,6 +632,10 @@ fig$N <- image_read("output/mortality_panel_hr.png")
 fig$N <- image_scale(fig$N, "400%")
 fig$N <- image_border(fig$N, color = "white", geometry = "100x100")
 fig$N <- annotate_figure_label(fig$N, "N")
+
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+}
 
 
 # Build rows of 4 images
@@ -664,7 +676,6 @@ fig$M <- image_read("images/Basic LCM.png")
 
 
 for (label in names(fig)) {
-  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
   fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
 }
 
@@ -683,6 +694,10 @@ fig$N <- image_scale(fig$N, "400%")
 fig$N <- image_border(fig$N, color = "white", geometry = "100x100")
 fig$N <- annotate_figure_label(fig$N, "N")
 
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+}
+
 
 # Build rows of 4 images
 row1 <- image_append(c(fig$A, fig$B, fig$C, fig$D), stack = FALSE)
@@ -695,6 +710,45 @@ final_panel <- image_append(c(row1, row2, row3, row4), stack = TRUE)
 # View or save
 final_panel
 # image_write(final_panel, "output/fig/panel.png")
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Internal Validation KM
+
+```{r sup internal validation km, out.width = "100%"}
+fig <- list()
+fig$A <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 19.5]_1.png")
+fig$B <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 32.5]_2.png")
+fig$C <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 45.5]_3.png")
+fig$D <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 58.5]_4.png")
+fig$E <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 71.5]_5.png")
+fig$F <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 84.5]_6.png")
+fig$G <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 97.5]_7.png")
+fig$H <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 110.5]_8.png")
+fig$I <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 123.5]_9.png")
+fig$J <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 136.5]_10.png")
+
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+
+# Manually define rows (3 per row, last row only 1 image)
+rows <- list(
+  image_append(image_join(fig$A, fig$B, fig$C)),
+  image_append(image_join(fig$D, fig$E, fig$F)),
+  image_append(image_join(fig$G, fig$H, fig$I)),
+  image_append(image_join(fig$J))
+)
+
+# Stack rows vertically
+final_panel <- image_append(image_join(rows), stack = TRUE)
+
+# View or save
+final_panel
 
 fig_no <- fig_no + 1
 ```
@@ -967,3 +1021,4 @@ all_env$save_figtabs$combined_coxzph_tables %>%
 
 tab_no <- 1 + tab_no
 ```
+
