@@ -100,6 +100,17 @@ save_figure <- function(image_obj, fig_num, label) {
 }
 ```
 
+```{r grob to magick}
+grob_to_magick <- function(grob, width = 400, height = 400, res = 150) {
+  tf <- tempfile(fileext = ".png")
+  png(tf, width = width, height = height, res = res)
+  grid::grid.newpage()
+  grid::grid.draw(grob)
+  dev.off()
+  image_read(tf)
+}
+```
+
 ```{r sup figs fig no }
 fig_no <- 1
 tab_no <- 1
@@ -438,7 +449,6 @@ fig$M <- image_read("images/Basic LCM.png")
 
 
 for (label in names(fig)) {
-  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
   fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
 }
 
@@ -457,11 +467,22 @@ fig$N <- image_scale(fig$N, "400%")
 fig$N <- image_border(fig$N, color = "white", geometry = "100x100")
 fig$N <- annotate_figure_label(fig$N, "N")
 
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+}
+
+legend1 <- grob_to_magick(het3_env$save_figtabs$legends_only[[1]]) %>%
+  image_scale("200%")
+legend2 <- grob_to_magick(het3_env$save_figtabs$legends_only[[2]]) %>%
+  image_scale("200%")
+legend3 <- grob_to_magick(het3_env$save_figtabs$legends_only[[3]]) %>%
+  image_scale("200%")
+
 
 # Build rows of 4 images
-row1 <- image_append(c(fig$A, fig$B, fig$C, fig$D), stack = FALSE)
-row2 <- image_append(c(fig$E, fig$F, fig$G, fig$H), stack = FALSE)
-row3 <- image_append(c(fig$I, fig$J, fig$K, fig$L), stack = FALSE)
+row1 <- image_append(c(fig$A, fig$B, fig$C, fig$D, legend1), stack = FALSE)
+row2 <- image_append(c(fig$E, fig$F, fig$G, fig$H, legend2), stack = FALSE)
+row3 <- image_append(c(fig$I, fig$J, fig$K, fig$L, legend3), stack = FALSE)
 row4 <- image_append(c(fig$M, fig$N))
 # Stack the rows vertically
 final_panel <- image_append(c(row1, row2, row3, row4), stack = TRUE)
@@ -517,10 +538,18 @@ for (label in names(fig)) {
   save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
 }
 
+legend1 <- grob_to_magick(fb6_env$save_figtabs$legends_only[[1]]) %>%
+  image_scale("200%")
+legend2 <- grob_to_magick(fb6_env$save_figtabs$legends_only[[2]]) %>%
+  image_scale("200%")
+legend3 <- grob_to_magick(fb6_env$save_figtabs$legends_only[[3]]) %>%
+  image_scale("200%")
+
+
 # Build rows of 4 images
-row1 <- image_append(c(fig$A, fig$B, fig$C, fig$D), stack = FALSE)
-row2 <- image_append(c(fig$E, fig$F, fig$G, fig$H), stack = FALSE)
-row3 <- image_append(c(fig$I, fig$J, fig$K, fig$L), stack = FALSE)
+row1 <- image_append(c(fig$A, fig$B, fig$C, fig$D, legend1), stack = FALSE)
+row2 <- image_append(c(fig$E, fig$F, fig$G, fig$H, legend2), stack = FALSE)
+row3 <- image_append(c(fig$I, fig$J, fig$K, fig$L, legend3), stack = FALSE)
 row4 <- image_append(c(fig$M, fig$N))
 # Stack the rows vertically
 final_panel <- image_append(c(row1, row2, row3, row4), stack = TRUE)
@@ -577,11 +606,18 @@ for (label in names(fig)) {
   save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
 }
 
+legend1 <- grob_to_magick(fhet3_env$save_figtabs$legends_only[[1]]) %>%
+  image_scale("200%")
+legend2 <- grob_to_magick(fhet3_env$save_figtabs$legends_only[[2]]) %>%
+  image_scale("200%")
+legend3 <- grob_to_magick(fhet3_env$save_figtabs$legends_only[[3]]) %>%
+  image_scale("200%")
+
 
 # Build rows of 4 images
-row1 <- image_append(c(fig$A, fig$B, fig$C, fig$D), stack = FALSE)
-row2 <- image_append(c(fig$E, fig$F, fig$G, fig$H), stack = FALSE)
-row3 <- image_append(c(fig$I, fig$J, fig$K, fig$L), stack = FALSE)
+row1 <- image_append(c(fig$A, fig$B, fig$C, fig$D, legend1), stack = FALSE)
+row2 <- image_append(c(fig$E, fig$F, fig$G, fig$H, legend2), stack = FALSE)
+row3 <- image_append(c(fig$I, fig$J, fig$K, fig$L, legend3), stack = FALSE)
 row4 <- image_append(c(fig$M, fig$N))
 # Stack the rows vertically
 final_panel <- image_append(c(row1, row2, row3, row4), stack = TRUE)
@@ -637,11 +673,18 @@ for (label in names(fig)) {
   save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
 }
 
+legend1 <- grob_to_magick(mb6_env$save_figtabs$legends_only[[1]]) %>%
+  image_scale("200%")
+legend2 <- grob_to_magick(mb6_env$save_figtabs$legends_only[[2]]) %>%
+  image_scale("200%")
+legend3 <- grob_to_magick(mb6_env$save_figtabs$legends_only[[3]]) %>%
+  image_scale("200%")
+
 
 # Build rows of 4 images
-row1 <- image_append(c(fig$A, fig$B, fig$C, fig$D), stack = FALSE)
-row2 <- image_append(c(fig$E, fig$F, fig$G, fig$H), stack = FALSE)
-row3 <- image_append(c(fig$I, fig$J, fig$K, fig$L), stack = FALSE)
+row1 <- image_append(c(fig$A, fig$B, fig$C, fig$D, legend1), stack = FALSE)
+row2 <- image_append(c(fig$E, fig$F, fig$G, fig$H, legend2), stack = FALSE)
+row3 <- image_append(c(fig$I, fig$J, fig$K, fig$L, legend3), stack = FALSE)
 row4 <- image_append(c(fig$M, fig$N))
 # Stack the rows vertically
 final_panel <- image_append(c(row1, row2, row3, row4), stack = TRUE)
@@ -698,11 +741,18 @@ for (label in names(fig)) {
   save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
 }
 
+legend1 <- grob_to_magick(mhet3_env$save_figtabs$legends_only[[1]]) %>%
+  image_scale("200%")
+legend2 <- grob_to_magick(mhet3_env$save_figtabs$legends_only[[2]]) %>%
+  image_scale("200%")
+legend3 <- grob_to_magick(mhet3_env$save_figtabs$legends_only[[3]]) %>%
+  image_scale("200%")
+
 
 # Build rows of 4 images
-row1 <- image_append(c(fig$A, fig$B, fig$C, fig$D), stack = FALSE)
-row2 <- image_append(c(fig$E, fig$F, fig$G, fig$H), stack = FALSE)
-row3 <- image_append(c(fig$I, fig$J, fig$K, fig$L), stack = FALSE)
+row1 <- image_append(c(fig$A, fig$B, fig$C, fig$D, legend1), stack = FALSE)
+row2 <- image_append(c(fig$E, fig$F, fig$G, fig$H, legend2), stack = FALSE)
+row3 <- image_append(c(fig$I, fig$J, fig$K, fig$L, legend3), stack = FALSE)
 row4 <- image_append(c(fig$M, fig$N))
 # Stack the rows vertically
 final_panel <- image_append(c(row1, row2, row3, row4), stack = TRUE)
