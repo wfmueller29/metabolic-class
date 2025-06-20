@@ -23,15 +23,20 @@ for (yaml in yaml_files) {
 }
 
 # Validate  -------------------------------------------------------------------
-yaml_validate <- "inputs/validate/slam_c1-c10_x_slam_c16-c18.yaml"
-ecode <- system2("Rscript", args = c("validate.R", yaml_validate))
-if (ecode != 0) stop("Error was thrown from system2 command")
+yaml_files <- c(
+  "inputs/validate/slam_c1-c10_x_slam_c16-c18.yaml",
+  "inputs/validate/slam_c1-c10_x_slam_c16-c18_het3_bw.yaml"
+)
+
+for (yaml in yaml_files) {
+  cat("Running:", yaml, "\n")
+  ecode <- system2("Rscript", args = c("validate.R", yaml))
+  if (ecode != 0) stop(paste("Error in:", yaml))
+}
 
 # Predict ---------------------------------------------------------------------
 yaml_files <- c(
-  "inputs/predict/itp_controls_p_treatment.yaml",
-  "slam_het3_bw_c1-c10_x_slam_c16-c18.yaml",
-  "slam_het3_bw_c1-c10_x_itp_c10c11c13c16.yaml"
+  "inputs/predict/itp_controls_p_treatment.yaml"
 )
 
 for (yaml in yaml_files) {
