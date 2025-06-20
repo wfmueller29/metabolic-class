@@ -151,6 +151,7 @@ fig_no <- fig_no + 1
 ### Figure `r as.character(fig_no)`: Reclassifcation analysis
 
 ```{r sup reclassifcation analysis, out.width = "100%"}
+fig <- list()
 knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/class_prediction_panel/class_prediction_panel.png")
 fig$A <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/class_prediction_panel/class_prediction_panel.png")
 
@@ -241,6 +242,7 @@ fig_no <- fig_no + 1
 ### Figure `r as.character(fig_no)`: Healthcard Supplemental 1
 
 ```{r sup figs hc1 }
+fig <- list()
 knitr::include_graphics("images/HC Suppl 1.jpg")
 fig$A <- image_read("images/HC Suppl 1.jpg")
 for (label in names(fig)) {
@@ -256,6 +258,7 @@ fig_no <- fig_no + 1
 ### Figure `r as.character(fig_no)`: Healthcard Supplemental 2
 
 ```{r sup figs hc2 }
+fig <- list()
 knitr::include_graphics("images/HC Suppl 2.jpg")
 fig$A <- image_read("images/HC Suppl 2.jpg")
 for (label in names(fig)) {
