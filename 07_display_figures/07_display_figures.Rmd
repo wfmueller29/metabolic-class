@@ -2131,6 +2131,7 @@ if (config$custom_palette) {
     Class = paste("Class", seq_along(config$legend_labels)),
     Label = config$legend_labels
   )
+  save_figtabs$key <- df
   kable(df)
 }
 ```
