@@ -1,6 +1,6 @@
 ---
 title: "SLAM Metabolic Class COD and healthcard"
-author: "William Mueller, Joshua Preston"
+author: "Joshua Preston, William Mueller"
 data: "`r format(Sys.time(), '%Y %B %d')`"
 output:
   html_document:
