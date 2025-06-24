@@ -47,9 +47,11 @@ rmarkdown::render("99_treatment_response/treatment_response.Rmd")
 # Figures ---------------------------------------------------------------------
 rmarkdown::render("figures/primary_figures.Rmd",
   output_format = "pdf_document",
+  output_dir = "output",
   output_file = "Primary Figures.pdf"
 )
 rmarkdown::render("figures/sup_figures.Rmd",
   output_format = "pdf_document",
+  output_dir = "output",
   output_file = "Supplemental Material.pdf"
 )
