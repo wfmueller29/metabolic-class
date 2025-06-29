@@ -246,8 +246,13 @@ for (label in names(fig)) {
   save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
 }
 
-row1 <- image_append(c(fig$A, fig$B, fig$C, fig$D), stack = FALSE)
-row2 <- image_append(c(fig$E, fig$F, fig$G, fig$H), stack = FALSE)
+legend1 <- image_read("../96_pub_ready_figs/output/fb6_env/define_class/bwbw_legend.png")
+legend2 <- image_read("../96_pub_ready_figs/output/mb6_env/define_class/bwbw_legend.png")
+legend3 <- image_read("../96_pub_ready_figs/output/fhet3_env/define_class/bwbw_legend.png")
+legend4 <- image_read("../96_pub_ready_figs/output/mhet3_env/define_class/bwbw_legend.png")
+
+row1 <- image_append(c(fig$A, fig$B, legend1, fig$C, fig$D, legend2), stack = FALSE)
+row2 <- image_append(c(fig$E, fig$F, legend3, fig$G, fig$H, legend4), stack = FALSE)
 
 final_panel <- image_append(c(row1, row2, fig$I), stack = TRUE)
 

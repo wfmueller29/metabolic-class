@@ -169,8 +169,13 @@ for (label in names(fig)) {
   save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
 }
 
-row1 <- image_append(c(fig$A, fig$B, fig$C, fig$D), stack = FALSE)
-row2 <- image_append(c(fig$E, fig$F, fig$G, fig$H), stack = FALSE)
+legend1 <- image_read("../96_pub_ready_figs/output/fb6_env/define_class/fatfat_legend.png")
+legend2 <- image_read("../96_pub_ready_figs/output/mb6_env/define_class/fatfat_legend.png")
+legend3 <- image_read("../96_pub_ready_figs/output/fhet3_env/define_class/fatfat_legend.png")
+legend4 <- image_read("../96_pub_ready_figs/output/mhet3_env/define_class/fatfat_legend.png")
+
+row1 <- image_append(c(fig$A, fig$B, legend1, fig$C, fig$D, legend2), stack = FALSE)
+row2 <- image_append(c(fig$E, fig$F, legend3, fig$G, fig$H, legend4), stack = FALSE)
 
 final_panel <- image_append(c(row1, row2, fig$I), stack = TRUE)
 
@@ -226,8 +231,13 @@ for (label in names(fig)) {
   save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
 }
 
-row1 <- image_append(c(fig$A, fig$B, fig$C, fig$D), stack = FALSE)
-row2 <- image_append(c(fig$E, fig$F, fig$G, fig$H), stack = FALSE)
+legend1 <- image_read("../96_pub_ready_figs/output/fb6_env/define_class/glucgluc_legend.png")
+legend2 <- image_read("../96_pub_ready_figs/output/mb6_env/define_class/glucgluc_legend.png")
+legend3 <- image_read("../96_pub_ready_figs/output/fhet3_env/define_class/glucgluc_legend.png")
+legend4 <- image_read("../96_pub_ready_figs/output/mhet3_env/define_class/glucgluc_legend.png")
+
+row1 <- image_append(c(fig$A, fig$B, legend1, fig$C, fig$D, legend2), stack = FALSE)
+row2 <- image_append(c(fig$E, fig$F, legend3, fig$G, fig$H, legend4), stack = FALSE)
 
 final_panel <- image_append(c(row1, row2, fig$I), stack = TRUE)
 
@@ -286,11 +296,11 @@ fig_no <- fig_no + 1
 ```{r sup internal validation, out.width = "100%"}
 fig <- list()
 fig$A <- image_read("images/Internal Validation.png")
-fig$B <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/forest/plot_2.png")
-fig$C <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/validation/plot_1.png")
-fig$D <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/validation/plot_3.png")
-fig$E <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/validation/plot_2.png")
-fig$F <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/validation/plot_4.png")
+fig$B <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/forest/plot_2.png")
+fig$C <- image_read("../96_pub_ready_figs/output/all_env/validation/window_coef.png")
+fig$D <- image_read("../96_pub_ready_figs/output/all_env/validation/cum_coef.png")
+fig$E <- image_read("../96_pub_ready_figs/output/all_env/validation/window_concord.png")
+fig$F <- image_read("../96_pub_ready_figs/output/all_env/validation/cum_concord.png")
 
 for (label in names(fig)) {
   save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
@@ -300,11 +310,17 @@ for (label in names(fig)) {
 fig$A <- image_scale(fig$A, "75%")
 fig$B <- image_scale(fig$B, "125%")
 
+
+legend1 <- image_read("../96_pub_ready_figs/output/all_env/validation/window_coef_legend.png")
+legend2 <- image_read("../96_pub_ready_figs/output/all_env/validation/cum_coef_legend.png")
+legend3 <- image_read("../96_pub_ready_figs/output/all_env/validation/window_concord_legend.png")
+legend4 <- image_read("../96_pub_ready_figs/output/all_env/validation/cum_concord_legend.png")
+
 # Stack the rows vertically
 row1 <- fig$A
 row2 <- fig$B
-row3 <- image_append(c(fig$C, fig$D), stack = FALSE)
-row4 <- image_append(c(fig$E, fig$F), stack = FALSE)
+row3 <- image_append(c(fig$C, legend1, fig$D, legend2), stack = FALSE)
+row4 <- image_append(c(fig$E, legend3, fig$F, legend4), stack = FALSE)
 
 final_panel <- image_append(c(row1, row2, row3, row4), stack = TRUE)
 
@@ -322,11 +338,11 @@ fig_no <- fig_no + 1
 ```{r sup external validation, out.width = "100%"}
 fig <- list()
 fig$A <- image_read("images/External Validation.png")
-fig$B <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/forest/plot_2.png")
-fig$C <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/validation/plot_1.png")
-fig$D <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/validation/plot_3.png")
-fig$E <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/validation/plot_2.png")
-fig$F <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/validation/plot_4.png")
+fig$B <- image_read("../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/forest/plot_2.png")
+fig$C <- image_read("../96_pub_ready_figs/output/held_out_env/validation/window_coef.png")
+fig$D <- image_read("../96_pub_ready_figs/output/held_out_env/validation/cum_coef.png")
+fig$E <- image_read("../96_pub_ready_figs/output/held_out_env/validation/window_concord.png")
+fig$F <- image_read("../96_pub_ready_figs/output/held_out_env/validation/cum_concord.png")
 
 for (label in names(fig)) {
   save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
@@ -336,11 +352,16 @@ for (label in names(fig)) {
 fig$A <- image_scale(fig$A, "75%")
 fig$B <- image_scale(fig$B, "125%")
 
+legend1 <- image_read("../96_pub_ready_figs/output/held_out_env/validation/window_coef_legend.png")
+legend2 <- image_read("../96_pub_ready_figs/output/held_out_env/validation/cum_coef_legend.png")
+legend3 <- image_read("../96_pub_ready_figs/output/held_out_env/validation/window_concord_legend.png")
+legend4 <- image_read("../96_pub_ready_figs/output/held_out_env/validation/cum_concord_legend.png")
+
 # Stack the rows vertically
 row1 <- fig$A
 row2 <- fig$B
-row3 <- image_append(c(fig$C, fig$D), stack = FALSE)
-row4 <- image_append(c(fig$E, fig$F), stack = FALSE)
+row3 <- image_append(c(fig$C, legend1, fig$D, legend2), stack = FALSE)
+row4 <- image_append(c(fig$E, legend3, fig$F, legend4), stack = FALSE)
 
 final_panel <- image_append(c(row1, row2, row3, row4), stack = TRUE)
 
