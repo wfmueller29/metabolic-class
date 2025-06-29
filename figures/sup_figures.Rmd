@@ -897,12 +897,99 @@ for (label in names(fig)) {
   fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
 }
 
+hr_table <- all_env$save_figtabs$km_hr_combine_validation_panels_hr
+hr_table <- lapply(hr_table, function(table) {
+  table <- cbind(Tertile = seq_len(nrow(table)) + 1, table)
+  table <- cbind(explicit = rownames(table), table)
+  table$column <- rep(colnames(table)[3], nrow(table))
+  colnames(table)[3] <- "HR"
+  rownames(table) <- NULL
+  table
+})
+hr_table <- cbind(explicit = rownames(hr_table), hr_table)
+hr_table <- hr_table[1:10]
+hr_table <- do.call(rbind, hr_table)
+hr_table <- flextable(hr_table) %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+invisible(save_as_image(hr_table, "output/km_internal_validation_panel_hr.png", zoom = 10))
+fig$K <- image_read("output/km_internal_validation_panel_hr.png")
+fig$K <- image_scale(fig$K, "200%")
+fig$K <- image_border(fig$K, color = "white", geometry = "100x100")
+fig$K <- annotate_figure_label(fig$K, "K")
+
 # Manually define rows (3 per row, last row only 1 image)
 rows <- list(
   image_append(image_join(fig$A, fig$B, fig$C)),
   image_append(image_join(fig$D, fig$E, fig$F)),
   image_append(image_join(fig$G, fig$H, fig$I)),
-  image_append(image_join(fig$J))
+  image_append(image_join(fig$J, fig$K))
+)
+
+# Stack rows vertically
+final_panel <- image_append(image_join(rows), stack = TRUE)
+
+# View or save
+final_panel
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: External Validation KM
+
+```{r sup external validation km, out.width = "100%"}
+fig <- list()
+fig$A <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 19.5]_1.png")
+fig$B <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 32.5]_2.png")
+fig$C <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 45.5]_3.png")
+fig$D <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 58.5]_4.png")
+fig$E <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 71.5]_5.png")
+fig$F <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 84.5]_6.png")
+fig$G <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 97.5]_7.png")
+fig$H <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 110.5]_8.png")
+fig$I <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 123.5]_9.png")
+fig$J <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 136.5]_10.png")
+
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+
+hr_table <- held_out_env$save_figtabs$km_hr_combine_validation_panels_hr
+hr_table <- lapply(hr_table, function(table) {
+  table <- cbind(Tertile = seq_len(nrow(table)) + 1, table)
+  table <- cbind(explicit = rownames(table), table)
+  table$column <- rep(colnames(table)[3], nrow(table))
+  colnames(table)[3] <- "HR"
+  rownames(table) <- NULL
+  table
+})
+hr_table <- cbind(explicit = rownames(hr_table), hr_table)
+hr_table <- hr_table[1:10]
+hr_table <- do.call(rbind, hr_table)
+hr_table <- flextable(hr_table) %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+invisible(save_as_image(hr_table, "output/km_internal_validation_panel_hr.png", zoom = 10))
+fig$K <- image_read("output/km_internal_validation_panel_hr.png")
+fig$K <- image_scale(fig$K, "200%")
+fig$K <- image_border(fig$K, color = "white", geometry = "100x100")
+fig$K <- annotate_figure_label(fig$K, "K")
+
+# Manually define rows (3 per row, last row only 1 image)
+rows <- list(
+  image_append(image_join(fig$A, fig$B, fig$C)),
+  image_append(image_join(fig$D, fig$E, fig$F)),
+  image_append(image_join(fig$G, fig$H, fig$I)),
+  image_append(image_join(fig$J, fig$K))
 )
 
 # Stack rows vertically
