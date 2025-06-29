@@ -1,6 +1,6 @@
 # Reproduce figures
 
-# Run 3-7  --------------------------------------------------------------------
+# Run 7  ----------------------------------------------------------------------
 yaml_files <- c(
   "inputs/train/slam_c1-c10_age_all_bwfatgluc.yaml",
   "inputs/train/slam_c1-c10_age_fb6_bwfatgluc.yaml",
