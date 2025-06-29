@@ -7,7 +7,7 @@ output:
   html_document:
     df_print: paged
 params:
-  input_path: "../06_create_figures/output/slam_c1-c10_age_fb6_bwfatgluc.yaml"
+  input_path: "../06_create_figures/output/slam_c1-c10_age_het3_bwfatgluc.yaml"
 ---
 
 ```{r setup, warning=FALSE, message=FALSE, echo=FALSE}
@@ -411,6 +411,9 @@ mortality_panel <- cowplot::plot_grid(title_theme, mortality_panel,
 mortality_panel_hr <- lapply(
   final_models[og_index, "kap_plot_hrs"],
   function(table) {
+    if (is.null(table)) {
+      return(NULL)
+    }
     table <- table$hr_table[, "final", drop = FALSE]
     class_numbers <- as.integer(sub("Class", "", rownames(table)))
     if (config$custom_palette) {
@@ -467,7 +470,15 @@ mortality_panel_train <- cowplot::plot_grid(title_theme, mortality_panel_train,
 mortality_panel_train_hr <- lapply(
   final_models[train_index, "kap_plot_hrs"],
   function(table) {
-    table$hr_table[, "final", drop = FALSE]
+    if (is.null(table)) {
+      return(NULL)
+    }
+    table <- table$hr_table[, "final", drop = FALSE]
+    class_numbers <- as.integer(sub("Class", "", rownames(table)))
+    if (config$custom_palette) {
+      rownames(table) <- config$legend_labels[class_numbers]
+    }
+    table
   }
 )
 ```
@@ -2258,7 +2269,9 @@ if (window_legend && cumulative_legend) {
       name = "Window Size",
       labels = window_legend_labels
     ) +
-    coord_cartesian(ylim = c(-1, 2))
+    coord_cartesian(ylim = c(-1, 2)) +
+    theme_bw()
+
 
   p[[2]] <- final_models[!og_index, ]$filter_window_test_concord_plot_model2[[1]] +
     scale_color_manual(
@@ -2266,7 +2279,9 @@ if (window_legend && cumulative_legend) {
       name = "Window Size",
       labels = window_legend_labels
     ) +
-    coord_cartesian(ylim = c(.5, .8))
+    coord_cartesian(ylim = c(0, 0.75)) +
+    theme_bw()
+
   p[[3]] <- final_models[!og_index, ]$filter_cumulative_test_lp_plot_model2[[1]] +
     viridis::scale_color_viridis(
       begin = .2,
@@ -2276,7 +2291,9 @@ if (window_legend && cumulative_legend) {
     ) +
     ggplot2::coord_cartesian(ylim = c(-1, 2)) +
     ggplot2::labs(color = "Lower Bound (weeks)") +
-    theme(legend.title = element_text(size = rel(.8)))
+    theme(legend.title = element_text(size = rel(.8))) +
+    theme_bw()
+
 
 
   p[[4]] <- final_models[!og_index, ]$filter_cumulative_test_concord_plot_model2[[1]] +
@@ -2286,9 +2303,10 @@ if (window_legend && cumulative_legend) {
       direction = -1,
       discrete = TRUE
     ) +
-    ggplot2::coord_cartesian(ylim = c(.5, .8)) +
+    ggplot2::coord_cartesian(ylim = c(0, 0.75)) +
     ggplot2::labs(color = "Lower Bound (weeks)") +
-    theme(legend.title = element_text(size = rel(.8)))
+    theme(legend.title = element_text(size = rel(.8))) +
+    theme_bw()
 }
 p
 
