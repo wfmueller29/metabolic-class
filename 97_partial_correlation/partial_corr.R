@@ -3,8 +3,10 @@
 library(consoler)
 library(ppcor)
 library(qgraph)
+library(gridExtra)
+library(grid)
 
-census <- read.csv("/Users/williammueller/programs/metabolic_class/analysis/04_create_census/output/slam_c1-c10_age_all_bwfatgluc/complete_census.csv")
+census <- read.csv("../04_create_census/output/slam_c1-c10_age_all_bwfatgluc/complete_census.csv")
 
 
 peek(census)
@@ -49,3 +51,62 @@ qgraph(pcor_results$estimate,
   title = "Partial Correlation Network"
 )
 dev.off()
+
+
+# Get correlation and p-value matrices
+cor_mat <- round(pcor_results$estimate, 2)
+pval_mat <- signif(pcor_results$p.value, 2)
+
+# Get variable names
+vars <- colnames(cor_mat)
+
+# Initialize combined output table
+result_table <- data.frame(
+  Variable1 = character(),
+  Variable2 = character(),
+  PartialCorrelation = numeric(),
+  PValue = numeric(),
+  stringsAsFactors = FALSE
+)
+
+# Loop through lower triangle to extract pairs
+for (i in 2:nrow(cor_mat)) {
+  for (j in 1:(i - 1)) {
+    result_table <- rbind(
+      result_table,
+      data.frame(
+        Variable1 = vars[i],
+        Variable2 = vars[j],
+        PartialCorrelation = cor_mat[i, j],
+        PValue = pval_mat[i, j],
+        stringsAsFactors = FALSE
+      )
+    )
+  }
+}
+
+# Sort by absolute value of correlation
+result_table <- result_table[order(-abs(result_table$PartialCorrelation)), ]
+
+# Print for review
+print(result_table)
+
+
+# Create the grob table from your result_table
+tab <- tableGrob(result_table, rows = NULL)
+
+# Optional: add a title grob
+title <- textGrob("Partial Correlation Coefficients", gp = gpar(fontsize = 14, fontface = "bold"))
+
+# Combine title and table into one grid
+combined <- gtable::gtable_add_rows(tab, heights = grobHeight(title) + unit(5, "mm"), pos = 0)
+combined <- gtable::gtable_add_grob(combined, title, 1, 1, 1, ncol(tab))
+
+# Save to PNG
+png("output/partial_correlation_results_clean_table.png", width = 1200, height = 900, res = 150)
+grid.newpage()
+grid.draw(combined)
+dev.off()
+
+# Optional: Save to CSV
+write.csv(result_table, "output/partial_correlation_results.csv", row.names = FALSE)
