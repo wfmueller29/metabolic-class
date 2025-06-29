@@ -122,7 +122,7 @@ grob_to_magick <- function(grob, width = 400, height = 400, res = 150) {
 
 \newpage
 
-### Figure `r as.character(fig_no)`: Overview
+### Graphical Abstract
 
 ```{r figs overview, out.width = "100%"}
 fig <- list()
@@ -130,8 +130,6 @@ fig$A <- image_read("images/Overview.png")
 save_figure(fig$A, as.character(fig_no), "A")
 
 fig$A
-
-fig_no <- fig_no + 1
 ```
 
 \newpage

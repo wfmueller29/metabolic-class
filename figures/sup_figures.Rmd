@@ -978,8 +978,8 @@ hr_table <- flextable(hr_table) %>%
   set_table_properties(layout = "autofit") %>%
   fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
-invisible(save_as_image(hr_table, "output/km_internal_validation_panel_hr.png", zoom = 10))
-fig$K <- image_read("output/km_internal_validation_panel_hr.png")
+invisible(save_as_image(hr_table, "output/km_external_validation_panel_hr.png", zoom = 10))
+fig$K <- image_read("output/km_external_validation_panel_hr.png")
 fig$K <- image_scale(fig$K, "200%")
 fig$K <- image_border(fig$K, color = "white", geometry = "100x100")
 fig$K <- annotate_figure_label(fig$K, "K")
