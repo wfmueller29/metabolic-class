@@ -8,16 +8,16 @@ scale: FALSE
 complete_ng: NULL
 train_ng: "complete_ng"
 external_validate: FALSE
-custom_palette: FALSE
-palette_colors: ["black", "#DF536B", "#61D04F", "midnightblue",
-  "#28E2E5", "#CD0BBC"]
-legend_labels: ["Early Peak BW", "Late Peak BW", "Low BW", "High-fat",
-  "Low-fat", "Stable Glucose"]
-custom_palette_train: FALSE
-palette_colors_train: [ "black", "#DF536B", "#61D04F", "midnightblue",
-  "#28E2E5", "#CD0BBC", "#FF991C", "gray62" ]
-legend_labels_train: [ "Overweight", "Low-weight", "Mid-Weight", "High-fat",
-  "Low-fat", "Mid-fat", "Decline Glucose", "Stable Glucose" ]
+custom_palette: TRUE
+palette_colors: ["#000000", "#ff2600",  "#a144ff", "#ff9f23", "#0e33ff",
+  "#00cfd2", "#ff41ff", "#b8b8b8"]
+legend_labels: ["Class 1", "Class 2", "Class 3", "Class 9", "Class 4",
+  "Class 5", "Class 6", "Class 8"]
+custom_palette_train: TRUE
+palette_colors_train: ["#000000", "#ff2600",  "#a144ff", "#ff9f23", "#0e33ff",
+  "#00cfd2", "#ff41ff", "#b8b8b8"]
+legend_labels_train: ["Class 1", "Class 2", "Class 3", "Class 9", "Class 4",
+  "Class 5", "Class 6", "Class 8"]
 survival_dataset:
   path: "../00c_survival_data/output/slam_c1-c10/data/main_cat_surv.csv"
   id: "idno"
