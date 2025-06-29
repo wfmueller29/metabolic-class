@@ -733,6 +733,8 @@ for (i in seq_along(new_figure1_plot_list)) {
     width = 5
   )
 }
+
+save(new_figure1_plot_list, file = file.path(output_path, "plot_list.RDATA"))
 ```
 
 ```{r model_display}
@@ -1364,7 +1366,7 @@ km_hr_combine_validation <- lapply(seq_along(censuses), function(i) {
 
   plot <- output$plot$plot +
     scale_color_manual(
-      values = c("darkgreen", "gold", "darkred"),
+      values = c("#009c00", "#ffac48", "#eb2200"),
       name = "HR Tertiles",
       labels = c(1, 2, 3)
     )
@@ -2329,6 +2331,8 @@ for (i in seq_along(p)) {
     width = 6
   )
 }
+
+save(p, file = file.path(output_path, "validation_list.RDATA"))
 ```
 
 ```{r display model 2 validation, fig.height = 12, fig.width = 12}
