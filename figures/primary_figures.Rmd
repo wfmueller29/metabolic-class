@@ -205,14 +205,14 @@ fig_no <- fig_no + 1
 
 ```{r sex strain bw classes, out.width = "100%"}
 fig <- list()
-fig$A <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_1.png")
-fig$B <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_4.png")
-fig$C <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_1.png")
-fig$D <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_4.png")
-fig$E <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_1.png")
-fig$F <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_4.png")
-fig$G <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_1.png")
-fig$H <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_4.png")
+fig$A <- image_read("../96_pub_ready_figs/output/fb6_env/define_class/bwbw.png")
+fig$B <- image_read("../96_pub_ready_figs/output/fb6_env/define_class/bwkm.png")
+fig$C <- image_read("../96_pub_ready_figs/output/mb6_env/define_class/bwbw.png")
+fig$D <- image_read("../96_pub_ready_figs/output/mb6_env/define_class/bwkm.png")
+fig$E <- image_read("../96_pub_ready_figs/output/fhet3_env/define_class/bwbw.png")
+fig$F <- image_read("../96_pub_ready_figs/output/fhet3_env/define_class/bwkm.png")
+fig$G <- image_read("../96_pub_ready_figs/output/mhet3_env/define_class/bwbw.png")
+fig$H <- image_read("../96_pub_ready_figs/output/mhet3_env/define_class/bwkm.png")
 
 for (label in names(fig)) {
   fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
@@ -242,21 +242,12 @@ fig$I <- image_scale(fig$I, "400%")
 fig$I <- image_border(fig$I, color = "white", geometry = "100x100")
 fig$I <- annotate_figure_label(fig$I, "I")
 
-legend1 <- grob_to_magick(fb6_env$save_figtabs$legends_only[[1]]) %>%
-  image_scale("200%")
-legend2 <- grob_to_magick(mb6_env$save_figtabs$legends_only[[1]]) %>%
-  image_scale("200%")
-legend3 <- grob_to_magick(fhet3_env$save_figtabs$legends_only[[1]]) %>%
-  image_scale("200%")
-legend4 <- grob_to_magick(mhet3_env$save_figtabs$legends_only[[1]]) %>%
-  image_scale("200%")
-
 for (label in names(fig)) {
   save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
 }
 
-row1 <- image_append(c(fig$A, fig$B, legend1, fig$C, fig$D, legend2), stack = FALSE)
-row2 <- image_append(c(fig$E, fig$F, legend3, fig$G, fig$H, legend4), stack = FALSE)
+row1 <- image_append(c(fig$A, fig$B, fig$C, fig$D), stack = FALSE)
+row2 <- image_append(c(fig$E, fig$F, fig$G, fig$H), stack = FALSE)
 
 final_panel <- image_append(c(row1, row2, fig$I), stack = TRUE)
 

@@ -126,16 +126,16 @@ max_width <- 7
 
 ### Figure `r as.character(fig_no)`: Sex/Strain Classes FM
 
-```{r sex strain fm classes, out.width = "100%"}
+```{r sex strain fat classes, out.width = "100%"}
 fig <- list()
-fig$A <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_2.png")
-fig$B <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_5.png")
-fig$C <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_2.png")
-fig$D <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_5.png")
-fig$E <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_2.png")
-fig$F <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_5.png")
-fig$G <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_2.png")
-fig$H <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_5.png")
+fig$A <- image_read("../96_pub_ready_figs/output/fb6_env/define_class/fatfat.png")
+fig$B <- image_read("../96_pub_ready_figs/output/fb6_env/define_class/fatkm.png")
+fig$C <- image_read("../96_pub_ready_figs/output/mb6_env/define_class/fatfat.png")
+fig$D <- image_read("../96_pub_ready_figs/output/mb6_env/define_class/fatkm.png")
+fig$E <- image_read("../96_pub_ready_figs/output/fhet3_env/define_class/fatfat.png")
+fig$F <- image_read("../96_pub_ready_figs/output/fhet3_env/define_class/fatkm.png")
+fig$G <- image_read("../96_pub_ready_figs/output/mhet3_env/define_class/fatfat.png")
+fig$H <- image_read("../96_pub_ready_figs/output/mhet3_env/define_class/fatkm.png")
 
 for (label in names(fig)) {
   fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
@@ -146,10 +146,10 @@ cbind_hr_table <- function(strata, hr_table) {
 }
 
 hr_table <- rbind(
-  cbind_hr_table("fb6", fb6_env$save_figtabs$mortality_panel_hr[[2]]),
-  cbind_hr_table("mb6", mb6_env$save_figtabs$mortality_panel_hr[[2]]),
-  cbind_hr_table("fhet3", fhet3_env$save_figtabs$mortality_panel_hr[[2]]),
-  cbind_hr_table("mhet3", mhet3_env$save_figtabs$mortality_panel_hr[[2]])
+  cbind_hr_table("fb6", fb6_env$save_figtabs$mortality_panel_hr[[1]]),
+  cbind_hr_table("mb6", mb6_env$save_figtabs$mortality_panel_hr[[1]]),
+  cbind_hr_table("fhet3", fhet3_env$save_figtabs$mortality_panel_hr[[1]]),
+  cbind_hr_table("mhet3", mhet3_env$save_figtabs$mortality_panel_hr[[1]])
 )
 rownames(hr_table) <- NULL
 
@@ -165,21 +165,12 @@ fig$I <- image_scale(fig$I, "400%")
 fig$I <- image_border(fig$I, color = "white", geometry = "100x100")
 fig$I <- annotate_figure_label(fig$I, "I")
 
-legend1 <- grob_to_magick(fb6_env$save_figtabs$legends_only[[2]]) %>%
-  image_scale("200%")
-legend2 <- grob_to_magick(mb6_env$save_figtabs$legends_only[[2]]) %>%
-  image_scale("200%")
-legend3 <- grob_to_magick(fhet3_env$save_figtabs$legends_only[[2]]) %>%
-  image_scale("200%")
-legend4 <- grob_to_magick(mhet3_env$save_figtabs$legends_only[[2]]) %>%
-  image_scale("200%")
-
 for (label in names(fig)) {
   save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
 }
 
-row1 <- image_append(c(fig$A, fig$B, legend1, fig$C, fig$D, legend2), stack = FALSE)
-row2 <- image_append(c(fig$E, fig$F, legend3, fig$G, fig$H, legend4), stack = FALSE)
+row1 <- image_append(c(fig$A, fig$B, fig$C, fig$D), stack = FALSE)
+row2 <- image_append(c(fig$E, fig$F, fig$G, fig$H), stack = FALSE)
 
 final_panel <- image_append(c(row1, row2, fig$I), stack = TRUE)
 
@@ -192,33 +183,30 @@ fig_no <- fig_no + 1
 
 ### Figure `r as.character(fig_no)`: Sex/Strain Classes FBG
 
-```{r sex strain fbg classes, out.width = "100%"}
+```{r sex strain gluc classes, out.width = "100%"}
 fig <- list()
-fig$A <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_3.png")
-fig$B <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_6.png")
-fig$C <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_3.png")
-fig$D <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_6.png")
-fig$E <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_3.png")
-fig$F <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_6.png")
-fig$G <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_3.png")
-fig$H <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_6.png")
+fig$A <- image_read("../96_pub_ready_figs/output/fb6_env/define_class/glucgluc.png")
+fig$B <- image_read("../96_pub_ready_figs/output/fb6_env/define_class/gluckm.png")
+fig$C <- image_read("../96_pub_ready_figs/output/mb6_env/define_class/glucgluc.png")
+fig$D <- image_read("../96_pub_ready_figs/output/mb6_env/define_class/gluckm.png")
+fig$E <- image_read("../96_pub_ready_figs/output/fhet3_env/define_class/glucgluc.png")
+fig$F <- image_read("../96_pub_ready_figs/output/fhet3_env/define_class/gluckm.png")
+fig$G <- image_read("../96_pub_ready_figs/output/mhet3_env/define_class/glucgluc.png")
+fig$H <- image_read("../96_pub_ready_figs/output/mhet3_env/define_class/gluckm.png")
 
 for (label in names(fig)) {
   fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
 }
 
 cbind_hr_table <- function(strata, hr_table) {
-  if (is.null(hr_table)) {
-    return(NULL)
-  }
   cbind(sex_strain = strata, Class = rownames(hr_table), hr_table)
 }
 
 hr_table <- rbind(
-  cbind_hr_table("fb6", fb6_env$save_figtabs$mortality_panel_hr[[3]]),
-  cbind_hr_table("mb6", mb6_env$save_figtabs$mortality_panel_hr[[3]]),
-  cbind_hr_table("fhet3", fhet3_env$save_figtabs$mortality_panel_hr[[3]]),
-  cbind_hr_table("mhet3", mhet3_env$save_figtabs$mortality_panel_hr[[3]])
+  cbind_hr_table("fb6", fb6_env$save_figtabs$mortality_panel_hr[[1]]),
+  cbind_hr_table("mb6", mb6_env$save_figtabs$mortality_panel_hr[[1]]),
+  cbind_hr_table("fhet3", fhet3_env$save_figtabs$mortality_panel_hr[[1]]),
+  cbind_hr_table("mhet3", mhet3_env$save_figtabs$mortality_panel_hr[[1]])
 )
 rownames(hr_table) <- NULL
 
@@ -234,21 +222,12 @@ fig$I <- image_scale(fig$I, "400%")
 fig$I <- image_border(fig$I, color = "white", geometry = "100x100")
 fig$I <- annotate_figure_label(fig$I, "I")
 
-legend1 <- grob_to_magick(fb6_env$save_figtabs$legends_only[[3]]) %>%
-  image_scale("200%")
-legend2 <- grob_to_magick(mb6_env$save_figtabs$legends_only[[3]]) %>%
-  image_scale("200%")
-legend3 <- grob_to_magick(fhet3_env$save_figtabs$legends_only[[3]]) %>%
-  image_scale("200%")
-legend4 <- grob_to_magick(mhet3_env$save_figtabs$legends_only[[3]]) %>%
-  image_scale("200%")
-
 for (label in names(fig)) {
   save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
 }
 
-row1 <- image_append(c(fig$A, fig$B, legend1, fig$C, fig$D, legend2), stack = FALSE)
-row2 <- image_append(c(fig$E, fig$F, legend3, fig$G, fig$H, legend4), stack = FALSE)
+row1 <- image_append(c(fig$A, fig$B, fig$C, fig$D), stack = FALSE)
+row2 <- image_append(c(fig$E, fig$F, fig$G, fig$H), stack = FALSE)
 
 final_panel <- image_append(c(row1, row2, fig$I), stack = TRUE)
 
