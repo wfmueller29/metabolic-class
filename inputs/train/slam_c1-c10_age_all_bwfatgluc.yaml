@@ -26,8 +26,8 @@ individual_cox:
 combined_cox:
   forms:
     - "~ <class+> + sex + strain"
-    - "~ <probs+> + sex + strata(strain) + frailty(idno)"
     - "~ <probs+> + sex + strata(strain)"
+    - "~ <probs+> + sex + strata(strain) + frailty(cohort)"
   tts:
     - NULL
     - NULL
