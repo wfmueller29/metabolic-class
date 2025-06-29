@@ -1,5 +1,6 @@
 # Fine tune colors, axis, and theme for publication
 library(consoler)
+library(cowplot)
 library(ggplot2)
 
 all_path <- "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_list.RDATA"
@@ -73,7 +74,8 @@ for (env_name in names(render_tasks)) {
   }
 }
 
-# Save original and legend-free versions of each plot
+
+# Save no-legend plot, full original, and legend separately
 for (env_name in names(render_tasks)) {
   env <- get(env_name, envir = .GlobalEnv)
 
@@ -85,24 +87,34 @@ for (env_name in names(render_tasks)) {
   for (obj_name in ls(envir = env)) {
     obj <- get(obj_name, envir = env)
     if (inherits(obj, "gg")) {
-      # Save original plot
-      original_path <- file.path(output_dir, paste0(obj_name, ".png"))
-      ggplot2::ggsave(
-        filename = original_path,
-        plot = obj,
-        width = 6, height = 6, dpi = 300
-      )
-
-      # Remove legend and save
-      no_legend_plot <- obj +
-        ggplot2::theme(legend.position = "none")
-
-      no_legend_path <- file.path(output_dir, paste0(obj_name, "_nolegend.png"))
+      # Plot without legend
+      no_legend_plot <- obj + ggplot2::theme(legend.position = "none")
+      no_legend_path <- file.path(output_dir, paste0(obj_name, ".png"))
       ggplot2::ggsave(
         filename = no_legend_path,
         plot = no_legend_plot,
-        width = 5, height = 6, dpi = 300
+        width = 4, height = 5, dpi = 300
       )
+
+      # Full original with legend
+      full_plot_path <- file.path(output_dir, paste0(obj_name, "_withlegend.png"))
+      ggplot2::ggsave(
+        filename = full_plot_path,
+        plot = obj,
+        width = 5, height = 5, dpi = 300
+      )
+
+      # Legend only
+      legend_grob <- cowplot::get_legend(obj)
+      if (!is.null(legend_grob)) {
+        legend_plot <- cowplot::ggdraw(legend_grob)
+        legend_path <- file.path(output_dir, paste0(obj_name, "_legend.png"))
+        ggplot2::ggsave(
+          filename = legend_path,
+          plot = legend_plot,
+          width = 3, height = 3, dpi = 300
+        )
+      }
     }
   }
 }
@@ -162,6 +174,8 @@ for (env_name in names(render_tasks)) {
   }
 }
 
+
+# Save validation plots (no legend, full with legend, and legend only)
 for (env_name in names(render_tasks)) {
   env <- get(env_name, envir = .GlobalEnv)
 
@@ -176,15 +190,30 @@ for (env_name in names(render_tasks)) {
     obj <- get(obj_name, envir = env)
     if (!inherits(obj, "gg")) next
 
-    # Save with legend
-    path_with <- file.path(output_dir, paste0(obj_name, ".png"))
-    ggplot2::ggsave(path_with, plot = obj, width = 6, height = 6, dpi = 300)
-
-    # Save without legend
-    path_no_legend <- file.path(output_dir, paste0(obj_name, "_nolegend.png"))
-    ggplot2::ggsave(path_no_legend,
-      plot = obj + ggplot2::theme(legend.position = "none"),
-      width = 5, height = 6, dpi = 300
+    # 1. Plot without legend → plotname.png
+    no_legend_plot <- obj + ggplot2::theme(legend.position = "none")
+    ggplot2::ggsave(
+      filename = file.path(output_dir, paste0(obj_name, ".png")),
+      plot = no_legend_plot,
+      width = 4, height = 5, dpi = 300
     )
+
+    # Full plot with legend
+    ggplot2::ggsave(
+      filename = file.path(output_dir, paste0(obj_name, "_withlegend.png")),
+      plot = obj,
+      width = 5, height = 5, dpi = 300
+    )
+
+    # Legend only
+    legend_grob <- cowplot::get_legend(obj)
+    if (!is.null(legend_grob)) {
+      legend_plot <- cowplot::ggdraw(legend_grob)
+      ggplot2::ggsave(
+        filename = file.path(output_dir, paste0(obj_name, "_legend.png")),
+        plot = legend_plot,
+        width = 3, height = 3, dpi = 300
+      )
+    }
   }
 }
