@@ -22,6 +22,7 @@ output:
   library(gridtext)
   library(gridExtra)
   library(grid)
+  library(lubridate)
   library(ggplot2)
   library(svglite)
   set.seed(365)
@@ -63,12 +64,12 @@ output:
 ```
 # Load in input data
 ```{r read in censuses}
-  # census_path <- "/Users/jdp2019/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/census.csv"
-  # class_census_path <- "/Users/jdp2019/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/20250426_all_cohort/complete_census.csv"
-  # healthcard_path <- "/Users/jdp2019/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/SLAM Healthcard reconciled.xlsx"
-  census_path <- "/Users/JoshsMacbook2015/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/census.csv"
-  class_census_path <- "/Users/JoshsMacbook2015/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/20250426_all_cohort/complete_census.csv"
-  healthcard_path <- "/Users/JoshsMacbook2015/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/SLAM Healthcard reconciled.xlsx"
+  census_path <- "/Users/jdp2019/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/census.csv"
+  class_census_path <- "/Users/jdp2019/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/20250426_all_cohort/complete_census.csv"
+  healthcard_path <- "/Users/jdp2019/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/SLAM Healthcard reconciled.xlsx"
+  # census_path <- "/Users/JoshsMacbook2015/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/census.csv"
+  # class_census_path <- "/Users/JoshsMacbook2015/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/20250426_all_cohort/complete_census.csv"
+  # healthcard_path <- "/Users/JoshsMacbook2015/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/SLAM Healthcard reconciled.xlsx"
   class_census <- read.csv(class_census_path)
   census <- read.csv(census_path)
   healthcard_ii <- as.data.frame(readxl::read_xlsx(healthcard_path, sheet = "Healthcard"))
@@ -1060,7 +1061,7 @@ output:
     max_y_S6C <- max(cumulative_HC_day_events_only_final$cum_HC_per_mouse_events_only, na.rm = TRUE)
   # Finalize version of S6C (cumulative incidence of HCs, only mice with events)
     S6C <- ggplot(cumulative_HC_day_events_only_final, aes(x = event_wk, y = cum_HC_per_mouse_events_only, color = Class)) +
-      geom_step(size = 1.1) +
+      geom_step(size = 2.5) +
       scale_color_manual(values = class_colors_final) +
       scale_y_continuous(limits = c(0, max_y_S6C)) +
       labs(
@@ -1073,7 +1074,7 @@ output:
 
   # Finalize version of S6D (cumulative incidence of HCs, all mice)
     S6D <- ggplot(cumulative_HC_day_all_mice_final, aes(x = event_wk, y = cum_HC_per_mouse_all, color = Class)) +
-      geom_step(size = 1.1) +
+      geom_step(size = 2.5) +
       scale_color_manual(values = class_colors_final) +
       scale_y_continuous(limits = c(0, max_y_S6C)) +
       labs(
