@@ -138,18 +138,18 @@ fig$A
 
 ```{r define classes, out.width = "100%"}
 fig <- list()
-fig$A <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_1.png")
-fig$B <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_4.png")
-fig$C <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_7.png")
-fig$D <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_10.png")
-fig$E <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_2.png")
-fig$F <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_5.png")
-fig$G <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_8.png")
-fig$H <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_11.png")
-fig$I <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_3.png")
-fig$J <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_6.png")
-fig$K <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_9.png")
-fig$L <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_12.png")
+fig$A <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_1.png")
+fig$B <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_4.png")
+fig$C <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_7.png")
+fig$D <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_10.png")
+fig$E <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_2.png")
+fig$F <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_5.png")
+fig$G <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_8.png")
+fig$H <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_11.png")
+fig$I <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_3.png")
+fig$J <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_6.png")
+fig$K <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_9.png")
+fig$L <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_12.png")
 fig$M <- image_read("images/Basic LCM.png")
 
 
@@ -268,6 +268,8 @@ fig <- list()
 fig$A <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/dose_response/plot_1.png")
 fig$B <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/dose_response/plot_4.png")
 fig$C <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/dose_response/plot_7.png")
+fig$D <- image_read("images/Basic LCM.png")
+fig$E <- image_read("images/Graded Mortality.png")
 
 
 for (label in names(fig)) {
@@ -375,13 +377,32 @@ fig_no <- fig_no + 1
 
 ```{r ITP validation, out.width = "100%"}
 fig <- list()
-fig$A <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/itp_c10c11c13c16_age_controls_bw/outcome/plot_1.png")
-fig$B <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/itp_c10c11c13c16_age_controls_bw/outcome/plot_2.png")
+fig$A <- image_read("../07_display_figures/output/itp_c10c11c13c16_age_controls_bw/outcome/plot_1.png")
+fig$B <- image_read("../07_display_figures/output/itp_c10c11c13c16_age_controls_bw/outcome/plot_2.png")
+fig$D <- image_read("images/ITP Treatment.png")
+fig$E <- image_read("../99_treatment_response/output/treatment_response/plot_1.png")
+fig$F <- image_read("../99_treatment_response/output/treatment_response/plot_2.png")
+fig$G <- image_read("../99_treatment_response/output/treatment_response/plot_3.png")
 
 for (label in names(fig)) {
   save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
   fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
 }
+
+load("../99_treatment_response/output/hr_table/hr_table.RDATA")
+
+hr_table <- do.call(rbind, hrs_table) %>%
+  flextable() %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+invisible(save_as_image(hr_table, "output/treatment_mortlity_panel_hr.png", zoom = 10))
+fig$H <- image_read("output/treatment_mortlity_panel_hr.png")
+fig$H <- image_scale(fig$H, "400%")
+fig$H <- image_border(fig$H, color = "white", geometry = "100x100")
+fig$H <- annotate_figure_label(fig$H, "H")
 
 # create table
 
@@ -401,10 +422,13 @@ fig$C <- annotate_figure_label(fig$C, "C")
 
 
 # Stack the rows vertically
-row1 <- image_append(c(fig$A, fig$B), stack = FALSE)
-row2 <- fig$C
+row1col1 <- image_append(c(fig$A, fig$B), stack = FALSE)
+row1col2 <- image_append(c(fig$C, fig$D), stack = TRUE)
+row1 <- image_append(c(row1col1, row1col2), stack = FALSE)
+row2 <- image_append(c(fig$E, fig$F, fig$G), stack = FALSE)
+row3 <- fig$H
 
-final_panel <- image_append(c(row1, row2), stack = TRUE)
+final_panel <- image_append(c(row1, row2, row3), stack = TRUE)
 
 # View or save
 final_panel
