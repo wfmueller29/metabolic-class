@@ -146,10 +146,10 @@ cbind_hr_table <- function(strata, hr_table) {
 }
 
 hr_table <- rbind(
-  cbind_hr_table("fb6", fb6_env$save_figtabs$mortality_panel_hr[[1]]),
-  cbind_hr_table("mb6", mb6_env$save_figtabs$mortality_panel_hr[[1]]),
-  cbind_hr_table("fhet3", fhet3_env$save_figtabs$mortality_panel_hr[[1]]),
-  cbind_hr_table("mhet3", mhet3_env$save_figtabs$mortality_panel_hr[[1]])
+  cbind_hr_table("fb6", fb6_env$save_figtabs$mortality_panel_hr[[2]]),
+  cbind_hr_table("mb6", mb6_env$save_figtabs$mortality_panel_hr[[2]]),
+  cbind_hr_table("fhet3", fhet3_env$save_figtabs$mortality_panel_hr[[2]]),
+  cbind_hr_table("mhet3", mhet3_env$save_figtabs$mortality_panel_hr[[2]])
 )
 rownames(hr_table) <- NULL
 
@@ -204,14 +204,17 @@ for (label in names(fig)) {
 }
 
 cbind_hr_table <- function(strata, hr_table) {
+  if (is.null(hr_table)) {
+    return(NULL)
+  }
   cbind(sex_strain = strata, Class = rownames(hr_table), hr_table)
 }
 
 hr_table <- rbind(
-  cbind_hr_table("fb6", fb6_env$save_figtabs$mortality_panel_hr[[1]]),
-  cbind_hr_table("mb6", mb6_env$save_figtabs$mortality_panel_hr[[1]]),
-  cbind_hr_table("fhet3", fhet3_env$save_figtabs$mortality_panel_hr[[1]]),
-  cbind_hr_table("mhet3", mhet3_env$save_figtabs$mortality_panel_hr[[1]])
+  cbind_hr_table("fb6", fb6_env$save_figtabs$mortality_panel_hr[[3]]),
+  cbind_hr_table("mb6", mb6_env$save_figtabs$mortality_panel_hr[[3]]),
+  cbind_hr_table("fhet3", fhet3_env$save_figtabs$mortality_panel_hr[[3]]),
+  cbind_hr_table("mhet3", mhet3_env$save_figtabs$mortality_panel_hr[[3]])
 )
 rownames(hr_table) <- NULL
 
