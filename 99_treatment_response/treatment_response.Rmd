@@ -152,4 +152,7 @@ for (table in hrs_table) {
 }
 ```
 
+```{r save predicted csv}
+write.csv(predicted, file = "output/treatment_class.csv")
+```
 
