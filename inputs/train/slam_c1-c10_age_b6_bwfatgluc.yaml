@@ -9,11 +9,11 @@ complete_ng: NULL
 train_ng: "complete_ng"
 external_validate: FALSE
 custom_palette: TRUE
-palette_colors: ["#000000", "#ff2500", "#a144ff", "#ff9f23", "#0e33ff", "#00cfd2", "#ff41ff", "#00b12d", "#ff9f23", "#b8b8b8"]
-legend_labels: ["Class 1","Class 2","Class 3", "Class9", "Class 4","Class 5","Class 6", "Class 10", "Class 7","Class 8"]
+palette_colors: ["#000000", "#ff2500",  "#0e33ff", "#00cfd2", "#ff41ff", "#ff9f23", "#b8b8b8"]
+legend_labels: ["Class 1","Class 2","Class 4","Class 5","Class 6","Class 7","Class 8"]
 custom_palette_train: TRUE
-palette_colors_train: ["#000000", "#ff2500", "#a144ff", "#ff9f23", "#0e33ff", "#00cfd2", "#ff41ff", "#00b12d", "#ff9f23", "#b8b8b8"]
-legend_labels_train: ["Class 1","Class 2","Class 3", "Class9", "Class 4","Class 5","Class 6", "Class 10", "Class 7","Class 8"]
+palette_colors_train: ["#000000", "#ff2500", "#0e33ff", "#00cfd2", "#ff41ff", "#ff9f23", "#b8b8b8"]
+legend_labels_train: ["Class 1","Class 2","Class 4","Class 5","Class 6","Class 7","Class 8"]
 survival_dataset:
   path: "../00c_survival_data/output/slam_c1-c10/data/main_cat_surv.csv"
   id: "idno"
