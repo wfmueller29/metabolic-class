@@ -22,7 +22,8 @@ if (length(args) == 0) {
   # args[[1]] <- "../inputs/train/slam_age_all.yaml"
   # args[[1]] <- "../inputs/validate/slam_c1-c10_x_slam_c16-c18.yaml"
   # args[[1]] <- "../inputs/predict/slam_c1-c10_x_slam_c16-c18.yaml"
-  args[[1]] <- "../inputs/predict/itp_controls_p_treatment.yaml"
+  # args[[1]] <- "../inputs/predict/itp_controls_p_treatment.yaml"
+  args[[1]] <- "../inputs/train/itp_genotyped.yaml"
   # args[[1]] <- "../x01_external_validation/input/slam_age_all.yaml"
   # args[[1]] <- "../x01_external_validation/input/slam_c16-c18.yaml"
   warning("No input file provided, using: ", args[[1]])
