@@ -19,17 +19,19 @@ traj_obs <- function(main,
   # age_var_ns
   age_var <- paste0(age_var, "_ns")
 
+
   ## join main and df
-  main$n <- ave(main[[1]], main[["new_class"]], FUN = length)
+  n <- ave(main[[id_var]], main[["new_class"]], FUN = length)
+  rescaled_n <- 3 * (n / max(n)) + 1
+  main$n <- rescaled_n
   main_obs <- merge(x = main, y = df, by = id_var)
 
   aes_smooth <- ggplot2::aes(
     x = eval(as.symbol((age_var))),
     y = eval(as.symbol(y_var)),
     color = factor(new_class),
-    size = n
+    linewidth = n
   )
-
   p <- ggplot2::ggplot(
     data = main_obs,
     mapping = ggplot2::aes(
@@ -60,7 +62,9 @@ traj_obs <- function(main,
       ),
       plot.margin = ggplot2::unit(c(10, 4, 25, 2), "pt")
     ) +
-    ggplot2::scale_size(guide = "none")
+    ggplot2::scale_size(guide = "none") +
+    ggplot2::scale_linewidth_identity()
+
 
   return(p)
 }
