@@ -6,7 +6,7 @@ output:
   html_document:
     df_print: paged
 params:
-  input_path: "../02_model/output/itp_genotyped_M.yaml"
+  input_path: "../02_model/output/itp_genotyped_treat_F.yaml"
 ---
 
 
@@ -153,8 +153,10 @@ select_model <- function(cf, ng = FALSE) {
     cf <- cf[cf$ng == ng, ]
   }
 
-  cf$smallest_greater_5 <- ifelse(cf[["Smallest Class (%)"]] >= 5, 1, 0)
-  cf <- cf[order(-cf$smallest_greater_5, cf$BIC), ]
+  cf$smallest_greater_5 <- ifelse(cf[["Smallest Class (%)"]] >= 5, TRUE, FALSE)
+  viable_models <- cf$smallest_greater_5 & (cf$conv == 1)
+  cf <- cf[viable_models, ]
+  cf <- cf[order(cf$BIC), ]
 
   selected_model <- cf[1, ]
 }
