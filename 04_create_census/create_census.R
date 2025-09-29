@@ -106,15 +106,16 @@ if (bool_external_validate || bool_predict) {
 main_cat_surv <- read.csv(file = config$survival_dataset$path)
 main_cat_surv <- as.data.frame(main_cat_surv)
 
+# drop extra variables from main_cat_surv -------------------------------------
+validation_column <- c(
+  config$survival_dataset$id,
+  config$survival_dataset$age_death,
+  config$survival_dataset$event
+)
+main_cat_surv <- main_cat_surv[, validation_column]
+
 # if external_validate rbind validation survival with original survial
 if (bool_external_validate) {
-  validation_column <- c(
-    config$survival_dataset$id,
-    config$survival_dataset$age_death,
-    config$survival_dataset$event
-  )
-  main_cat_surv <- main_cat_surv[, validation_column]
-
   main_cat_surv_og <- read.csv(file = validation_config$survival_dataset$path)
   og_column <- c(
     validation_config$survival_dataset$id,
