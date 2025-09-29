@@ -7,7 +7,7 @@ output:
   html_document:
     df_print: paged
 params:
-  input_path: "../06_create_figures/output/slam_c1-c10_age_het3_bwfatgluc.yaml"
+  input_path: "../06_create_figures/output/itp_genotyped_treat.yaml"
 ---
 
 ```{r setup, warning=FALSE, message=FALSE, echo=FALSE}
@@ -517,6 +517,9 @@ make_cox_table <- function(cox_models, outcome) {
     names(hr_table) <- c("Outcome", "Class", model_name)
     hr_table_list[[i]] <- hr_table
   }
+  hr_table_list <- lapply(hr_table_list, function(table) {
+    table[grepl("^Class\\d+", table$Class), ]
+  })
   result <- purrr::reduce(hr_table_list,
     dplyr::left_join,
     by = c("Class", "Outcome")

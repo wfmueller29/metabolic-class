@@ -8,7 +8,7 @@ if (length(args) == 0) {
   # input_path <- "../03_model_select/output/test_local.yaml"
   # input_path <- "../03_model_select/output/20250413_fb6-2_seq.yaml"
   # input_path <- "../01_prep_model_data/output/xslam_c16-c18.yaml"
-  input_path <- "../03_model_select/output/itp_genotyped_M.yaml"
+  input_path <- "../03_model_select/output/itp_genotyped_treat_F.yaml"
   # input_path <- "../01_prep_model_data/output/20250410_slam_c1-c10_x_slam_c16-c18.yaml"
   # input_path <- "../01_prep_model_data/output/20250410_slam_c1-c10_p_slam_c16-c18.yaml"
   # input_path <- "../01_prep_model_data/output/mb6.yaml"
