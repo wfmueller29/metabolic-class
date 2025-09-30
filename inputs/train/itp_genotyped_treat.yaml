@@ -1,0 +1,89 @@
+out_tag: itp_genotyped_treat
+tag_time: FALSE
+plan: multicore
+ncpus: 8
+sample_n: FALSE
+center: TRUE
+scale: FALSE
+complete_ng: NULL
+train_ng: "complete_ng"
+external_validate: FALSE
+custom_palette: TRUE
+palette_colors:  ["#ff7f50", "#00dd83", "#4f1e9e"]
+legend_labels: ["Class 1", "Class 2", "Class 3"]
+custom_palette_train: TRUE
+palette_colors_train: ["#ff7f50", "#00dd83", "#4f1e9e"]
+legend_labels_train: ["Class 1", "Class 2", "Class 3"]
+survival_dataset:
+  path: "../00a_clean_itp_geno/output/itp_genotyped_treat_surv.csv"
+  id: "idno"
+  age_death: "le_wk"
+  event: "dead_censor"
+individual_cox:
+  - "~ Class + sex" 
+  - "~ Class + sex + tx" 
+  - "~ Class + sex * tx" 
+combined_cox:
+  forms:
+    - "~ <class+> + sex + tx"
+    - "~ <probs+> + sex * tx"
+    - "~ <probs+> + strata(sex) + tx"
+  tts:
+    - NULL
+    - NULL
+    - NULL
+prediction_data:
+  filter_interval:
+    intervals:
+      - [age_wk_ns: "(13, 65)"]
+      - [age_wk_ns: "[39, 21)"]
+      - [age_wk_ns: "[65, 117)"]
+    names:
+  filter_window:
+    age_var: "age_wk"
+    start: 13 # 3 months
+    end: 117 # 27 months
+    window_size_vector: [26.1, 52.1, 78] # 6, 12, 18 months
+    step: 26 # 6 months
+  filter_cumulative:
+    age_var: "age_wk"
+    start_vector: [13, 39] # 3 and 9 months
+    end: 117 # 27 months
+    step: 26 # 6 months
+  resample:
+    age_var: "age_wk"
+    fraction_vector: [.75, .667, .5, .337, .25]
+meta_dataset:
+  id: "idno"
+  age_var: ["age_wk", "age_wk2"] # these must be in increasing polynomial order
+  covariates: ["sex", "tx"]
+  covariates_dummy: ["sex_M", "sex_F", "tx_Y"]
+  train_test:
+    sample_by: ["sex", "site", "tx"]
+    split: .8
+datasets:
+- name: "slam"
+  path: "../00a_clean_itp_geno/output/itp_genotyped_treat_bw_og.csv"
+  outcome: "bw"
+  model:
+    fixed: "~ age_wk + age_wk2 + sex_F * tx_Y"
+    fixcov: ["sex_F", "tx_Y"]
+    mixture: "~ age_wk + age_wk2" 
+    random: 
+      - "~ 1"
+      - "~ age_wk"
+      - "~ age_wk + age_wk2"
+    idiag: [FALSE, TRUE]
+    nwg: [FALSE, TRUE]
+    ng_max: 5
+  labels:
+    oc_name: "Body Weight"
+    oc_units: "(g)"
+    age_var_name: "Age"
+    age_var_units: "(weeks)"
+    data_name: "SLAM Body Weight"
+  harmonize:
+    execute: TRUE
+    formula: "~ age_wk + age_wk2 + sex + tx_Y + (1|idno)"
+    variable: ["cohort", "site"]
+
