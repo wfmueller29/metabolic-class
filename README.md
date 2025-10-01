@@ -58,9 +58,72 @@ Yaml files are required and must follow the provided format. The easiest case wo
 
 #### `out_tag`
 
-This parameters specifies the name of the output directories created by the pipeline.
+A character string that specifies the name of the output directories created by the pipeline.
 
-#### 
+#### `plan`
+
+A character string that specifies the strategy to be used for parellel computing. This string is passed to the argument `strategy` of the [plan](https://future.futureverse.org/reference/plan.html#built-in-evaluation-strategies) function from the [future](https://cran.r-project.org/web/packages/future/index.html) R package. To not use paraellel computing, the plan should be "sequential". If parellel computing is desired, it is recommended to read documentation of the [plan](https://future.futureverse.org/reference/plan.html#built-in-evaluation-strategies) function as the stategy for parellel computing varies depending on operating system etc. NOTE: the "cluster" strategy may not be supported. 
+
+The steps of the pipeline eligible for parellel computing are: 
+1. Running all candidate models
+2. Boostrapping confidence intervals for F1 accuracy estimates
+
+#### `ncpus`
+
+A numeric value indicating the number of cpus to be used if parellel computing is desired and specfied using the `plan` parameter.
+
+#### `sample_n`
+
+A numeric value indicating the number of subjects to sample of the study population for the run. `FALSE` if no sample is desired. This sampling is useful for saving time and computational resources when doing test runs of the pipeline. 
+
+#### `center`
+
+A boolean variable that specifies if the age variables should be centered around their mean. 
+
+#### `scale`
+
+A boolean variable that specifies if the age variables should be scaled to standard deviations. 
+
+#### `complete_ng`
+
+A variable that can be used to prespecify the number of classes for models in the complete dataset. `NULL` if no prespecification is desired. A numeric vector where each entry corresponds with the desired number of classes for each outcome dataset entered in the pipeline. 
+
+#### `train_ng`
+
+A variable that can be used to prespecify the number of classes for models in the training dataset. `NULL` if no prespecification is desired. Or, a numeric vector where each entry corresponds with the desired number of classes for each outcome dataset entered in the pipeline. Or, "complete_ng" if the number of classes for the training dataset should be determined by the number of classes for the complete dataset. 
+
+#### `external_validate`
+
+`FALSE` if no external validation is desired. If external validation is desired this should be a realtive path specified like this: `../06_create_figures/output/<run>.yaml` to training `<run>` you are trying to validate. 
+
+#### `custom_palette`
+
+A bool specifying if a custom palette should be applied. When first running the pipeline, it is recommended that this be `FALSE`, to avoid mismatching the number of classes in the palette with the actual number of classes produced from the pipeline.
+
+#### `palette_colors`
+
+A list of character strings of hexadecimal (hex) colors ordered to match the class names in `legend_labels`.
+
+#### `legend_labels`
+
+A list of character strings providing the legned labels for the various classes.
+
+#### `custom_palette_train` `palette_colors_train` `legend_labels_train`
+
+The same as above but for the training set.
+
+#### `survival_dataset`
+
+* `path` - Absolute or relative path to the CSV that contains the variables `id`, `age_death`, and `event`
+* `id` - A character string specifying the column name of the subject identifier.
+* `age_death` - A character string specifiying the column name that contains that age of death of the subject.
+* `event` - A character string specifiying the column name that contains whether or not the event occurred. Did the subject die or was lost to follow-up and should be censored? 
+
+#### `individual_cox`
+
+A list of character strings representing three one-side formula for a cox model. For example, \["~ Class", "~ Class + X", "~ Class + X * Y"], where X and Y are covariates that we want to control for when determining the relationship between Class and mortality. 
+
+####
 
 ### Testing Config
 ```yaml
