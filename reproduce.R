@@ -13,7 +13,13 @@ yaml_files <- c(
   "inputs/train/slam_c1-c10_age_mhet3_bwfatgluc.yaml",
   "inputs/train/slam_c1-c10_age_het3_bwfatgluc.yaml",
   "inputs/train/slam_c1-c10_age_het3_bw.yaml",
-  "inputs/train/itp_c10c11c13c16_age_controls_bw.yaml"
+  "inputs/train/itp_c10c11c13c16_age_controls_bw.yaml",
+  "inputs/train/itp_genotyped.yaml",
+  "inputs/train/itp_genotyped_F.yaml",
+  "inputs/train/itp_genotyped_M.yaml",
+  "inputs/train/itp_genotyped_treat.yaml",
+  "inputs/train/itp_genotyped_treat_F.yaml",
+  "inputs/train/itp_genotyped_treat_M.yaml"
 )
 
 for (yaml in yaml_files) {
