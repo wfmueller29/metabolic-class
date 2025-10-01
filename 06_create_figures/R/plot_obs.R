@@ -22,7 +22,7 @@ traj_obs <- function(main,
 
   ## join main and df
   n <- ave(main[[id_var]], main[["new_class"]], FUN = length)
-  rescaled_n <- 3 * (n / max(n)) + 1
+  rescaled_n <- 2 * (n / max(n)) + 1
   main$n <- rescaled_n
   main_obs <- merge(x = main, y = df, by = id_var)
 
