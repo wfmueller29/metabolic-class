@@ -54,6 +54,14 @@ The tedious part is creating the `validate_config.yaml` file (See below)
 ## Config Files
 Yaml files are required and must follow the provided format. The easiest case would be to copy this example then change as necessary. Think of the yaml files as all the inputs to a function, and the R files as the functions themselves. The function argument names are provided on the left (i.e. "out_tag"), and the acutal arguemnt (i.e. "all") is provided on the right. This file will be read into R as a specifically structured list, so proper indentation is critical.
 
+### Parameters
+
+#### `out_tag`
+
+This parameters specifies the name of the output directories created by the pipeline.
+
+#### 
+
 ### Testing Config
 ```yaml
 out_tag: all   # this will be the name of output files
