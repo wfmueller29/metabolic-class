@@ -121,14 +121,33 @@ The same as above but for the training set.
 
 #### `individual_cox`
 
-A list of character strings representing three one-side formula for a cox model. For example, \["~ Class", "~ Class + X", "~ Class + X * Y"], where X and Y are covariates that we want to control for when determining the relationship between Class and mortality. 
+A list of character strings representing three one-side formula for a cox model. For example, `["~ Class", "~ Class + X", "~ Class + X * Y"]`, where X and Y are covariates that we want to control for when determining the relationship between Class and mortality. 
 
-####
+#### `combined_cox`
 
+* `forms` - A list of three strings representing one sided formulas for the combined cox model. The strings `"<probs+>"` and `"<probs*>"` will expand to the posterior probabilities of all classes included additively and multiplicatively, respectively. The strings `"<class+>"` and `"<class*>"` will expand discrete class membership additively and multiplicatively, respectively. For example, `["~ <class+>", "~ <probs+> + frailty(idno)", "~ <probs+>"]` would be three possible formula.
+* `tts` - A list of three strings representing time transformation to variables in `forms` that have a `tt()` function. For example, if the formula `"~ <probs+> + bw + gluc + fat + tt(bw) + tt(gluc) + tt(fat) + sex + strata(strain)"` was provided in `forms`, the corresponding tts entry would included a list of three functions, one for each of the variables specified by the `tt` function. The complete example is shown below. `NULL` if no time transformation is desired.
+
+```yaml
+forms:
+  - "~ <class+> + sex + strata(strain)"
+  - "~ <probs+> + sex + strata(strain)"
+  - "~ <probs+> + bw + gluc + fat + tt(bw) + tt(gluc) + tt(fat) + sex + strata(strain)"
+tts:
+  - NULL
+  - NULL
+  - ["function(x, t, ...) x * log(t + 20) + x * log(t * t + 20)",
+     "function(x, t, ...) x * log(t + 20) + x * log(t * t + 20)",
+     "function(x, t, ...) x * log(t + 20) + x * log(t * t + 20)"]
+
+```
+
+* 
 ### Testing Config
 ```yaml
 out_tag: all   # this will be the name of output files
-tag_time: FALSE   # pretty sure this is an appendage
+tag_time: FALSE   # pretty s
+ure this is an appendage
 plan: multicore   # Input for "plan" function or the R Futures Package
 ncpus: 10   # Number of CPUs to use when running in parrallel
 sample_n: FALSE   # Integer providing desired sample size to reduce computation
