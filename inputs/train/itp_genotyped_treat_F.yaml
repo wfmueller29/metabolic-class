@@ -8,12 +8,12 @@ scale: FALSE
 complete_ng: NULL
 train_ng: "complete_ng"
 external_validate: FALSE
-custom_palette: FALSE
-palette_colors:  ["#ff7f50", "#00dd83", "#4f1e9e"]
-legend_labels: ["Class 1", "Class 2", "Class 3"]
-custom_palette_train: FALSE
-palette_colors_train: ["#ff7f50", "#00dd83", "#4f1e9e"]
-legend_labels_train: ["Class 1", "Class 2", "Class 3"]
+custom_palette: TRUE
+palette_colors:  ["#ff7f50", "#00dd83"]
+legend_labels: ["Class 1", "Class 2"]
+custom_palette_train: TRUE
+palette_colors_train: ["#ff7f50", "#00dd83"]
+legend_labels_train: ["Class 1", "Class 2"]
 survival_dataset:
   path: "../00a_clean_itp_geno/output/itp_genotyped_treat_surv.csv"
   id: "idno"

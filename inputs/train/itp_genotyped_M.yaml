@@ -5,8 +5,8 @@ ncpus: 8
 sample_n: FALSE
 center: TRUE
 scale: FALSE
-complete_ng: NULL
-train_ng: "complete_ng"
+complete_ng: 3
+train_ng: 3
 external_validate: FALSE
 custom_palette: TRUE
 palette_colors: ["#FE218B", "#8338EC", "#21B0FE"]
