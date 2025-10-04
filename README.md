@@ -142,7 +142,41 @@ tts:
 
 ```
 
-* 
+#### `predication_data`
+
+These parameters determine how testing data will be sampled for the interval, window, cumulative, and resample age-based subsets. 
+
+* `filter_interval$intervals` A list of named character strings were the names are the age variable desired to sample over with the suffix `_ns`, and the strings are an interval over which the origianl data will be sampled.
+* `filter_window`
+  - `age_var` - a character string specifying the age variable over which to sample
+  - `start` - a numeric value specifying the lower bound for the first window
+  - `end` - a numeric value specifying the maximum value for the last upper bound
+  - `window_size_vector` - a list of numeric values specifying various size for the sampling window
+  - `step` - a numeric value specifying the number of units to step forard the bounds of each sampling window.
+*  
+```yaml
+prediction_data:
+  filter_interval:
+    intervals:
+      - [age_wk_ns: "(13, 65)"]
+      - [age_wk_ns: "[39, 21)"]
+      - [age_wk_ns: "[65, 117)"]
+    names:
+  filter_window:
+    age_var: "age_wk"
+    start: 13 # 3 months
+    end: 117 # 27 months
+    window_size_vector: [26.1, 52.1, 78] # 6, 12, 18 months
+    step: 26 # 6 months
+  filter_cumulative:
+    age_var: "age_wk"
+    start_vector: [13, 39] # 3 and 9 months
+    end: 117 # 27 months
+    step: 26 # 6 months
+  resample:
+    age_var: "age_wk"
+    fraction_vector: [.75, .667, .5, .337, .25]
+```
 ### Testing Config
 ```yaml
 out_tag: all   # this will be the name of output files
