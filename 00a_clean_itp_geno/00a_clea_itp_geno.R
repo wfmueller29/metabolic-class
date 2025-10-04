@@ -46,6 +46,18 @@ itp_geno_treat <- merge(itp_geno_treat, itp_geno_treat_census, by = "idno")
 itp_geno_treat_m <- itp_geno_treat[itp_geno_treat$sex_M == 1, ]
 itp_geno_treat_f <- itp_geno_treat[itp_geno_treat$sex_M == 0, ]
 
+# A few summary stats before cleaning  -----------------------------------------
+length(unique(itp_geno$idno))
+sum(itp_geno$age_wk == 6)
+unique(itp_geno$cohort)
+table(itp_geno$sex)
+
+length(unique(itp_geno_treat$idno))
+sum(itp_geno_treat$age_wk == 6)
+unique(itp_geno_treat$cohort)
+table(itp_geno_treat$sex)
+
+# clean ----------------------------------------------------------------------
 
 itp_geno <- clean_itp(itp_geno, filter = TRUE)
 itp_geno_m <- clean_itp(itp_geno_m, filter = TRUE)
@@ -55,10 +67,16 @@ itp_geno_treat <- clean_itp(itp_geno_treat)
 itp_geno_treat_m <- clean_itp(itp_geno_treat_m)
 itp_geno_treat_f <- clean_itp(itp_geno_treat_f)
 
+# A few summary stats after cleaning  -----------------------------------------
 length(unique(itp_geno$idno))
 sum(itp_geno$age_wk == 6)
 unique(itp_geno$cohort)
 table(itp_geno$sex)
+
+length(unique(itp_geno_treat$idno))
+sum(itp_geno_treat$age_wk == 6)
+unique(itp_geno_treat$cohort)
+table(itp_geno_treat$sex)
 
 if (!dir.exists("output")) {
   dir.create("output")
