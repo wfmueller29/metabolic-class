@@ -11,9 +11,11 @@ output:
   library(consoler)
   library(SLAM)
   library(dplyr)
+  library(tibble)
   library(tidyr)
   library(purrr)
   library(broom)
+  library(stringr)
   library(scales)
   library(pheatmap)
   library(RColorBrewer)
@@ -25,6 +27,7 @@ output:
   library(lubridate)
   library(ggplot2)
   library(svglite)
+  library(writexl)
   set.seed(365)
 
   # setting global knitr options for r markdown output
@@ -64,9 +67,12 @@ output:
 ```
 # Load in input data
 ```{r read in censuses}
-  census_path <- "/Users/jdp2019/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/census.csv"
-  class_census_path <- "/Users/jdp2019/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/20250426_all_cohort/complete_census.csv"
-  healthcard_path <- "/Users/jdp2019/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/SLAM Healthcard reconciled.xlsx"
+  census_path <- "/Users/JoshsMacbook2015/Library/CloudStorage/OneDrive-NationalInstitutesofHealth/Trajectories_Raw_Data/pipeline_ready/98_healthcard_cod/data/Michel_raw_healthcard_3_13_26/census.csv"
+  class_census_path <- "/Users/JoshsMacbook2015/Library/CloudStorage/OneDrive-NationalInstitutesofHealth/Trajectories_Raw_Data/pipeline_ready/98_healthcard_cod/data/Michel_raw_healthcard_3_13_26/complete_census.csv"
+  healthcard_path <- "/Users/JoshsMacbook2015/Library/CloudStorage/OneDrive-NationalInstitutesofHealth/Trajectories_Raw_Data/pipeline_ready/98_healthcard_cod/data/Michel_raw_healthcard_3_13_26/SLAM Healthcard reconciled.xlsx"
+  # census_path <- "/Users/jdp2019/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/census.csv"
+  # class_census_path <- "/Users/jdp2019/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/20250426_all_cohort/complete_census.csv"
+  # healthcard_path <- "/Users/jdp2019/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/SLAM Healthcard reconciled.xlsx"
   # census_path <- "/Users/JoshsMacbook2015/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/census.csv"
   # class_census_path <- "/Users/JoshsMacbook2015/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/20250426_all_cohort/complete_census.csv"
   # healthcard_path <- "/Users/JoshsMacbook2015/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/SLAM Healthcard reconciled.xlsx"
@@ -162,6 +168,7 @@ output:
     healthcard_final <- as_tibble(merge(census, healthcard, by = "tag", all.y = TRUE)) %>%
       select(idno, idno_rec, everything(), -c(Comments, name, cage, eartag, "Created By", "Entered By"))
 ```
+
 ## Process healthcard to prep for graphing- EOL
 ```{r process healthcard}
   # Clean up and pare HC
@@ -332,7 +339,7 @@ output:
   plot_data_EOL <- plot_data_EOL_i %>%
     mutate(condition = recode(condition, !!!condition_renames))
   unique(plot_data_EOL$condition)
-  ```
+```
 
 ## Divide EOL datasets into significant and non-significant, plot
 ```{r divide into sig and NS, assign p-values}
@@ -428,7 +435,7 @@ output:
       legend.title = element_text(face = "bold"),
       legend.text = element_text(size = 12)
     )
-  ```
+```
 
 
 ## Examine lifelong healthcards accounting for incidence (non-condition specific)
@@ -608,7 +615,7 @@ output:
         ungroup()
   #* Plot
     #- As raw days
-      days_HCfree <- ggplot(cumulative_class_curves_day, aes(x = event_day, y = prop_disease_free, color = Class)) +
+      days_HCfree <- ggplot(cumulative_class_curves_day, aes(x = event_day, y = prop_disease_free_day, color = Class)) +
         geom_step(size = 1.1) +
         scale_color_manual(values = class_colors) +
         labs(
@@ -1035,8 +1042,8 @@ output:
         legend.text   = element_text(size = 13, face = "plain"),
         strip.text    = element_text(size = 14, face = "plain") # if using facets
       )
-  # Finalize version of S6A (proportion of LL HCs stacked)
-    S6A <- ggplot(bin_props_stacked_final, aes(x = factor(new_class_bw), y = proportion, fill = condition_bin)) +
+  # Finalize version of S8A (proportion of LL HCs stacked)
+    S8A <- ggplot(bin_props_stacked_final, aes(x = factor(new_class_bw), y = proportion, fill = condition_bin)) +
       geom_bar(stat = "identity", position = "stack") +
       scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
       scale_fill_manual(values = bin_colors, name = "# of HCs") +
@@ -1046,8 +1053,8 @@ output:
         y = "Proportion of Mice"
       ) + final_plot_theme
 
-  # Finalize version of S6B (proportion of LL HCs stacked, year normalized)
-    S6B <- ggplot(bin_props_yr_final, aes(x = factor(new_class_bw), y = proportion, fill = hc_yr_bin)) +
+  # Finalize version of S8B (proportion of LL HCs stacked, year normalized)
+    S8B <- ggplot(bin_props_yr_final, aes(x = factor(new_class_bw), y = proportion, fill = hc_yr_bin)) +
       geom_bar(stat = "identity", position = "stack") +
       scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
       scale_fill_manual(values = bin_colors_per_yr, name = "HCs/Yr") +
@@ -1057,13 +1064,13 @@ output:
         y = "Proportion of Mice"
       ) + final_plot_theme
 
-  # Use the scale for S6C for next two plots
-    max_y_S6C <- max(cumulative_HC_day_events_only_final$cum_HC_per_mouse_events_only, na.rm = TRUE)
-  # Finalize version of S6C (cumulative incidence of HCs, only mice with events)
-    S6C <- ggplot(cumulative_HC_day_events_only_final, aes(x = event_wk, y = cum_HC_per_mouse_events_only, color = Class)) +
+  # Use the scale for S8C for next two plots
+    max_y_S8C <- max(cumulative_HC_day_events_only_final$cum_HC_per_mouse_events_only, na.rm = TRUE)
+  # Finalize version of S8C (cumulative incidence of HCs, only mice with events)
+    S8C <- ggplot(cumulative_HC_day_events_only_final, aes(x = event_wk, y = cum_HC_per_mouse_events_only, color = Class)) +
       geom_step(size = 2.5) +
       scale_color_manual(values = class_colors_final) +
-      scale_y_continuous(limits = c(0, max_y_S6C)) +
+      scale_y_continuous(limits = c(0, max_y_S8C)) +
       labs(
         title = "Cumulative HCs per Mouse (Only Mice With Events)",
         x = "Weeks Since Birth",
@@ -1072,11 +1079,11 @@ output:
       ) +
       final_plot_theme
 
-  # Finalize version of S6D (cumulative incidence of HCs, all mice)
-    S6D <- ggplot(cumulative_HC_day_all_mice_final, aes(x = event_wk, y = cum_HC_per_mouse_all, color = Class)) +
+  # Finalize version of S8D (cumulative incidence of HCs, all mice)
+    S8D <- ggplot(cumulative_HC_day_all_mice_final, aes(x = event_wk, y = cum_HC_per_mouse_all, color = Class)) +
       geom_step(size = 2.5) +
       scale_color_manual(values = class_colors_final) +
-      scale_y_continuous(limits = c(0, max_y_S6C)) +
+      scale_y_continuous(limits = c(0, max_y_S8C)) +
       labs(
         title = "Cumulative HCs per Mouse (Including Mice with No Events)",
         x = "Weeks Since Birth",
@@ -1085,7 +1092,7 @@ output:
       ) +
       final_plot_theme
 
-  # Finalize version of S6E (cumulative incidence of HCs, all mice)
+  # Finalize version of S8E (cumulative incidence of HCs, all mice)
     condition_matrix_norm_renamed <- condition_matrix_norm
     colnames(condition_matrix_norm_renamed) <- recode(
       colnames(condition_matrix_norm_renamed),
@@ -1093,7 +1100,7 @@ output:
       "Class 2" = "Stable BW",
       "Class 3" = "Mid-Peak-BW"
     )
-    S6E <- pheatmap::pheatmap(
+    S8E <- pheatmap::pheatmap(
       condition_matrix_norm_renamed,
       scale = "none", # Fix inconsistent coloring
       cluster_rows = TRUE,
@@ -1126,13 +1133,39 @@ output:
       )
     }
     # Export ggplot objects
-    export_plot(S6A, "S6A.png")
-    export_plot(S6B, "S6B.png")
-    export_plot(S6C, "S6C.png")
-    export_plot(S6D, "S6D.png")
-    # Export S6E (pheatmap object)
-    png("Healthcard_PNGs/S6E.png", width = 8.5, height = 11, units = "in", res = 1200, bg = "white")
+    export_plot(S8A, "S8A.png")
+    export_plot(S8B, "S8B.png")
+    export_plot(S8C, "S8C.png")
+    export_plot(S8D, "S8D.png")
+    # Export S8E (pheatmap object)
+    png("Healthcard_PNGs/S8E.png", width = 8.5, height = 11, units = "in", res = 1200, bg = "white")
     grid::grid.newpage()
-    grid::grid.draw(S6E$gtable)
+    grid::grid.draw(S8E$gtable)
     dev.off()
 ```  
+
+## Export cleaned data for Michel
+```{r export data}
+  # Clean dates on a copy of healthcard_final without touching the original
+  healthcard_final_export <- healthcard_final %>%
+    mutate(
+      created_date  = as.Date(as.numeric(created_date), origin = "1899-12-30"),
+      recovery_date = as.Date(recovery_date),
+      dod           = as.Date(dod)
+    )
+
+  # Export healthcard_final
+  write.csv(healthcard_final_export, "/Users/JoshsMacbook2015/Library/CloudStorage/OneDrive-NationalInstitutesofHealth/Trajectories_Raw_Data/pipeline_ready/98_healthcard_cod/data/Michel_raw_healthcard_3_13_26/healthcard_final.csv", row.names = FALSE)
+
+  # Export Fig S8A: parts-of-whole condition burden per mouse per class
+  writexl::write_xlsx(bin_props_stacked_final, "/Users/JoshsMacbook2015/Library/CloudStorage/OneDrive-NationalInstitutesofHealth/Trajectories_Raw_Data/pipeline_ready/98_healthcard_cod/data/Michel_raw_healthcard_3_13_26/S8A.xlsx")
+
+  # Export Fig S8B: time-normalized incidence (HCs per year) per class
+  writexl::write_xlsx(bin_props_yr_final, "/Users/JoshsMacbook2015/Library/CloudStorage/OneDrive-NationalInstitutesofHealth/Trajectories_Raw_Data/pipeline_ready/98_healthcard_cod/data/Michel_raw_healthcard_3_13_26/S8B.xlsx")
+
+  # Export hc_lifespan_data: per-mouse HC counts and binning (source data for S8A/S8B)
+  writexl::write_xlsx(
+    mutate(hc_lifespan_data, condition_bin = as.character(condition_bin), hc_yr_bin = as.character(hc_yr_bin)),
+    "/Users/JoshsMacbook2015/Library/CloudStorage/OneDrive-NationalInstitutesofHealth/Trajectories_Raw_Data/pipeline_ready/98_healthcard_cod/data/Michel_raw_healthcard_3_13_26/hc_lifespan_data.xlsx"
+  )
+```
