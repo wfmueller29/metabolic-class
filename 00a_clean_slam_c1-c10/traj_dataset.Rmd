@@ -1358,6 +1358,40 @@ main_cat_surv <- main_cat_surv_f %>%
 slam_main_cat_surv <- main_cat_surv
 ```
 
+
+### Create adiposity
+
+```{r create adiposity}
+main_all2$bw_nearest_fat <- NA_real_
+
+by_id <- split(seq_len(nrow(main_all2)), main_all2$idno)
+
+for (idx in by_id) {
+  d <- main_all2[idx, ]
+
+  fat_idx <- which(!is.na(d$fat))
+  bw_idx <- which(!is.na(d$bw))
+
+  if (length(fat_idx) == 0 || length(bw_idx) == 0) next
+
+  for (i in fat_idx) {
+    closest_bw_idx <- bw_idx[
+      which.min(abs(as.numeric(d$date[bw_idx] - d$date[i])))
+    ]
+
+    main_all2$bw_nearest_fat[idx[i]] <- d$bw[closest_bw_idx]
+  }
+}
+
+main_all2$adiposity <- main_all2$fat / main_all2$bw_nearest_fat
+```
+
+### Create ln(age) variable
+
+```{r ln age}
+main_all2$ln_age <- log(main_all2$age_wk)
+```
+
 ### Drop unused variables before saving
 
 ```{r drop unused variables}
