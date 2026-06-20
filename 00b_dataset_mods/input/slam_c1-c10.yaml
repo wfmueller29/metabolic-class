@@ -147,3 +147,40 @@
       - [sex: F, strain: B6]
       - [strain: HET3]
       - [strain: B6]
+        
+- name: "slam"
+  path: "../00a_clean_slam_c1-c10/output/main_all2.RDATA"
+  outcome: "adiposity"
+  age_var: ["age_wk", "per_age_wk"]
+  id: "idno"
+  dummy: ["sex", "strain"]
+  remove_velocity_outliers:
+    execute: FALSE
+    threshold: 5
+    age_var: "age_wk"
+  percent_change_baseline:
+    execute: FALSE
+    age_var: "age_wk"
+    target: 30
+    lower: 0
+    upper: 50
+    keep_before: FALSE
+  sample_monthwise:
+    execute: FALSE
+    interval: 3
+    age_var: "age_wk"
+  sample_age_interval:
+    execute: FALSE
+    intervals:
+      - [age_wk: "[0, 100]"]
+      - [age_wk: "[0, 110]"]
+      - [age_wk: "[0, 120]"]
+  sample_subsets:
+    execute: TRUE
+    subsets:
+      - [sex: M, strain: HET3]
+      - [sex: F, strain: HET3]
+      - [sex: M, strain: B6]
+      - [sex: F, strain: B6]
+      - [strain: HET3]
+      - [strain: B6]
