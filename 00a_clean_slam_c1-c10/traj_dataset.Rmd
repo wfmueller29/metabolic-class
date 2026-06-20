@@ -1400,6 +1400,7 @@ keep_cols <- c(
   "gluc",
   "bw",
   "fat",
+  "adiposity",
   "lean",
   "sex",
   "strain",
