@@ -1383,7 +1383,7 @@ for (idx in by_id) {
   }
 }
 
-main_all2$adiposity <- main_all2$fat / main_all2$bw_nearest_fat
+main_all2$adiposity <- main_all2$fat / main_all2$bw_nearest_fat * 100
 ```
 
 ### Create ln(age) variable
