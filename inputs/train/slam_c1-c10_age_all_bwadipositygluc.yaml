@@ -8,10 +8,10 @@ scale: FALSE
 complete_ng: NULL
 train_ng: "complete_ng"
 external_validate: FALSE
-custom_palette: FALSE
+custom_palette: TRUE
 palette_colors: ["#000000", "#ff2500", "#a144ff", "#0e33ff", "#00cfd2", "#ff41ff", "#ff9f23", "#b8b8b8"]
 legend_labels: ["Class 1","Class 2","Class 3","Class 4","Class 5","Class 6","Class 7","Class 8"]
-custom_palette_train: FALSE
+custom_palette_train: TRUE
 palette_colors_train: ["#000000", "#ff2500", "#a144ff", "#0e33ff", "#00cfd2", "#ff41ff", "#ff9f23", "#b8b8b8"]
 legend_labels_train: ["Class 1","Class 2","Class 3","Class 4","Class 5","Class 6","Class 7","Class 8"]
 survival_dataset:
@@ -104,11 +104,11 @@ datasets:
     nwg: [FALSE, TRUE]
     ng_max: 5
   labels:
-    oc_name: "Body Fat"
-    oc_units: "(g)"
+    oc_name: "Adiposity"
+    oc_units: "(%)"
     age_var_name: "Age"
     age_var_units: "(weeks)"
-    data_name: "SLAM Body Fat"
+    data_name: "SLAM Adiposity"
   harmonize:
     execute: TRUE
     formula: "~ age_wk + age_wk2 + sex * strain + (1|idno)"
