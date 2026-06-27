@@ -7,7 +7,6 @@ library(survival)
 library(parallel)
 library(ggplot2)
 library(survminer)
-library(cowplot)
 
 # read required data ----------------------------------------------------------
 bw <- read.csv("../00b_dataset_mods/output/slam_c1-c10/data/slam_bw_og.csv")
@@ -189,6 +188,7 @@ bw_jm3 <- gridsearch(
 
 bw_jm3$conv
 
+
 # fat -------------------------------------------------------------------------
 fat_jm1 <- Jointlcmm(
   fixed = fat ~ age_wk + age_wk2 + sex_M + strain_HET3,
@@ -248,7 +248,7 @@ adiposity_jm3 <- gridsearch(
     subject = "idno",
     survival = Surv(tstart, tstop, death) ~ 1,
     hazard = "Weibull",
-    ng = 2,
+    ng = 3,
     data = adiposity_tm
   )
 )
@@ -288,45 +288,15 @@ gluc_jm3 <- gridsearch(
 
 gluc_jm3$conv
 
-# reorder class ---------------------------------------------------------------
-
-i <- 0
-bw_prob <- bw_jm3$pprob
-i <- length(unique(bw_prob$class))
-fat_prob <- fat_jm3$pprob
-fat_prob$class <- fat_prob$class + i
-i <- i + length(unique(fat_prob$class))
-adiposity_prob <- adiposity_jm3$pprob
-adiposity_prob$class <- adiposity_prob$class + i
-i <- i + length(unique(adiposity_prob$class))
-gluc_prob <- gluc_jm3$pprob
-gluc_prob$class <- gluc_prob$class + i
-
-
-# merge  ----------------------------------------------------------------------
-
-bw_class <- merge(bw_tm, bw_prob, by = "idno", all.x = TRUE)
-surv_bw_class <- merge(surv, bw_prob, by = "idno", all.x = TRUE)
-
-fat_class <- merge(fat_tm, fat_prob, by = "idno", all.x = TRUE)
-surv_fat_class <- merge(surv, fat_prob, by = "idno", all.x = TRUE)
-
-adiposity_class <- merge(adiposity_tm, adiposity_prob, by = "idno", all.x = TRUE)
-surv_adiposity_class <- merge(surv, adiposity_prob, by = "idno", all.x = TRUE)
-
-gluc_class <- merge(gluc_tm, gluc_prob, by = "idno", all.x = TRUE)
-surv_gluc_class <- merge(surv, gluc_prob, by = "idno", all.x = TRUE)
-
-# plot ------------------------------------------------------------------------
-
-
-source("R/plot_observed.R")
-source("R/plot_km.R")
-
+# merge and plot
 
 # bw --------------------------------------------------------------------------
+bw_class <- merge(bw_tm, bw_jm3$pprob, by = "idno", all.x = TRUE)
+surv_bw_class <- merge(surv, bw_jm3$pprob, by = "idno", all.x = TRUE)
 
-p_bw_obs <- plot_observed_classes(
+source("R/plot_observed.R")
+
+plot_observed_classes(
   data = bw_class,
   x = age_wk,
   y = bw,
@@ -337,7 +307,9 @@ p_bw_obs <- plot_observed_classes(
   class_label = "BW Class"
 )
 
-p_bw_km <- plot_km_classes(
+source("R/plot_km.R")
+
+plot_km_classes(
   data = surv_bw_class,
   time = le_wk,
   event = dead_censor,
@@ -348,103 +320,92 @@ p_bw_km <- plot_km_classes(
   class_label = "BW Class"
 )
 
-
 # fat -------------------------------------------------------------------------
+bw_class <- merge(bw_tm, bw_jm3$pprob, by = "idno", all.x = TRUE)
+surv_bw_class <- merge(surv, bw_jm3$pprob, by = "idno", all.x = TRUE)
 
-p_fat_obs <- plot_observed_classes(
-  data = fat_class,
+source("R/plot_observed.R")
+
+plot_observed_classes(
+  data = bw_class,
   x = age_wk,
-  y = fat,
+  y = bw,
   class = class,
-  title = "Observed Fat Mass Classes",
+  title = "Observed Body Weight Classes",
   x_label = "Age, weeks",
-  y_label = "Fat Mass",
-  class_label = "FM Class"
+  y_label = "Body weight",
+  class_label = "BW Class"
 )
 
-p_fat_km <- plot_km_classes(
-  data = surv_fat_class,
+source("R/plot_km.R")
+
+plot_km_classes(
+  data = surv_bw_class,
   time = le_wk,
   event = dead_censor,
   class = class,
-  title = "Kaplan-Meier Survival by Fat Mass Class",
+  title = "Kaplan-Meier Survival by Body Weight Class",
   x_label = "Age, weeks",
   y_label = "Survival probability",
-  class_label = "FM Class"
+  class_label = "BW Class"
 )
 
+# adiposity  ------------------------------------------------------------------
+bw_class <- merge(bw_tm, bw_jm3$pprob, by = "idno", all.x = TRUE)
+surv_bw_class <- merge(surv, bw_jm3$pprob, by = "idno", all.x = TRUE)
 
-# adiposity -------------------------------------------------------------------
+source("R/plot_observed.R")
 
-p_adiposity_obs <- plot_observed_classes(
-  data = adiposity_class,
+plot_observed_classes(
+  data = bw_class,
   x = age_wk,
-  y = adiposity,
+  y = bw,
   class = class,
-  title = "Observed Adiposity Classes",
+  title = "Observed Body Weight Classes",
   x_label = "Age, weeks",
-  y_label = "Adiposity",
-  class_label = "Adiposity Class"
+  y_label = "Body weight",
+  class_label = "BW Class"
 )
 
-p_adiposity_km <- plot_km_classes(
-  data = surv_adiposity_class,
+source("R/plot_km.R")
+
+plot_km_classes(
+  data = surv_bw_class,
   time = le_wk,
   event = dead_censor,
   class = class,
-  title = "Kaplan-Meier Survival by Adiposity Class",
+  title = "Kaplan-Meier Survival by Body Weight Class",
   x_label = "Age, weeks",
   y_label = "Survival probability",
-  class_label = "Adiposity Class"
+  class_label = "BW Class"
 )
 
+# gluc  ------------------------------------------------------------------ ----
+bw_class <- merge(bw_tm, bw_jm3$pprob, by = "idno", all.x = TRUE)
+surv_bw_class <- merge(surv, bw_jm3$pprob, by = "idno", all.x = TRUE)
 
-# gluc ------------------------------------------------------------------------
+source("R/plot_observed.R")
 
-p_gluc_obs <- plot_observed_classes(
-  data = gluc_class,
+plot_observed_classes(
+  data = bw_class,
   x = age_wk,
-  y = gluc,
+  y = bw,
   class = class,
-  title = "Observed Glucose Classes",
+  title = "Observed Body Weight Classes",
   x_label = "Age, weeks",
-  y_label = "Glucose",
-  class_label = "FPG Class"
+  y_label = "Body weight",
+  class_label = "BW Class"
 )
 
-p_gluc_km <- plot_km_classes(
-  data = surv_gluc_class,
+source("R/plot_km.R")
+
+plot_km_classes(
+  data = surv_bw_class,
   time = le_wk,
   event = dead_censor,
   class = class,
-  title = "Kaplan-Meier Survival by Glucose Class",
+  title = "Kaplan-Meier Survival by Body Weight Class",
   x_label = "Age, weeks",
   y_label = "Survival probability",
-  class_label = "FPG Class"
-)
-
-
-# combined panel --------------------------------------------------------------
-
-class_panel <- plot_grid(
-  p_bw_obs,        p_bw_km$plot,
-  p_fat_obs,       p_fat_km$plot,
-  p_adiposity_obs, p_adiposity_km$plot,
-  p_gluc_obs,      p_gluc_km$plot,
-  ncol = 2,
-  align = "hv",
-  labels = c("A", "B", "C", "D", "E", "F", "G", "H"),
-  label_size = 12
-)
-
-class_panel
-
-
-ggsave(
-  filename = "class_panel.png",
-  plot = class_panel,
-  width = 14,
-  height = 18,
-  dpi = 300,
-  bg = "white"
+  class_label = "BW Class"
 )
