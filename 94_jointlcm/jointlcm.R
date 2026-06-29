@@ -158,7 +158,7 @@ clusterEvalQ(cl, {
 # NOTE: BW 1 class model did not converge with random~age_wk + age_wk2
 # NOTE: We are going to use just age_wk for the random effect
 bw_jm1 <- Jointlcmm(
-  fixed = bw ~ age_wk + age_wk2 + sex_M + strain_HET3,
+  fixed = bw ~ age_wk + age_wk2 + sex_M * strain_HET3,
   random = ~age_wk,
   subject = "idno",
   survival = Surv(tstart, tstop, death) ~ 1,
@@ -176,7 +176,7 @@ bw_jm3 <- gridsearch(
   minit = bw_jm1,
   cl = cl,
   Jointlcmm(
-    fixed = bw ~ age_wk + age_wk2 + sex_M + strain_HET3,
+    fixed = bw ~ age_wk + age_wk2 + sex_M * strain_HET3,
     mixture = ~ age_wk + age_wk2,
     random = ~age_wk,
     subject = "idno",
@@ -191,7 +191,7 @@ bw_jm3$conv
 
 # fat -------------------------------------------------------------------------
 fat_jm1 <- Jointlcmm(
-  fixed = fat ~ age_wk + age_wk2 + sex_M + strain_HET3,
+  fixed = fat ~ age_wk + age_wk2 + sex_M * strain_HET3,
   random = ~age_wk,
   subject = "idno",
   survival = Surv(tstart, tstop, death) ~ 1,
@@ -209,7 +209,7 @@ fat_jm3 <- gridsearch(
   minit = fat_jm1,
   cl = cl,
   Jointlcmm(
-    fixed = fat ~ age_wk + age_wk2 + sex_M + strain_HET3,
+    fixed = fat ~ age_wk + age_wk2 + sex_M * strain_HET3,
     mixture = ~ age_wk + age_wk2,
     random = ~age_wk,
     subject = "idno",
@@ -257,7 +257,7 @@ adiposity_jm3$conv
 
 # gluc ------------------------------------------------------------------------
 gluc_jm1 <- Jointlcmm(
-  fixed = gluc ~ age_wk + age_wk2 + sex_M + strain_HET3,
+  fixed = gluc ~ age_wk + age_wk2 + sex_M * strain_HET3,
   random = ~age_wk,
   subject = "idno",
   survival = Surv(tstart, tstop, death) ~ 1,
@@ -275,7 +275,7 @@ gluc_jm3 <- gridsearch(
   minit = gluc_jm1,
   cl = cl,
   Jointlcmm(
-    fixed = gluc ~ age_wk + age_wk2 + sex_M + strain_HET3,
+    fixed = gluc ~ age_wk + age_wk2 + sex_M * strain_HET3,
     mixture = ~ age_wk + age_wk2,
     random = ~age_wk,
     subject = "idno",
