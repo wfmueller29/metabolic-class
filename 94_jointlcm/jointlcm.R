@@ -439,12 +439,90 @@ class_panel <- plot_grid(
 
 class_panel
 
+# create output folder
+if (!dir.exists("panel")) {
+  dir.create("panel")
+}
 
+# save combined panel
 ggsave(
-  filename = "class_panel.png",
+  filename = file.path("panel", "class_panel.png"),
   plot = class_panel,
   width = 14,
   height = 18,
+  dpi = 300,
+  bg = "white"
+)
+
+# save individual panels
+ggsave(
+  filename = file.path("panel", "A_bw_observed.png"),
+  plot = p_bw_obs,
+  width = 7,
+  height = 4.5,
+  dpi = 300,
+  bg = "white"
+)
+
+ggsave(
+  filename = file.path("panel", "B_bw_km.png"),
+  plot = p_bw_km$plot,
+  width = 7,
+  height = 4.5,
+  dpi = 300,
+  bg = "white"
+)
+
+ggsave(
+  filename = file.path("panel", "C_fat_observed.png"),
+  plot = p_fat_obs,
+  width = 7,
+  height = 4.5,
+  dpi = 300,
+  bg = "white"
+)
+
+ggsave(
+  filename = file.path("panel", "D_fat_km.png"),
+  plot = p_fat_km$plot,
+  width = 7,
+  height = 4.5,
+  dpi = 300,
+  bg = "white"
+)
+
+ggsave(
+  filename = file.path("panel", "E_adiposity_observed.png"),
+  plot = p_adiposity_obs,
+  width = 7,
+  height = 4.5,
+  dpi = 300,
+  bg = "white"
+)
+
+ggsave(
+  filename = file.path("panel", "F_adiposity_km.png"),
+  plot = p_adiposity_km$plot,
+  width = 7,
+  height = 4.5,
+  dpi = 300,
+  bg = "white"
+)
+
+ggsave(
+  filename = file.path("panel", "G_glucose_observed.png"),
+  plot = p_gluc_obs,
+  width = 7,
+  height = 4.5,
+  dpi = 300,
+  bg = "white"
+)
+
+ggsave(
+  filename = file.path("panel", "H_glucose_km.png"),
+  plot = p_gluc_km$plot,
+  width = 7,
+  height = 4.5,
   dpi = 300,
   bg = "white"
 )
