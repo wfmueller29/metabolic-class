@@ -23,6 +23,7 @@ library(cowplot)
 library(RColorBrewer)
 library(viridis)
 library(consoler)
+library(pheatmap)
 set.seed(365)
 
 # setting global knitr options for r markdown output
@@ -270,13 +271,22 @@ census1 <- census[, c(prob_cols, cov)]
 if (config$custom_palette) {
   colnames(census1) <- c(config$legend_labels, cov)
 }
-heatmap(as.matrix(census1), margins = c(10, 4))
+# same default color scale base heatmap() uses internally (via image.default),
+# interpolated to more steps so the pheatmap legend renders as a smooth
+# gradient instead of 12 visible blocks
+heatmap_palette <- colorRampPalette(c(
+  "#FFFFC8", "#FFF4B7", "#FBE49A", "#F8D074", "#F7BA3C", "#F5A100",
+  "#F28400", "#ED6200", "#E13C00", "#C32200", "#A20706", "#7D0025"
+))(100)
+
+pheatmap(as.matrix(census1), scale = "none", color = heatmap_palette, fontsize_col = 8)
 heatmap1 <- recordPlot()
+
 census2 <- census[, prob_cols]
 if (config$custom_palette) {
   colnames(census2) <- config$legend_labels
 }
-heatmap(as.matrix(census2), margins = c(10, 4))
+pheatmap(as.matrix(census2), scale = "none", color = heatmap_palette, fontsize_col = 8)
 heatmap2 <- recordPlot()
 ```
 
@@ -288,12 +298,12 @@ output_path <- normalizePath(output_path)
 
 file_path <- file.path(output_path, "heatmap1.jpg")
 jpeg(file = file_path, width = 1200, height = 1200, res = 300)
-heatmap(as.matrix(census1), margins = c(6, 4), cexCol = 0.5)
+pheatmap(as.matrix(census1), scale = "none", color = heatmap_palette, fontsize_col = 5)
 dev.off()
 
 file_path <- file.path(output_path, "heatmap2.jpg")
 jpeg(file = file_path, width = 1200, height = 1200, res = 300)
-heatmap(as.matrix(census2), margins = c(6, 4), cexCol = 0.5)
+pheatmap(as.matrix(census2), scale = "none", color = heatmap_palette, fontsize_col = 5)
 dev.off()
 ```
 

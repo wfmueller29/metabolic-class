@@ -1,5 +1,5 @@
 # Create a partial correlation analysis
-
+{
 library(consoler)
 library(ppcor)
 library(qgraph)
@@ -20,6 +20,25 @@ keep_vars <- c(
   "Early-peak FM" = "prob4",
   "Decline FBG" = "prob7"
 )
+
+# class number embedded in the original "probN" column name; NA for
+# covariates that aren't tied to a latent class (Lifespan, Female, B6)
+class_num <- sub("^prob(\\d+)$", "\\1", keep_vars)
+class_num[!grepl("^prob\\d+$", keep_vars)] <- NA
+
+# network plot: just "Class N" for class variables, descriptor otherwise
+network_labels <- ifelse(
+  !is.na(class_num), paste0("Class ", class_num), names(keep_vars)
+)
+names(network_labels) <- names(keep_vars)
+
+# results table: descriptor with the class number appended, e.g. "Early-peak FM (4)"
+table_labels <- ifelse(
+  !is.na(class_num),
+  paste0(names(keep_vars), " (", class_num, ")"),
+  names(keep_vars)
+)
+names(table_labels) <- names(keep_vars)
 
 census <- consoler::rename(census, keep_vars)
 
@@ -46,7 +65,7 @@ jpeg("output/partial_correlation_network.jpg", width = 2000, height = 2000, res 
 # Visualize partial correlation network
 qgraph(pcor_results$estimate,
   layout = "spring",
-  labels = colnames(census),
+  labels = network_labels[colnames(census)],
   minimum = 0.05, # Only show correlations above a threshold
   title = "Partial Correlation Network"
 )
@@ -75,8 +94,8 @@ for (i in 2:nrow(cor_mat)) {
     result_table <- rbind(
       result_table,
       data.frame(
-        Variable1 = vars[i],
-        Variable2 = vars[j],
+        Variable1 = table_labels[vars[i]],
+        Variable2 = table_labels[vars[j]],
         PartialCorrelation = cor_mat[i, j],
         PValue = pval_mat[i, j],
         stringsAsFactors = FALSE
@@ -85,8 +104,15 @@ for (i in 2:nrow(cor_mat)) {
   }
 }
 
-# Sort by absolute value of correlation
-result_table <- result_table[order(-abs(result_table$PartialCorrelation)), ]
+# Sort by absolute value of correlation, rename for better readibility
+result_table <- result_table[order(-abs(result_table$PartialCorrelation)), ] |>
+  dplyr::rename(
+    "Variable 1 (Class)" = "Variable1",
+    "Variable 2 (Class)" = "Variable2",
+    "Corr." = "PartialCorrelation",
+    "P value" = "PValue"
+  )
+  
 
 # Print for review
 print(result_table)
@@ -110,3 +136,4 @@ dev.off()
 
 # Optional: Save to CSV
 write.csv(result_table, "output/partial_correlation_results.csv", row.names = FALSE)
+}
