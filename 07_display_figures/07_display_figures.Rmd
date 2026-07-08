@@ -279,31 +279,47 @@ heatmap_palette <- colorRampPalette(c(
   "#F28400", "#ED6200", "#E13C00", "#C32200", "#A20706", "#7D0025"
 ))(100)
 
-pheatmap(as.matrix(census1), scale = "none", color = heatmap_palette, fontsize_col = 8)
+# heatmap()'s default cexCol (a relative multiplier, unlike pheatmap's
+# absolute-point-size fontsize_col) was 0.2 + 1/log10(nc); converting to an
+# approximate equivalent point size via R's default par("ps") = 12
+cexcol_to_fontsize <- function(nc) (0.2 + 1 / log10(nc)) * 12
+
+pheatmap(as.matrix(census1),
+  scale = "none", color = heatmap_palette,
+  fontsize_col = cexcol_to_fontsize(ncol(census1))
+)
 heatmap1 <- recordPlot()
 
 census2 <- census[, prob_cols]
 if (config$custom_palette) {
   colnames(census2) <- config$legend_labels
 }
-pheatmap(as.matrix(census2), scale = "none", color = heatmap_palette, fontsize_col = 8)
+pheatmap(as.matrix(census2),
+  scale = "none", color = heatmap_palette,
+  fontsize_col = cexcol_to_fontsize(ncol(census2))
+)
 heatmap2 <- recordPlot()
 ```
 
 ```{r save heatamps}
 getwd()
 output_path <- file.path("output", config$out_tag, "heatmap")
-dir.create(output_path, recursive = TRUE)
+if (dir.exists(output_path)) {
+  old_files <- list.files(output_path, full.names = TRUE)
+  file.remove(old_files)
+} else {
+  dir.create(output_path, recursive = TRUE)
+}
 output_path <- normalizePath(output_path)
 
 file_path <- file.path(output_path, "heatmap1.jpg")
 jpeg(file = file_path, width = 1200, height = 1200, res = 300)
-pheatmap(as.matrix(census1), scale = "none", color = heatmap_palette, fontsize_col = 5)
+pheatmap(as.matrix(census1), scale = "none", color = heatmap_palette, fontsize_col = 6)
 dev.off()
 
 file_path <- file.path(output_path, "heatmap2.jpg")
 jpeg(file = file_path, width = 1200, height = 1200, res = 300)
-pheatmap(as.matrix(census2), scale = "none", color = heatmap_palette, fontsize_col = 5)
+pheatmap(as.matrix(census2), scale = "none", color = heatmap_palette, fontsize_col = 6)
 dev.off()
 ```
 
