@@ -7,6 +7,8 @@
 *.rdb
 *.rdx
 *.png
+*.jpg
+*.jpeg
 *.pdf
 *.Rproj
 *.xlsx

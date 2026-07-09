@@ -305,7 +305,7 @@ main_all2_desc <- main_all2 %>%
   )
 
 main_all2_desc2_all <- format(round(psych::describe(main_all2_desc$age_wk), 2), nsmall = 2) %>%
-  mutate_each(funs(as.numeric(.))) %>%
+  mutate(across(everything(), as.numeric)) %>%
   mutate(group1 = "all") %>%
   select(-c("vars"))
 main_all2_desc_sex <- as.data.frame(describeBy(main_all2_desc$age_wk, main_all2_desc$sex, mat = TRUE, digits = 2)) %>%
@@ -513,10 +513,10 @@ slam_main_all <- main_all2
 ```{r slam_follow_up, warning=FALSE, message=FALSE, echo=FALSE, include=TRUE}
 n_asmt <- main_all2 %>%
   group_by(idno, sex) %>%
-  summarise_all(funs(
-    n = sum(!is.na(.)),
-    sd = format(round(sd(!is.na(.)), 2), nsmall = 2)
-  ))
+  summarise(across(everything(), list(
+    n = ~ sum(!is.na(.)),
+    sd = ~ format(round(sd(!is.na(.)), 2), nsmall = 2)
+  )))
 
 gluc_asmt <- format(round(as.data.frame(psych::describe(n_asmt$gluc_n)), 2), nsmall = 2) %>%
   mutate(group1 = "all") %>%

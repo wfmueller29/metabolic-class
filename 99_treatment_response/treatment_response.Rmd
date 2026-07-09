@@ -553,4 +553,3 @@ dev.off()
 ```{r save predicted csv}
 write.csv(predicted, file = "output/treatment_class.csv")
 ```
-

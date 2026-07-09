@@ -1116,6 +1116,170 @@ dose_plot_panel <- cowplot::plot_grid(title_theme, dose_plot_panel,
 dose_plot_panel_hr <- lapply(dose_plots_hrs, function(table) {
   table$hr_table[, "final", drop = FALSE]
 })
+
+
+# ---------------------------------------------------------------------------
+# ggforest-STYLE forest plots (manual ggplot). These reuse the EXACT numbers
+# already computed in dose_plots_hrs / km_hr_combine_validation_hrs -- the
+# same HR/CI/stars that build the manuscript HR tables -- parsed straight out
+# of the `final` strings. Nothing is recomputed. Faceted with ONE shared
+# log10 x-axis so panels are directly comparable, styled to mimic
+# survminer::ggforest (translucent row stripes, dotted reference line, fonts).
+# Squares are colored by quintile/tertile to match the KM plots above.
+
+# palettes reused from the KM plots directly above these figures
+forest_quintile_palette <- setNames(
+  c("#000000", "#60FDFF", "#EB2100", "#FFA024", "#00B400"), 1:5
+)
+forest_tertile_palette <- setNames(
+  c("#00B400", "#FFA024", "#EB2100"), 1:3
+)
+
+# reduce a cut2 interval label "[0.002665,0.008639)" -> "[0.00267, 0.00864)"
+round_boundary <- function(x, digits = 3) {
+  start <- regexpr("\\[", x)
+  if (start == -1) {
+    return(x)
+  }
+  bracket <- substring(x, start)
+  close <- substr(bracket, nchar(bracket), nchar(bracket))
+  inner <- substr(bracket, 2, nchar(bracket) - 1)
+  parts <- as.numeric(strsplit(inner, ",")[[1]])
+  paste0("[", signif(parts[1], digits), ", ", signif(parts[2], digits), close)
+}
+
+# parse "HR = 1.2513 (1.0542, 1.4853)*" -> value/lower/upper + stars
+forest_parse_final <- function(final) {
+  m <- regmatches(final, regexec(
+    "HR = ([0-9.eE+-]+) \\(([0-9.eE+-]+), ([0-9.eE+-]+)\\)(\\**)", final
+  ))[[1]]
+  data.frame(
+    value = as.numeric(m[2]), lower = as.numeric(m[3]),
+    upper = as.numeric(m[4]), stars = m[5], stringsAsFactors = FALSE
+  )
+}
+
+# significance stars -> p-value column text
+forest_pval_text <- function(stars) {
+  dplyr::case_when(
+    stars == "***" ~ "<0.001 ***",
+    stars == "**" ~ "<0.01 **",
+    stars == "*" ~ "<0.05 *",
+    TRUE ~ "n.s."
+  )
+}
+
+# one panel_hr list element (1-col df of `final` strings, tile-boundary
+# rownames) -> tidy rows, prepending a reference (group 1) row at HR = 1
+forest_tidy_panel <- function(df, facet_name, group_prefix) {
+  finals <- df[[1]]
+  parsed <- do.call(rbind, lapply(finals, forest_parse_final))
+  n <- length(finals)
+  group <- seq_len(n) + 1
+  ref_row <- data.frame(
+    facet = facet_name, group = 1,
+    row_label = paste0(group_prefix, " 1 (reference)"),
+    value = 1, lower = NA, upper = NA,
+    hr_val = "reference", hr_ci = "", pval_text = "",
+    stringsAsFactors = FALSE
+  )
+  main_rows <- data.frame(
+    facet = facet_name, group = group,
+    row_label = paste0(
+      group_prefix, " ", group, " ",
+      vapply(rownames(df), round_boundary, character(1))
+    ),
+    value = parsed$value, lower = parsed$lower, upper = parsed$upper,
+    hr_val = sprintf("%.2f", parsed$value),
+    hr_ci = sprintf("(%.2f - %.2f)", parsed$lower, parsed$upper),
+    pval_text = forest_pval_text(parsed$stars),
+    stringsAsFactors = FALSE
+  )
+  rbind(ref_row, main_rows)
+}
+
+# ggforest's annotation font size: fontsize(0.7) * (11pt -> mm)
+forest_font_mm <- 0.7 * 11 / 72.27 * 25.4
+
+forest_plot_style <- function(data, palette, legend_title, title = NULL) {
+  groups_asc <- sort(unique(data$group))
+  data <- data %>%
+    mutate(
+      facet = factor(facet, levels = unique(facet)),
+      group_y = factor(group, levels = rev(groups_asc)),
+      group_c = factor(group, levels = groups_asc)
+    ) %>%
+    arrange(facet, group) %>%
+    mutate(stripe_fill = ifelse(row_number() %% 2 == 0, "#00000033", "#FFFFFF33"))
+
+  lg_lo <- log10(min(data$lower, na.rm = TRUE))
+  lg_hi <- log10(max(data$upper, na.rm = TRUE))
+  d <- lg_hi - lg_lo
+
+  x_label <- 10^(lg_lo - 1.0 * d)
+  x_hr <- 10^(lg_lo - 0.35 * d)
+  x_stars <- 10^(lg_hi + 0.13 * d)
+  x_min <- 10^(lg_lo - 1.05 * d)
+  x_max <- 10^(lg_hi + 0.30 * d)
+
+  max_break <- round(10^lg_hi)
+  x_breaks <- seq(1, max_break, by = 1)
+
+  ggplot(data, aes(y = group_y)) +
+    geom_tile(aes(x = 1, y = group_y, fill = stripe_fill), width = Inf, height = 1) +
+    scale_fill_identity() +
+    geom_vline(xintercept = 1, linetype = 3, color = "black") +
+    geom_errorbarh(
+      data = ~ dplyr::filter(.x, !is.na(lower)),
+      aes(xmin = lower, xmax = upper, color = group_c), height = 0.15
+    ) +
+    geom_point(aes(x = value, color = group_c), shape = 15, size = 4) +
+    geom_text(aes(x = x_label, label = row_label), hjust = 0, size = forest_font_mm) +
+    geom_text(aes(x = x_hr, label = hr_val), hjust = 0.5, vjust = -0.1, size = forest_font_mm) +
+    geom_text(aes(x = x_hr, label = hr_ci), hjust = 0.5, vjust = 1.2, size = forest_font_mm, fontface = "italic") +
+    geom_text(aes(x = x_stars, label = pval_text), hjust = 0, size = forest_font_mm, fontface = "italic") +
+    scale_color_manual(
+      values = palette, name = legend_title,
+      breaks = as.character(groups_asc), limits = as.character(groups_asc)
+    ) +
+    scale_x_log10(
+      breaks = x_breaks, labels = function(b) sprintf("%g", b),
+      limits = c(x_min, x_max), expand = expansion(mult = c(0.01, 0.01))
+    ) +
+    facet_grid(rows = vars(facet), scales = "free_y", space = "free_y", switch = "y") +
+    labs(x = "Hazard Ratio", y = NULL, title = title) +
+    theme_light() +
+    theme(
+      panel.grid.minor = element_blank(),
+      panel.grid.major.y = element_blank(),
+      panel.border = element_rect(color = "grey50", fill = NA, linewidth = 0.5),
+      panel.spacing = unit(4, "pt"),
+      strip.placement = "outside",
+      strip.background = element_blank(),
+      strip.text.y.left = element_text(angle = 0, face = "bold", hjust = 0.5, color = "black"),
+      axis.text.y = element_blank(),
+      axis.ticks.y = element_blank(),
+      plot.title = element_text(hjust = 0.5)
+    )
+}
+
+# dose-response forest: prob classes 1, 4, 7 (matching the manuscript table).
+# guard indices against subsetted configs (mb6, fb6, ...) with fewer classes.
+dose_forest_index <- c(1, 4, 7)
+dose_forest_index <- dose_forest_index[dose_forest_index <= length(dose_plot_panel_hr)]
+dose_forest_rows <- lapply(dose_forest_index, function(i) {
+  forest_tidy_panel(dose_plot_panel_hr[[i]], paste("Class", i), "Quintile")
+})
+dose_plot_panel_forest <- if (length(dose_forest_rows) > 0) {
+  forest_plot_style(
+    do.call(rbind, dose_forest_rows),
+    palette = forest_quintile_palette,
+    legend_title = "Quintile",
+    title = "Dose Response - Probability of Class Membership"
+  )
+} else {
+  NULL
+}
 ```
 
 ```{r save dose plots}
@@ -1461,6 +1625,26 @@ km_hr_combine_validation_panels_hr <- lapply(
     table
   }
 )
+
+# tertile forest: windows 4,6,8,10 (58.5/84.5/110.5/136.5), matching KM
+# panels C-F in the manuscript figure (window 2 = [6.5, 32.5] omitted). Uses
+# the same forest_* helpers and already-computed numbers as the dose forest.
+km_forest_index <- c(4, 6, 8, 10)
+km_forest_index <- km_forest_index[km_forest_index <= length(km_hr_combine_validation_panels_hr)]
+km_forest_rows <- lapply(km_forest_index, function(i) {
+  panel_i <- km_hr_combine_validation_panels_hr[[i]]
+  forest_tidy_panel(panel_i, colnames(panel_i)[1], "Tertile")
+})
+km_hr_combine_panel_forest <- if (length(km_forest_rows) > 0) {
+  forest_plot_style(
+    do.call(rbind, km_forest_rows),
+    palette = forest_tertile_palette,
+    legend_title = "Tertile",
+    title = "Held Out Cohort Validation - Tertiled HR by Window"
+  )
+} else {
+  NULL
+}
 ```
 
 ```{r save km combined cox vaidation plots}
@@ -1966,6 +2150,23 @@ for (table in dose_plot_panel_hr) {
 }
 ```
 
+```{r dose response hr forest, fig.height=11, fig.width=12}
+save_figtabs$dose_plot_panel_forest <- dose_plot_panel_forest
+dose_plot_panel_forest
+
+# save standalone png. width matches the combined-cox forest; height scales
+# with row count (3 classes x 5 quintiles = 15 rows; combined-cox = 10 rows
+# at 7in, i.e. 0.7in/row) so row height is consistent across all forests.
+if (!is.null(dose_plot_panel_forest)) {
+  forest_out <- file.path("output", config$out_tag, "dose_response_forest")
+  dir.create(forest_out, recursive = TRUE, showWarnings = FALSE)
+  ggsave(
+    file.path(forest_out, "forest.png"), dose_plot_panel_forest,
+    width = 10, height = 10.5
+  )
+}
+```
+
 ### Table `r as.character(tab_no)`: Hazard Ratios - Complete Data
 
 ```{r get indiviual cox model formulas, results = 'asis'}
@@ -2072,6 +2273,22 @@ fig_no <- fig_no + 1
 save_figtabs$km_hr_combine_validation_panels_hr <- km_hr_combine_validation_panels_hr
 for (table in km_hr_combine_validation_panels_hr) {
   print(kable(table))
+}
+```
+
+```{r km tertiled hr validation forest, fig.height=13, fig.width=12}
+save_figtabs$km_hr_combine_panel_forest <- km_hr_combine_panel_forest
+km_hr_combine_panel_forest
+
+# save standalone png. width matches the combined-cox forest; height scales
+# with row count (4 windows x 3 tertiles = 12 rows at 0.7in/row = 8.4in).
+if (!is.null(km_hr_combine_panel_forest)) {
+  forest_out <- file.path("output", config$out_tag, "km_validation_forest")
+  dir.create(forest_out, recursive = TRUE, showWarnings = FALSE)
+  ggsave(
+    file.path(forest_out, "forest.png"), km_hr_combine_panel_forest,
+    width = 10, height = 8.4
+  )
 }
 ```
 
@@ -2212,10 +2429,9 @@ for (i in seq_along(p)) {
   output_path <- normalizePath(output_path)
   file_name <- file.path(output_path, name)
 
-  ggsave(filename = name, plot = plot, device = "png", path = output_path)
-  png(file = file_name)
-  plot
-  dev.off()
+  # width + per-row height (10 rows -> 7in, 0.7in/row) matched to the two
+  # dose/tertile forests so all three are visually congruent
+  ggsave(filename = name, plot = plot, device = "png", path = output_path, width = 10, height = 7)
 }
 rm(test_combined_cox)
 rm(rest_combined_cox)

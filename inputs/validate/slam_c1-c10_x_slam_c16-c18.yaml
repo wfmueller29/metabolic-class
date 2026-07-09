@@ -7,7 +7,7 @@ center: TRUE
 scale: FALSE
 complete_ng: NULL
 train_ng: "complete_ng"
-external_validate: "/Users/williammueller/programs/metabolic_class/analysis/06_create_figures/output/slam_c1-c10_age_all_bwfatgluc.yaml"
+external_validate: "/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/06_create_figures/output/slam_c1-c10_age_all_bwfatgluc.yaml"
 predict: FALSE
 custom_palette: TRUE
 palette_colors: ["black", "#DF536B", "#61D04F", "midnightblue",
@@ -20,7 +20,7 @@ palette_colors_train: [ "black", "#DF536B", "#61D04F", "midnightblue",
 legend_labels_train: [ "Overweight", "Low-weight", "Mid-Weight", "High-fat",
   "Low-fat", "Mid-fat", "Decline Glucose", "Stable Glucose" ]
 survival_dataset:
-  path: "/Users/williammueller/programs/metabolic_class/analysis/00c_survival_data/output/slam_c16-c18/data/main_cat_surv.csv"
+  path: "/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/00c_survival_data/output/slam_c16-c18/data/main_cat_surv.csv"
   id: "idno"
   age_death: "le_wk"
   event: "dead_censor"
@@ -70,7 +70,7 @@ meta_dataset:
     split: .8
 datasets:
 - name: "slam"
-  path: "/Users/williammueller/programs/metabolic_class/analysis/00b_dataset_mods/output/slam_c16-c18/data/slam_c16-c18_bw_og.csv"
+  path: "/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/00b_dataset_mods/output/slam_c16-c18/data/slam_c16-c18_bw_og.csv"
   outcome: "bw"
   model:
     fixed: "~ age_wk + age_wk2 + sex_F * strain_HET3"
@@ -95,7 +95,7 @@ datasets:
     variable: "cohort"
 
 - name: "slam"
-  path: "/Users/williammueller/programs/metabolic_class/analysis/00b_dataset_mods/output/slam_c16-c18/data/slam_c16-c18_fat_og.csv"
+  path: "/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/00b_dataset_mods/output/slam_c16-c18/data/slam_c16-c18_fat_og.csv"
   outcome: "fat"
   model:
     fixed: "~ age_wk + age_wk2"
@@ -119,7 +119,7 @@ datasets:
     variable: "cohort"
 
 - name: "slam"
-  path: "/Users/williammueller/programs/metabolic_class/analysis/00b_dataset_mods/output/slam_c16-c18/data/slam_c16-c18_gluc_og.csv"
+  path: "/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/00b_dataset_mods/output/slam_c16-c18/data/slam_c16-c18_gluc_og.csv"
   outcome: "gluc"
   model:
     fixed: "~ age_wk + age_wk2 + sex_F * strain_HET3" 

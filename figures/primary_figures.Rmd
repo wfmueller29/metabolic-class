@@ -197,7 +197,7 @@ final_panel
 fig_no <- fig_no + 1
 ```
 
-\newpage 
+\newpage
 
 ### Figure `r as.character(fig_no)`: Sex/Strain Classes BW
 
@@ -265,9 +265,9 @@ fig_no <- fig_no + 1
 
 ```{r dose response, out.width = "100%"}
 fig <- list()
-fig$A <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/dose_response/plot_1.png")
-fig$B <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/dose_response/plot_4.png")
-fig$C <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/dose_response/plot_7.png")
+fig$A <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/dose_response/plot_1.png")
+fig$B <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/dose_response/plot_4.png")
+fig$C <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/dose_response/plot_7.png")
 fig$D <- image_read("images/Basic LCM.png")
 fig$E <- image_read("images/Graded Mortality.png")
 
@@ -277,38 +277,27 @@ for (label in names(fig)) {
   fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
 }
 
-# create table
+# HR table removed -- hazard ratios are now shown in the forest-plot figure
+# below (Graded Mortality Response - Forest Plot)
 
-hr_table <- all_env$save_figtabs$dose_plot_panel_hr
-hr_table <- lapply(hr_table, function(table) {
-  table <- cbind(Quintile = seq_len(nrow(table)) + 1, table)
-  table <- cbind(explicit = rownames(table), table)
-  rownames(table) <- NULL
-  table
-})
-hr_table <- cbind(explicit = rownames(hr_table), hr_table)
-hr_table <- hr_table[c(1, 4, 7)]
-hr_table <- do.call(rbind, hr_table)
-hr_table <- flextable(hr_table) %>%
-  theme_vanilla() %>%
-  autofit() %>%
-  set_table_properties(layout = "autofit") %>%
-  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-
-invisible(save_as_image(hr_table, "output/km_validation_panel_hr.png", zoom = 10))
-fig$D <- image_read("output/km_validation_panel_hr.png")
-fig$D <- image_scale(fig$D, "200%")
-fig$D <- image_border(fig$D, color = "white", geometry = "100x100")
-fig$D <- annotate_figure_label(fig$D, "D")
-
-# Stack the rows vertically
+# Stack the KM dose-response curves
 col1 <- image_append(c(fig$A, fig$B, fig$C), stack = TRUE)
 
-final_panel <- image_append(c(col1, fig$D), stack = FALSE)
+final_panel <- col1
 
 # View or save
 final_panel
 # image_write(final_panel, "output/fig2/panel.png")
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Graded Mortality Response - Forest Plot
+
+```{r dose response forest, out.width = "100%", fig.height=11, fig.width=12}
+all_env$save_figtabs$dose_plot_panel_forest
+
 fig_no <- fig_no + 1
 ```
 
@@ -317,12 +306,12 @@ fig_no <- fig_no + 1
 ```{r external validation, out.width = "100%"}
 fig <- list()
 fig$A <- image_read("images/External Validation.png")
-fig$B <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/forest/plot_5.png")
-# fig$C <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 32.5]_2.png")
-fig$C <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 58.5]_4.png")
-fig$D <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 84.5]_6.png")
-fig$E <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 110.5]_8.png")
-fig$F <- image_read("/Users/williammueller/programs/metabolic_class/analysis/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 136.5]_10.png")
+fig$B <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/forest/plot_5.png")
+# fig$C <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 32.5]_2.png")
+fig$C <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 58.5]_4.png")
+fig$D <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 84.5]_6.png")
+fig$E <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 110.5]_8.png")
+fig$F <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 136.5]_10.png")
 
 fig$A <- image_scale(fig$A, "75%")
 fig$B <- image_scale(fig$B, "125%")
@@ -332,32 +321,8 @@ for (label in names(fig)) {
   fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
 }
 
-# create table
-
-hr_table <- held_out_env$save_figtabs$km_hr_combine_validation_panels_hr
-hr_table <- lapply(hr_table, function(table) {
-  table <- cbind(Tertile = seq_len(nrow(table)) + 1, table)
-  table <- cbind(explicit = rownames(table), table)
-  table$column <- rep(colnames(table)[3], nrow(table))
-  colnames(table)[3] <- "HR"
-  rownames(table) <- NULL
-  table
-})
-hr_table <- cbind(explicit = rownames(hr_table), hr_table)
-hr_table <- hr_table[c(2, 4, 6, 8, 10)]
-hr_table <- do.call(rbind, hr_table)
-hr_table <- flextable(hr_table) %>%
-  theme_vanilla() %>%
-  autofit() %>%
-  set_table_properties(layout = "autofit") %>%
-  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-
-invisible(save_as_image(hr_table, "output/km_validation_panel_hr.png", zoom = 10))
-fig$H <- image_read("output/km_validation_panel_hr.png")
-fig$H <- image_scale(fig$H, "200%")
-fig$H <- image_border(fig$H, color = "white", geometry = "100x100")
-fig$H <- annotate_figure_label(fig$H, "H")
-
+# HR table removed -- hazard ratios are now shown in the forest-plot figure
+# below (Held Out Cohort Validation - Forest Plot)
 
 # Stack the rows vertically
 col1 <- image_append(c(fig$A, fig$B), stack = TRUE)
@@ -365,11 +330,20 @@ col2 <- image_append(c(fig$C, fig$E), stack = TRUE)
 col3 <- image_append(c(fig$D, fig$F), stack = TRUE)
 
 final_panel <- image_append(c(col1, col2, col3), stack = FALSE)
-final_panel <- image_append(c(final_panel, fig$H), stack = TRUE)
 
 # View or save
 final_panel
 # image_write(final_panel, "output/fig2/panel.png")
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Held Out Cohort Validation - Forest Plot
+
+```{r external validation forest, out.width = "100%", fig.height=13, fig.width=12}
+held_out_env$save_figtabs$km_hr_combine_panel_forest
+
 fig_no <- fig_no + 1
 ```
 
