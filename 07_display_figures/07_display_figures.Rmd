@@ -1274,8 +1274,7 @@ dose_plot_panel_forest <- if (length(dose_forest_rows) > 0) {
   forest_plot_style(
     do.call(rbind, dose_forest_rows),
     palette = forest_quintile_palette,
-    legend_title = "Quintile",
-    title = "Dose Response - Probability of Class Membership"
+    legend_title = "Quintile"
   )
 } else {
   NULL
@@ -1639,8 +1638,7 @@ km_hr_combine_panel_forest <- if (length(km_forest_rows) > 0) {
   forest_plot_style(
     do.call(rbind, km_forest_rows),
     palette = forest_tertile_palette,
-    legend_title = "Tertile",
-    title = "Held Out Cohort Validation - Tertiled HR by Window"
+    legend_title = "Tertile"
   )
 } else {
   NULL

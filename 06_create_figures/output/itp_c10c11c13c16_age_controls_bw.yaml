@@ -1,0 +1,15 @@
+data_time: 2026-07-09 05:30:22
+working_directory: /Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/06_create_figures
+config_path: /Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/inputs/train/itp_c10c11c13c16_age_controls_bw.yaml
+input_path: /Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/05_prediction_data/output/itp_c10c11c13c16_age_controls_bw.yaml
+output_dir_path: /Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/06_create_figures/output/itp_c10c11c13c16_age_controls_bw
+datasets_path: /Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/05_prediction_data/output/itp_c10c11c13c16_age_controls_bw/datasets.RDATA
+validation_config_path: ~
+models_path: /Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/02_model/output/itp_c10c11c13c16_age_controls_bw/models.RDATA
+cf_path: /Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/02_model/output/itp_c10c11c13c16_age_controls_bw/cf.RDATA
+final_models_path: /Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/06_create_figures/output/itp_c10c11c13c16_age_controls_bw/final_models.RDATA
+csv_path: /Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/03_model_select/output/itp_c10c11c13c16_age_controls_bw/final_models.csv
+main_cat_surv_path: /Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/04_create_census/output/itp_c10c11c13c16_age_controls_bw/main_cat_surv.RDATA
+complete_cenus_path: ~
+train_cenus_path: ~
+test_cenus_path: ~
