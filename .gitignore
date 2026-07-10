@@ -20,4 +20,6 @@
 *.out
 *.DS*
 *.RDATA
+*.csvr
 .A/
+JDP.R

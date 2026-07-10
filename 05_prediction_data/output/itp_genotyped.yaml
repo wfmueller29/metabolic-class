@@ -1,0 +1,15 @@
+data_time: 2026-07-10 16:12:00
+working_directory: /Users/jdp2019/Desktop/Repos/metabolic-class/05_prediction_data
+config_path: /Users/jdp2019/Desktop/Repos/metabolic-class/inputs/train/itp_genotyped.yaml
+input_path: /Users/jdp2019/Desktop/Repos/metabolic-class/04_create_census/output/itp_genotyped.yaml
+output_dir_path: /Users/jdp2019/Desktop/Repos/metabolic-class/05_prediction_data/output/itp_genotyped
+datasets_path: /Users/jdp2019/Desktop/Repos/metabolic-class/05_prediction_data/output/itp_genotyped/datasets.RDATA
+validation_config_path: ~
+models_path: /Users/jdp2019/Desktop/Repos/metabolic-class/02_model/output/itp_genotyped/models.RDATA
+cf_path: /Users/jdp2019/Desktop/Repos/metabolic-class/02_model/output/itp_genotyped/cf.RDATA
+final_models_path: /Users/jdp2019/Desktop/Repos/metabolic-class/04_create_census/output/itp_genotyped/final_models.RDATA
+csv_path: /Users/jdp2019/Desktop/Repos/metabolic-class/03_model_select/output/itp_genotyped/final_models.csv
+main_cat_surv_path: /Users/jdp2019/Desktop/Repos/metabolic-class/04_create_census/output/itp_genotyped/main_cat_surv.RDATA
+complete_cenus_path: /Users/jdp2019/Desktop/Repos/metabolic-class/04_create_census/output/itp_genotyped/complete_census.csv
+train_cenus_path: /Users/jdp2019/Desktop/Repos/metabolic-class/04_create_census/output/itp_genotyped/train_census.csv
+test_cenus_path: /Users/jdp2019/Desktop/Repos/metabolic-class/04_create_census/output/itp_genotyped/test_census.csv
