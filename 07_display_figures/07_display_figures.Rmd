@@ -312,14 +312,25 @@ if (dir.exists(output_path)) {
 }
 output_path <- normalizePath(output_path)
 
-file_path <- file.path(output_path, "heatmap1.jpg")
-jpeg(file = file_path, width = 1200, height = 1200, res = 300)
-pheatmap(as.matrix(census1), scale = "none", color = heatmap_palette, fontsize_col = 6)
+# pheatmap opens its OWN device when it draws, so wrapping a plain
+# pheatmap() in jpeg()/dev.off() closes the wrong device and silently drops
+# the first file (this is why heatmap1.jpg went missing). Instead build the
+# grob with silent = TRUE (draws nothing, opens no device) and draw it into
+# a jpeg device we control.
+hm1 <- pheatmap(as.matrix(census1),
+  scale = "none", color = heatmap_palette, fontsize_col = 6, silent = TRUE
+)
+jpeg(file = file.path(output_path, "heatmap1.jpg"), width = 1200, height = 1200, res = 300)
+grid::grid.newpage()
+grid::grid.draw(hm1$gtable)
 dev.off()
 
-file_path <- file.path(output_path, "heatmap2.jpg")
-jpeg(file = file_path, width = 1200, height = 1200, res = 300)
-pheatmap(as.matrix(census2), scale = "none", color = heatmap_palette, fontsize_col = 6)
+hm2 <- pheatmap(as.matrix(census2),
+  scale = "none", color = heatmap_palette, fontsize_col = 6, silent = TRUE
+)
+jpeg(file = file.path(output_path, "heatmap2.jpg"), width = 1200, height = 1200, res = 300)
+grid::grid.newpage()
+grid::grid.draw(hm2$gtable)
 dev.off()
 ```
 
