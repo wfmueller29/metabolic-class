@@ -342,7 +342,7 @@ amber_anchors <- c("#F7BA3C", "#F28400", "#E13C00", "#7D0025")
 pal <- grDevices::colorRampPalette(amber_anchors)(length(lvls))
 
 make_km <- function(pal) {
-  survminer::ggsurvplot(
+  p <- survminer::ggsurvplot(
     km_fit,
     data = census_hr,
     conf.int = FALSE,
@@ -365,6 +365,13 @@ make_km <- function(pal) {
     cumcensor = FALSE,
     palette = pal
   )
+  # Match Figure 1b's KM styling exactly (07_display_figures.Rmd): the base
+  # ggtheme above only sets title/margin, so ggsurvplot renders on ggplot's
+  # gray default unless we explicitly override it here with theme_bw().
+  p$plot <- p$plot +
+    ggplot2::theme_bw() +
+    ggplot2::coord_cartesian(xlim = c(0, NA), ylim = c(0, NA))
+  p
 }
 
 png("km_high_risk_burden.png", width = 8, height = 6, units = "in",
