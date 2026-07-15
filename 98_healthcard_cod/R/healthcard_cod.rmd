@@ -1118,12 +1118,13 @@ output:
       legend = TRUE
     )
   # Export all plots as high-quality pngs
-    # Create output folder if needed
-    dir.create("Healthcard_PNGs", showWarnings = FALSE)
+    # Output folder (repo-relative; run with the working directory at the repo root)
+    output_dir <- "98_healthcard_cod/Outputs"
+    dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
     # Define export function
     export_plot <- function(plot_obj, filename, width = 8.5, height = 11, dpi = 1200) {
       ggsave(
-        filename = file.path("Healthcard_PNGs", filename),
+        filename = file.path(output_dir, filename),
         plot = plot_obj,
         width = width,
         height = height,
@@ -1138,7 +1139,7 @@ output:
     export_plot(S8C, "S8C.png")
     export_plot(S8D, "S8D.png")
     # Export S8E (pheatmap object)
-    png("Healthcard_PNGs/S8E.png", width = 8.5, height = 11, units = "in", res = 1200, bg = "white")
+    png(file.path(output_dir, "S8E.png"), width = 8.5, height = 11, units = "in", res = 1200, bg = "white")
     grid::grid.newpage()
     grid::grid.draw(S8E$gtable)
     dev.off()
