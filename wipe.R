@@ -1,7 +1,7 @@
 # Deletes all pipeline output for one or more out_tags across stages 01-07,
 # so you can regenerate everything cleanly from fresh upstream data.
 #
-# Does NOT touch raw-data-level output (00a_itp2/output, 00b_dataset_mods/
+# Does NOT touch raw-data-level output (00a_itp/output, 00b_dataset_mods/
 # output, 00c_survival_data/output, etc.) -- those aren't out_tag-scoped the
 # same way (multiple out_tags can share the same raw-cleaning output), and a
 # chained out_tag from a separate step (e.g. predict.R's own out_tag) isn't
@@ -62,7 +62,7 @@ if (confirm) {
 }
 
 cat(
-  "\nNote: this does NOT touch raw-data-level output (00a_itp2/output,",
+  "\nNote: this does NOT touch raw-data-level output (00a_itp/output,",
   "00b_dataset_mods/output, 00c_survival_data/output, etc.) -- wipe those",
   "separately and on purpose if your raw data changed.\n"
 )

@@ -15,7 +15,7 @@ custom_palette_train: TRUE
 palette_colors_train: ["navyblue", "maroon", "darkgreen"]
 legend_labels_train: ["Class 1", "Class 2", "Class 3"]
 survival_dataset:
-  path: "/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/00a_itp2/output/itp_tx_control_surv.csv"
+  path: "/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/00a_itp/output/itp_tx_control_surv.csv"
   id: "idno"
   age_death: "le_wk"
   event: "dead_censor"
@@ -63,7 +63,7 @@ meta_dataset:
     split: .8
 datasets:
 - name: "slam"
-  path: "/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/00a_itp2/output/itp_control_train.csv"
+  path: "/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/00a_itp/output/itp_control_train.csv"
   outcome: "bw"
   model:
     fixed: "~ age_wk + age_wk2 + sex_F"

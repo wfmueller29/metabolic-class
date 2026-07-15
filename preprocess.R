@@ -37,7 +37,7 @@ exit_code <- system2("Rscript",
 if (exit_code != 0) stop("Error was thrown from system2 command")
 
 # For itp  --------------------------------------------------------------------
-setwd("../00a_itp2/")
+setwd("../00a_itp/")
 
-exit_code <- system2("Rscript", args = c("itp2_clean.R"))
+exit_code <- system2("Rscript", args = c("itp_clean.R"))
 if (exit_code != 0) stop("Error was thrown from system2 command")
