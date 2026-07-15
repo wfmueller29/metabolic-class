@@ -1174,7 +1174,7 @@ forest_parse_final <- function(final) {
 forest_pval_text <- function(stars) {
   dplyr::case_when(
     stars == "***" ~ "<0.001 ***",
-    stars == "**" ~ "<0.01 **",
+    stars == "**" ~ "<0.005 **",
     stars == "*" ~ "<0.05 *",
     TRUE ~ "n.s."
   )
