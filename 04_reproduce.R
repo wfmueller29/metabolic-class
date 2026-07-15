@@ -1,8 +1,10 @@
-# Reproduce entire analysis
-
-# Preprocess  -----------------------------------------------------------------
-ecode <- system2("Rscript", args = c("preprocess.R"))
-if (ecode != 0) stop("Error was thrown from system2 command")
+# Reproduce the analysis from the CLEANED data onward (modeling -> figures).
+#
+# Assumes you have already run, IN ORDER:
+#   01_installer.R   - install package dependencies
+#   02_hydrate.R     - provision raw data from the master  (hydrate("raw"))
+#   03_preprocess.R  - run all cleaning stages (00a / 00b / 00c)
+# Cleaning is therefore NOT repeated here.
 
 # Train  ----------------------------------------------------------------------
 yaml_files <- c(

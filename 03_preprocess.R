@@ -1,3 +1,7 @@
+# Runs all cleaning stages. Anchored to the repo root so re-running after a
+# mid-way failure doesn't strand the working directory in a subfolder.
+setwd("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class")
+
 # For c1-c10 ------------------------------------------------------------------
 
 setwd("00a_clean_slam_c1-c10/")
@@ -14,7 +18,7 @@ if (exit_code != 0) stop("Error was thrown from system2 command")
 setwd("../00c_survival_data/")
 
 exit_code <- system2("Rscript",
-  args = c("create_survival_data.R ", "input/slam_c1-c10.yaml")
+  args = c("create_survival_data.R", "input/slam_c1-c10.yaml")
 )
 if (exit_code != 0) stop("Error was thrown from system2 command")
 
@@ -32,7 +36,7 @@ if (exit_code != 0) stop("Error was thrown from system2 command")
 setwd("../00c_survival_data/")
 
 exit_code <- system2("Rscript",
-  args = c("create_survival_data.R ", "input/slam_c16-c18.yaml")
+  args = c("create_survival_data.R", "input/slam_c16-c18.yaml")
 )
 if (exit_code != 0) stop("Error was thrown from system2 command")
 
@@ -40,4 +44,10 @@ if (exit_code != 0) stop("Error was thrown from system2 command")
 setwd("../00a_itp/")
 
 exit_code <- system2("Rscript", args = c("itp_clean.R"))
+if (exit_code != 0) stop("Error was thrown from system2 command")
+
+# For itp genotype ------------------------------------------------------------
+setwd("../00a_clean_itp_geno/")
+
+exit_code <- system2("Rscript", args = c("00a_clea_itp_geno.R"))
 if (exit_code != 0) stop("Error was thrown from system2 command")

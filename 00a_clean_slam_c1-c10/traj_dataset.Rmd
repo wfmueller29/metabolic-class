@@ -1420,6 +1420,7 @@ main_cat_surv <- main_cat_surv[, keep_cols_surv]
 ```
 
 ```{r save main_all2}
+dir.create("output", showWarnings = FALSE, recursive = TRUE)
 save(main_all2, file = "output/main_all2.RDATA")
 save(main_cat_surv, file = "output/main_cat_surv.RDATA")
 ```
