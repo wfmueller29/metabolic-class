@@ -1,15 +1,15 @@
 data_time: 2026-07-10 16:38:44
-working_directory: /Users/jdp2019/Desktop/Repos/metabolic-class/06_create_figures
-config_path: /Users/jdp2019/Desktop/Repos/metabolic-class/inputs/train/itp_genotyped_M.yaml
-input_path: /Users/jdp2019/Desktop/Repos/metabolic-class/05_prediction_data/output/itp_genotyped_M.yaml
-output_dir_path: /Users/jdp2019/Desktop/Repos/metabolic-class/06_create_figures/output/itp_genotyped_M
-datasets_path: /Users/jdp2019/Desktop/Repos/metabolic-class/05_prediction_data/output/itp_genotyped_M/datasets.RDATA
+working_directory: /Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/06_create_figures
+config_path: /Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/inputs/train/itp_genotyped_M.yaml
+input_path: /Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/05_prediction_data/output/itp_genotyped_M.yaml
+output_dir_path: /Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/06_create_figures/output/itp_genotyped_M
+datasets_path: /Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/05_prediction_data/output/itp_genotyped_M/datasets.RDATA
 validation_config_path: ~
-models_path: /Users/jdp2019/Desktop/Repos/metabolic-class/02_model/output/itp_genotyped_M/models.RDATA
-cf_path: /Users/jdp2019/Desktop/Repos/metabolic-class/02_model/output/itp_genotyped_M/cf.RDATA
-final_models_path: /Users/jdp2019/Desktop/Repos/metabolic-class/06_create_figures/output/itp_genotyped_M/final_models.RDATA
-csv_path: /Users/jdp2019/Desktop/Repos/metabolic-class/03_model_select/output/itp_genotyped_M/final_models.csv
-main_cat_surv_path: /Users/jdp2019/Desktop/Repos/metabolic-class/04_create_census/output/itp_genotyped_M/main_cat_surv.RDATA
+models_path: /Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/02_model/output/itp_genotyped_M/models.RDATA
+cf_path: /Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/02_model/output/itp_genotyped_M/cf.RDATA
+final_models_path: /Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/06_create_figures/output/itp_genotyped_M/final_models.RDATA
+csv_path: /Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/03_model_select/output/itp_genotyped_M/final_models.csv
+main_cat_surv_path: /Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/04_create_census/output/itp_genotyped_M/main_cat_surv.RDATA
 complete_cenus_path: ~
 train_cenus_path: ~
 test_cenus_path: ~
