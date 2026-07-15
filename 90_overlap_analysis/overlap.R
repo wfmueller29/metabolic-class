@@ -388,7 +388,7 @@ hr_burden_stats <- kap_plot_cox(
 cph <- hr_burden_stats[[3]]                # summary.coxph object
 
 star <- function(p) {
-  if (p < .001) "***" else if (p < .005) "**" else if (p < .05) "*" else ""
+  if (p < .001) "***" else if (p < .01) "**" else if (p < .05) "*" else ""
 }
 fmt2 <- function(x) format(round(x, 2), nsmall = 2)
 
@@ -419,7 +419,7 @@ hr_ft <- flextable(hr_table) %>%
   autofit() %>%
   set_caption(paste0(
     "Mortality hazard ratios by number of high-risk phenotypes ",
-    "(reference = 0). * p<.05, ** p<.005, *** p<.001."
+    "(reference = 0). * p<.05, ** p<.01, *** p<.001."
   ))
 
 hr_ft
