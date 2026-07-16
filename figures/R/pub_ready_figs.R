@@ -3,11 +3,11 @@ library(consoler)
 library(cowplot)
 library(ggplot2)
 
-all_path <- "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_list.RDATA"
-fb6_path <- "../07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_list.RDATA"
-mb6_path <- "../07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_list.RDATA"
-fhet3_path <- "../07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_list.RDATA"
-mhet3_path <- "../07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_list.RDATA"
+all_path <- "pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_list.RDATA"
+fb6_path <- "pipeline/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_list.RDATA"
+mb6_path <- "pipeline/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_list.RDATA"
+fhet3_path <- "pipeline/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_list.RDATA"
+mhet3_path <- "pipeline/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_list.RDATA"
 
 render_tasks <- list(
   all_env = all_path,
@@ -79,7 +79,7 @@ for (env_name in names(render_tasks)) {
 for (env_name in names(render_tasks)) {
   env <- get(env_name, envir = .GlobalEnv)
 
-  output_dir <- file.path("output", env_name, "define_class")
+  output_dir <- file.path("figures/raw", env_name, "define_class")
   if (!dir.exists(output_dir)) {
     dir.create(output_dir, recursive = TRUE)
   }
@@ -122,8 +122,8 @@ for (env_name in names(render_tasks)) {
 
 # Validation Plots  -----------------------------------------------------------
 
-all_path <- "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/validation/validation_list.RDATA"
-held_out_path <- "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/validation/validation_list.RDATA"
+all_path <- "pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/validation/validation_list.RDATA"
+held_out_path <- "pipeline/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/validation/validation_list.RDATA"
 
 render_tasks <- list(
   all_env = all_path,
@@ -179,7 +179,7 @@ for (env_name in names(render_tasks)) {
 for (env_name in names(render_tasks)) {
   env <- get(env_name, envir = .GlobalEnv)
 
-  output_dir <- file.path("output", env_name, "validation")
+  output_dir <- file.path("figures/raw", env_name, "validation")
   if (!dir.exists(output_dir)) {
     dir.create(output_dir, recursive = TRUE)
   }

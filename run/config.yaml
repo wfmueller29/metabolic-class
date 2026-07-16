@@ -1,0 +1,21 @@
+# =============================================================================
+# config.yaml  --  master settings for a fresh reproduction run.
+# Edit these, then run:   Rscript run/run.R   (from the repo root)
+# =============================================================================
+
+# --- WHERE the master store lives ------------------------------------------
+# The raw/clean/model deposit that run/02_hydrate_data.R pulls from (Zenodo
+# download / OneDrive). This is the ONE path a reproducer must set per machine.
+master_dir: "/Users/JoshsMacbook2015/Library/CloudStorage/OneDrive-NationalInstitutesofHealth/Mueller2026_final_data"
+
+# --- HOW DEEP to rebuild ----------------------------------------------------
+#   raw    -> hydrate raw inputs, run preprocess (clean), fit models, figures
+#   clean  -> hydrate CLEANED data (SKIP preprocess), fit models, figures
+#   model  -> hydrate FITTED objects (SKIP preprocess + fitting), figures only *
+# (* figures-only path is pending the 04/05/06 split — reorg item 9.)
+rebuild_from: "raw"
+
+# --- run 01_installer first? -------------------------------------------------
+# Package provisioning. Usually run once, then leave false (it's slow until the
+# renv-based idempotent installer lands, reorg item 8).
+install: false

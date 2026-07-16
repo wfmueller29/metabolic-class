@@ -9,20 +9,20 @@
 # if you want it wiped too. Deliberately explicit, not automatic-guessing.
 #
 # Usage:
-#   Rscript wipe.R <out_tag> [out_tag2] ...            # dry run, lists what would be deleted
-#   Rscript wipe.R --confirm <out_tag> [out_tag2] ...  # actually deletes
+#   Rscript helpers/wipe.R <out_tag> [out_tag2] ...            # dry run, lists what would be deleted
+#   Rscript helpers/wipe.R --confirm <out_tag> [out_tag2] ...  # actually deletes
 
 args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) == 0) {
-  stop("Usage: Rscript wipe.R [--confirm] <out_tag> [out_tag2] ...")
+  stop("Usage: Rscript helpers/wipe.R [--confirm] <out_tag> [out_tag2] ...")
 }
 
 confirm <- "--confirm" %in% args
 out_tags <- setdiff(args, "--confirm")
 
 if (length(out_tags) == 0) {
-  stop("No out_tag provided. Usage: Rscript wipe.R [--confirm] <out_tag> [out_tag2] ...")
+  stop("No out_tag provided. Usage: Rscript helpers/wipe.R [--confirm] <out_tag> [out_tag2] ...")
 }
 
 stages <- c(

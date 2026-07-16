@@ -2,7 +2,7 @@
 #
 # Assumes you have already run, IN ORDER:
 #   01_installer.R   - install package dependencies
-#   02_hydrate.R     - provision raw data from the master  (hydrate("raw"))
+#   run/02_hydrate_data.R - provision raw data from the master (hydrate("raw"))
 #   03_preprocess.R  - run all cleaning stages (00a / 00b / 00c)
 # Cleaning is therefore NOT repeated here.
 
@@ -27,7 +27,7 @@ yaml_files <- c(
 
 for (yaml in yaml_files) {
   cat("Running:", yaml, "\n")
-  ecode <- system2("Rscript", args = c("train.R", yaml))
+  ecode <- system2("Rscript", args = c("helpers/train.R", yaml))
   if (ecode != 0) stop(paste("Error in:", yaml))
 }
 
@@ -39,7 +39,7 @@ yaml_files <- c(
 
 for (yaml in yaml_files) {
   cat("Running:", yaml, "\n")
-  ecode <- system2("Rscript", args = c("validate.R", yaml))
+  ecode <- system2("Rscript", args = c("helpers/validate.R", yaml))
   if (ecode != 0) stop(paste("Error in:", yaml))
 }
 
@@ -50,21 +50,13 @@ yaml_files <- c(
 
 for (yaml in yaml_files) {
   cat("Running:", yaml, "\n")
-  ecode <- system2("Rscript", args = c("predict.R", yaml))
+  ecode <- system2("Rscript", args = c("helpers/predict.R", yaml))
   if (ecode != 0) stop(paste("Error in:", yaml))
 }
 
 # Treatment Response ----------------------------------------------------------
 rmarkdown::render("pipeline/99_treatment_response/treatment_response.Rmd")
 
-# Figures ---------------------------------------------------------------------
-rmarkdown::render("figures/primary_figures.Rmd",
-  output_format = "pdf_document",
-  output_dir = "figures/output",
-  output_file = "Primary Figures.pdf"
-)
-rmarkdown::render("figures/sup_figures.Rmd",
-  output_format = "pdf_document",
-  output_dir = "figures/output",
-  output_file = "Supplemental Material.pdf"
-)
+# Figures are now a SEPARATE step -- run/05_render_figures.R (generates the
+# pub-ready figure components via figures/R/pub_ready_figs.R, then renders
+# primary + sup figures). Run it after this script.

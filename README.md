@@ -13,7 +13,7 @@ git clone https://github.com/wfmueller29/metabolic-class
 To install R package dependencies, navigate to the `metabolic-class` directory and run this command in your terminal:
 
 ```bash
-Rscript installer.R
+Rscript run/01_installer.R
 ```
 This should install all R packages that the pipeline depends upon, including two in-house dependencies listed below:
 
@@ -34,11 +34,30 @@ This pipeline uses file in, file out structure with yaml files, with the only tw
 
 ## How to use
 
-### Training
+### Reproduce the published analysis
+
+To reproduce the manuscript results from the deposited data, edit **one config** and run **one command**.
+
+1. In [`run/config.yaml`](run/config.yaml), set:
+   - `master_dir` — path to the downloaded `raw`/`clean`/`model` data deposit (the one machine-specific value you must set).
+   - `rebuild_from` — how deep to rebuild:
+     - `raw` — hydrate raw inputs → clean (`03_preprocess`) → fit models → figures
+     - `clean` — hydrate cleaned data (skip preprocess) → fit models → figures
+     - `model` — hydrate the fitted objects (skip fitting) → figures only
+   - `install` — set `true` on the first run to provision R packages, then `false`.
+2. From the repo root, run the orchestrator:
+
+```bash
+Rscript run/run.R
+```
+
+`run/run.R` sequences the steps in `run/` according to `rebuild_from`: `01_installer` (if enabled) → `02_hydrate_data` → `03_preprocess` (raw only) → `04_reproduce` → `09_session_info`. Each step is a normal `Rscript`, so you can also run them individually from `run/` for finer control.
+
+### Train on your own data
 If you have your own longitudinal dataset that you would like to use to train, navigate to the `metabolic-class` directory and run this command in your terminal.
 
 ```bash
-Rscript train.R <train_config.yaml>
+Rscript helpers/train.R <train_config.yaml>
 ```
 
 The tedious part is creating the `train_config.yaml` file (See below)
@@ -46,7 +65,7 @@ The tedious part is creating the `train_config.yaml` file (See below)
 ### Validate
 If you have longitudinal data you would like test against a previously trained model, navigate to the `metabolic-class` directory and run this command in your terminal. 
 ```bash
-Rscript validate.R <validate_config.yaml>
+Rscript helpers/validate.R <validate_config.yaml>
 ```
 
 The tedious part is creating the `validate_config.yaml` file (See below)
@@ -310,41 +329,4 @@ datasets: # list of datasets with corresponding outcomes. The one dataset case h
     variable: "cohort"
 
 ```
-
-
-## How to use on Biowulf
-
-This repository runs using predominantly R code, a little shell, and yaml 
-files for configuration. 
-
-### Step 1: Installation
-
-```
-cd /data/$USER
-```
-
-```
-git clone https://github.com/wfmueller29/metabolic-class.git
-```
-
-### Step 2: Run code
-
-Move to correct working Directory
-```
-cd /data/$USER/metabolic-class/analysis
-```
-
-Submit general_prep_model_data.R with correct config file as a command line 
-argument. If no config file is provided, the test config is run
-
-```
-bash submit/02_submit_prep_data.sh <Config file path>
-```
-
-Submit model.R.
-
-```
-bash submit/03_submit_models.sh <Name of output directory from prep model>
-```
-
 
