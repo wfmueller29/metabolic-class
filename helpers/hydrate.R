@@ -66,7 +66,11 @@ layers <- list(
     "pipeline/04_create_census/output",
     "pipeline/05_prediction_data/output",
     "pipeline/06_create_figures/output",
-    "pipeline/07_display_figures/output"
+    "pipeline/07_display_figures/output",
+    # analysis outputs the paper figures EMBED -- freeze these too so model-mode
+    # figures (which skip re-fitting/re-analysis) are complete:
+    "pipeline/97_partial_correlation/output",
+    "pipeline/99_treatment_response/output"
   )
 )
 

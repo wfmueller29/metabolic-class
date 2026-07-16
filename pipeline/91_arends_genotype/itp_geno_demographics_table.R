@@ -20,7 +20,7 @@ library(survival)
 library(flextable)
 library(magick)
 
-setwd("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/91_arends_genotype")
+setwd("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/91_arends_genotype")
 
 # ---- the two census sources -------------------------------------------------
 SRC_91 <- "."                                        # local 91 copies -> this figure

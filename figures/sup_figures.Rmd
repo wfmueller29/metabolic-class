@@ -161,8 +161,8 @@ hr_table <- flextable(hr_table) %>%
   set_table_properties(layout = "autofit") %>%
   fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
-invisible(save_as_image(hr_table, "output/mortality_panel_hr.png", zoom = 10))
-fig$I <- image_read("output/mortality_panel_hr.png")
+invisible(save_as_image(hr_table, "raw/mortality_panel_hr.png", zoom = 10))
+fig$I <- image_read("raw/mortality_panel_hr.png")
 fig$I <- image_scale(fig$I, "400%")
 fig$I <- image_border(fig$I, color = "white", geometry = "100x100")
 fig$I <- annotate_figure_label(fig$I, "I")
@@ -226,8 +226,8 @@ hr_table <- flextable(hr_table) %>%
   set_table_properties(layout = "autofit") %>%
   fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
-invisible(save_as_image(hr_table, "output/mortality_panel_hr.png", zoom = 10))
-fig$I <- image_read("output/mortality_panel_hr.png")
+invisible(save_as_image(hr_table, "raw/mortality_panel_hr.png", zoom = 10))
+fig$I <- image_read("raw/mortality_panel_hr.png")
 fig$I <- image_scale(fig$I, "400%")
 fig$I <- image_border(fig$I, color = "white", geometry = "100x100")
 fig$I <- annotate_figure_label(fig$I, "I")
@@ -335,7 +335,7 @@ final_panel <- image_append(c(row1, row2, row3, row4), stack = TRUE)
 
 # View or save
 final_panel
-# image_write(final_panel, "output/fig/panel.png")
+# image_write(final_panel, "raw/fig/panel.png")
 
 fig_no <- fig_no + 1
 ```
@@ -376,7 +376,7 @@ final_panel <- image_append(c(row1, row2, row3, row4), stack = TRUE)
 
 # View or save
 final_panel
-# image_write(final_panel, "output/fig/panel.png")
+# image_write(final_panel, "raw/fig/panel.png")
 
 fig_no <- fig_no + 1
 ```
@@ -387,16 +387,16 @@ fig_no <- fig_no + 1
 
 ```{r sup external validation km, out.width = "100%"}
 fig <- list()
-fig$A <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 19.5]_1.png")
-fig$B <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 32.5]_2.png")
-fig$C <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 45.5]_3.png")
-fig$D <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 58.5]_4.png")
-fig$E <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 71.5]_5.png")
-fig$F <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 84.5]_6.png")
-fig$G <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 97.5]_7.png")
-fig$H <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 110.5]_8.png")
-fig$I <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 123.5]_9.png")
-fig$J <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 136.5]_10.png")
+fig$A <- image_read("../pipeline/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 19.5]_1.png")
+fig$B <- image_read("../pipeline/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 32.5]_2.png")
+fig$C <- image_read("../pipeline/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 45.5]_3.png")
+fig$D <- image_read("../pipeline/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 58.5]_4.png")
+fig$E <- image_read("../pipeline/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 71.5]_5.png")
+fig$F <- image_read("../pipeline/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 84.5]_6.png")
+fig$G <- image_read("../pipeline/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 97.5]_7.png")
+fig$H <- image_read("../pipeline/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 110.5]_8.png")
+fig$I <- image_read("../pipeline/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 123.5]_9.png")
+fig$J <- image_read("../pipeline/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 136.5]_10.png")
 
 for (label in names(fig)) {
   save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
@@ -421,8 +421,8 @@ hr_table <- flextable(hr_table) %>%
   set_table_properties(layout = "autofit") %>%
   fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
-invisible(save_as_image(hr_table, "output/km_external_validation_panel_hr.png", zoom = 10))
-fig$K <- image_read("output/km_external_validation_panel_hr.png")
+invisible(save_as_image(hr_table, "raw/km_external_validation_panel_hr.png", zoom = 10))
+fig$K <- image_read("raw/km_external_validation_panel_hr.png")
 fig$K <- image_scale(fig$K, "200%")
 fig$K <- image_border(fig$K, color = "white", geometry = "100x100")
 fig$K <- annotate_figure_label(fig$K, "K")
@@ -587,9 +587,9 @@ tab_no <- 1 + tab_no
 
 ```{r treatment response, out.width = "100%"}
 fig <- list()
-fig$A <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/99_treatment_response/output/treatment_response/plot_1.png")
-fig$B <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/99_treatment_response/output/treatment_response/plot_2.png")
-fig$C <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/99_treatment_response/output/treatment_response/plot_3.png")
+fig$A <- image_read("../pipeline/99_treatment_response/output/treatment_response/plot_1.png")
+fig$B <- image_read("../pipeline/99_treatment_response/output/treatment_response/plot_2.png")
+fig$C <- image_read("../pipeline/99_treatment_response/output/treatment_response/plot_3.png")
 
 for (label in names(fig)) {
   save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
@@ -616,18 +616,18 @@ fig_no <- fig_no + 1
 
 ```{r define classes b6, out.width = "100%"}
 fig <- list()
-fig$A <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_b6_bwfatgluc/outcome/plot_1.png")
-fig$B <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_b6_bwfatgluc/outcome/plot_4.png")
-fig$C <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_b6_bwfatgluc/outcome/plot_7.png")
-fig$D <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_b6_bwfatgluc/outcome/plot_10.png")
-fig$E <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_b6_bwfatgluc/outcome/plot_2.png")
-fig$F <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_b6_bwfatgluc/outcome/plot_5.png")
-fig$G <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_b6_bwfatgluc/outcome/plot_8.png")
-fig$H <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_b6_bwfatgluc/outcome/plot_11.png")
-fig$I <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_b6_bwfatgluc/outcome/plot_3.png")
-fig$J <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_b6_bwfatgluc/outcome/plot_6.png")
-fig$K <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_b6_bwfatgluc/outcome/plot_9.png")
-fig$L <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_b6_bwfatgluc/outcome/plot_12.png")
+fig$A <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_b6_bwfatgluc/outcome/plot_1.png")
+fig$B <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_b6_bwfatgluc/outcome/plot_4.png")
+fig$C <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_b6_bwfatgluc/outcome/plot_7.png")
+fig$D <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_b6_bwfatgluc/outcome/plot_10.png")
+fig$E <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_b6_bwfatgluc/outcome/plot_2.png")
+fig$F <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_b6_bwfatgluc/outcome/plot_5.png")
+fig$G <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_b6_bwfatgluc/outcome/plot_8.png")
+fig$H <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_b6_bwfatgluc/outcome/plot_11.png")
+fig$I <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_b6_bwfatgluc/outcome/plot_3.png")
+fig$J <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_b6_bwfatgluc/outcome/plot_6.png")
+fig$K <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_b6_bwfatgluc/outcome/plot_9.png")
+fig$L <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_b6_bwfatgluc/outcome/plot_12.png")
 fig$M <- image_read("images/Basic LCM.png")
 
 
@@ -645,8 +645,8 @@ hr_table <- flextable(hr_table) %>%
   set_table_properties(layout = "autofit") %>%
   fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
-invisible(save_as_image(hr_table, "output/mortality_panel_hr.png", zoom = 10))
-fig$N <- image_read("output/mortality_panel_hr.png")
+invisible(save_as_image(hr_table, "raw/mortality_panel_hr.png", zoom = 10))
+fig$N <- image_read("raw/mortality_panel_hr.png")
 fig$N <- image_scale(fig$N, "400%")
 fig$N <- image_border(fig$N, color = "white", geometry = "100x100")
 fig$N <- annotate_figure_label(fig$N, "N")
@@ -673,7 +673,7 @@ final_panel <- image_append(c(row1, row2, row3, row4), stack = TRUE)
 
 # View or save
 final_panel
-# image_write(final_panel, "output/fig/panel.png")
+# image_write(final_panel, "raw/fig/panel.png")
 
 fig_no <- fig_no + 1
 ```
@@ -684,18 +684,18 @@ fig_no <- fig_no + 1
 
 ```{r define classes het3, out.width = "100%"}
 fig <- list()
-fig$A <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/outcome/plot_1.png")
-fig$B <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/outcome/plot_4.png")
-fig$C <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/outcome/plot_7.png")
-fig$D <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/outcome/plot_10.png")
-fig$E <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/outcome/plot_2.png")
-fig$F <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/outcome/plot_5.png")
-fig$G <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/outcome/plot_8.png")
-fig$H <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/outcome/plot_11.png")
-fig$I <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/outcome/plot_3.png")
-fig$J <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/outcome/plot_6.png")
-fig$K <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/outcome/plot_9.png")
-fig$L <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/outcome/plot_12.png")
+fig$A <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/outcome/plot_1.png")
+fig$B <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/outcome/plot_4.png")
+fig$C <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/outcome/plot_7.png")
+fig$D <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/outcome/plot_10.png")
+fig$E <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/outcome/plot_2.png")
+fig$F <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/outcome/plot_5.png")
+fig$G <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/outcome/plot_8.png")
+fig$H <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/outcome/plot_11.png")
+fig$I <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/outcome/plot_3.png")
+fig$J <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/outcome/plot_6.png")
+fig$K <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/outcome/plot_9.png")
+fig$L <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/outcome/plot_12.png")
 fig$M <- image_read("images/Basic LCM.png")
 
 
@@ -713,8 +713,8 @@ hr_table <- flextable(hr_table) %>%
   set_table_properties(layout = "autofit") %>%
   fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
-invisible(save_as_image(hr_table, "output/mortality_panel_hr.png", zoom = 10))
-fig$N <- image_read("output/mortality_panel_hr.png")
+invisible(save_as_image(hr_table, "raw/mortality_panel_hr.png", zoom = 10))
+fig$N <- image_read("raw/mortality_panel_hr.png")
 fig$N <- image_scale(fig$N, "400%")
 fig$N <- image_border(fig$N, color = "white", geometry = "100x100")
 fig$N <- annotate_figure_label(fig$N, "N")
@@ -741,7 +741,7 @@ final_panel <- image_append(c(row1, row2, row3, row4), stack = TRUE)
 
 # View or save
 final_panel
-# image_write(final_panel, "output/fig/panel.png")
+# image_write(final_panel, "raw/fig/panel.png")
 
 fig_no <- fig_no + 1
 ```
@@ -766,7 +766,7 @@ hr_table_strain <- flextable(hr_table_strain) %>%
   set_table_properties(layout = "autofit") %>%
   fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
-invisible(save_as_image(hr_table_strain, "output/strain_mortality_panel_hr.png", zoom = 10))
+invisible(save_as_image(hr_table_strain, "raw/strain_mortality_panel_hr.png", zoom = 10))
 ```
 
 \newpage
@@ -775,18 +775,18 @@ invisible(save_as_image(hr_table_strain, "output/strain_mortality_panel_hr.png",
 
 ```{r define classes fb6, out.width = "100%"}
 fig <- list()
-fig$A <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_1.png")
-fig$B <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_4.png")
-fig$C <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_7.png")
-fig$D <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_10.png")
-fig$E <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_2.png")
-fig$F <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_5.png")
-fig$G <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_8.png")
-fig$H <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_11.png")
-fig$I <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_3.png")
-fig$J <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_6.png")
-fig$K <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_9.png")
-fig$L <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_12.png")
+fig$A <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_1.png")
+fig$B <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_4.png")
+fig$C <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_7.png")
+fig$D <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_10.png")
+fig$E <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_2.png")
+fig$F <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_5.png")
+fig$G <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_8.png")
+fig$H <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_11.png")
+fig$I <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_3.png")
+fig$J <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_6.png")
+fig$K <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_9.png")
+fig$L <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_12.png")
 fig$M <- image_read("images/Basic LCM.png")
 
 
@@ -803,8 +803,8 @@ hr_table <- flextable(hr_table) %>%
   set_table_properties(layout = "autofit") %>%
   fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
-invisible(save_as_image(hr_table, "output/mortality_panel_hr.png", zoom = 10))
-fig$N <- image_read("output/mortality_panel_hr.png")
+invisible(save_as_image(hr_table, "raw/mortality_panel_hr.png", zoom = 10))
+fig$N <- image_read("raw/mortality_panel_hr.png")
 fig$N <- image_scale(fig$N, "400%")
 fig$N <- image_border(fig$N, color = "white", geometry = "100x100")
 fig$N <- annotate_figure_label(fig$N, "N")
@@ -831,7 +831,7 @@ final_panel <- image_append(c(row1, row2, row3, row4), stack = TRUE)
 
 # View or save
 final_panel
-# image_write(final_panel, "output/fig/panel.png")
+# image_write(final_panel, "raw/fig/panel.png")
 
 fig_no <- fig_no + 1
 ```
@@ -842,18 +842,18 @@ fig_no <- fig_no + 1
 
 ```{r define classes fhet3, out.width = "100%"}
 fig <- list()
-fig$A <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_1.png")
-fig$B <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_4.png")
-fig$C <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_7.png")
-fig$D <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_10.png")
-fig$E <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_2.png")
-fig$F <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_5.png")
-fig$G <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_8.png")
-fig$H <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_11.png")
-fig$I <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_3.png")
-fig$J <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_6.png")
-fig$K <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_9.png")
-fig$L <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_12.png")
+fig$A <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_1.png")
+fig$B <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_4.png")
+fig$C <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_7.png")
+fig$D <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_10.png")
+fig$E <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_2.png")
+fig$F <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_5.png")
+fig$G <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_8.png")
+fig$H <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_11.png")
+fig$I <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_3.png")
+fig$J <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_6.png")
+fig$K <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_9.png")
+fig$L <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_12.png")
 fig$M <- image_read("images/Basic LCM.png")
 
 
@@ -871,8 +871,8 @@ hr_table <- flextable(hr_table) %>%
   set_table_properties(layout = "autofit") %>%
   fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
-invisible(save_as_image(hr_table, "output/mortality_panel_hr.png", zoom = 10))
-fig$N <- image_read("output/mortality_panel_hr.png")
+invisible(save_as_image(hr_table, "raw/mortality_panel_hr.png", zoom = 10))
+fig$N <- image_read("raw/mortality_panel_hr.png")
 fig$N <- image_scale(fig$N, "400%")
 fig$N <- image_border(fig$N, color = "white", geometry = "100x100")
 fig$N <- annotate_figure_label(fig$N, "N")
@@ -899,7 +899,7 @@ final_panel <- image_append(c(row1, row2, row3, row4), stack = TRUE)
 
 # View or save
 final_panel
-# image_write(final_panel, "output/fig/panel.png")
+# image_write(final_panel, "raw/fig/panel.png")
 
 fig_no <- fig_no + 1
 ```
@@ -910,18 +910,18 @@ fig_no <- fig_no + 1
 
 ```{r define classes mb6, out.width = "100%"}
 fig <- list()
-fig$A <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_1.png")
-fig$B <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_4.png")
-fig$C <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_7.png")
-fig$D <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_10.png")
-fig$E <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_2.png")
-fig$F <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_5.png")
-fig$G <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_8.png")
-fig$H <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_11.png")
-fig$I <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_3.png")
-fig$J <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_6.png")
-fig$K <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_9.png")
-fig$L <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_12.png")
+fig$A <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_1.png")
+fig$B <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_4.png")
+fig$C <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_7.png")
+fig$D <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_10.png")
+fig$E <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_2.png")
+fig$F <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_5.png")
+fig$G <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_8.png")
+fig$H <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_11.png")
+fig$I <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_3.png")
+fig$J <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_6.png")
+fig$K <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_9.png")
+fig$L <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_12.png")
 fig$M <- image_read("images/Basic LCM.png")
 
 
@@ -938,8 +938,8 @@ hr_table <- flextable(hr_table) %>%
   set_table_properties(layout = "autofit") %>%
   fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
-invisible(save_as_image(hr_table, "output/mortality_panel_hr.png", zoom = 10))
-fig$N <- image_read("output/mortality_panel_hr.png")
+invisible(save_as_image(hr_table, "raw/mortality_panel_hr.png", zoom = 10))
+fig$N <- image_read("raw/mortality_panel_hr.png")
 fig$N <- image_scale(fig$N, "400%")
 fig$N <- image_border(fig$N, color = "white", geometry = "100x100")
 fig$N <- annotate_figure_label(fig$N, "N")
@@ -966,7 +966,7 @@ final_panel <- image_append(c(row1, row2, row3, row4), stack = TRUE)
 
 # View or save
 final_panel
-# image_write(final_panel, "output/fig/panel.png")
+# image_write(final_panel, "raw/fig/panel.png")
 
 fig_no <- fig_no + 1
 ```
@@ -978,18 +978,18 @@ fig_no <- fig_no + 1
 
 ```{r define classes mhet3, out.width = "100%"}
 fig <- list()
-fig$A <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_1.png")
-fig$B <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_4.png")
-fig$C <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_7.png")
-fig$D <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_10.png")
-fig$E <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_2.png")
-fig$F <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_5.png")
-fig$G <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_8.png")
-fig$H <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_11.png")
-fig$I <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_3.png")
-fig$J <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_6.png")
-fig$K <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_9.png")
-fig$L <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_12.png")
+fig$A <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_1.png")
+fig$B <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_4.png")
+fig$C <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_7.png")
+fig$D <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_10.png")
+fig$E <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_2.png")
+fig$F <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_5.png")
+fig$G <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_8.png")
+fig$H <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_11.png")
+fig$I <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_3.png")
+fig$J <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_6.png")
+fig$K <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_9.png")
+fig$L <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_12.png")
 fig$M <- image_read("images/Basic LCM.png")
 
 
@@ -1006,8 +1006,8 @@ hr_table <- flextable(hr_table) %>%
   set_table_properties(layout = "autofit") %>%
   fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
-invisible(save_as_image(hr_table, "output/mortality_panel_hr.png", zoom = 10))
-fig$N <- image_read("output/mortality_panel_hr.png")
+invisible(save_as_image(hr_table, "raw/mortality_panel_hr.png", zoom = 10))
+fig$N <- image_read("raw/mortality_panel_hr.png")
 fig$N <- image_scale(fig$N, "400%")
 fig$N <- image_border(fig$N, color = "white", geometry = "100x100")
 fig$N <- annotate_figure_label(fig$N, "N")
@@ -1034,7 +1034,7 @@ final_panel <- image_append(c(row1, row2, row3, row4), stack = TRUE)
 
 # View or save
 final_panel
-# image_write(final_panel, "output/fig/panel.png")
+# image_write(final_panel, "raw/fig/panel.png")
 
 fig_no <- fig_no + 1
 ```
@@ -1045,16 +1045,16 @@ fig_no <- fig_no + 1
 
 ```{r sup internal validation km, out.width = "100%"}
 fig <- list()
-fig$A <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 19.5]_1.png")
-fig$B <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 32.5]_2.png")
-fig$C <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 45.5]_3.png")
-fig$D <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 58.5]_4.png")
-fig$E <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 71.5]_5.png")
-fig$F <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 84.5]_6.png")
-fig$G <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 97.5]_7.png")
-fig$H <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 110.5]_8.png")
-fig$I <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 123.5]_9.png")
-fig$J <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 136.5]_10.png")
+fig$A <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 19.5]_1.png")
+fig$B <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 32.5]_2.png")
+fig$C <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 45.5]_3.png")
+fig$D <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 58.5]_4.png")
+fig$E <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 71.5]_5.png")
+fig$F <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 84.5]_6.png")
+fig$G <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 97.5]_7.png")
+fig$H <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 110.5]_8.png")
+fig$I <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 123.5]_9.png")
+fig$J <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 136.5]_10.png")
 
 for (label in names(fig)) {
   save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
@@ -1079,8 +1079,8 @@ hr_table <- flextable(hr_table) %>%
   set_table_properties(layout = "autofit") %>%
   fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
-invisible(save_as_image(hr_table, "output/km_internal_validation_panel_hr.png", zoom = 10))
-fig$K <- image_read("output/km_internal_validation_panel_hr.png")
+invisible(save_as_image(hr_table, "raw/km_internal_validation_panel_hr.png", zoom = 10))
+fig$K <- image_read("raw/km_internal_validation_panel_hr.png")
 fig$K <- image_scale(fig$K, "200%")
 fig$K <- image_border(fig$K, color = "white", geometry = "100x100")
 fig$K <- annotate_figure_label(fig$K, "K")

@@ -167,8 +167,8 @@ hr_table <- flextable(hr_table) %>%
   set_table_properties(layout = "autofit") %>%
   fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
-invisible(save_as_image(hr_table, "output/mortality_panel_hr.png", zoom = 10))
-fig$N <- image_read("output/mortality_panel_hr.png")
+invisible(save_as_image(hr_table, "raw/mortality_panel_hr.png", zoom = 10))
+fig$N <- image_read("raw/mortality_panel_hr.png")
 fig$N <- image_scale(fig$N, "400%")
 fig$N <- image_border(fig$N, color = "white", geometry = "100x100")
 fig$N <- annotate_figure_label(fig$N, "N")
@@ -192,7 +192,7 @@ final_panel <- image_append(c(row1, row2, row3, row4), stack = TRUE)
 
 # View or save
 final_panel
-# image_write(final_panel, "output/fig/panel.png")
+# image_write(final_panel, "raw/fig/panel.png")
 
 fig_no <- fig_no + 1
 ```
@@ -234,8 +234,8 @@ hr_table <- flextable(hr_table) %>%
   set_table_properties(layout = "autofit") %>%
   fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
-invisible(save_as_image(hr_table, "output/mortality_panel_hr.png", zoom = 10))
-fig$I <- image_read("output/mortality_panel_hr.png")
+invisible(save_as_image(hr_table, "raw/mortality_panel_hr.png", zoom = 10))
+fig$I <- image_read("raw/mortality_panel_hr.png")
 fig$I <- image_scale(fig$I, "400%")
 fig$I <- image_border(fig$I, color = "white", geometry = "100x100")
 fig$I <- annotate_figure_label(fig$I, "I")
@@ -265,9 +265,9 @@ fig_no <- fig_no + 1
 
 ```{r dose response, out.width = "100%"}
 fig <- list()
-fig$A <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/dose_response/plot_1.png")
-fig$B <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/dose_response/plot_4.png")
-fig$C <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/dose_response/plot_7.png")
+fig$A <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/dose_response/plot_1.png")
+fig$B <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/dose_response/plot_4.png")
+fig$C <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/dose_response/plot_7.png")
 fig$D <- image_read("images/Basic LCM.png")
 fig$E <- image_read("images/Graded Mortality.png")
 
@@ -287,7 +287,7 @@ final_panel <- col1
 
 # View or save
 final_panel
-# image_write(final_panel, "output/fig2/panel.png")
+# image_write(final_panel, "raw/fig2/panel.png")
 fig_no <- fig_no + 1
 ```
 
@@ -306,12 +306,12 @@ fig_no <- fig_no + 1
 ```{r external validation, out.width = "100%"}
 fig <- list()
 fig$A <- image_read("images/External Validation.png")
-fig$B <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/forest/plot_5.png")
-# fig$C <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 32.5]_2.png")
-fig$C <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 58.5]_4.png")
-fig$D <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 84.5]_6.png")
-fig$E <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 110.5]_8.png")
-fig$F <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 136.5]_10.png")
+fig$B <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/forest/plot_5.png")
+# fig$C <- image_read("../pipeline/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 32.5]_2.png")
+fig$C <- image_read("../pipeline/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 58.5]_4.png")
+fig$D <- image_read("../pipeline/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 84.5]_6.png")
+fig$E <- image_read("../pipeline/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 110.5]_8.png")
+fig$F <- image_read("../pipeline/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 136.5]_10.png")
 
 fig$A <- image_scale(fig$A, "75%")
 fig$B <- image_scale(fig$B, "125%")
@@ -333,7 +333,7 @@ final_panel <- image_append(c(col1, col2, col3), stack = FALSE)
 
 # View or save
 final_panel
-# image_write(final_panel, "output/fig2/panel.png")
+# image_write(final_panel, "raw/fig2/panel.png")
 fig_no <- fig_no + 1
 ```
 
@@ -372,8 +372,8 @@ hr_table <- do.call(rbind, hrs_table) %>%
   set_table_properties(layout = "autofit") %>%
   fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
-invisible(save_as_image(hr_table, "output/treatment_mortlity_panel_hr.png", zoom = 10))
-fig$H <- image_read("output/treatment_mortlity_panel_hr.png")
+invisible(save_as_image(hr_table, "raw/treatment_mortlity_panel_hr.png", zoom = 10))
+fig$H <- image_read("raw/treatment_mortlity_panel_hr.png")
 fig$H <- image_scale(fig$H, "400%")
 fig$H <- image_border(fig$H, color = "white", geometry = "100x100")
 fig$H <- annotate_figure_label(fig$H, "H")
@@ -388,8 +388,8 @@ hr_table <- flextable(hr_table) %>%
   set_table_properties(layout = "autofit") %>%
   fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
-invisible(save_as_image(hr_table, "output/mortality_panel_hr.png", zoom = 10))
-fig$C <- image_read("output/mortality_panel_hr.png")
+invisible(save_as_image(hr_table, "raw/mortality_panel_hr.png", zoom = 10))
+fig$C <- image_read("raw/mortality_panel_hr.png")
 fig$C <- image_scale(fig$C, "400%")
 fig$C <- image_border(fig$C, color = "white", geometry = "100x100")
 fig$C <- annotate_figure_label(fig$C, "C")
@@ -406,7 +406,7 @@ final_panel <- image_append(c(row1, row2, row3), stack = TRUE)
 
 # View or save
 final_panel
-# image_write(final_panel, "output/fig2/panel.png")
+# image_write(final_panel, "raw/fig2/panel.png")
 fig_no <- fig_no + 1
 ```
 
