@@ -26,13 +26,13 @@ if (length(out_tags) == 0) {
 }
 
 stages <- c(
-  "Pipeline/01_prep_model_data",
-  "Pipeline/02_model",
-  "Pipeline/03_model_select",
-  "Pipeline/04_create_census",
-  "Pipeline/05_prediction_data",
-  "Pipeline/06_create_figures",
-  "Pipeline/07_display_figures"
+  "pipeline/01_prep_model_data",
+  "pipeline/02_model",
+  "pipeline/03_model_select",
+  "pipeline/04_create_census",
+  "pipeline/05_prediction_data",
+  "pipeline/06_create_figures",
+  "pipeline/07_display_figures"
 )
 
 targets <- unlist(lapply(out_tags, function(tag) {

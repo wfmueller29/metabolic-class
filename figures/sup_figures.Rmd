@@ -41,15 +41,15 @@ knitr::opts_chunk$set(cache = FALSE)
 
 ```{r sup figs read input yaml}
 # this loads in all the tables
-all_path <- "../Pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/workspace.RDATA"
-fb6_path <- "../Pipeline/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/workspace.RDATA"
-fhet3_path <- "../Pipeline/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/workspace.RDATA"
-mb6_path <- "../Pipeline/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/workspace.RDATA"
-mhet3_path <- "../Pipeline/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/workspace.RDATA"
-het3_path <- "../Pipeline/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/workspace.RDATA"
-b6_path <- "../Pipeline/07_display_figures/output/slam_c1-c10_age_b6_bwfatgluc/workspace.RDATA"
-itp_path <- "../Pipeline/07_display_figures/output/itp_c10c11c13c16_age_controls_bw/workspace.RDATA"
-held_out_path <- "../Pipeline/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/workspace.RDATA"
+all_path <- "../pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/workspace.RDATA"
+fb6_path <- "../pipeline/07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/workspace.RDATA"
+fhet3_path <- "../pipeline/07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/workspace.RDATA"
+mb6_path <- "../pipeline/07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/workspace.RDATA"
+mhet3_path <- "../pipeline/07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/workspace.RDATA"
+het3_path <- "../pipeline/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/workspace.RDATA"
+b6_path <- "../pipeline/07_display_figures/output/slam_c1-c10_age_b6_bwfatgluc/workspace.RDATA"
+itp_path <- "../pipeline/07_display_figures/output/itp_c10c11c13c16_age_controls_bw/workspace.RDATA"
+held_out_path <- "../pipeline/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/workspace.RDATA"
 
 config <- NULL
 ```
@@ -130,14 +130,14 @@ max_width <- 7
 
 ```{r sex strain fat classes, out.width = "100%"}
 fig <- list()
-fig$A <- image_read("../Pipeline/96_pub_ready_figs/output/fb6_env/define_class/fatfat.png")
-fig$B <- image_read("../Pipeline/96_pub_ready_figs/output/fb6_env/define_class/fatkm.png")
-fig$C <- image_read("../Pipeline/96_pub_ready_figs/output/mb6_env/define_class/fatfat.png")
-fig$D <- image_read("../Pipeline/96_pub_ready_figs/output/mb6_env/define_class/fatkm.png")
-fig$E <- image_read("../Pipeline/96_pub_ready_figs/output/fhet3_env/define_class/fatfat.png")
-fig$F <- image_read("../Pipeline/96_pub_ready_figs/output/fhet3_env/define_class/fatkm.png")
-fig$G <- image_read("../Pipeline/96_pub_ready_figs/output/mhet3_env/define_class/fatfat.png")
-fig$H <- image_read("../Pipeline/96_pub_ready_figs/output/mhet3_env/define_class/fatkm.png")
+fig$A <- image_read("../pipeline/96_pub_ready_figs/output/fb6_env/define_class/fatfat.png")
+fig$B <- image_read("../pipeline/96_pub_ready_figs/output/fb6_env/define_class/fatkm.png")
+fig$C <- image_read("../pipeline/96_pub_ready_figs/output/mb6_env/define_class/fatfat.png")
+fig$D <- image_read("../pipeline/96_pub_ready_figs/output/mb6_env/define_class/fatkm.png")
+fig$E <- image_read("../pipeline/96_pub_ready_figs/output/fhet3_env/define_class/fatfat.png")
+fig$F <- image_read("../pipeline/96_pub_ready_figs/output/fhet3_env/define_class/fatkm.png")
+fig$G <- image_read("../pipeline/96_pub_ready_figs/output/mhet3_env/define_class/fatfat.png")
+fig$H <- image_read("../pipeline/96_pub_ready_figs/output/mhet3_env/define_class/fatkm.png")
 
 for (label in names(fig)) {
   fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
@@ -171,10 +171,10 @@ for (label in names(fig)) {
   save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
 }
 
-legend1 <- image_read("../Pipeline/96_pub_ready_figs/output/fb6_env/define_class/fatfat_legend.png")
-legend2 <- image_read("../Pipeline/96_pub_ready_figs/output/mb6_env/define_class/fatfat_legend.png")
-legend3 <- image_read("../Pipeline/96_pub_ready_figs/output/fhet3_env/define_class/fatfat_legend.png")
-legend4 <- image_read("../Pipeline/96_pub_ready_figs/output/mhet3_env/define_class/fatfat_legend.png")
+legend1 <- image_read("../pipeline/96_pub_ready_figs/output/fb6_env/define_class/fatfat_legend.png")
+legend2 <- image_read("../pipeline/96_pub_ready_figs/output/mb6_env/define_class/fatfat_legend.png")
+legend3 <- image_read("../pipeline/96_pub_ready_figs/output/fhet3_env/define_class/fatfat_legend.png")
+legend4 <- image_read("../pipeline/96_pub_ready_figs/output/mhet3_env/define_class/fatfat_legend.png")
 
 row1 <- image_append(c(fig$A, fig$B, legend1, fig$C, fig$D, legend2), stack = FALSE)
 row2 <- image_append(c(fig$E, fig$F, legend3, fig$G, fig$H, legend4), stack = FALSE)
@@ -192,14 +192,14 @@ fig_no <- fig_no + 1
 
 ```{r sex strain gluc classes, out.width = "100%"}
 fig <- list()
-fig$A <- image_read("../Pipeline/96_pub_ready_figs/output/fb6_env/define_class/glucgluc.png")
-fig$B <- image_read("../Pipeline/96_pub_ready_figs/output/fb6_env/define_class/gluckm.png")
-fig$C <- image_read("../Pipeline/96_pub_ready_figs/output/mb6_env/define_class/glucgluc.png")
-fig$D <- image_read("../Pipeline/96_pub_ready_figs/output/mb6_env/define_class/gluckm.png")
-fig$E <- image_read("../Pipeline/96_pub_ready_figs/output/fhet3_env/define_class/glucgluc.png")
-fig$F <- image_read("../Pipeline/96_pub_ready_figs/output/fhet3_env/define_class/gluckm.png")
-fig$G <- image_read("../Pipeline/96_pub_ready_figs/output/mhet3_env/define_class/glucgluc.png")
-fig$H <- image_read("../Pipeline/96_pub_ready_figs/output/mhet3_env/define_class/gluckm.png")
+fig$A <- image_read("../pipeline/96_pub_ready_figs/output/fb6_env/define_class/glucgluc.png")
+fig$B <- image_read("../pipeline/96_pub_ready_figs/output/fb6_env/define_class/gluckm.png")
+fig$C <- image_read("../pipeline/96_pub_ready_figs/output/mb6_env/define_class/glucgluc.png")
+fig$D <- image_read("../pipeline/96_pub_ready_figs/output/mb6_env/define_class/gluckm.png")
+fig$E <- image_read("../pipeline/96_pub_ready_figs/output/fhet3_env/define_class/glucgluc.png")
+fig$F <- image_read("../pipeline/96_pub_ready_figs/output/fhet3_env/define_class/gluckm.png")
+fig$G <- image_read("../pipeline/96_pub_ready_figs/output/mhet3_env/define_class/glucgluc.png")
+fig$H <- image_read("../pipeline/96_pub_ready_figs/output/mhet3_env/define_class/gluckm.png")
 
 for (label in names(fig)) {
   fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
@@ -236,10 +236,10 @@ for (label in names(fig)) {
   save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
 }
 
-legend1 <- image_read("../Pipeline/96_pub_ready_figs/output/fb6_env/define_class/glucgluc_legend.png")
-legend2 <- image_read("../Pipeline/96_pub_ready_figs/output/mb6_env/define_class/glucgluc_legend.png")
-legend3 <- image_read("../Pipeline/96_pub_ready_figs/output/fhet3_env/define_class/glucgluc_legend.png")
-legend4 <- image_read("../Pipeline/96_pub_ready_figs/output/mhet3_env/define_class/glucgluc_legend.png")
+legend1 <- image_read("../pipeline/96_pub_ready_figs/output/fb6_env/define_class/glucgluc_legend.png")
+legend2 <- image_read("../pipeline/96_pub_ready_figs/output/mb6_env/define_class/glucgluc_legend.png")
+legend3 <- image_read("../pipeline/96_pub_ready_figs/output/fhet3_env/define_class/glucgluc_legend.png")
+legend4 <- image_read("../pipeline/96_pub_ready_figs/output/mhet3_env/define_class/glucgluc_legend.png")
 
 row1 <- image_append(c(fig$A, fig$B, legend1, fig$C, fig$D, legend2), stack = FALSE)
 row2 <- image_append(c(fig$E, fig$F, legend3, fig$G, fig$H, legend4), stack = FALSE)
@@ -258,10 +258,10 @@ fig_no <- fig_no + 1
 
 ```{r heatmaps, out.width = "100%"}
 fig <- list()
-fig$A <- image_read("../Pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/heatmap/heatmap2.jpg")
-fig$B <- image_read("../Pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/heatmap/heatmap1.jpg")
-fig$C <- image_read("../Pipeline/97_partial_correlation/output/partial_correlation_network.jpg")
-fig$D <- image_read("../Pipeline/97_partial_correlation/output/partial_correlation_results_clean_table.png")
+fig$A <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/heatmap/heatmap2.jpg")
+fig$B <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/heatmap/heatmap1.jpg")
+fig$C <- image_read("../pipeline/97_partial_correlation/output/partial_correlation_network.jpg")
+fig$D <- image_read("../pipeline/97_partial_correlation/output/partial_correlation_results_clean_table.png")
 
 for (label in names(fig)) {
   save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
@@ -284,8 +284,8 @@ fig_no <- fig_no + 1
 
 ```{r sup reclassifcation analysis, out.width = "100%"}
 fig <- list()
-knitr::include_graphics("../Pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/class_prediction_panel/class_prediction_panel.png")
-fig$A <- image_read("../Pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/class_prediction_panel/class_prediction_panel.png")
+knitr::include_graphics("../pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/class_prediction_panel/class_prediction_panel.png")
+fig$A <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/class_prediction_panel/class_prediction_panel.png")
 fig$M <- image_read("images/Reclassification.png")
 
 for (label in names(fig)) {
@@ -305,11 +305,11 @@ fig_no <- fig_no + 1
 ```{r sup internal validation, out.width = "100%"}
 fig <- list()
 fig$A <- image_read("images/Internal Validation.png")
-fig$B <- image_read("../Pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/forest/plot_2.png")
-fig$C <- image_read("../Pipeline/96_pub_ready_figs/output/all_env/validation/window_coef.png")
-fig$D <- image_read("../Pipeline/96_pub_ready_figs/output/all_env/validation/cum_coef.png")
-fig$E <- image_read("../Pipeline/96_pub_ready_figs/output/all_env/validation/window_concord.png")
-fig$F <- image_read("../Pipeline/96_pub_ready_figs/output/all_env/validation/cum_concord.png")
+fig$B <- image_read("../pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/forest/plot_2.png")
+fig$C <- image_read("../pipeline/96_pub_ready_figs/output/all_env/validation/window_coef.png")
+fig$D <- image_read("../pipeline/96_pub_ready_figs/output/all_env/validation/cum_coef.png")
+fig$E <- image_read("../pipeline/96_pub_ready_figs/output/all_env/validation/window_concord.png")
+fig$F <- image_read("../pipeline/96_pub_ready_figs/output/all_env/validation/cum_concord.png")
 
 for (label in names(fig)) {
   save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
@@ -320,10 +320,10 @@ fig$A <- image_scale(fig$A, "75%")
 fig$B <- image_scale(fig$B, "125%")
 
 
-legend1 <- image_read("../Pipeline/96_pub_ready_figs/output/all_env/validation/window_coef_legend.png")
-legend2 <- image_read("../Pipeline/96_pub_ready_figs/output/all_env/validation/cum_coef_legend.png")
-legend3 <- image_read("../Pipeline/96_pub_ready_figs/output/all_env/validation/window_concord_legend.png")
-legend4 <- image_read("../Pipeline/96_pub_ready_figs/output/all_env/validation/cum_concord_legend.png")
+legend1 <- image_read("../pipeline/96_pub_ready_figs/output/all_env/validation/window_coef_legend.png")
+legend2 <- image_read("../pipeline/96_pub_ready_figs/output/all_env/validation/cum_coef_legend.png")
+legend3 <- image_read("../pipeline/96_pub_ready_figs/output/all_env/validation/window_concord_legend.png")
+legend4 <- image_read("../pipeline/96_pub_ready_figs/output/all_env/validation/cum_concord_legend.png")
 
 # Stack the rows vertically
 row1 <- fig$A
@@ -347,11 +347,11 @@ fig_no <- fig_no + 1
 ```{r sup external validation, out.width = "100%"}
 fig <- list()
 fig$A <- image_read("images/External Validation.png")
-fig$B <- image_read("../Pipeline/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/forest/plot_2.png")
-fig$C <- image_read("../Pipeline/96_pub_ready_figs/output/held_out_env/validation/window_coef.png")
-fig$D <- image_read("../Pipeline/96_pub_ready_figs/output/held_out_env/validation/cum_coef.png")
-fig$E <- image_read("../Pipeline/96_pub_ready_figs/output/held_out_env/validation/window_concord.png")
-fig$F <- image_read("../Pipeline/96_pub_ready_figs/output/held_out_env/validation/cum_concord.png")
+fig$B <- image_read("../pipeline/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/forest/plot_2.png")
+fig$C <- image_read("../pipeline/96_pub_ready_figs/output/held_out_env/validation/window_coef.png")
+fig$D <- image_read("../pipeline/96_pub_ready_figs/output/held_out_env/validation/cum_coef.png")
+fig$E <- image_read("../pipeline/96_pub_ready_figs/output/held_out_env/validation/window_concord.png")
+fig$F <- image_read("../pipeline/96_pub_ready_figs/output/held_out_env/validation/cum_concord.png")
 
 for (label in names(fig)) {
   save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
@@ -361,10 +361,10 @@ for (label in names(fig)) {
 fig$A <- image_scale(fig$A, "75%")
 fig$B <- image_scale(fig$B, "125%")
 
-legend1 <- image_read("../Pipeline/96_pub_ready_figs/output/held_out_env/validation/window_coef_legend.png")
-legend2 <- image_read("../Pipeline/96_pub_ready_figs/output/held_out_env/validation/cum_coef_legend.png")
-legend3 <- image_read("../Pipeline/96_pub_ready_figs/output/held_out_env/validation/window_concord_legend.png")
-legend4 <- image_read("../Pipeline/96_pub_ready_figs/output/held_out_env/validation/cum_concord_legend.png")
+legend1 <- image_read("../pipeline/96_pub_ready_figs/output/held_out_env/validation/window_coef_legend.png")
+legend2 <- image_read("../pipeline/96_pub_ready_figs/output/held_out_env/validation/cum_coef_legend.png")
+legend3 <- image_read("../pipeline/96_pub_ready_figs/output/held_out_env/validation/window_concord_legend.png")
+legend4 <- image_read("../pipeline/96_pub_ready_figs/output/held_out_env/validation/cum_concord_legend.png")
 
 # Stack the rows vertically
 row1 <- fig$A
@@ -598,7 +598,7 @@ for (label in names(fig)) {
 
 image_append(c(fig$A, fig$B, fig$C), stack = FALSE)
 
-load("../Pipeline/99_treatment_response/output/hr_table/hr_table.RDATA")
+load("../pipeline/99_treatment_response/output/hr_table/hr_table.RDATA")
 
 do.call(rbind, hrs_table) %>%
   flextable() %>%
@@ -1142,7 +1142,7 @@ tab_no <- 1 + tab_no
 ### Figure `r as.character(fig_no)`: How it works
 
 ```{r sup figs how it works, out.width = "100%"}
-knitr::include_graphics("../Pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/how_it_works/how_it_works.png")
+knitr::include_graphics("../pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/how_it_works/how_it_works.png")
 
 fig_no <- fig_no + 1
 ```
@@ -1152,7 +1152,7 @@ fig_no <- fig_no + 1
 ### Figure `r as.character(fig_no)`: Kaplan Meier by Harmonizer
 
 ```{r sup figs kap plot by harmonize, out.width = "100%"}
-knitr::include_graphics("../Pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/harmonize_km/plot_1.png")
+knitr::include_graphics("../pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/harmonize_km/plot_1.png")
 
 table <- all_env$save_figtabs$harmonize_km[[1]]
 table <- cbind(Cohort = rownames(table), table)
@@ -1177,7 +1177,7 @@ dose_height_width <- sqrt(length(unique_class)) * 6
 ### Figure `r as.character(fig_no)`: KM plots of covariates - By Sex
 
 ```{r sup figs plot km covs sex, out.width = "100%"}
-knitr::include_graphics("../Pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/cov_km/plot_1.png")
+knitr::include_graphics("../pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/cov_km/plot_1.png")
 
 table <- all_env$save_figtabs$cov_km[[1]]
 table <- cbind(Sex = rownames(table), table)
@@ -1196,7 +1196,7 @@ rm(table)
 ### Figure `r as.character(fig_no)`: KM plots of covariates - By Strain
 
 ```{r sup figs plot km covs strain, out.width = "100%"}
-knitr::include_graphics("../Pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/cov_km/plot_2.png")
+knitr::include_graphics("../pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/cov_km/plot_2.png")
 
 table <- all_env$save_figtabs$cov_km[[2]]
 table <- cbind(Strain = rownames(table), table)
@@ -1215,7 +1215,7 @@ rm(table)
 ### Figure `r as.character(fig_no)`: Histogram of Outcome Variables - Complete and Training Data
 
 ```{r sup figs disply hist outcome panel, out.width = "100%"}
-knitr::include_graphics("../Pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/hist_outcome_plot_panel/hist_outcome_plot_panel.png")
+knitr::include_graphics("../pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/hist_outcome_plot_panel/hist_outcome_plot_panel.png")
 
 fig_no <- fig_no + 1
 ```
@@ -1225,7 +1225,7 @@ fig_no <- fig_no + 1
 ### Figure `r as.character(fig_no)`: Histogram of log transform of outcome Variables - Complete and Training Data
 
 ```{r sup figs disply hist log outcome panel, out.width = "100%"}
-knitr::include_graphics("../Pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/hist_log_outcome_plot_panel/hist_log_outcome_plot_panel.png")
+knitr::include_graphics("../pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/hist_log_outcome_plot_panel/hist_log_outcome_plot_panel.png")
 
 fig_no <- fig_no + 1
 ```
@@ -1235,7 +1235,7 @@ fig_no <- fig_no + 1
 ### Figure `r as.character(fig_no)`: Histogram of probability of class membership - Complete Data
 
 ```{r sup figs disply hist class prob panel, out.width = "100%"}
-knitr::include_graphics("../Pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/hist_plot_panel/hist_plot_panel.png")
+knitr::include_graphics("../pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/hist_plot_panel/hist_plot_panel.png")
 
 fig_no <- fig_no + 1
 ```
@@ -1245,7 +1245,7 @@ fig_no <- fig_no + 1
 ### Figure `r as.character(fig_no)`: Display Testing Data - Cumulative
 
 ```{r sup figs cumulative validation plots, out.width = "100%"}
-knitr::include_graphics("../Pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/cum_validation_plots/cum_validation_plots.png")
+knitr::include_graphics("../pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/cum_validation_plots/cum_validation_plots.png")
 
 fig_no <- fig_no + 1
 ```
@@ -1255,7 +1255,7 @@ fig_no <- fig_no + 1
 ### Figure `r as.character(fig_no)`: Display Testing Data - Window
 
 ```{r sup figs window validation plots, out.width = "100%"}
-knitr::include_graphics("../Pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/window_validation_plots/window_validation_plots.png")
+knitr::include_graphics("../pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/window_validation_plots/window_validation_plots.png")
 fig_no <- fig_no + 1
 ```
 
@@ -1264,7 +1264,7 @@ fig_no <- fig_no + 1
 ### Figure `r as.character(fig_no)`: Display Testing Data - Interval
 
 ```{r sup figs interval validation plots, out.width = "100%"}
-knitr::include_graphics("../Pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/interval_validation_plots/interval_validation_plots.png")
+knitr::include_graphics("../pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/interval_validation_plots/interval_validation_plots.png")
 fig_no <- fig_no + 1
 ```
 
@@ -1274,7 +1274,7 @@ fig_no <- fig_no + 1
 
 
 ```{r sup figs resampled validation plots, out.width = "100%"}
-knitr::include_graphics("../Pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/resampled_validation_plots/resampled_validation_plots.png")
+knitr::include_graphics("../pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/resampled_validation_plots/resampled_validation_plots.png")
 
 fig_no <- fig_no + 1
 ```

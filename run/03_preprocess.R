@@ -1,6 +1,6 @@
 # Runs all cleaning stages. Anchored to the repo root so re-running after a
 # mid-way failure doesn't strand the working directory in a subfolder.
-setwd("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/Pipeline")
+setwd("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline")
 
 # For c1-c10 ------------------------------------------------------------------
 

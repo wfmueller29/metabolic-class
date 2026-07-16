@@ -3,16 +3,16 @@
 args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) == 0) {
-  args[[1]] <- "Pipeline/01_prep_model_data/input/test_local.yaml"
+  args[[1]] <- "pipeline/01_prep_model_data/input/test_local.yaml"
   warning("No input file provided, using: ", args[[1]])
 }
 
 args[[1]] <- normalizePath(args[[1]])
 cat("This is our input file:", args[[1]], "\n")
 
-# Stages now live under Pipeline/ -- cd there so the setwd("<stage>")/setwd("..")
+# Stages now live under pipeline/ -- cd there so the setwd("<stage>")/setwd("..")
 # navigation below resolves (the base folder used to be the repo root).
-setwd("Pipeline")
+setwd("pipeline")
 
 # 01 -------------------------------------------------------------------------
 
