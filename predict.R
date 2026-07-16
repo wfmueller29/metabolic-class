@@ -11,6 +11,10 @@ if (length(args) == 0) {
 args[[1]] <- normalizePath(args[[1]])
 cat("This is our input file:", args[[1]], "\n")
 
+# Stages now live under Pipeline/ -- cd there so the setwd("<stage>")/setwd("..")
+# navigation below resolves (the base folder used to be the repo root).
+setwd("Pipeline")
+
 # 01 -------------------------------------------------------------------------
 
 setwd("01_prep_model_data")

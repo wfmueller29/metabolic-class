@@ -35,19 +35,19 @@ MASTER <- Sys.getenv("MASTER_DIR", unset = file.path(repo, "data_master"))
 layers <- list(
   # LAYER 1: super-raw inputs -- the four active cleaning stages' data/ folders
   raw = c(
-    "00a_clean_slam_c1-c10/data",
-    "00a_clean_slam_c16-c18/data",
-    "00a_clean_itp_geno/data",
-    "00a_itp/data"
+    "Pipeline/00a_clean_slam_c1-c10/data",
+    "Pipeline/00a_clean_slam_c16-c18/data",
+    "Pipeline/00a_clean_itp_geno/data",
+    "Pipeline/00a_itp/data"
   ),
   # LAYER 2: cleaned/derived outputs (deterministic; regenerable from raw)
   clean = c(
-    "00a_clean_slam_c1-c10/output",
-    "00a_clean_slam_c16-c18/output",
-    "00a_clean_itp_geno/output",
-    "00a_itp/output",
-    "00b_dataset_mods/output",
-    "00c_survival_data/output"
+    "Pipeline/00a_clean_slam_c1-c10/output",
+    "Pipeline/00a_clean_slam_c16-c18/output",
+    "Pipeline/00a_clean_itp_geno/output",
+    "Pipeline/00a_itp/output",
+    "Pipeline/00b_dataset_mods/output",
+    "Pipeline/00c_survival_data/output"
   ),
   # LAYER 3: fitted objects / figures (env-sensitive; freeze these).
   # Captures the WHOLE 01-07 output/ trees -- every out_tag's models, censuses,
@@ -56,13 +56,13 @@ layers <- list(
   # (Whole-tree, same pattern as `clean`; prune to specific out_tags later if
   # you want a leaner published deposit.)
   model = c(
-    "01_prep_model_data/output",
-    "02_model/output",
-    "03_model_select/output",
-    "04_create_census/output",
-    "05_prediction_data/output",
-    "06_create_figures/output",
-    "07_display_figures/output"
+    "Pipeline/01_prep_model_data/output",
+    "Pipeline/02_model/output",
+    "Pipeline/03_model_select/output",
+    "Pipeline/04_create_census/output",
+    "Pipeline/05_prediction_data/output",
+    "Pipeline/06_create_figures/output",
+    "Pipeline/07_display_figures/output"
   )
 )
 
