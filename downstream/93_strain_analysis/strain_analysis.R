@@ -7,20 +7,20 @@ library(lcmm)
 library(consoler)
 
 # Read all data
-all_yaml <- yaml::read_yaml("../06_create_figures/output/slam_c1-c10_age_all_bwfatgluc.yaml")
-load("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/workspace.RDATA")
+all_yaml <- yaml::read_yaml("../../pipeline/06_create_figures/output/slam_c1-c10_age_all_bwfatgluc.yaml")
+load("../../pipeline/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/workspace.RDATA")
 load(all_yaml$final_models_path)
 all_final_models <- final_models
 
 # Read b6 data
-b6_yaml <- yaml::read_yaml("../06_create_figures/output/slam_c1-c10_age_b6_bwfatgluc.yaml")
-load("../07_display_figures/output/slam_c1-c10_age_b6_bwfatgluc/workspace.RDATA")
+b6_yaml <- yaml::read_yaml("../../pipeline/06_create_figures/output/slam_c1-c10_age_b6_bwfatgluc.yaml")
+load("../../pipeline/07_display_figures/output/slam_c1-c10_age_b6_bwfatgluc/workspace.RDATA")
 load(b6_yaml$final_models_path)
 b6_final_models <- final_models
 
 # Read het3 data
-het3_yaml <- yaml::read_yaml("../06_create_figures/output/slam_c1-c10_age_het3_bwfatgluc.yaml")
-load("../07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/workspace.RDATA")
+het3_yaml <- yaml::read_yaml("../../pipeline/06_create_figures/output/slam_c1-c10_age_het3_bwfatgluc.yaml")
+load("../../pipeline/07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc/workspace.RDATA")
 load(het3_yaml$final_models_path)
 het3_final_models <- final_models
 rm(final_models)

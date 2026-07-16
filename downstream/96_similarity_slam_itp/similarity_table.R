@@ -39,7 +39,7 @@ datasets <- list(
 
 # Resolve paths so this works whether run from INSIDE 100_similarity_slam_itp/
 # (Rscript / cd here / source(..., chdir = TRUE)) OR sourced from the repo root.
-.base <- if (dir.exists("../04_create_census")) ".." else
+.base <- if (dir.exists("../../pipeline/04_create_census")) ".." else
          if (dir.exists("04_create_census")) "." else
          stop("Cannot find 04_create_census/. Run from the repo root or from 100_similarity_slam_itp/.")
 # where to write outputs: the folder itself, wherever we were launched from

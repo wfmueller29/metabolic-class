@@ -6,7 +6,7 @@ library(qgraph)
 library(gridExtra)
 library(grid)
 
-census <- read.csv("../04_create_census/output/slam_c1-c10_age_all_bwfatgluc/complete_census.csv")
+census <- read.csv("../../pipeline/04_create_census/output/slam_c1-c10_age_all_bwfatgluc/complete_census.csv")
 
 
 peek(census)

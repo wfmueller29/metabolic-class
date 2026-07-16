@@ -10,11 +10,11 @@ library(survminer)
 library(cowplot)
 
 # read required data ----------------------------------------------------------
-bw <- read.csv("../00b_dataset_mods/output/slam_c1-c10/data/slam_bw_og.csv")
-fat <- read.csv("../00b_dataset_mods/output/slam_c1-c10/data/slam_fat_og.csv")
-adiposity <- read.csv("../00b_dataset_mods/output/slam_c1-c10/data/slam_adiposity_og.csv")
-gluc <- read.csv("../00b_dataset_mods/output/slam_c1-c10/data/slam_gluc_og.csv")
-surv <- read.csv("../00c_survival_data/output/slam_c1-c10/data/main_cat_surv.csv")
+bw <- read.csv("../../pipeline/00b_dataset_mods/output/slam_c1-c10/data/slam_bw_og.csv")
+fat <- read.csv("../../pipeline/00b_dataset_mods/output/slam_c1-c10/data/slam_fat_og.csv")
+adiposity <- read.csv("../../pipeline/00b_dataset_mods/output/slam_c1-c10/data/slam_adiposity_og.csv")
+gluc <- read.csv("../../pipeline/00b_dataset_mods/output/slam_c1-c10/data/slam_gluc_og.csv")
+surv <- read.csv("../../pipeline/00c_survival_data/output/slam_c1-c10/data/main_cat_surv.csv")
 
 
 # tmerge variables ------------------------------------------------------------

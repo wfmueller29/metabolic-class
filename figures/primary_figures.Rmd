@@ -354,16 +354,16 @@ fig <- list()
 fig$A <- image_read("../pipeline/07_display_figures/output/itp_c10c11c13c16_age_controls_bw/outcome/plot_1.png")
 fig$B <- image_read("../pipeline/07_display_figures/output/itp_c10c11c13c16_age_controls_bw/outcome/plot_2.png")
 fig$D <- image_read("images/ITP Treatment.png")
-fig$E <- image_read("../pipeline/99_treatment_response/output/treatment_response/plot_1.png")
-fig$F <- image_read("../pipeline/99_treatment_response/output/treatment_response/plot_2.png")
-fig$G <- image_read("../pipeline/99_treatment_response/output/treatment_response/plot_3.png")
+fig$E <- image_read("../downstream/97_treatment_response/output/treatment_response/plot_1.png")
+fig$F <- image_read("../downstream/97_treatment_response/output/treatment_response/plot_2.png")
+fig$G <- image_read("../downstream/97_treatment_response/output/treatment_response/plot_3.png")
 
 for (label in names(fig)) {
   save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
   fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
 }
 
-load("../pipeline/99_treatment_response/output/hr_table/hr_table.RDATA")
+load("../downstream/97_treatment_response/output/hr_table/hr_table.RDATA")
 
 hr_table <- do.call(rbind, hrs_table) %>%
   flextable() %>%

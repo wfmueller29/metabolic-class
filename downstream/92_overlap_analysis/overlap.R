@@ -9,7 +9,7 @@ library(webshot2)
 library(UpSetR)
 
 # load data -------------------------------------------------------------------
-census <- read.csv("../04_create_census/output/slam_c1-c10_age_all_bwfatgluc/train_census.csv")
+census <- read.csv("../../pipeline/04_create_census/output/slam_c1-c10_age_all_bwfatgluc/train_census.csv")
 
 
 ari_bw_fat <- adjustedRandIndex(
@@ -297,7 +297,7 @@ library(survival)
 library(survminer)
 
 # reuse the project's Cox-HR helper (same HR/CI/star format used elsewhere)
-source("../07_display_figures/R/surv_all.R")
+source("../../pipeline/07_display_figures/R/surv_all.R")
 
 # ---- editable labels --------------------------------------------------------
 # Each high-risk "class" belongs to a different phenotype (BW / FM / FBG), and a

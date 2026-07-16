@@ -3,18 +3,18 @@
 library(consoler)
 
 # controls --------------------------------------------------------------------
-itp_geno <- read.csv("../04_create_census/output/itp_genotyped/complete_census.csv")
-itp_geno_m <- read.csv("../04_create_census/output/itp_genotyped_m/complete_census.csv")
-itp_geno_f <- read.csv("../04_create_census/output/itp_genotyped_f/complete_census.csv")
-itp_census <- read.csv("../00a_clean_itp_geno/data/main_cat_surv.csv")
+itp_geno <- read.csv("../../pipeline/04_create_census/output/itp_genotyped/complete_census.csv")
+itp_geno_m <- read.csv("../../pipeline/04_create_census/output/itp_genotyped_m/complete_census.csv")
+itp_geno_f <- read.csv("../../pipeline/04_create_census/output/itp_genotyped_f/complete_census.csv")
+itp_census <- read.csv("../../pipeline/00a_clean_itp_geno/data/main_cat_surv.csv")
 
 itp_census <- itp_census[c("idno", "id")]
 
 # treatment and controls ------------------------------------------------------
-itp_geno_tx <- read.csv("../04_create_census/output/itp_genotyped_treat/complete_census.csv")
-itp_geno_tx_f <- read.csv("../04_create_census/output/itp_genotyped_treat_f/complete_census.csv")
-itp_geno_tx_m <- read.csv("../04_create_census/output/itp_genotyped_treat_m/complete_census.csv")
-itp_tx_census <- read.csv("../00a_clean_itp_geno/output/itp_genotyped_treat_surv.csv")
+itp_geno_tx <- read.csv("../../pipeline/04_create_census/output/itp_genotyped_treat/complete_census.csv")
+itp_geno_tx_f <- read.csv("../../pipeline/04_create_census/output/itp_genotyped_treat_f/complete_census.csv")
+itp_geno_tx_m <- read.csv("../../pipeline/04_create_census/output/itp_genotyped_treat_m/complete_census.csv")
+itp_tx_census <- read.csv("../../pipeline/00a_clean_itp_geno/output/itp_genotyped_treat_surv.csv")
 
 itp_tx_census <- itp_tx_census[c("idno", "id")]
 

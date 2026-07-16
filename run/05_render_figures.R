@@ -9,17 +9,17 @@
 #
 # Prereqs that must already exist (produced by 04_reproduce.R):
 #   pipeline/07_display_figures/output/<tag>/...
-#   pipeline/99_treatment_response/output/...   (for the supplemental panels)
+#   downstream/97_treatment_response/output/...   (for the supplemental panels)
 #
 # Run from the repo root:  Rscript run/05_render_figures.R
 # =============================================================================
 
 # 1) generate the figure COMPONENTS the Rmds embed.
 #  1a) partial-correlation network -- runs IN pipeline/97 (reads the 04 census via its
-#      own ../ relative paths, writes pipeline/97_partial_correlation/output/).
-wd <- getwd(); setwd("pipeline/97_partial_correlation")
+#      own ../ relative paths, writes downstream/91_partial_correlation/output/).
+wd <- getwd(); setwd("downstream/91_partial_correlation")
 ec <- system2("Rscript", "partial_corr.R"); setwd(wd)
-if (ec != 0) stop("pipeline/97_partial_correlation/partial_corr.R failed (exit ", ec, ")")
+if (ec != 0) stop("downstream/91_partial_correlation/partial_corr.R failed (exit ", ec, ")")
 
 #  1b) publication-ready outcome/validation components -> figures/raw/
 ec <- system2("Rscript", "figures/R/pub_ready_figs.R")

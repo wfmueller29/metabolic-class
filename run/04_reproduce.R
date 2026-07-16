@@ -130,7 +130,7 @@ for (cfg in c(
 )) run_config("helpers/predict.R", cfg)
 
 # Treatment-response analysis (produces output the supplemental figures embed) --
-run_render("pipeline/99_treatment_response/treatment_response.Rmd")
+run_render("downstream/97_treatment_response/treatment_response.Rmd")
 
 # --- final summary -----------------------------------------------------------
 df <- if (length(results)) do.call(rbind, lapply(results, as.data.frame, stringsAsFactors = FALSE)) else NULL

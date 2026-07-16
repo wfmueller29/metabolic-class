@@ -16,7 +16,7 @@
 # claim that cor_auto is definitively more correct. cor_auto p-values here are
 # approximate (normal-theory t-test on the polychoric-based estimates).
 #
-# Run from the 97_partial_correlation/ directory: Rscript partial_corr_methods_comp.R
+# Run from the 91_partial_correlation/ directory: Rscript partial_corr_methods_comp.R
 # =============================================================================
 
 library(ppcor)
@@ -26,12 +26,12 @@ library(grid)
 library(gtable)
 library(magick)
 
-# run from the 97_partial_correlation/ directory regardless of where this is
+# run from the 91_partial_correlation/ directory regardless of where this is
 # sourced/invoked from, so the ../ and output/ relative paths resolve
-setwd("pipeline/97_partial_correlation")  # launched from the repo root
+setwd("downstream/91_partial_correlation")  # launched from the repo root
 
 # --- load the SAME data partial_corr.R uses ---------------------------------
-census <- read.csv("../04_create_census/output/slam_c1-c10_age_all_bwfatgluc/complete_census.csv")
+census <- read.csv("../../pipeline/04_create_census/output/slam_c1-c10_age_all_bwfatgluc/complete_census.csv")
 keep_vars <- c(
   "Lifespan" = "le_wk",
   "Female" = "sex_F",

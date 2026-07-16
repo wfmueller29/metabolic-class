@@ -2,10 +2,10 @@
 
 library(survival)
 
-mb6 <- read.csv("../04_create_census/output/slam_c1-c10_age_mb6_bwfatgluc/complete_census.csv")
-fb6 <- read.csv("../04_create_census/output/slam_c1-c10_age_fb6_bwfatgluc/complete_census.csv")
-fhet3 <- read.csv("../04_create_census/output/slam_c1-c10_age_fhet3_bwfatgluc/complete_census.csv")
-mhet3 <- read.csv("../04_create_census/output/slam_c1-c10_age_mhet3_bwfatgluc/complete_census.csv")
+mb6 <- read.csv("../../pipeline/04_create_census/output/slam_c1-c10_age_mb6_bwfatgluc/complete_census.csv")
+fb6 <- read.csv("../../pipeline/04_create_census/output/slam_c1-c10_age_fb6_bwfatgluc/complete_census.csv")
+fhet3 <- read.csv("../../pipeline/04_create_census/output/slam_c1-c10_age_fhet3_bwfatgluc/complete_census.csv")
+mhet3 <- read.csv("../../pipeline/04_create_census/output/slam_c1-c10_age_mhet3_bwfatgluc/complete_census.csv")
 
 
 datasets <- list(mb6 = mb6, fb6 = fb6, fhet3 = fhet3, mhet3 = mhet3)

@@ -18,7 +18,7 @@
 .Ruserdata
 **/*.csv
 *.out
-*.DS*
+.DS_Store
 *.RDATA
 *.csvr
 .A/
