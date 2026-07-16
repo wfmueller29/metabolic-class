@@ -29,9 +29,19 @@ if (!rebuild %in% c("raw", "clean", "model"))
 if (!is.null(cfg$master_dir) && nzchar(cfg$master_dir))
   Sys.setenv(MASTER_DIR = path.expand(cfg$master_dir))
 
+# --- per-step timing log (output/run_log.csv, gitignored). 09_session_info.R
+#     reads it and writes the run_timing.txt summary; env record stays separate.
+RUN_LOG <- file.path("output", "run_log.csv")
+dir.create("output", showWarnings = FALSE, recursive = TRUE)
+writeLines("step,start,end,minutes,status", RUN_LOG)   # fresh log each run
+
 step <- function(script) {
   cat(sprintf("\n>>>>> %s\n", script))
-  ec <- system2("Rscript", script)
+  t0 <- Sys.time(); ec <- system2("Rscript", script); t1 <- Sys.time()
+  cat(sprintf("%s,%s,%s,%.2f,%s\n", script, format(t0), format(t1),
+              round(as.numeric(difftime(t1, t0, units = "mins")), 2),
+              if (identical(ec, 0L)) "OK" else paste0("FAILED(", ec, ")")),
+      file = RUN_LOG, append = TRUE)
   if (ec != 0) stop("step FAILED (exit ", ec, "): ", script)
 }
 

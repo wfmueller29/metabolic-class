@@ -60,7 +60,7 @@ computeLog10 <- function(lm.null, lm.alt){
 
 
 ### File 1 - Census
-census <- read.csv("itp_geno_census.csv", row.names = 15)
+census <- read.csv("output/itp_geno_census.csv", row.names = 15)
 gtsM <- gtsp[rownames(census),]
 
 cdata <- data.frame(longevity = as.numeric(pull.pheno(mcross)[, "longevity"]), 
@@ -84,7 +84,7 @@ names(lods.c) <- names(all)
 lodM <- cbind(lodM, lods.c)
 
 ### File 2 - Census F
-census <- read.csv("itp_geno_f_census.csv", row.names = 11)
+census <- read.csv("output/itp_geno_f_census.csv", row.names = 11)
 gtsM <- gtsp[rownames(census),]
 
 cdata <- data.frame(longevity = as.numeric(pull.pheno(mcross)[, "longevity"]), 
@@ -107,7 +107,7 @@ names(lods.c) <- names(all)
 lodM <- cbind(lodM, lods.c)
 
 ### File 3 - Census M
-census <- read.csv("itp_geno_m_census.csv", row.names = 12)
+census <- read.csv("output/itp_geno_m_census.csv", row.names = 12)
 gtsM <- gtsp[rownames(census),]
 
 cdata <- data.frame(longevity = as.numeric(pull.pheno(mcross)[, "longevity"]), 
@@ -131,7 +131,7 @@ lodM <- cbind(lodM, lods.c)
 
 
 ### File 4 - Census TX
-census <- read.csv("itp_geno_tx_census.csv", row.names = 17)
+census <- read.csv("output/itp_geno_tx_census.csv", row.names = 17)
 gtsM <- gtsp[rownames(census),]
 
 cdata <- data.frame(longevity = as.numeric(pull.pheno(mcross)[, "longevity"]), 
@@ -154,7 +154,7 @@ names(lods.c) <- names(all)
 lodM <- cbind(lodM, lods.c)
 
 ### File 5 - Census TX F
-census <- read.csv("itp_geno_tx_f_census.csv", row.names = 13)
+census <- read.csv("output/itp_geno_tx_f_census.csv", row.names = 13)
 gtsM <- gtsp[rownames(census),]
 
 cdata <- data.frame(longevity = as.numeric(pull.pheno(mcross)[, "longevity"]), 
@@ -178,7 +178,7 @@ lodM <- cbind(lodM, lods.c)
 
 
 ### File 6 - Census TX M
-census <- read.csv("itp_geno_tx_m_census.csv", row.names = 13)
+census <- read.csv("output/itp_geno_tx_m_census.csv", row.names = 13)
 gtsM <- gtsp[rownames(census),]
 
 cdata <- data.frame(longevity = as.numeric(pull.pheno(mcross)[, "longevity"]), 

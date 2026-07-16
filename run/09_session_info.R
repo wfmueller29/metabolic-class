@@ -85,3 +85,34 @@ if (requireNamespace("sessioninfo", quietly = TRUE)) {
 
 writeLines(lines, out_file)
 cat("wrote", normalizePath(out_file), "\n")
+
+# --- run timing (SEPARATE artifact -- EXECUTION, not environment) ------------
+# run.R appends a per-step row to output/run_log.csv during the run; summarize it
+# into a clean run_timing.txt. Kept OUT of session_info.txt so the env record
+# stays stable/diffable across runs.
+run_log <- file.path("output", "run_log.csv")
+if (file.exists(run_log)) {
+  t <- tryCatch(utils::read.csv(run_log, stringsAsFactors = FALSE), error = function(e) NULL)
+  if (!is.null(t) && nrow(t)) {
+    mins <- suppressWarnings(as.numeric(t$minutes))
+    tl <- c(
+      "================================================================",
+      " RUN TIMING -- metabolic-class reproduction",
+      paste0(" summarized: ", format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z")),
+      "================================================================",
+      "",
+      sprintf("  %-26s %9s   %s", "step", "minutes", "status"),
+      sprintf("  %-26s %9s   %s", strrep("-", 26), strrep("-", 9), strrep("-", 8)),
+      sprintf("  %-26s %9.2f   %s", basename(t$step), mins, t$status),
+      "",
+      sprintf("  %-26s %9.2f", "TOTAL (steps before 09)", sum(mins, na.rm = TRUE)),
+      "",
+      "(09_session_info itself isn't listed -- run.R records each step's row after",
+      " it finishes, so this final step can't time itself.)"
+    )
+    writeLines(tl, "run_timing.txt")
+    cat("wrote", normalizePath("run_timing.txt"), "\n")
+  }
+} else {
+  cat("no output/run_log.csv -- run the pipeline via run/run.R to capture step timing.\n")
+}
