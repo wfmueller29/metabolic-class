@@ -50,19 +50,19 @@ layers <- list(
     "00c_survival_data/output"
   ),
   # LAYER 3: fitted objects / figures (env-sensitive; freeze these).
-  # TODO: finalize the exact out_tag list that appears in the paper before
-  # relying on model hydration. These are the 07 workspaces reproduce_figures
-  # needs; add 04/05/06 outputs if you want those frozen too.
+  # Captures the WHOLE 01-07 output/ trees -- every out_tag's models, censuses,
+  # workspaces, and figures -- so seed("model") stores the complete modeling
+  # result and hydrate("model") restores a figure-ready pipeline with NO re-fit.
+  # (Whole-tree, same pattern as `clean`; prune to specific out_tags later if
+  # you want a leaner published deposit.)
   model = c(
-    "07_display_figures/output/slam_c1-c10_age_all_bwfatgluc",
-    "07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc",
-    "07_display_figures/output/slam_c1-c10_age_b6_bwfatgluc",
-    "07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc",
-    "07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc",
-    "07_display_figures/output/slam_c1-c10_age_het3_bwfatgluc",
-    "07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc",
-    "07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc",
-    "07_display_figures/output/itp_c10c11c13c16_age_controls_bw"
+    "01_prep_model_data/output",
+    "02_model/output",
+    "03_model_select/output",
+    "04_create_census/output",
+    "05_prediction_data/output",
+    "06_create_figures/output",
+    "07_display_figures/output"
   )
 )
 

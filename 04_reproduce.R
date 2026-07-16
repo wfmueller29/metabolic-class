@@ -9,6 +9,7 @@
 # Train  ----------------------------------------------------------------------
 yaml_files <- c(
   "inputs/train/slam_c1-c10_age_all_bwfatgluc.yaml",
+  "inputs/train/slam_c1-c10_age_b6_bwfatgluc.yaml",
   "inputs/train/slam_c1-c10_age_fb6_bwfatgluc.yaml",
   "inputs/train/slam_c1-c10_age_fhet3_bwfatgluc.yaml",
   "inputs/train/slam_c1-c10_age_mb6_bwfatgluc.yaml",
