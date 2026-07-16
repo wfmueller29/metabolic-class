@@ -14,7 +14,7 @@ master_dir: "/Users/JoshsMacbook2015/Library/CloudStorage/OneDrive-NationalInsti
 #   model  -> hydrate FITTED objects (SKIP preprocess + fitting), render figures only
 rebuild_from: "raw"
 
-# --- resilience of the MODELS runner (04_reproduce.R) -----------------------
+# --- resilience of the MODELS runner (04_pipeline.R) + downstream (05_downstream.R) --
 #   false -> fail LOUDLY: stop on the first failed config (right for a published
 #            reproduce -- you want to see breakage).
 #   true  -> unattended/overnight: on a failure, log it (output/run_errors.log) and

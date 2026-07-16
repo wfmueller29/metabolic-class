@@ -23,7 +23,8 @@ if (!file.exists(cfg_path))
   stop("missing ", cfg_path, " -- edit the template there, then re-run.")
 cfg <- yaml::read_yaml(cfg_path)
 
-rebuild <- cfg$rebuild_from %||% "raw"
+rebuild   <- cfg$rebuild_from %||% "raw"
+resilient <- isTRUE(cfg$resilient)
 if (!rebuild %in% c("raw", "clean", "model"))
   stop("config rebuild_from must be raw|clean|model, got: ", rebuild)
 if (!is.null(cfg$master_dir) && nzchar(cfg$master_dir))
@@ -34,6 +35,9 @@ if (!is.null(cfg$master_dir) && nzchar(cfg$master_dir))
 RUN_LOG <- file.path("output", "run_log.csv")
 dir.create("output", showWarnings = FALSE, recursive = TRUE)
 writeLines("step,start,end,minutes,status", RUN_LOG)   # fresh log each run
+# clear stale failure artifacts (04/05 APPEND to these) so the morning-after logs
+# reflect THIS run only, not an accumulation across runs.
+unlink(file.path("output", c("run_errors.log", "run_summary.csv", "run_downstream_summary.csv")))
 
 step <- function(script) {
   cat(sprintf("\n>>>>> %s\n", script))
@@ -59,7 +63,15 @@ if (rebuild == "model")
       "hydrate layer.\n")
 
 step("run/05_downstream.R")                                       # downstream analyses (90-98)
-step("run/06_render_figures.R")                                   # assemble figures (all modes)
+# figures embed downstream outputs; if one is missing (a downstream analysis failed),
+# the render can fail. In resilient/overnight mode DON'T let that skip the session-info
+# + timing record -- log it and press on so 07 always captures what happened.
+if (resilient) {
+  tryCatch(step("run/06_render_figures.R"),
+           error = function(e) cat("\n[resilient] 06_render_figures FAILED -- continuing to session_info.\n"))
+} else {
+  step("run/06_render_figures.R")
+}
 
-step("run/07_session_info.R")
+step("run/07_session_info.R")                                     # env + timing record (always runs when resilient)
 cat("\n===== done (rebuild_from = ", rebuild, ") =====\n", sep = "")
