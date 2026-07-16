@@ -86,19 +86,6 @@ run_config <- function(driver, cfg) {
   invisible(r$ok)
 }
 
-# the 99 analysis is an in-process render, wrapped in the same resilient logic
-run_render <- function(rmd) {
-  cat(sprintf("\n########## render %s  %s ##########\n", rmd, format(Sys.time())))
-  t0 <- Sys.time()
-  ok <- tryCatch({ rmarkdown::render(rmd); TRUE },
-                 error = function(e) { log_err(rmd, "render error", conditionMessage(e)); FALSE })
-  mins <- round(as.numeric(difftime(Sys.time(), t0, units = "mins")), 1)
-  cat(sprintf("  -> %s (%.1f min)\n", if (ok) "OK" else paste0("FAILED -- logged to ", ERR_LOG), mins))
-  record("render", rmd, if (ok) "OK" else "FAILED", mins)
-  if (!ok && !resilient) stop("render FAILED (not resilient): ", rmd, " -- see ", ERR_LOG)
-  invisible(ok)
-}
-
 cat(sprintf("\n===== 04_pipeline (models) -- resilient = %s =====\n", resilient))
 
 # Train  (`all` FIRST so a failure surfaces on run #1) -------------------------
