@@ -32,7 +32,7 @@
 #     hydrate("raw")         # restore data/ on a fresh clone from the master
 # =============================================================================
 
-repo   <- "/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class"
+repo   <- getwd()  # repo root = launch dir (every entry point runs from the repo root)
 MASTER <- Sys.getenv("MASTER_DIR", unset = file.path(repo, "data_master"))
 
 # ---- what each layer tracks (repo-relative dirs) ----------------------------

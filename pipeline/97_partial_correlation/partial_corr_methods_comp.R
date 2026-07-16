@@ -28,7 +28,7 @@ library(magick)
 
 # run from the 97_partial_correlation/ directory regardless of where this is
 # sourced/invoked from, so the ../ and output/ relative paths resolve
-setwd("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/pipeline/97_partial_correlation")
+setwd("pipeline/97_partial_correlation")  # launched from the repo root
 
 # --- load the SAME data partial_corr.R uses ---------------------------------
 census <- read.csv("../04_create_census/output/slam_c1-c10_age_all_bwfatgluc/complete_census.csv")
