@@ -7,10 +7,10 @@
 #   Rscript run/run.R          (from the repo root)
 #
 # `rebuild_from` drives which steps execute:
-#   raw    installer -> hydrate(raw)   -> preprocess -> reproduce -> figures -> session_info
-#   clean  installer -> hydrate(clean) ->               reproduce -> figures -> session_info
-#   model  installer -> hydrate(model) ->                            figures -> session_info
-#   (reproduce = fit models + 99 analysis; figures = run/05_render_figures.R)
+#   raw    installer -> hydrate(raw)   -> preprocess -> pipeline -> downstream -> figures -> session_info
+#   clean  installer -> hydrate(clean) ->               pipeline -> downstream -> figures -> session_info
+#   model  installer -> hydrate(model) ->                           downstream -> figures -> session_info
+#   (pipeline = fit models 01-07; downstream = analyses 90-98; figures = 06_render_figures.R)
 #
 # Each step is a fresh Rscript (same as running the run/ scripts by hand); this
 # just sequences them and honours the config. Stops on the first failure.
@@ -29,7 +29,7 @@ if (!rebuild %in% c("raw", "clean", "model"))
 if (!is.null(cfg$master_dir) && nzchar(cfg$master_dir))
   Sys.setenv(MASTER_DIR = path.expand(cfg$master_dir))
 
-# --- per-step timing log (output/run_log.csv, gitignored). 09_session_info.R
+# --- per-step timing log (output/run_log.csv, gitignored). 07_session_info.R
 #     reads it and writes the run_timing.txt summary; env record stays separate.
 RUN_LOG <- file.path("output", "run_log.csv")
 dir.create("output", showWarnings = FALSE, recursive = TRUE)
@@ -52,13 +52,14 @@ step("run/01_installer.R")   # idempotent renv::restore() -- always safe (no-op 
 step("run/02_hydrate_data.R")                          # hydrates the `rebuild` layer
 
 if (rebuild == "raw")                step("run/03_preprocess.R")
-if (rebuild %in% c("raw", "clean"))  step("run/04_reproduce.R")   # fit models + 99 analysis
+if (rebuild %in% c("raw", "clean"))  step("run/04_pipeline.R")    # fit models (stages 01-07)
 if (rebuild == "model")
-  cat("\n[model mode] using frozen objects; skipping re-fit. NOTE: supplemental figures",
-      "that embed analysis outputs (99 etc.) may be incomplete until those are added to",
-      "the model hydrate layer (item 3b).\n")
+  cat("\n[model mode] using frozen objects; skipping re-fit. NOTE: downstream analyses",
+      "that embed model outputs may be incomplete until those are added to the model",
+      "hydrate layer.\n")
 
-step("run/05_render_figures.R")                                   # assemble figures (all modes)
+step("run/05_downstream.R")                                       # downstream analyses (90-98)
+step("run/06_render_figures.R")                                   # assemble figures (all modes)
 
-step("run/09_session_info.R")
+step("run/07_session_info.R")
 cat("\n===== done (rebuild_from = ", rebuild, ") =====\n", sep = "")

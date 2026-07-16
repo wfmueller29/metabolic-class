@@ -1,7 +1,7 @@
 # =============================================================================
-# 04_reproduce.R  --  MODELS runner: train / validate / predict (stages 01-07)
-# + the 99 treatment-response analysis. Figures are a SEPARATE step
-# (run/05_render_figures.R).
+# 04_pipeline.R  --  MODELS runner: train / validate / predict (stages 01-07).
+# Downstream analyses are run/05_downstream.R; figures are run/06_render_figures.R
+# (both SEPARATE steps after this one). 04 is models only.
 #
 # Assumes you have already run, IN ORDER:
 #   run/01_installer.R      - restore the package library (renv)
@@ -20,7 +20,7 @@
 #   output/run_errors.log  -- written ONLY when something fails (config + stderr tail)
 #   output/run_summary.csv -- per-task status + minutes (overnight mode, or on failure)
 #
-# Run from the repo root:  Rscript run/04_reproduce.R
+# Run from the repo root:  Rscript run/04_pipeline.R
 # =============================================================================
 
 resilient <- isTRUE(tryCatch(yaml::read_yaml("run/00_config.yaml")$resilient,
@@ -99,7 +99,7 @@ run_render <- function(rmd) {
   invisible(ok)
 }
 
-cat(sprintf("\n===== 04_reproduce (models) -- resilient = %s =====\n", resilient))
+cat(sprintf("\n===== 04_pipeline (models) -- resilient = %s =====\n", resilient))
 
 # Train  (`all` FIRST so a failure surfaces on run #1) -------------------------
 for (cfg in c(
@@ -129,18 +129,19 @@ for (cfg in c(
   "inputs/predict/itp_controls_p_treatment.yaml"
 )) run_config("helpers/predict.R", cfg)
 
-# Treatment-response analysis (produces output the supplemental figures embed) --
-run_render("downstream/97_treatment_response/treatment_response.Rmd")
+# NOTE: the treatment-response analysis (97) and every other downstream analysis
+# now run in run/05_downstream.R (the step AFTER this one). 04 is models only, so
+# nothing double-runs and the runners mirror the pipeline/ vs downstream/ split.
 
 # --- final summary -----------------------------------------------------------
 df <- if (length(results)) do.call(rbind, lapply(results, as.data.frame, stringsAsFactors = FALSE)) else NULL
 nfail <- if (is.null(df)) 0 else sum(grepl("FAILED", df$status))
-cat(sprintf("\n===== 04_reproduce done: %d tasks, %d FAILED =====\n",
+cat(sprintf("\n===== 04_pipeline done: %d tasks, %d FAILED =====\n",
             if (is.null(df)) 0 else nrow(df), nfail))
 if (nfail > 0) {
   cat("failed tasks:\n"); print(df[grepl("FAILED", df$status), c("driver", "config", "status")], row.names = FALSE)
   cat(sprintf("\nsee %s  (summary: %s)\n", ERR_LOG, SUMMARY))
 }
 
-# Figures are a SEPARATE step -- run/05_render_figures.R (pub_ready_figs + partial
-# correlation, then render primary + sup). Run it after this script.
+# Next steps (SEPARATE scripts): run/05_downstream.R (the downstream analyses,
+# incl. 91 + 97) then run/06_render_figures.R (assemble the figure PDFs).

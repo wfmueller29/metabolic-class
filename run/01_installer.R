@@ -13,7 +13,7 @@
 # NOT captured by renv (so handled/documented separately):
 #   - the TeX distribution: renv installs the tinytex R PACKAGE, not the LaTeX
 #     install -- bootstrapped idempotently below (needed for the PDF figure renders).
-#   - the BLAS/LAPACK backend (system-level): documented by run/09_session_info.R.
+#   - the BLAS/LAPACK backend (system-level): documented by run/07_session_info.R.
 #
 # Run from the repo root:  Rscript run/01_installer.R
 # =============================================================================

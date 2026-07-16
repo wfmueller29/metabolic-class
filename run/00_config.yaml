@@ -19,4 +19,4 @@ rebuild_from: "raw"
 #            reproduce -- you want to see breakage).
 #   true  -> unattended/overnight: on a failure, log it (output/run_errors.log) and
 #            CONTINUE to the next config (retry once first, except `all`).
-resilient: false
+resilient: true

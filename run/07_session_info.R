@@ -1,5 +1,5 @@
 # =============================================================================
-# 09_session_info.R  --  final reproducibility step.
+# 07_session_info.R  --  final reproducibility step.
 #
 # Captures the exact environment that produced the results -- R version, OS,
 # BLAS/LAPACK backend, locale, and the versions of every package the pipeline
@@ -10,7 +10,7 @@
 # needs to reproduce (or explain drift from) the canonical run.
 #
 # Run from the repo root, ideally in the same R environment used for the run:
-#   Rscript 09_session_info.R
+#   Rscript 07_session_info.R
 # =============================================================================
 
 out_file <- "session_info.txt"
@@ -107,7 +107,7 @@ if (file.exists(run_log)) {
       "",
       sprintf("  %-26s %9.2f", "TOTAL (steps before 09)", sum(mins, na.rm = TRUE)),
       "",
-      "(09_session_info itself isn't listed -- run.R records each step's row after",
+      "(07_session_info itself isn't listed -- run.R records each step's row after",
       " it finishes, so this final step can't time itself.)"
     )
     writeLines(tl, "run_timing.txt")
