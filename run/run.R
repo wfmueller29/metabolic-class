@@ -1,7 +1,7 @@
 # =============================================================================
 # run.R  --  top-level reproduction orchestrator.
 #
-# Reads run/config.yaml and runs the pipeline end-to-end per `rebuild_from`,
+# Reads run/00_config.yaml and runs the pipeline end-to-end per `rebuild_from`,
 # so a reproducer edits ONE config and runs ONE command:
 #
 #   Rscript run/run.R          (from the repo root)
@@ -18,7 +18,7 @@
 
 `%||%` <- function(a, b) if (is.null(a)) b else a
 
-cfg_path <- "run/config.yaml"
+cfg_path <- "run/00_config.yaml"
 if (!file.exists(cfg_path))
   stop("missing ", cfg_path, " -- edit the template there, then re-run.")
 cfg <- yaml::read_yaml(cfg_path)
