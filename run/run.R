@@ -7,9 +7,9 @@
 #   Rscript run/run.R          (from the repo root)
 #
 # `rebuild_from` drives which steps execute:
-#   raw    installer? -> hydrate(raw)   -> preprocess -> reproduce -> figures -> session_info
-#   clean  installer? -> hydrate(clean) ->               reproduce -> figures -> session_info
-#   model  installer? -> hydrate(model) ->                            figures -> session_info
+#   raw    installer -> hydrate(raw)   -> preprocess -> reproduce -> figures -> session_info
+#   clean  installer -> hydrate(clean) ->               reproduce -> figures -> session_info
+#   model  installer -> hydrate(model) ->                            figures -> session_info
 #   (reproduce = fit models + 99 analysis; figures = run/05_render_figures.R)
 #
 # Each step is a fresh Rscript (same as running the run/ scripts by hand); this
@@ -38,7 +38,7 @@ step <- function(script) {
 cat(sprintf("\n===== reproduction run =====\n  rebuild_from = %s\n  master       = %s\n",
             rebuild, Sys.getenv("MASTER_DIR")))
 
-if (isTRUE(cfg$install)) step("run/01_installer.R")   # usually run once; config gates it
+step("run/01_installer.R")   # idempotent renv::restore() -- always safe (no-op when in sync)
 step("run/02_hydrate_data.R")                          # hydrates the `rebuild` layer
 
 if (rebuild == "raw")                step("run/03_preprocess.R")

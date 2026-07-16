@@ -1,30 +1,39 @@
-install.packages("devtools", repos = "https://cloud.r-project.org")
-install.packages("coxme", repos = "https://cloud.r-project.org")
-install.packages("fastDummies", repos = "https://cloud.r-project.org")
-devtools::install_github("https://github.com/wfmueller29/helphlme.git")
-devtools::install_github("https://github.com/wfmueller29/callframe.git")
-devtools::install_github("https://github.com/wfmueller29/SLAM.git")
-devtools::install_github("https://github.com/wfmueller29/consoler.git")
-install.packages("lmerTest", repos = "https://cloud.r-project.org")
-install.packages("tidyverse", repos = "https://cloud.r-project.org")
-install.packages("rsample", repos = "https://cloud.r-project.org")
-install.packages("future", repos = "https://cloud.r-project.org")
-install.packages("kableExtra", repos = "https://cloud.r-project.org")
-install.packages("survival", repos = "https://cloud.r-project.org")
-install.packages("survminer", repos = "https://cloud.r-project.org")
-install.packages("ggplotify", repos = "https://cloud.r-project.org")
-install.packages("sjPlot", repos = "https://cloud.r-project.org")
-install.packages("lme4", repos = "https://cloud.r-project.org")
-install.packages("cowplot", repos = "https://cloud.r-project.org")
-install.packages("RColorBrewer", repos = "https://cloud.r-project.org")
-install.packages("viridis", repos = "https://cloud.r-project.org")
-# install.packages("MLmetrics", repos = "https://cloud.r-project.org")
-install.packages("yardstick", repos = "https://cloud.r-project.org")
-install.packages("beepr", repos = "https://cloud.r-project.org")
-install.packages("tinytex", repos = "https://cloud.r-project.org")
-install.packages("flextable", repos = "https://cloud.r-project.org")
-tinytex::install_tinytex()
-# install.packages("rms", repos = "https://cloud.r-project.org")
-# install.packages("base.rms", repos = "https://cloud.r-project.org")
-install.packages("nnet", repos = "https://cloud.r-project.org")
-install.packages("pheatmap", repos = "https://cloud.r-project.org")
+# =============================================================================
+# 01_installer.R  --  provision the R package environment from renv.lock.
+#
+# Idempotent FIRST STOP. renv::restore() installs ONLY the packages that are
+# missing or version-mismatched vs renv.lock -- including the pinned GitHub commit
+# SHAs for helphlme / callframe / SLAM / consoler, and the exact lcmm / marqLevAlg
+# versions (LCMM class assignments are version-sensitive). It's a fast no-op when
+# the library already matches the lock, so this is safe to run EVERY time.
+#
+# renv is auto-activated by the project .Rprofile (renv/activate.R), so a fresh
+# clone self-bootstraps renv on R startup; this script just restores the lockfile.
+#
+# NOT captured by renv (so handled/documented separately):
+#   - the TeX distribution: renv installs the tinytex R PACKAGE, not the LaTeX
+#     install -- bootstrapped idempotently below (needed for the PDF figure renders).
+#   - the BLAS/LAPACK backend (system-level): documented by run/09_session_info.R.
+#
+# Run from the repo root:  Rscript run/01_installer.R
+# =============================================================================
+
+# 1) restore the pinned package library (idempotent; no-op when already in sync)
+renv::restore(prompt = FALSE)
+
+# 2) TeX distribution for the PDF figure renders (idempotent -- installs only if absent)
+if (!requireNamespace("tinytex", quietly = TRUE) || !tinytex::is_tinytex())
+  tinytex::install_tinytex()
+
+# -----------------------------------------------------------------------------
+# Fallback reference only -- the pre-renv manual install list (superseded by
+# renv.lock, which pins exact versions + GitHub SHAs). Left commented in case you
+# ever need to provision without renv:
+#
+#   install.packages(c("devtools","coxme","fastDummies","lmerTest","tidyverse",
+#     "rsample","future","kableExtra","survival","survminer","ggplotify","sjPlot",
+#     "lme4","cowplot","RColorBrewer","viridis","yardstick","beepr","tinytex",
+#     "flextable","nnet","pheatmap"), repos = "https://cloud.r-project.org")
+#   devtools::install_github(c("wfmueller29/helphlme","wfmueller29/callframe",
+#     "wfmueller29/SLAM","wfmueller29/consoler"))
+# -----------------------------------------------------------------------------
