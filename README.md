@@ -1,6 +1,61 @@
 # metabolic-class
 A generalized _Latent Class Mixed Model (LCMM)_ and _Cox Proportional Hazard Model_ pipeline for large longitudinal datasets, like those of _Study of Longitudinal Aging in Mice (SLAM)_. This is a rewrite of [traj_models](https://github.com/wfmueller29/traj_models)
 
+---
+
+## 🚀 Quick start — reproduce the published analysis
+
+**You need:** R, this repo, and the data deposit (the `raw` / `clean` / `model` store from Zenodo / OneDrive).
+
+**1. Clone and enter the repo:**
+```bash
+git clone https://github.com/wfmueller29/metabolic-class
+cd metabolic-class
+```
+
+**2. Set the _one_ machine-specific value** in [`run/00_config.yaml`](run/00_config.yaml):
+```yaml
+master_dir:   "/path/to/your/downloaded/data/deposit"   # the ONLY path you must edit
+rebuild_from: "raw"     # raw = rebuild everything | clean = skip cleaning | model = figures only
+resilient:    false     # true = keep going + log failures (for long unattended runs)
+```
+
+**3. Run _one_ command from the repo root:**
+```bash
+Rscript run/run.R
+```
+
+That's it. `run.R` reads the config and runs the whole pipeline in order, timing each step. A full `raw` rebuild re-fits the models (~6.5 h). For an unattended **overnight run**, keep the machine awake and capture a log:
+```bash
+caffeinate -i Rscript run/run.R 2>&1 | tee run.log
+```
+
+**What you get** (all written into the repo): the figure PDFs in `figures/output/`, the environment record in `session_info.txt`, a per-step timing summary in `run_timing.txt`, and — in resilient mode — failure logs under `output/`.
+
+### What `run.R` does, in order
+| # | script | does |
+|---|---|---|
+| 1 | `run/01_installer.R` | restore the pinned R package library (renv) |
+| 2 | `run/02_hydrate_data.R` | provision data for the chosen `rebuild_from` layer from `master_dir` |
+| 3 | `run/03_preprocess.R` | run the cleaning stages (`raw` mode only) |
+| 4 | `run/04_pipeline.R` | fit the LCMM + Cox models (stages 01–07) |
+| 5 | `run/05_downstream.R` | run the downstream analyses (`downstream/`) |
+| 6 | `run/06_render_figures.R` | assemble the publication figure PDFs |
+| 7 | `run/07_session_info.R` | write the environment + timing record |
+
+Each step is a normal `Rscript`, so you can also run any of them on their own for finer control (e.g. re-render just the figures with `Rscript run/06_render_figures.R` after a completed run).
+
+### Repository layout
+| dir | what |
+|---|---|
+| **`run/`** | the numbered entry points you execute — plus `run.R` (orchestrator) and `00_config.yaml` |
+| **`pipeline/`** | the sequential model pipeline stages (`00a` cleaning → `07` figures) |
+| **`downstream/`** | self-contained analyses that consume the pipeline's outputs (paper figures/tables) |
+| **`helpers/`** | the machinery the runners call (`train` / `validate` / `predict` / `hydrate` / `wipe`) |
+| **`figures/`** | the final figure-assembly package |
+
+---
+
 ## Installation
 
 To install this end-to-end modelling pipeline in your current working directory, run the following command your terminal: 
@@ -8,17 +63,20 @@ To install this end-to-end modelling pipeline in your current working directory,
 ```bash
 git clone https://github.com/wfmueller29/metabolic-class
 ```
-## Dependencies 
+## Dependencies
 
-To install R package dependencies, navigate to the `metabolic-class` directory and run this command in your terminal:
+The package environment is pinned with [renv](https://rstudio.github.io/renv/) — `renv.lock` records the exact version of every dependency (including the in-house GitHub packages, pinned to specific commits), so the modeling environment is reproducible. To provision it, navigate to the `metabolic-class` directory and run:
 
 ```bash
 Rscript run/01_installer.R
 ```
-This should install all R packages that the pipeline depends upon, including two in-house dependencies listed below:
 
-* [Callframe Package](https://github.com/wfmueller29/callframe)
-* [Helphlme Package](https://github.com/wfmueller29/helphlme)
+This restores the recorded library via `renv::restore()` (a fast no-op when your library already matches the lockfile) and installs a TeX distribution for the PDF figure renders. It runs automatically as step 1 of `run/run.R`, so you rarely need to invoke it directly. The in-house dependencies it installs:
+
+* [Callframe](https://github.com/wfmueller29/callframe)
+* [Helphlme](https://github.com/wfmueller29/helphlme)
+* [SLAM](https://github.com/wfmueller29/SLAM)
+* [consoler](https://github.com/wfmueller29/consoler)
 
 
 
@@ -36,22 +94,14 @@ This pipeline uses file in, file out structure with yaml files, with the only tw
 
 ### Reproduce the published analysis
 
-To reproduce the manuscript results from the deposited data, edit **one config** and run **one command**.
+See the **[Quick start](#-quick-start--reproduce-the-published-analysis)** at the top: set `master_dir` in [`run/00_config.yaml`](run/00_config.yaml) and run `Rscript run/run.R`.
 
-1. In [`run/config.yaml`](run/config.yaml), set:
-   - `master_dir` — path to the downloaded `raw`/`clean`/`model` data deposit (the one machine-specific value you must set).
-   - `rebuild_from` — how deep to rebuild:
-     - `raw` — hydrate raw inputs → clean (`03_preprocess`) → fit models → figures
-     - `clean` — hydrate cleaned data (skip preprocess) → fit models → figures
-     - `model` — hydrate the fitted objects (skip fitting) → figures only
-   - `install` — set `true` on the first run to provision R packages, then `false`.
-2. From the repo root, run the orchestrator:
+The `rebuild_from` setting controls how deep the rebuild goes:
+- `raw` — hydrate raw inputs → clean (`03_preprocess`) → fit models (`04_pipeline`) → downstream (`05_downstream`) → figures (`06_render_figures`)
+- `clean` — hydrate cleaned data (skip preprocess) → fit models → downstream → figures
+- `model` — hydrate the fitted objects (skip fitting) → downstream → figures only
 
-```bash
-Rscript run/run.R
-```
-
-`run/run.R` sequences the steps in `run/` according to `rebuild_from`: `01_installer` (if enabled) → `02_hydrate_data` → `03_preprocess` (raw only) → `04_reproduce` → `09_session_info`. Each step is a normal `Rscript`, so you can also run them individually from `run/` for finer control.
+Set `resilient: true` in the config for long unattended runs: on a failure the models runner (`04_pipeline`) and downstream runner (`05_downstream`) log the error to `output/run_errors.log` and continue, rather than stopping.
 
 ### Train on your own data
 If you have your own longitudinal dataset that you would like to use to train, navigate to the `metabolic-class` directory and run this command in your terminal.
