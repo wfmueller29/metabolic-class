@@ -17,6 +17,7 @@
 *.RData
 .Ruserdata
 **/*.csv
+**/output/*.yaml
 *.out
 *.DS*
 *.RDATA
