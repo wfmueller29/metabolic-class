@@ -51,12 +51,12 @@ traj_plot <- function(df,
   ## Create Prediction DF using lcpred
   pred <- helphlme::create_pred_df(
     df = df,
-    age_vars = c(age_var, paste0(age_var, 2)),
+    age_vars = age_var,
     fixcov = fixcov
   )
 
   # Determine ymax by maximum predicted value
-  predY <- lcmm::predictY(mo, pred, var.time = paste0(age_var, "_ns"))
+  predY <- lcmm::predictY(mo, pred, var.time = paste0(age_var[[1]], "_ns"))
   ymax <- max(predY$pred)
 
   # Determine ymin by either taking minimum predicted value or
@@ -76,7 +76,7 @@ traj_plot <- function(df,
   helphlme::plot_hlme(
     df = pred,
     model = mo,
-    age = age_var,
+    age = age_var[[1]],
     lwd = 3,
     lty = c(1, 1),
     main = title,

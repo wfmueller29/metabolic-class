@@ -6,7 +6,7 @@ output:
   html_document:
     df_print: paged
 params:
-  input_path: "../05_prediction_data/output/itp_genotyped_M.yaml"
+  input_path: "../05_prediction_data/output/slam_c1-c10_lnage_all_bwfatgluc.yaml"
 ---
 
 ```{r setup, warning=FALSE, message=FALSE, echo=FALSE, eval = TRUE}
@@ -197,7 +197,7 @@ final_models$traj_pred <- lapply(seq_len(nrow(final_models)), function(i) {
     df = final_models$dfs[[i]],
     mo = final_models$final_model[[i]],
     t1 = final_models$t1_raw[[i]],
-    age_var = final_models$age_var[[i]],
+    age_var = datasets[[i]]$age_var,
     y_var = final_models$oc[[i]],
     title = paste("Predicted",
       final_models$oc_name[[i]],
@@ -1156,7 +1156,11 @@ add_prediction_data <- function(final_models, datasets, filtered_df_name) {
   test_index <- final_models$data_mod == "train_test"
   final_models_test <- final_models[test_index, ]
 
-  age_vars <- rep(config$meta_dataset$age_var[[1]], nrow(final_models_test))
+  age_vars <- lapply(datasets[test_index], function(dataset) {
+    dataset$age_var[[1]]
+  })
+  age_vars <- unlist(age_vars)
+  # age_vars <- rep(config$meta_dataset$age_var[[1]], nrow(final_models_test))
   age_vars <- paste0(age_vars, "_ns")
   outcomes <- final_models_test[, "oc"]
   ids <- final_models_test[, "subject"]

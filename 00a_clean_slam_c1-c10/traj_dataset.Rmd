@@ -1389,7 +1389,7 @@ main_all2$adiposity <- main_all2$fat / main_all2$bw_nearest_fat * 100
 ### Create ln(age) variable
 
 ```{r ln age}
-main_all2$ln_age <- log(main_all2$age_wk)
+main_all2$ln_age_wk <- log(main_all2$age_wk)
 ```
 
 ### Drop unused variables before saving
@@ -1406,7 +1406,8 @@ keep_cols <- c(
   "strain",
   "cohort",
   "age_wk",
-  "per_age_wk"
+  "per_age_wk",
+  "ln_age_wk"
 )
 
 main_all2 <- main_all2[, keep_cols]
