@@ -1,0 +1,18 @@
+================================================================
+ RUN TIMING -- metabolic-class reproduction
+ summarized: 2026-07-17 18:18:07 EDT
+================================================================
+
+  step                         minutes   status
+  -------------------------- ---------   --------
+  01_installer.R                  0.10   OK
+  02_hydrate_data.R               0.09   OK
+  03_preprocess.R                 2.62   OK
+  04_pipeline.R                1473.00   OK
+  05_downstream.R               113.15   OK
+  06_render_figures.R             2.64   FAILED(1)
+
+  TOTAL (steps before 09)      1591.60
+
+(07_session_info itself isn't listed -- run.R records each step's row after
+ it finishes, so this final step can't time itself.)
