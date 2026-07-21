@@ -142,6 +142,25 @@ FIGURES <- list(
   ),
   list(
     part  = "supplemental",
+    title = "Class Overlap and Co-occurrence",
+    panels = c(
+      # A -- subject x class posterior probability, HCA on both axes. Stage 07
+      # writes TWO heatmaps: heatmap1 includes the covariates as extra columns,
+      # heatmap2 does not. This is heatmap2; heatmap1 is the superseded version
+      # and is deliberately not in the deck.
+      "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/heatmap/heatmap2.jpg",
+      # B, C -- qgraph network and the coefficient table behind it
+      "../91_partial_correlation/output/partial_correlation_network.jpg",
+      "../99_pub_ready_figs/output/tables/partial_correlation.png",
+      # D-G -- adjusted Rand index, UpSet, and the high-risk-burden survival pair
+      "../92_overlap_analysis/output/ari_matrix.png",
+      "../92_overlap_analysis/output/upset_high_risk.png",
+      "../92_overlap_analysis/output/km_high_risk_burden.png",
+      "../92_overlap_analysis/output/km_high_risk_burden_hr.png"
+    )
+  ),
+  list(
+    part  = "supplemental",
     title = "Sex/Strain Classes FM",
     panels = c(
       "../99_pub_ready_figs/output/fb6_env/define_class/fat_by_fat.png",
@@ -170,16 +189,9 @@ FIGURES <- list(
       "../99_pub_ready_figs/output/tables/hr_sexstrain_gluc.png"
     )
   ),
-  list(
-    part  = "supplemental",
-    title = "Heatmaps",
-    panels = c(
-      "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/heatmap/heatmap2.jpg",
-      "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/heatmap/heatmap1.jpg",
-      "../91_partial_correlation/output/partial_correlation_network.jpg",
-      "../91_partial_correlation/output/partial_correlation_results_clean_table.png"
-    )
-  ),
+  # The old "Heatmaps" figure lived here. All four of its panels are now in the
+  # Class Overlap figure above, except heatmap1.jpg (the covariates-as-columns
+  # version), which is superseded and intentionally dropped.
   list(
     part  = "supplemental",
     title = "Reclassifcation analysis",

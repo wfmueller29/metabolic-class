@@ -28,9 +28,29 @@ output:
 
   OUTPUTS
     output/panels/1A.png, 1B.png, ... S1A.png, ...   flat, one per panel
-    output/tables/hr_*.png                            HR tables built below
     output/panel_index.csv                            panel -> source map
+
+    output/panels/ is wiped at the start of every render -- see the chunk
+    below. Any panel that is MISSING simply has no PNG.
+
+    Table PNGs are NOT written here. Every table is built and rasterised by
+    ../99_pub_ready_figs/pub_ready_figs.R; a table that belongs to a figure is
+    referenced as one of that figure's panels and so gets copied out under its
+    panel id like any other. Tables listed in TABLES (Table 1, Table 2, the
+    supplemental tables) render inline in this document only.
 -->
+
+<style>
+/* This deck is scanned, not read: the panel id is the thing you are looking
+   for, so it is set large, and the image is deliberately small so more panels
+   fit on screen at once. Changing these two rules changes the whole deck. */
+.panel-id  { font-size: 3em; font-weight: 700; line-height: 1;
+             margin: 1.4em 0 0.1em; }
+.panel-src { font-size: .75em; color: #666; margin: 0 0 .4em; }
+.panel-img { max-width: 75%; height: auto; }
+/* forests only -- must follow .panel-img to win at equal specificity */
+.panel-img-full { max-width: 100%; }
+</style>
 
 ```{r setup, warning=FALSE, message=FALSE, echo=FALSE}
 # library(helphlme)
@@ -65,8 +85,19 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 source("figure_spec.R")
 
 PANEL_DIR <- file.path("output", "panels")
-TABLE_DIR <- file.path("output", "tables")
-for (d in c(PANEL_DIR, TABLE_DIR)) if (!dir.exists(d)) dir.create(d, recursive = TRUE)
+if (!dir.exists(PANEL_DIR)) dir.create(PANEL_DIR, recursive = TRUE)
+
+# Panel ids are POSITIONAL: inserting a figure re-letters everything after it,
+# and deleting one leaves the highest ids with no owner. A file written by an
+# earlier render is never overwritten in that case, so it would sit in this
+# folder looking exactly as authoritative as a current one -- and this folder is
+# what gets handed off for layout. Clear it every render so its contents can
+# only ever be the panels the current spec produced.
+old <- list.files(PANEL_DIR, pattern = "\\.png$", full.names = TRUE)
+if (length(old)) {
+  invisible(file.remove(old))
+  message("cleared ", length(old), " panel PNG(s) from a previous render")
+}
 
 
 # Figure ids: primary -> "1","2",... ; supplemental -> "S1","S2",...
@@ -82,6 +113,16 @@ figure_ids <- local({
 
 # Panel id: figure id + letter by position -> "S2C"
 panel_id <- function(fig_id, i) if (fig_id == "GA") "GA" else paste0(fig_id, LETTERS[i])
+
+# Most panels render at PANEL_SCALE so more of the deck fits on screen. Forest
+# plots are the exception: combined Cox forests and the faceted (quintile /
+# tertile) ones are wide, dense, and carry small per-row labels and CIs that
+# stop being legible when shrunk, so they render full width. Matching on the
+# path is deliberate -- every forest in the deck is written into a directory
+# named .../forest/ or .../*_forest/ by stage 07, so a new one is picked up
+# automatically rather than needing to be listed here.
+PANEL_SCALE   <- 0.75
+is_full_width <- function(path) grepl("forest", path, fixed = TRUE)
 ```
 
 <!--
@@ -159,16 +200,30 @@ for (fi in seq_along(FIGURES)) {
 
     if (!file.exists(path)) {
       missing_panels <- c(missing_panels, paste0(id, "  ", path))
-      cat("\n**", id, "** -- MISSING: `", path, "`\n\n", sep = "")
+      cat('\n<p class="panel-id">', id, '</p>\n', sep = "")
+      cat('<p class="panel-src">MISSING: <code>', path, '</code></p>\n\n', sep = "")
       next
     }
 
+    img <- magick::image_read(path)
     out <- file.path(PANEL_DIR, paste0(id, ".png"))
-    magick::image_write(magick::image_read(path), out, format = "png")
+    magick::image_write(img, out, format = "png")
 
-    cat("\n**", id, "**  \n", sep = "")
-    cat("<sub>`", path, "`</sub>\n\n", sep = "")
-    cat("![](", out, ")\n\n", sep = "")
+    # Scaling is applied in BOTH directions. The width attribute scales the
+    # image's natural pixel width, which is what shrinks a panel already
+    # narrower than the text column. The max-width CSS rule scales it relative
+    # to the column instead, which is what shrinks the table PNGs -- those are
+    # written at zoom = 10, so a fraction of their natural width still
+    # overflows the column and would otherwise look unchanged. Both have to
+    # move together, hence one scale driving the width and one matching class.
+    full  <- is_full_width(path)
+    scale <- if (full) 1 else PANEL_SCALE
+    cls   <- if (full) "panel-img panel-img-full" else "panel-img"
+    w     <- round(magick::image_info(img)$width[1] * scale)
+
+    cat('\n<p class="panel-id">', id, '</p>\n', sep = "")
+    cat('<p class="panel-src"><code>', path, '</code></p>\n', sep = "")
+    cat('<img class="', cls, '" src="', out, '" width="', w, '">\n\n', sep = "")
   }
 }
 ```

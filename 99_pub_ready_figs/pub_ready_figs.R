@@ -165,7 +165,15 @@ CANON <- list(
   list(pattern = "adipos",                  label = "Adiposity (%)"),
   list(pattern = "fat|\\bfm\\b",            label = "Fat mass (g)"),
   list(pattern = "gluc|\\bfbg\\b",          label = "Blood glucose (mg/dL)"),
-  list(pattern = "body ?wei?gh?t|^bw\\b",   label = "Body weight (g)")
+  list(pattern = "body ?wei?gh?t|^bw\\b",   label = "Body weight (g)"),
+  # KM axes. Stage 07 emits 'Age (Weeks) ' (title case, trailing space) and
+  # 'Survival Probability'; the manuscript uses sentence case throughout, as
+  # with the outcome labels above. Normalising here means every KM in the deck
+  # agrees without touching 07. Anything OUTSIDE this stage that draws its own
+  # KM must match these two strings by hand -- 92_overlap_analysis writes its
+  # PNG directly and so is the one place that has to be kept in step.
+  list(pattern = "^age *\\(weeks?\\)$",     label = "Age (weeks)"),
+  list(pattern = "^survival probability$",  label = "Survival probability")
 )
 
 canonical_label <- function(lab) {
@@ -600,6 +608,37 @@ if (TRUE) {
     # S1G -- adiposity classes only (9 and 10)
     demographics_table(adiposity_env, "output/tables/demographics_adiposity.png",
                        lcm = "Adiposity")
+  })
+  tbl("partial_correlation", {
+    # ---- partial_correlation (S2C) ---------------------------------------
+    # Rebuilt here rather than used as 91's own PNG. 91 draws it with
+    # gridExtra::tableGrob, which cannot take the flextable house style, but it
+    # also writes the same data to CSV -- and it writes that CSV AFTER renaming
+    # the columns, so the headers are already final:
+    #   Variable 1 (Class) | Variable 2 (Class) | Corr. | P value
+    # Reading the CSV means no upstream change and no risk of the two drifting:
+    # this table and 91's are the same numbers by construction.
+    #
+    # check.names = FALSE keeps the spaces and parentheses in the headers.
+    pc_path <- "../91_partial_correlation/output/partial_correlation_results.csv"
+    if (!file.exists(pc_path))
+      stop("partial correlation CSV not found: ", pc_path, " (91 has not run)")
+
+    pc <- utils::read.csv(pc_path, check.names = FALSE, stringsAsFactors = FALSE)
+
+    # 91 already sorted by descending |correlation|; preserve that order.
+    pc[["Corr."]]   <- formatC(pc[["Corr."]], format = "f", digits = 2)
+    pc[["P value"]] <- formatC(pc[["P value"]], format = "e", digits = 1)
+
+    pc_ft <- flextable(pc) %>%
+      fig_table_theme() %>%
+      align(j = c("Variable 1 (Class)", "Variable 2 (Class)"),
+            align = "left", part = "all") %>%
+      autofit() %>%
+      set_table_properties(layout = "autofit") %>%
+      fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+    invisible(save_as_image(pc_ft, "output/tables/partial_correlation.png", zoom = 10))
   })
   tbl("hr_adiposity", {
     # ---- hr_adiposity (S1H) ----------------------------------------------

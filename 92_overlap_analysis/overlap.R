@@ -9,6 +9,9 @@ library(webshot2)
 library(UpSetR)
 
 # load data -------------------------------------------------------------------
+# All figures from this stage go under output/, as in every other stage.
+if (!dir.exists("output")) dir.create("output", recursive = TRUE)
+
 census <- read.csv("../04_create_census/output/slam_c1-c10_age_all_bwfatgluc/train_census.csv")
 
 
@@ -52,8 +55,8 @@ ari_mat
 
 
 dimnames(ari_mat) <- list(
-  c("BW Class", "FM Class", "FPG Class"),
-  c("BW Class", "FM Class", "FPG Class")
+  c("BW Class", "FM Class", "FBG Class"),
+  c("BW Class", "FM Class", "FBG Class")
 )
 
 # ari_mat should already exist from your ARI code
@@ -79,7 +82,7 @@ ari_ft
 
 save_as_image(
   ari_ft,
-  path = "ari_matrix.png"
+  path = "output/ari_matrix.png"
 )
 
 # redo analysis comparing just high risk to non-high risk groups
@@ -144,8 +147,8 @@ for (i in seq_along(risk_df)) {
 }
 
 dimnames(ari_risk_mat) <- list(
-  c("BW High Risk", "FM High Risk", "FPG High Risk"),
-  c("BW High Risk", "FM High Risk", "FPG High Risk")
+  c("BW High Risk", "FM High Risk", "FBG High Risk"),
+  c("BW High Risk", "FM High Risk", "FBG High Risk")
 )
 
 ari_risk_mat
@@ -171,7 +174,7 @@ ari_risk_ft
 
 save_as_image(
   ari_risk_ft,
-  path = "ari_high_risk_matrix.png"
+  path = "output/ari_high_risk_matrix.png"
 )
 
 # Jaccard index function -------------------------------------------------------
@@ -225,8 +228,8 @@ for (i in seq_along(risk_df)) {
 }
 
 dimnames(jaccard_risk_mat) <- list(
-  c("BW High Risk", "FM High Risk", "FPG High Risk"),
-  c("BW High Risk", "FM High Risk", "FPG High Risk")
+  c("BW High Risk", "FM High Risk", "FBG High Risk"),
+  c("BW High Risk", "FM High Risk", "FBG High Risk")
 )
 
 jaccard_risk_mat
@@ -252,7 +255,7 @@ jaccard_risk_ft
 
 save_as_image(
   jaccard_risk_ft,
-  path = "jaccard_high_risk_matrix.png"
+  path = "output/jaccard_high_risk_matrix.png"
 )
 
 # UpSet plot ------------------------------------------------------------------
@@ -266,11 +269,11 @@ upset_data <- census_risk[, c(
 names(upset_data) <- c(
   "BW High Risk",
   "FM High Risk",
-  "FPG High Risk"
+  "FBG High Risk"
 )
 
 png(
-  filename = "upset_high_risk.png",
+  filename = "output/upset_high_risk.png",
   width = 10,
   height = 6,
   units = "in",
@@ -280,7 +283,7 @@ png(
 
 upset(
   upset_data,
-  sets = c("BW High Risk", "FM High Risk", "FPG High Risk"),
+  sets = c("BW High Risk", "FM High Risk", "FBG High Risk"),
   order.by = "freq",
   text.scale = 1.5
 )
@@ -347,8 +350,8 @@ make_km <- function(pal) {
     data = census_hr,
     conf.int = FALSE,
     pval = FALSE,                          # HRs are in a separate table instead
-    xlab = "Age (Weeks) ",
-    ylab = "Survival Probability",
+    xlab = "Age (weeks)",
+    ylab = "Survival probability",
     legend.labs = legend_labs,             # 0 (n = ...), 1 (n = ...), ...
     legend.title = burden_legend,
     legend = "right",
@@ -374,7 +377,7 @@ make_km <- function(pal) {
   p
 }
 
-png("km_high_risk_burden.png", width = 8, height = 6, units = "in",
+png("output/km_high_risk_burden.png", width = 8, height = 6, units = "in",
     res = 600, bg = "white")
 print(make_km(pal))
 dev.off()
@@ -406,7 +409,7 @@ hr_table <- data.frame(
   b = c("Reference", hr_strings),
   stringsAsFactors = FALSE, check.names = FALSE
 )
-names(hr_table) <- c(burden_title, "HR (95% CI)")
+names(hr_table) <- c(burden_title, "HR (CI)")
 
 cat("\nHR table (vs 0 high-risk phenotypes):\n")
 print(hr_table, row.names = FALSE)
@@ -424,4 +427,4 @@ hr_ft <- flextable(hr_table) %>%
 
 hr_ft
 
-save_as_image(hr_ft, path = "km_high_risk_burden_hr.png", res = 600)
+save_as_image(hr_ft, path = "output/km_high_risk_burden_hr.png", res = 600)
