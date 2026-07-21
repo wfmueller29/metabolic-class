@@ -1179,7 +1179,11 @@ dose_plot_panel <- cowplot::plot_grid(title_theme, dose_plot_panel,
 )
 
 dose_plot_panel_hr <- lapply(dose_plots_hrs, function(table) {
-  table$hr_table[, "final", drop = FALSE]
+  # `pval` is kept alongside `final` so the faceted forest can assign stars from
+  # the model p-value rather than re-parsing them out of the formatted string,
+  # which would inherit SLAM's p<0.005 cutoff for "**".
+  keep <- intersect(c("final", "pval"), colnames(table$hr_table))
+  table$hr_table[, keep, drop = FALSE]
 })
 
 
@@ -1224,11 +1228,21 @@ forest_parse_final <- function(final) {
   )
 }
 
+# Stars for the faceted forests. MUST match the manuscript legends and
+# 99_pub_ready_figs/STAR_RULES: *** p<0.001, ** p<0.01, * p<0.05.
+# This deliberately differs from SLAM::surv_gethr, which uses p<0.005 for "**":
+# the forests take the model p-value directly, so they are not bound by it.
+# If no p-value is available the parsed star is used as a fallback.
+forest_stars <- function(pval, fallback = "") {
+  if (is.null(pval) || length(pval) == 0 || is.na(pval)) return(fallback)
+  if (pval < 0.001) "***" else if (pval < 0.01) "**" else if (pval < 0.05) "*" else ""
+}
+
 # significance stars -> p-value column text
 forest_pval_text <- function(stars) {
   dplyr::case_when(
     stars == "***" ~ "<0.001 ***",
-    stars == "**" ~ "<0.005 **",
+    stars == "**" ~ "<0.01 **",
     stars == "*" ~ "<0.05 *",
     TRUE ~ "n.s."
   )
@@ -1257,7 +1271,14 @@ forest_tidy_panel <- function(df, facet_name, group_prefix) {
     value = parsed$value, lower = parsed$lower, upper = parsed$upper,
     hr_val = sprintf("%.2f", parsed$value),
     hr_ci = sprintf("(%.2f - %.2f)", parsed$lower, parsed$upper),
-    pval_text = forest_pval_text(parsed$stars),
+    pval_text = forest_pval_text(
+      if ("pval" %in% colnames(df)) {
+        vapply(seq_len(nrow(df)),
+               function(k) forest_stars(df$pval[k], parsed$stars[k]), character(1))
+      } else {
+        parsed$stars
+      }
+    ),
     stringsAsFactors = FALSE
   )
   rbind(ref_row, main_rows)

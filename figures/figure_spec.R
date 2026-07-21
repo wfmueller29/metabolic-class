@@ -88,11 +88,11 @@ FIGURES <- list(
     part  = "primary",
     title = "Graded Mortality Response",
     panels = c(
+      "images/3A.png",
       "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/dose_response/plot_1.png",
       "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/dose_response/plot_4.png",
       "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/dose_response/plot_7.png",
-      "images/Basic LCM.png",
-      "images/Graded Mortality.png"
+      "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/dose_response_forest/forest.png"
     )
   ),
   list(

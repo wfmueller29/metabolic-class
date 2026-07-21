@@ -128,11 +128,20 @@ normalise_labels <- function(g) {
 # upper/pval/final), so where that exists we can format the string ourselves and
 # apply the thresholds below explicitly.
 #
-# TO CHANGE THE CONVENTION: edit STAR_RULES. Checked in order, first match wins.
-# Whatever is set here must match the figure legends.
+# THESE MUST MATCH THE MANUSCRIPT LEGENDS. That is the whole reason this stage
+# re-derives the stars instead of passing SLAM's through: the legends are the
+# specification, and 99 enforces them.
+#
+# Current legends state:  *, p<0.05;  **, p<0.01;  ***, p<0.001
+# so that is what is set below. Note this DIFFERS from SLAM's baked-in 0.005:
+# any HR with 0.005 <= p < 0.01 gains a star relative to the old figures. That
+# is intended -- the old figures did not match their own legend.
+#
+# TO CHANGE THE CONVENTION: edit STAR_RULES and the legends together, never one
+# alone. Checked in order, first match wins.
 STAR_RULES <- list(
   list(p = 0.001, mark = "***"),
-  list(p = 0.005, mark = "**"),   # SLAM's convention; use 0.01 for the usual one
+  list(p = 0.01,  mark = "**"),
   list(p = 0.05,  mark = "*")
 )
 
@@ -153,12 +162,31 @@ format_hr <- function(value, lower, upper, pval, digits = 4) {
 
 # Pull one model's rows out of hr_numeric; NULL if 07 did not produce it (the
 # caller then falls back to SLAM's pre-formatted `final` strings).
+#
+# CLASS LABELS: hr_numeric carries the RAW model term names ("Class2"), because
+# cox_table_numeric() reads straight from surv_gethr. hr_table carries the
+# DISPLAY labels ("Class 2"), because 07 rewrites them through
+# config$legend_labels afterwards. Publishing the raw ones would be wrong, so
+# the display label is taken from hr_table, matched on a whitespace-stripped
+# key. Doing it that way rather than reinserting a space keeps this correct if
+# legend_labels is ever set to something else entirely (e.g. "Early-Peak-BW").
+#
+# Values were verified identical between the two sources within a run before
+# this was relied on.
 hr_numeric_rows <- function(env, model = "HR Model 1") {
   hn <- env$save_figtabs$hr_numeric
   if (is.null(hn) || !nrow(hn)) return(NULL)
   rows <- hn[hn$Model == model, , drop = FALSE]
   if (!nrow(rows)) return(NULL)
-  rows
+
+  ht <- env$save_figtabs$hr_table
+  if (!is.null(ht) && nrow(ht)) {
+    key      <- function(o, c) paste(gsub("\\s+", "", o), gsub("\\s+", "", c))
+    lookup   <- setNames(as.character(ht$Class), key(ht$Outcome, ht$Class))
+    display  <- lookup[key(rows$Outcome, rows$Class)]
+    rows$Class <- ifelse(is.na(display), as.character(rows$Class), display)
+  }
+  rows[!is.na(rows$Class), , drop = FALSE]
 }
 
 # ---- stage 07 workspaces ----------------------------------------------------
@@ -341,8 +369,9 @@ if (have_workspaces) {
       check.names = FALSE, stringsAsFactors = FALSE
     )
   } else {
-    message("hr_all: hr_numeric absent -- using SLAM's pre-formatted strings ",
-            "(stars follow 0.001/0.005/0.05, not STAR_RULES)")
+    warning("hr_all: hr_numeric absent -- falling back to SLAM's pre-formatted ",
+            "strings, whose stars use p<0.005 for ** and therefore DO NOT match ",
+            "the manuscript legend (p<0.01). Re-run stage 07 so hr_numeric exists.")
     hr_src   <- all_env$save_figtabs$hr_table
     hr_table <- data.frame(
       LCM                 = unname(LCM_LABEL[as.character(hr_src$Outcome)]),
@@ -373,22 +402,44 @@ if (have_workspaces) {
   SEX_STRAIN_LABEL <- c(fb6 = "F/B6", mb6 = "M/B6",
                         fhet3 = "F/HET3", mhet3 = "M/HET3")
 
-  sexstrain_rows <- function(strata, env, slot, lcm) {
-    tb <- env$save_figtabs$mortality_panel_hr[[slot]]
-    data.frame(
-      LCM                 = lcm,
-      `Sex/Strain`        = unname(SEX_STRAIN_LABEL[[strata]]),
-      Class               = rownames(tb),
-      `Hazard Ratio (CI)` = as.character(tb[["final"]]),
-      check.names = FALSE, stringsAsFactors = FALSE
-    )
+  # Prefer hr_numeric so STAR_RULES decides the asterisks, exactly as in hr_all.
+  # `outcome` selects the rows within hr_numeric; `slot` is only used by the
+  # fallback (mortality_panel_hr is ordered bw, fat, gluc).
+  #
+  # The two sources agree: hr_numeric comes from final_models$cox_models via
+  # surv_gethr, mortality_panel_hr from kap_plot_hrs -- both are the unadjusted
+  # "~ Class" fit, and their HR/CI strings were verified identical (values and
+  # class ordering) across cohorts before this was wired up.
+  sexstrain_rows <- function(strata, env, slot, lcm, outcome) {
+    hn <- hr_numeric_rows(env, "HR Model 1")
+    if (!is.null(hn)) {
+      hn <- hn[hn$Outcome == outcome & !is.na(hn$Class) & !is.na(hn$pval), , drop = FALSE]
+    }
+    if (!is.null(hn) && nrow(hn)) {
+      data.frame(
+        LCM                 = lcm,
+        `Sex/Strain`        = unname(SEX_STRAIN_LABEL[[strata]]),
+        Class               = as.character(hn$Class),
+        `Hazard Ratio (CI)` = mapply(format_hr, hn$value, hn$lower, hn$upper, hn$pval),
+        check.names = FALSE, stringsAsFactors = FALSE
+      )
+    } else {
+      tb <- env$save_figtabs$mortality_panel_hr[[slot]]
+      data.frame(
+        LCM                 = lcm,
+        `Sex/Strain`        = unname(SEX_STRAIN_LABEL[[strata]]),
+        Class               = rownames(tb),
+        `Hazard Ratio (CI)` = as.character(tb[["final"]]),
+        check.names = FALSE, stringsAsFactors = FALSE
+      )
+    }
   }
 
   hr_table <- rbind(
-    sexstrain_rows("fb6",   fb6_env,   1, "BW"),
-    sexstrain_rows("mb6",   mb6_env,   1, "BW"),
-    sexstrain_rows("fhet3", fhet3_env, 1, "BW"),
-    sexstrain_rows("mhet3", mhet3_env, 1, "BW")
+    sexstrain_rows("fb6",   fb6_env,   1, "BW", "Body Weight"),
+    sexstrain_rows("mb6",   mb6_env,   1, "BW", "Body Weight"),
+    sexstrain_rows("fhet3", fhet3_env, 1, "BW", "Body Weight"),
+    sexstrain_rows("mhet3", mhet3_env, 1, "BW", "Body Weight")
   )
   rownames(hr_table) <- NULL
 
