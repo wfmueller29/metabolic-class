@@ -128,6 +128,20 @@ FIGURES <- list(
   ),
   list(
     part  = "supplemental",
+    title = "Adiposity Classes",
+    panels = c(
+      "../99_pub_ready_figs/output/adiposity_env/define_class/adiposity_by_adiposity.png",
+      "../99_pub_ready_figs/output/adiposity_env/define_class/km_adiposity.png",
+      "../99_pub_ready_figs/output/adiposity_env/define_class/bw_by_adiposity.png",
+      "../99_pub_ready_figs/output/adiposity_env/define_class/gluc_by_adiposity.png",
+      "../99_pub_ready_figs/output/adiposity_env/define_class/adiposity_by_bw.png",
+      "../99_pub_ready_figs/output/adiposity_env/define_class/adiposity_by_gluc.png",
+      "../99_pub_ready_figs/output/tables/demographics_adiposity.png",
+      "../99_pub_ready_figs/output/tables/hr_adiposity.png"
+    )
+  ),
+  list(
+    part  = "supplemental",
     title = "Sex/Strain Classes FM",
     panels = c(
       "../99_pub_ready_figs/output/fb6_env/define_class/fat_by_fat.png",

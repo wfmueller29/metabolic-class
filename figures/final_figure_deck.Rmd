@@ -84,36 +84,14 @@ figure_ids <- local({
 panel_id <- function(fig_id, i) if (fig_id == "GA") "GA" else paste0(fig_id, LETTERS[i])
 ```
 
-```{r load stage outputs, include=FALSE}
-# this loads in all the tables
-all_path <- "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/workspace.RDATA"
-fb6_path <- "../07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/workspace.RDATA"
-fhet3_path <- "../07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/workspace.RDATA"
-mb6_path <- "../07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/workspace.RDATA"
-mhet3_path <- "../07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/workspace.RDATA"
-itp_path <- "../07_display_figures/output/itp_c10c11c13c16_age_controls_bw/workspace.RDATA"
-held_out_path <- "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/workspace.RDATA"
-
-config <- NULL
-
-# Define a named list of input paths and environment names
-render_tasks <- list(
-  all_env = all_path,
-  fb6_env = fb6_path,
-  fhet3_env = fhet3_path,
-  mb6_env = mb6_path,
-  mhet3_env = mhet3_path,
-  itp_env = itp_path,
-  held_out_env = held_out_path
-)
-
-lapply(names(render_tasks), function(env_name) {
-  env <- new.env()
-  input_path <- render_tasks[[env_name]]
-  load(input_path, envir = env)
-  assign(env_name, env, envir = .GlobalEnv)
-})
-```
+<!--
+  This deck deliberately loads NO stage-07 workspaces. Every table it shows is
+  produced upstream by ../99_pub_ready_figs/pub_ready_figs.R and referenced as
+  a PNG through figure_spec.R, so the deck depends only on files on disk. The
+  old `load stage outputs` chunk loaded seven workspaces unconditionally and
+  aborted the whole render if any one config had not run yet -- and nothing in
+  the document used them.
+-->
 
 <!--
   Tables are NOT built here any more. They are produced by
@@ -121,6 +99,48 @@ lapply(names(render_tasks), function(env_name) {
   all appearance decisions live in one stage. figure_spec.R references them by
   path under ../99_pub_ready_figs/output/tables/.
 -->
+
+# Tables
+
+Table 1 and Table 2 -- the class demographics that lead the manuscript.
+
+Numbered separately from the figures, as in the manuscript. Tables marked
+`png` in figure_spec.R are also written to `output/tables/` as Canva assets;
+the rest render here only.
+
+```{r render tables, results='asis'}
+# Split into two passes: primary tables lead the document (they are Table 1
+# and Table 2 of the manuscript), supplemental tables trail the figures.
+tn <- list(primary = 0L, supplemental = 0L)
+
+render_tables <- function(which_part) {
+for (tb in TABLES) {
+  if (tb$part != which_part) next
+  tn[[tb$part]] <- tn[[tb$part]] + 1L
+  label <- paste0(if (tb$part == "supplemental") "Supplemental Table " else "Table ",
+                  tn[[tb$part]])
+
+  cat("\n\n## ", label, ". ", tb$title, "\n\n", sep = "")
+
+  out <- tryCatch(tb$build(), error = function(e) e)
+  if (inherits(out, "error")) {
+    cat("\n*FAILED: ", conditionMessage(out), "*\n\n", sep = "")
+    next
+  }
+
+  # build() may return a flextable (already themed) or a plain data frame
+  if (inherits(out, "flextable")) {
+    cat(knitr::knit_child(text = "`r knitr::asis_output(flextable::htmltools_value(out))`",
+                          quiet = TRUE), "\n")
+  } else {
+    print(knitr::kable(out))
+    cat("\n")
+  }
+}
+}
+
+render_tables("primary")
+```
 
 # Figures
 
@@ -157,40 +177,19 @@ for (fi in seq_along(FIGURES)) {
 if (length(missing_panels)) {
   cat("\n\n# Missing panels\n\n")
   cat(paste0("- `", missing_panels, "`"), sep = "\n")
-} 
+  # Same switch as 99_pub_ready_figs: tolerate gaps while the pipeline is still
+  # running, but fail the render for the run that produces the submitted deck,
+  # so a missing panel cannot be scrolled past.
+  if (nzchar(Sys.getenv("FIGS_STRICT")))
+    stop(length(missing_panels), " panel(s) missing; see the list above",
+         call. = FALSE)
+}
 ```
 
-# Tables
+# Supplemental Tables
 
-Numbered separately from the figures, as in the manuscript. Tables marked
-`png` in figure_spec.R are also written to `output/tables/` as Canva assets;
-the rest render here only.
-
-```{r render tables, results='asis'}
-tn <- list(primary = 0L, supplemental = 0L)
-
-for (tb in TABLES) {
-  tn[[tb$part]] <- tn[[tb$part]] + 1L
-  label <- paste0(if (tb$part == "supplemental") "Supplemental Table " else "Table ",
-                  tn[[tb$part]])
-
-  cat("\n\n## ", label, ". ", tb$title, "\n\n", sep = "")
-
-  out <- tryCatch(tb$build(), error = function(e) e)
-  if (inherits(out, "error")) {
-    cat("\n*FAILED: ", conditionMessage(out), "*\n\n", sep = "")
-    next
-  }
-
-  # build() may return a flextable (already themed) or a plain data frame
-  if (inherits(out, "flextable")) {
-    cat(knitr::knit_child(text = "`r knitr::asis_output(flextable::htmltools_value(out))`",
-                          quiet = TRUE), "\n")
-  } else {
-    print(knitr::kable(out))
-    cat("\n")
-  }
-}
+```{r render supplemental tables, results='asis'}
+render_tables("supplemental")
 ```
 
 # Panel index

@@ -54,6 +54,23 @@ library(consoler)
 library(cowplot)
 library(ggplot2)
 
+# ---- strict mode ------------------------------------------------------------
+# By default a missing input is reported and skipped, so this stage can run
+# partway through a pipeline run and build whatever is ready. That tolerance is
+# a liability for the final production run: a panel that fails to build would
+# just come out as a MISSING line in the deck and could be scrolled past.
+#
+#   FIGS_STRICT=1 Rscript pub_ready_figs.R
+#
+# turns every skip into a hard error. Use it for the run that produces the
+# submitted figures -- if it exits 0, every panel and table in the deck was
+# actually built from real data.
+STRICT <- nzchar(Sys.getenv("FIGS_STRICT"))
+skip <- function(...) {
+  if (STRICT) stop(..., call. = FALSE) else message("SKIP ", ...)
+  invisible(NULL)
+}
+
 # ---- panel definitions ------------------------------------------------------
 # position in new_figure1_plot_list -> name, outcome, and whether it is a
 # diagonal (own-class) panel. Order matches the plot list.
@@ -67,21 +84,19 @@ library(ggplot2)
 #   2 plots -> 1 outcome    12 plots -> 3 outcomes
 # The first n are the diagonals, the next n the KMs, and the remainder the
 # cross-references (none when n == 1).
-OUTCOME_ORDER <- c("bw", "fat", "gluc")   # the order 07 builds them in
+# Outcomes are PER CONFIG, in the order the config lists its datasets. Most
+# SLAM runs are bw/fat/gluc, but slam_c1-c10_age_all_bwadipositygluc swaps fat
+# for adiposity, and the ITP run is body weight only. Hard-coding bw/fat/gluc
+# would have written the adiposity panels out as "fat_by_fat".
+DEFAULT_OUTCOMES <- c("bw", "fat", "gluc")
 
-# Cross-reference order for the 3-outcome case, positions 7-12. Derived from
-# stage 07's `selector` (the off-diagonal of a 3x3 outcome x class grid) and
-# confirmed against the rendered panels.
-CROSS_3 <- list(
-  list(name = "fat_by_bw",   outcome = "fat"),
-  list(name = "bw_by_fat",   outcome = "bw"),
-  list(name = "bw_by_gluc",  outcome = "bw"),
-  list(name = "gluc_by_bw",  outcome = "gluc"),
-  list(name = "gluc_by_fat", outcome = "gluc"),
-  list(name = "fat_by_gluc", outcome = "fat")
-)
+# Cross-reference order for the 3-outcome case, positions 7-12, as (outcome
+# plotted, class system colouring it) index pairs into the config's outcome
+# vector. Derived from stage 07's `selector` (the off-diagonal of a 3x3 grid)
+# and confirmed against the rendered panels.
+CROSS_3_PAIRS <- list(c(2, 1), c(1, 2), c(1, 3), c(3, 1), c(3, 2), c(2, 3))
 
-panels_for <- function(n_plots) {
+panels_for <- function(n_plots, outcomes = DEFAULT_OUTCOMES) {
   n <- (-1 + sqrt(1 + 4 * n_plots)) / 2
   if (abs(n - round(n)) > 1e-9) {
     warning("plot list of length ", n_plots,
@@ -89,7 +104,12 @@ panels_for <- function(n_plots) {
     return(NULL)
   }
   n <- round(n)
-  oc <- OUTCOME_ORDER[seq_len(n)]
+  if (length(outcomes) < n) {
+    warning("only ", length(outcomes), " outcome names for ", n,
+            " outcomes -- skipping this environment")
+    return(NULL)
+  }
+  oc <- outcomes[seq_len(n)]
 
   out <- list()
   for (k in seq_len(n))                      # diagonals
@@ -99,9 +119,13 @@ panels_for <- function(n_plots) {
     out[[length(out) + 1]] <- list(i = n + k, name = paste0("km_", oc[k]),
                                    outcome = "km", diagonal = FALSE)
   if (n == 3) {                              # cross-references
-    for (k in seq_along(CROSS_3))
-      out[[length(out) + 1]] <- list(i = 2 * n + k, name = CROSS_3[[k]]$name,
-                                     outcome = CROSS_3[[k]]$outcome, diagonal = FALSE)
+    for (k in seq_along(CROSS_3_PAIRS)) {
+      pr <- CROSS_3_PAIRS[[k]]
+      out[[length(out) + 1]] <- list(
+        i = 2 * n + k,
+        name = paste0(oc[pr[1]], "_by_", oc[pr[2]]),
+        outcome = oc[pr[1]], diagonal = FALSE)
+    }
   } else if (n > 1) {
     warning("no cross-reference naming defined for ", n, " outcomes -- ",
             "only diagonals and KMs will be written")
@@ -111,8 +135,11 @@ panels_for <- function(n_plots) {
 
 Y_LABEL  <- c(bw = "Body weight (g)",
               fat = "Fat mass (g)",
+              adiposity = "Adiposity (%)",
               gluc = "Blood glucose (mg/dL)")
 
+# Fixed ranges keep panels comparable across cohorts. An outcome with no entry
+# here is left to autoscale.
 Y_LIMITS <- list(bw = c(0, 70), fat = c(0, 25), gluc = c(0, 275))
 
 # ---- canonical axis labels --------------------------------------------------
@@ -135,6 +162,7 @@ Y_LIMITS <- list(bw = c(0, 70), fat = c(0, 25), gluc = c(0, 275))
 # TO ADD OR CHANGE A TERM: edit CANON below. It applies to every panel this
 # stage writes, existing and future -- do not special-case labels elsewhere.
 CANON <- list(
+  list(pattern = "adipos",                  label = "Adiposity (%)"),
   list(pattern = "fat|\\bfm\\b",            label = "Fat mass (g)"),
   list(pattern = "gluc|\\bfbg\\b",          label = "Blood glucose (mg/dL)"),
   list(pattern = "body ?wei?gh?t|^bw\\b",   label = "Body weight (g)")
@@ -197,6 +225,16 @@ format_hr <- function(value, lower, upper, pval, digits = 4) {
           stars(as.numeric(pval)))
 }
 
+# Same numbers as format_hr but bare: "0.81 (0.72, 0.91) ***". Used where the
+# column heading already says "HR (CI)", so the "HR = " prefix is redundant.
+format_hr_bare <- function(value, lower, upper, pval, digits = 4) {
+  st <- stars(as.numeric(pval))
+  trimws(sprintf("%s (%s, %s) %s",
+                 format(round(as.numeric(value), digits), nsmall = 0),
+                 format(round(as.numeric(lower), digits), nsmall = 0),
+                 format(round(as.numeric(upper), digits), nsmall = 0), st))
+}
+
 # Pull one model's rows out of hr_numeric; NULL if 07 did not produce it (the
 # caller then falls back to SLAM's pre-formatted `final` strings).
 #
@@ -228,13 +266,17 @@ hr_numeric_rows <- function(env, model = "HR Model 1") {
 
 # ---- stage 07 workspaces ----------------------------------------------------
 OUTCOME_ENVS <- list(
-  all_env   = "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_list.RDATA",
-  fb6_env   = "../07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_list.RDATA",
-  fhet3_env = "../07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_list.RDATA",
-  mb6_env   = "../07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_list.RDATA",
-  mhet3_env = "../07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_list.RDATA",
-  # body weight only -- 2 plots, not 12. panels_for() handles that.
-  itp_env   = "../07_display_figures/output/itp_c10c11c13c16_age_controls_bw/outcome/plot_list.RDATA"
+  all_env       = list(path = "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_list.RDATA"),
+  fb6_env       = list(path = "../07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_list.RDATA"),
+  fhet3_env     = list(path = "../07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_list.RDATA"),
+  mb6_env       = list(path = "../07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_list.RDATA"),
+  mhet3_env     = list(path = "../07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_list.RDATA"),
+  # body weight only -- 2 plots, not 12
+  itp_env       = list(path = "../07_display_figures/output/itp_c10c11c13c16_age_controls_bw/outcome/plot_list.RDATA",
+                       outcomes = "bw"),
+  # adiposity in place of fat mass
+  adiposity_env = list(path = "../07_display_figures/output/slam_c1-c10_age_all_bwadipositygluc/outcome/plot_list.RDATA",
+                       outcomes = c("bw", "adiposity", "gluc"))
 )
 
 VALIDATION_ENVS <- list(
@@ -252,9 +294,11 @@ save_png <- function(plot, dir, name, width = 4, height = 5, dpi = 300) {
 
 # ---- define-class panels ----------------------------------------------------
 for (env_name in names(OUTCOME_ENVS)) {
-  path <- OUTCOME_ENVS[[env_name]]
+  spec <- OUTCOME_ENVS[[env_name]]
+  path <- spec$path
+  oc   <- if (is.null(spec$outcomes)) DEFAULT_OUTCOMES else spec$outcomes
   if (!file.exists(path)) {
-    message("SKIP ", env_name, " -- not found: ", path)
+    skip(env_name, " -- not found: ", path)
     next
   }
   e <- new.env()
@@ -262,12 +306,12 @@ for (env_name in names(OUTCOME_ENVS)) {
   plots   <- e$new_figure1_plot_list
   out_dir <- file.path("output", env_name, "define_class")
 
-  panels <- panels_for(length(plots))
+  panels <- panels_for(length(plots), oc)
   if (is.null(panels)) next
 
   for (p in panels) {
     if (p$i > length(plots)) {
-      message("SKIP ", env_name, "/", p$name,
+      skip(env_name, "/", p$name,
               " -- plot list has only ", length(plots), " entries")
       next
     }
@@ -275,10 +319,11 @@ for (env_name in names(OUTCOME_ENVS)) {
 
     if (p$outcome != "km") {
       face <- if (p$diagonal) "bold" else "plain"
-      g <- g +
-        ggplot2::ylab(Y_LABEL[[p$outcome]]) +
-        ggplot2::coord_cartesian(ylim = Y_LIMITS[[p$outcome]]) +
+      g <- g + ggplot2::ylab(Y_LABEL[[p$outcome]]) +
         ggplot2::theme(axis.title.y = ggplot2::element_text(face = face))
+      if (!is.null(Y_LIMITS[[p$outcome]])) {
+        g <- g + ggplot2::coord_cartesian(ylim = Y_LIMITS[[p$outcome]])
+      }
     }
 
     save_png(g + ggplot2::theme(legend.position = "none"), out_dir, p$name)
@@ -305,7 +350,7 @@ VALIDATION_PANELS <- list(
 for (env_name in names(VALIDATION_ENVS)) {
   path <- VALIDATION_ENVS[[env_name]]
   if (!file.exists(path)) {
-    message("SKIP ", env_name, " validation -- not found: ", path)
+    skip(env_name, " validation -- not found: ", path)
     next
   }
   e <- new.env()
@@ -362,353 +407,595 @@ WORKSPACE_ENVS <- list(
   held_out_env = "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/workspace.RDATA"
 )
 
-have_workspaces <- TRUE
+# Load whatever workspaces exist. Each table below is wrapped in tbl(), so a
+# config that has not run yet skips only the tables that need it -- the rest
+# still build. This is what makes 99 runnable partway through a pipeline run.
 for (env_name in names(WORKSPACE_ENVS)) {
   path <- WORKSPACE_ENVS[[env_name]]
   if (!file.exists(path)) {
-    message("SKIP tables -- workspace not found: ", path)
-    have_workspaces <- FALSE
+    skip("workspace (not run yet): ", env_name)
     next
   }
   e <- new.env(); load(path, envir = e); assign(env_name, e, envir = .GlobalEnv)
 }
 
-if (have_workspaces) {
+# Run one table block, reporting rather than aborting if its inputs are absent.
+tbl <- function(label, expr) {
+  tryCatch({ force(expr); message("  table OK: ", label) },
+           error = function(e) skip("table ", label, " -- ", conditionMessage(e)))
+  invisible(NULL)
+}
+
+if (TRUE) {
   library(flextable)
   library(magrittr)
   max_width <- 7
+
+  # ---- house style for FIGURE tables ----------------------------------------
+  # One look for every table that sits inside a figure (the hr_* panels):
+  # bold header on grey, plain body text, body rows alternating grey/white.
+  #
+  # NOT applied to Table 1, Table 2 or S1G. Those come from demographics_table()
+  # and follow the Word manuscript's own scheme -- accent-red title, spanning
+  # headers, block shading that groups rows by metabolic variable. Striping
+  # those would fight the grouping the shading exists to show.
+  #
+  # The header grey is a step darker than the stripe so the header still reads
+  # as a header when body row 1 is also grey. Both are the Word defaults; change
+  # them here and every figure table follows.
+  TBL_HEADER_GREY <- "#D9D9D9"
+  TBL_STRIPE_GREY <- "#F2F2F2"
+
+  fig_table_theme <- function(ft) {
+    ft %>%
+      theme_zebra(odd_header = TBL_HEADER_GREY, even_header = TBL_HEADER_GREY,
+                  odd_body   = TBL_STRIPE_GREY, even_body   = "transparent") %>%
+      bold(part = "header") %>%
+      bold(part = "body", bold = FALSE) %>%
+      align(align = "center", part = "all") %>%
+      valign(valign = "center", part = "all") %>%
+      padding(padding.top = 4, padding.bottom = 4, part = "all")
+  }
   if (!dir.exists("output/tables")) dir.create("output/tables", recursive = TRUE)
 
 
-  # ---- hr_all ----------------------------------------------------------
-  # Figure 1N. Three columns: LCM | Class | Hazard Ratio (CI).
-  #
-  # Source is save_figtabs$hr_table rather than mortality_panel_hr: it holds
-  # the same numbers (its "HR Model 1" column is identical to
-  # mortality_panel_hr's "final") but already carries the Outcome label, which
-  # is what the LCM column needs.
-  #
-  # "HR Model 1" is the UNADJUSTED model -- individual_cox[[1]] in the config
-  # is "~ Class", no covariates. Models 2 and 3 are the adjusted ones.
-  #
-  # The significance stars arrive already baked into the string by the
-  # in-house package that builds kap_plot$hr; nothing here sets them. They
-  # behave like p<0.05 / <0.01 / <0.001 (verified against 31 of 32 rows).
-  #
-  # LCM_LABEL maps stage-07 outcome names onto the abbreviations used in the
-  # 1A schematic. Extend it if an outcome is added.
-  LCM_LABEL <- c("Body Weight" = "BW", "Body Fat" = "FM", "Glucose" = "FBG")
+  tbl("demographics", {
+    # ---- demographics tables (Table 1, Table 2) --------------------------
+    # Class demographics after classing: n, sex split, strain split, median
+    # survival, one row per class plus a total. `oc_name` is the outcome the
+    # classes came from (Body Weight / Body Fat / Glucose) and is dropped --
+    # the published tables are body-weight classes only.
+  })
+  tbl("demographics", {
+    # ---- demographics tables (Table 1, Table 2, S1G) ---------------------
+    # Matched to the Word versions: spanning Sex / Genetic background headers,
+    # descriptive class names, en-dash for missing, scientific p-values.
+    DEMOG_ACCENT <- "#A6272B"   # the dark red used for titles and header groups
+    DEMOG_BAND   <- "#F2F2F2"   # alternating block shading
 
-  # Prefer hr_numeric: real p-values, so STAR_RULES above decide the asterisks.
-  # Fall back to hr_table's pre-formatted strings (SLAM's 0.005 convention) when
-  # 07 did not produce hr_numeric -- e.g. workspaces from an older run.
-  hn <- hr_numeric_rows(all_env, "HR Model 1")
-  if (!is.null(hn)) {
-    hr_table <- data.frame(
-      LCM                 = unname(LCM_LABEL[as.character(hn$Outcome)]),
-      Class               = as.character(hn$Class),
-      `Hazard Ratio (CI)` = mapply(format_hr, hn$value, hn$lower, hn$upper, hn$pval),
-      check.names = FALSE, stringsAsFactors = FALSE
+    # The pipeline renames classes by peak, so these mappings are stable for the
+    # 3-class runs (see the note in 96_similarity_slam_itp/similarity_table.R).
+    # A class with no entry here is left as-is and warned about.
+    CLASS_DESCRIPTOR <- c(
+      "Class 1" = "Early-peak", "Class 2" = "Stable",  "Class 3" = "Late-peak",
+      "Class 4" = "Early-peak", "Class 5" = "Stable",  "Class 6" = "Late-peak",
+      "Class 7" = "Decline",    "Class 8" = "Stable",
+      "Class 9" = "Low",        "Class 10" = "High"
     )
-  } else {
-    warning("hr_all: hr_numeric absent -- falling back to SLAM's pre-formatted ",
-            "strings, whose stars use p<0.005 for ** and therefore DO NOT match ",
-            "the manuscript legend (p<0.01). Re-run stage 07 so hr_numeric exists.")
-    hr_src   <- all_env$save_figtabs$hr_table
-    hr_table <- data.frame(
-      LCM                 = unname(LCM_LABEL[as.character(hr_src$Outcome)]),
-      Class               = as.character(hr_src$Class),
-      `Hazard Ratio (CI)` = as.character(hr_src[["HR Model 1"]]),
-      check.names = FALSE, stringsAsFactors = FALSE
-    )
-  }
-  if (anyNA(hr_table$LCM)) {
-    warning("hr_all: an outcome has no LCM_LABEL entry -- LCM column contains NA")
-  }
 
-  hr_table <- flextable(hr_table) %>%
-    theme_vanilla() %>%
-    autofit() %>%
-    set_table_properties(layout = "autofit") %>%
-    fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+    # "Body Weight" / "Fat Mass" / "FBG" as printed in the Metabolic Variable
+    # column (07 supplies "Body Weight" / "Body Fat" / "Glucose").
+    METVAR_LABEL <- c("Body Weight" = "Body Weight", "Body Fat" = "Fat Mass",
+                      "Glucose" = "FBG", "Adiposity" = "Adiposity")
 
-  invisible(save_as_image(hr_table, "output/tables/hr_all.png", zoom = 10))
-
-  # ---- hr_sexstrain_bw -------------------------------------------------
-  # Figure 2I. Columns: LCM | Sex/Strain | Class | Hazard Ratio (CI).
-  #
-  # mortality_panel_hr is ordered bw, fat, gluc -- so [[1]] is BW on every row,
-  # which is why LCM is "BW" throughout. The FM and FBG tables below use [[2]]
-  # and [[3]] and share sexstrain_rows(); to give them the same treatment,
-  # switch them to it and pass slot 2 / "FM" or 3 / "FBG".
-  SEX_STRAIN_LABEL <- c(fb6 = "F/B6", mb6 = "M/B6",
-                        fhet3 = "F/HET3", mhet3 = "M/HET3")
-
-  # Prefer hr_numeric so STAR_RULES decides the asterisks, exactly as in hr_all.
-  # `outcome` selects the rows within hr_numeric; `slot` is only used by the
-  # fallback (mortality_panel_hr is ordered bw, fat, gluc).
-  #
-  # The two sources agree: hr_numeric comes from final_models$cox_models via
-  # surv_gethr, mortality_panel_hr from kap_plot_hrs -- both are the unadjusted
-  # "~ Class" fit, and their HR/CI strings were verified identical (values and
-  # class ordering) across cohorts before this was wired up.
-  sexstrain_rows <- function(strata, env, slot, lcm, outcome) {
-    hn <- hr_numeric_rows(env, "HR Model 1")
-    if (!is.null(hn)) {
-      hn <- hn[hn$Outcome == outcome & !is.na(hn$Class) & !is.na(hn$pval), , drop = FALSE]
+    fmt_demog_p <- function(x) {
+      p <- suppressWarnings(as.numeric(x))
+      ifelse(is.na(p), "-",
+        ifelse(p < 0.001,
+               sub("e([+-])0", "e\\1", formatC(p, format = "e", digits = 0)),
+               formatC(p, format = "f", digits = 4)))
     }
-    if (!is.null(hn) && nrow(hn)) {
-      data.frame(
-        LCM                 = lcm,
-        `Sex/Strain`        = unname(SEX_STRAIN_LABEL[[strata]]),
+
+    demographics_table <- function(env, file, lcm = NULL, title = NULL,
+                                   strain = TRUE) {
+      t1 <- env$save_figtabs$t1_df
+      if (is.null(t1)) { warning("demographics: t1_df missing -- skipped"); return(invisible(NULL)) }
+      tb <- t1
+      if (!is.null(lcm)) {
+        tb <- tb[as.character(tb$oc_name) == lcm, , drop = FALSE]
+        if (!nrow(tb)) {
+          warning("demographics: no rows for LCM '", lcm, "' -- have: ",
+                  paste(unique(t1$oc_name), collapse = ", ")); return(invisible(NULL))
+        }
+      }
+
+      # descriptive class names: "Class 2" -> "Class 2 (Stable)"
+      rn   <- as.character(tb$row_names)
+      desc <- CLASS_DESCRIPTOR[rn]
+      unk  <- grepl("^Class ", rn) & is.na(desc)
+      if (any(unk)) warning("demographics: no descriptor for ",
+                            paste(unique(rn[unk]), collapse = ", "))
+      rn <- ifelse(is.na(desc), rn, paste0(rn, " (", desc, ")"))
+      rn <- sub("^total$", "Total", rn, ignore.case = TRUE)
+      rn <- sub("^pval$", "p-value", rn)
+
+      is_p <- grepl("^p-value$", rn)
+      out  <- data.frame(`Class or Variable` = rn, check.names = FALSE,
+                         stringsAsFactors = FALSE)
+      if (is.null(lcm)) {
+        out <- cbind(`Metabolic Variable` =
+                       unname(METVAR_LABEL[as.character(tb$oc_name)]), out)
+      }
+
+      cols <- c(n = "n (%)", sex_F = "Female", sex_M = "Male")
+      if (strain) cols <- c(cols, strain_B6 = "B6", strain_HET3 = "HET3")
+      cols <- c(cols, median_surv = "Median Survival")
+      for (nm in names(cols)) {
+        if (!nm %in% names(tb)) next
+        v <- as.character(tb[[nm]])
+        v[is_p] <- fmt_demog_p(v[is_p])           # p-value row -> scientific
+        # Plain hyphen, not an en dash: the pipeline can run under a C locale,
+        # where a multi-byte dash is read as raw bytes and breaks the flextable
+        # renderer. Visually equivalent at table scale.
+        v[is.na(v) | v == "NA"] <- "-"
+        out[[cols[[nm]]]] <- v
+      }
+
+      ft <- flextable(out)
+      if (strain && ncol(out) >= 7) {
+        # spanning "Sex" / "Genetic background" over their pairs
+        lead <- ncol(out) - 5
+        ft <- add_header_row(ft,
+          values = c(rep("", lead), "Sex", "Genetic background", ""),
+          colwidths = c(rep(1, lead), 2, 2, 1))
+        ft <- color(ft, i = 1, part = "header", color = DEMOG_ACCENT)
+      }
+      ft <- theme_booktabs(ft)
+      ft <- bold(ft, part = "header")
+      ft <- italic(ft, i = which(is_p), j = 1, part = "body")
+      if (!is.null(title)) {
+        ft <- add_header_lines(ft, values = title)
+        ft <- color(ft, i = 1, part = "header", color = DEMOG_ACCENT)
+        ft <- bold(ft, i = 1, part = "header")
+      }
+      # shade alternate metabolic-variable blocks
+      if (is.null(lcm) && "Metabolic Variable" %in% names(out)) {
+        grp <- as.integer(factor(out$`Metabolic Variable`,
+                                 levels = unique(out$`Metabolic Variable`)))
+        shade <- which(grp %% 2 == 1)
+        if (length(shade)) ft <- bg(ft, i = shade, bg = DEMOG_BAND, part = "body")
+        ft <- merge_v(ft, j = "Metabolic Variable")
+      }
+      ft <- add_footer_lines(ft,
+        values = "Chi-squared tests were performed to compute the displayed p-values.")
+      # lettered markers, as in the Word tables. The column-name row is the last
+      # header row, whichever spanning/title rows were added above it.
+      hrow <- nrow(ft$header$dataset)
+      ft <- flextable::footnote(ft, i = hrow, j = "Median Survival", part = "header",
+        value = as_paragraph("95% confidence interval indicated in parentheses following values."),
+        ref_symbols = "a")
+      ft <- flextable::footnote(ft, i = hrow, j = "Median Survival", part = "header",
+        value = as_paragraph("In weeks."), ref_symbols = "b")
+      if (any(is_p)) {
+        ft <- flextable::footnote(ft, i = which(is_p)[1], j = "Class or Variable",
+          part = "body",
+          value = as_paragraph(
+            "p-values < 0.001 are written in scientific notation and rounded to the nearest integer."),
+          ref_symbols = "c")
+      }
+      ft <- italic(ft, part = "footer"); ft <- fontsize(ft, size = 8, part = "footer")
+      # Arial renders the en dash; the default substitutes a glyph for it
+      ft <- font(ft, fontname = "Arial", part = "all")
+      ft <- autofit(ft) %>% set_table_properties(layout = "autofit") %>%
+        fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+      invisible(save_as_image(ft, file, zoom = 10))
+    }
+
+    demographics_table(all_env, "output/tables/demographics_slam.png",
+                       title = "Table 1. Metabolic Class Demographics.")
+    # ITP is all HET3, so no genetic-background columns
+    demographics_table(itp_env, "output/tables/demographics_itp.png",
+                       title = "Table 2. Body Weight Class Demographics of ITP Complete Dataset.",
+                       strain = FALSE)
+    # S1G -- adiposity classes only (9 and 10)
+    demographics_table(adiposity_env, "output/tables/demographics_adiposity.png",
+                       lcm = "Adiposity")
+  })
+  tbl("hr_adiposity", {
+    # ---- hr_adiposity (S1H) ----------------------------------------------
+    # Outcome | Class | HR (CI) Model 1 | Model 2 | Model 3, adiposity only.
+    # Model 1 is unadjusted ("~ Class"); 2 and 3 are the adjusted specifications
+    # in the config's individual_cox list.
+    #
+    # Built from hr_numeric (long: one row per Outcome x Class x Model) and
+    # pivoted to one column per model, so the stars come from STAR_RULES rather
+    # than SLAM's pre-formatted strings. Falls back to hr_table's strings, whose
+    # ** is p<0.005, if 07 has not produced hr_numeric for this config.
+    .adip_hr <- function(env, outcome = "Adiposity") {
+      # via hr_numeric_rows() per model so the DISPLAY class labels ("Class 10")
+      # are used, not hr_numeric's raw model terms ("Class10").
+      hn <- env$save_figtabs$hr_numeric
+      if (!is.null(hn) && nrow(hn)) {
+        hn <- do.call(rbind, lapply(sort(unique(as.character(hn$Model))),
+                                    function(mo) hr_numeric_rows(env, mo)))
+        hn <- hn[as.character(hn$Outcome) == outcome, , drop = FALSE]
+        if (nrow(hn)) {
+          models <- sort(unique(as.character(hn$Model)))
+          classes <- unique(as.character(hn$Class))
+          out <- data.frame(Outcome = outcome, Class = classes,
+                            check.names = FALSE, stringsAsFactors = FALSE)
+          for (mo in models) {
+            r <- hn[hn$Model == mo, , drop = FALSE]
+            out[[sub("^HR ", "HR (CI) ", mo)]] <-
+              mapply(format_hr_bare, r$value, r$lower, r$upper, r$pval)[
+                match(classes, as.character(r$Class))]
+          }
+          return(out)
+        }
+      }
+      warning("hr_adiposity: hr_numeric absent for '", outcome,
+              "' -- using SLAM's strings, whose ** is p<0.005, not the legend's 0.01")
+      ht <- env$save_figtabs$hr_table
+      ht <- ht[as.character(ht$Outcome) == outcome, , drop = FALSE]
+      names(ht) <- sub("^HR Model", "HR (CI) Model", names(ht))
+      ht
+    }
+
+    if (exists("adiposity_env")) {
+      hr_table <- .adip_hr(adiposity_env)
+      if (!is.null(hr_table) && nrow(hr_table)) {
+        hr_table <- flextable(hr_table) %>%
+          fig_table_theme() %>%
+          autofit() %>%
+          set_table_properties(layout = "autofit") %>%
+          fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+        invisible(save_as_image(hr_table, "output/tables/hr_adiposity.png", zoom = 10))
+      }
+    }
+  })
+  tbl("hr_all", {
+    # ---- hr_all ----------------------------------------------------------
+    # Figure 1N. Three columns: LCM | Class | Hazard Ratio (CI).
+    #
+    # Source is save_figtabs$hr_table rather than mortality_panel_hr: it holds
+    # the same numbers (its "HR Model 1" column is identical to
+    # mortality_panel_hr's "final") but already carries the Outcome label, which
+    # is what the LCM column needs.
+    #
+    # "HR Model 1" is the UNADJUSTED model -- individual_cox[[1]] in the config
+    # is "~ Class", no covariates. Models 2 and 3 are the adjusted ones.
+    #
+    # The significance stars arrive already baked into the string by the
+    # in-house package that builds kap_plot$hr; nothing here sets them. They
+    # behave like p<0.05 / <0.01 / <0.001 (verified against 31 of 32 rows).
+    #
+    # LCM_LABEL maps stage-07 outcome names onto the abbreviations used in the
+    # 1A schematic. Extend it if an outcome is added.
+    LCM_LABEL <- c("Body Weight" = "BW", "Body Fat" = "FM", "Glucose" = "FBG")
+
+    # Prefer hr_numeric: real p-values, so STAR_RULES above decide the asterisks.
+    # Fall back to hr_table's pre-formatted strings (SLAM's 0.005 convention) when
+    # 07 did not produce hr_numeric -- e.g. workspaces from an older run.
+    hn <- hr_numeric_rows(all_env, "HR Model 1")
+    if (!is.null(hn)) {
+      hr_table <- data.frame(
+        LCM                 = unname(LCM_LABEL[as.character(hn$Outcome)]),
         Class               = as.character(hn$Class),
         `Hazard Ratio (CI)` = mapply(format_hr, hn$value, hn$lower, hn$upper, hn$pval),
         check.names = FALSE, stringsAsFactors = FALSE
       )
     } else {
-      tb <- env$save_figtabs$mortality_panel_hr[[slot]]
-      data.frame(
-        LCM                 = lcm,
-        `Sex/Strain`        = unname(SEX_STRAIN_LABEL[[strata]]),
+      warning("hr_all: hr_numeric absent -- falling back to SLAM's pre-formatted ",
+              "strings, whose stars use p<0.005 for ** and therefore DO NOT match ",
+              "the manuscript legend (p<0.01). Re-run stage 07 so hr_numeric exists.")
+      hr_src   <- all_env$save_figtabs$hr_table
+      hr_table <- data.frame(
+        LCM                 = unname(LCM_LABEL[as.character(hr_src$Outcome)]),
+        Class               = as.character(hr_src$Class),
+        `Hazard Ratio (CI)` = as.character(hr_src[["HR Model 1"]]),
+        check.names = FALSE, stringsAsFactors = FALSE
+      )
+    }
+    if (anyNA(hr_table$LCM)) {
+      warning("hr_all: an outcome has no LCM_LABEL entry -- LCM column contains NA")
+    }
+
+    hr_table <- flextable(hr_table) %>%
+      fig_table_theme() %>%
+      autofit() %>%
+      set_table_properties(layout = "autofit") %>%
+      fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+    invisible(save_as_image(hr_table, "output/tables/hr_all.png", zoom = 10))
+  })
+  tbl("hr_sexstrain_bw", {
+    # ---- hr_sexstrain_bw -------------------------------------------------
+    # Figure 2I. Columns: LCM | Sex/Strain | Class | Hazard Ratio (CI).
+    #
+    # mortality_panel_hr is ordered bw, fat, gluc -- so [[1]] is BW on every row,
+    # which is why LCM is "BW" throughout. The FM and FBG tables below use [[2]]
+    # and [[3]] and share sexstrain_rows(); to give them the same treatment,
+    # switch them to it and pass slot 2 / "FM" or 3 / "FBG".
+    SEX_STRAIN_LABEL <- c(fb6 = "F/B6", mb6 = "M/B6",
+                          fhet3 = "F/HET3", mhet3 = "M/HET3")
+
+    # Prefer hr_numeric so STAR_RULES decides the asterisks, exactly as in hr_all.
+    # `outcome` selects the rows within hr_numeric; `slot` is only used by the
+    # fallback (mortality_panel_hr is ordered bw, fat, gluc).
+    #
+    # The two sources agree: hr_numeric comes from final_models$cox_models via
+    # surv_gethr, mortality_panel_hr from kap_plot_hrs -- both are the unadjusted
+    # "~ Class" fit, and their HR/CI strings were verified identical (values and
+    # class ordering) across cohorts before this was wired up.
+    sexstrain_rows <- function(strata, env, slot, lcm, outcome) {
+      hn <- hr_numeric_rows(env, "HR Model 1")
+      if (!is.null(hn)) {
+        hn <- hn[hn$Outcome == outcome & !is.na(hn$Class) & !is.na(hn$pval), , drop = FALSE]
+      }
+      if (!is.null(hn) && nrow(hn)) {
+        data.frame(
+          LCM                 = lcm,
+          `Sex/Strain`        = unname(SEX_STRAIN_LABEL[[strata]]),
+          Class               = as.character(hn$Class),
+          `Hazard Ratio (CI)` = mapply(format_hr, hn$value, hn$lower, hn$upper, hn$pval),
+          check.names = FALSE, stringsAsFactors = FALSE
+        )
+      } else {
+        tb <- env$save_figtabs$mortality_panel_hr[[slot]]
+        data.frame(
+          LCM                 = lcm,
+          `Sex/Strain`        = unname(SEX_STRAIN_LABEL[[strata]]),
+          Class               = rownames(tb),
+          `Hazard Ratio (CI)` = as.character(tb[["final"]]),
+          check.names = FALSE, stringsAsFactors = FALSE
+        )
+      }
+    }
+
+    hr_table <- rbind(
+      sexstrain_rows("fb6",   fb6_env,   1, "BW", "Body Weight"),
+      sexstrain_rows("mb6",   mb6_env,   1, "BW", "Body Weight"),
+      sexstrain_rows("fhet3", fhet3_env, 1, "BW", "Body Weight"),
+      sexstrain_rows("mhet3", mhet3_env, 1, "BW", "Body Weight")
+    )
+    rownames(hr_table) <- NULL
+
+    hr_table <- flextable(hr_table) %>%
+      fig_table_theme() %>%
+      autofit() %>%
+      set_table_properties(layout = "autofit") %>%
+      fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+    invisible(save_as_image(hr_table, "output/tables/hr_sexstrain_bw.png", zoom = 10))
+  })
+  tbl("hr_treatment", {
+    # ---- hr_treatment ----------------------------------------------------
+    # Rapamycin vs control, one row per predicted class, plus the pooled 1+3 row
+    # at the bottom. Columns: Class | Treatment | Hazard Ratio (CI).
+    #
+    # 97 saves these as two separate objects, both named `hrs_table`, so they are
+    # loaded into their own environments to avoid clobbering:
+    #   hr_table/hr_table.RDATA                     per class (1, 2, 3)
+    #   hr_table_nonresponder/...RDATA              0 = responder (class 2),
+    #                                               1 = classes 1+3 pooled
+    # Only the pooled row is taken from the second; the responder row duplicates
+    # class 2, which is already present.
+    #
+    # Stars come from STAR_RULES via the pval that 97 now keeps, not from SLAM's
+    # pre-formatted string (which uses p<0.005 for "**").
+    .e1 <- new.env(); load("../97_treatment_response/output/hr_table/hr_table.RDATA", envir = .e1)
+    .e2 <- new.env()
+    .np <- "../97_treatment_response/output/hr_table_nonresponder/hr_table_nonresponder.RDATA"
+    if (file.exists(.np)) load(.np, envir = .e2)
+
+    .hr_row <- function(tb, class_label) {
+      ci <- if (all(c("value", "lower", "upper", "pval") %in% colnames(tb))) {
+        format_hr(tb$value[1], tb$lower[1], tb$upper[1], tb$pval[1])
+      } else {
+        warning("hr_treatment: no pval for '", class_label,
+                "' -- using SLAM's string, whose ** is p<0.005, not the legend's 0.01")
+        as.character(tb$final[1])
+      }
+      data.frame(Class = class_label, Treatment = "Rapamycin",
+                 `Hazard Ratio (CI)` = ci,
+                 check.names = FALSE, stringsAsFactors = FALSE)
+    }
+
+    hr_table <- do.call(rbind, lapply(.e1$hrs_table, function(tb)
+      .hr_row(tb, as.character(tb$Class[1]))))
+
+    if (!is.null(.e2$hrs_table)) {
+      .pooled <- Filter(function(tb) as.character(tb$Nonresponder[1]) == "1", .e2$hrs_table)
+      if (length(.pooled)) {
+        hr_table <- rbind(hr_table, .hr_row(.pooled[[1]], "1+3"))
+      }
+    } else {
+      warning("hr_treatment: pooled 1+3 table not found -- table will have 3 rows")
+    }
+    rownames(hr_table) <- NULL
+
+    hr_table <- hr_table %>%
+      flextable() %>%
+      fig_table_theme() %>%
+      autofit() %>%
+      set_table_properties(layout = "autofit") %>%
+      fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+    invisible(save_as_image(hr_table, "output/tables/hr_treatment.png", zoom = 10))
+  })
+  tbl("hr_itp", {
+    # ---- hr_itp ----------------------------------------------------------
+    # Figure 5D. Two columns: Class | Hazard Ratio (CI).
+    # The ITP control run models body weight only, so there is a single outcome
+    # and no LCM column is needed. Prefers hr_numeric so STAR_RULES sets the
+    # asterisks; falls back to SLAM's pre-formatted strings if 07 has not
+    # produced it for this config yet.
+    hn <- hr_numeric_rows(itp_env, "HR Model 1")
+    if (!is.null(hn)) {
+      hr_table <- data.frame(
+        Class               = as.character(hn$Class),
+        `Hazard Ratio (CI)` = mapply(format_hr, hn$value, hn$lower, hn$upper, hn$pval),
+        check.names = FALSE, stringsAsFactors = FALSE
+      )
+    } else {
+      warning("hr_itp: hr_numeric absent -- falling back to SLAM's strings, whose ",
+              "stars use p<0.005 for ** and do NOT match the legend (p<0.01).")
+      tb <- itp_env$save_figtabs$mortality_panel_hr[[1]]
+      hr_table <- data.frame(
         Class               = rownames(tb),
         `Hazard Ratio (CI)` = as.character(tb[["final"]]),
         check.names = FALSE, stringsAsFactors = FALSE
       )
     }
-  }
 
-  hr_table <- rbind(
-    sexstrain_rows("fb6",   fb6_env,   1, "BW", "Body Weight"),
-    sexstrain_rows("mb6",   mb6_env,   1, "BW", "Body Weight"),
-    sexstrain_rows("fhet3", fhet3_env, 1, "BW", "Body Weight"),
-    sexstrain_rows("mhet3", mhet3_env, 1, "BW", "Body Weight")
-  )
-  rownames(hr_table) <- NULL
+    hr_table <- flextable(hr_table) %>%
+      fig_table_theme() %>%
+      autofit() %>%
+      set_table_properties(layout = "autofit") %>%
+      fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
-  hr_table <- flextable(hr_table) %>%
-    theme_vanilla() %>%
-    autofit() %>%
-    set_table_properties(layout = "autofit") %>%
-    fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-
-  invisible(save_as_image(hr_table, "output/tables/hr_sexstrain_bw.png", zoom = 10))
-
-  # ---- hr_treatment ----------------------------------------------------
-  # Rapamycin vs control, one row per predicted class, plus the pooled 1+3 row
-  # at the bottom. Columns: Class | Treatment | Hazard Ratio (CI).
-  #
-  # 97 saves these as two separate objects, both named `hrs_table`, so they are
-  # loaded into their own environments to avoid clobbering:
-  #   hr_table/hr_table.RDATA                     per class (1, 2, 3)
-  #   hr_table_nonresponder/...RDATA              0 = responder (class 2),
-  #                                               1 = classes 1+3 pooled
-  # Only the pooled row is taken from the second; the responder row duplicates
-  # class 2, which is already present.
-  #
-  # Stars come from STAR_RULES via the pval that 97 now keeps, not from SLAM's
-  # pre-formatted string (which uses p<0.005 for "**").
-  .e1 <- new.env(); load("../97_treatment_response/output/hr_table/hr_table.RDATA", envir = .e1)
-  .e2 <- new.env()
-  .np <- "../97_treatment_response/output/hr_table_nonresponder/hr_table_nonresponder.RDATA"
-  if (file.exists(.np)) load(.np, envir = .e2)
-
-  .hr_row <- function(tb, class_label) {
-    ci <- if (all(c("value", "lower", "upper", "pval") %in% colnames(tb))) {
-      format_hr(tb$value[1], tb$lower[1], tb$upper[1], tb$pval[1])
-    } else {
-      warning("hr_treatment: no pval for '", class_label,
-              "' -- using SLAM's string, whose ** is p<0.005, not the legend's 0.01")
-      as.character(tb$final[1])
-    }
-    data.frame(Class = class_label, Treatment = "Rapamycin",
-               `Hazard Ratio (CI)` = ci,
-               check.names = FALSE, stringsAsFactors = FALSE)
-  }
-
-  hr_table <- do.call(rbind, lapply(.e1$hrs_table, function(tb)
-    .hr_row(tb, as.character(tb$Class[1]))))
-
-  if (!is.null(.e2$hrs_table)) {
-    .pooled <- Filter(function(tb) as.character(tb$Nonresponder[1]) == "1", .e2$hrs_table)
-    if (length(.pooled)) {
-      hr_table <- rbind(hr_table, .hr_row(.pooled[[1]], "1+3"))
-    }
-  } else {
-    warning("hr_treatment: pooled 1+3 table not found -- table will have 3 rows")
-  }
-  rownames(hr_table) <- NULL
-
-  hr_table <- hr_table %>%
-    flextable() %>%
-    theme_vanilla() %>%
-    autofit() %>%
-    set_table_properties(layout = "autofit") %>%
-    fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-
-  invisible(save_as_image(hr_table, "output/tables/hr_treatment.png", zoom = 10))
-
-  # ---- hr_itp ----------------------------------------------------------
-  # Figure 5D. Two columns: Class | Hazard Ratio (CI).
-  # The ITP control run models body weight only, so there is a single outcome
-  # and no LCM column is needed. Prefers hr_numeric so STAR_RULES sets the
-  # asterisks; falls back to SLAM's pre-formatted strings if 07 has not
-  # produced it for this config yet.
-  hn <- hr_numeric_rows(itp_env, "HR Model 1")
-  if (!is.null(hn)) {
-    hr_table <- data.frame(
-      Class               = as.character(hn$Class),
-      `Hazard Ratio (CI)` = mapply(format_hr, hn$value, hn$lower, hn$upper, hn$pval),
-      check.names = FALSE, stringsAsFactors = FALSE
-    )
-  } else {
-    warning("hr_itp: hr_numeric absent -- falling back to SLAM's strings, whose ",
-            "stars use p<0.005 for ** and do NOT match the legend (p<0.01).")
-    tb <- itp_env$save_figtabs$mortality_panel_hr[[1]]
-    hr_table <- data.frame(
-      Class               = rownames(tb),
-      `Hazard Ratio (CI)` = as.character(tb[["final"]]),
-      check.names = FALSE, stringsAsFactors = FALSE
-    )
-  }
-
-  hr_table <- flextable(hr_table) %>%
-    theme_vanilla() %>%
-    autofit() %>%
-    set_table_properties(layout = "autofit") %>%
-    fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-
-  invisible(save_as_image(hr_table, "output/tables/hr_itp.png", zoom = 10))
-
-  # ---- hr_sexstrain_fat ------------------------------------------------
-  cbind_hr_table <- function(strata, hr_table) {
-    cbind(sex_strain = strata, Class = rownames(hr_table), hr_table)
-  }
-
-  hr_table <- rbind(
-    cbind_hr_table("fb6", fb6_env$save_figtabs$mortality_panel_hr[[2]]),
-    cbind_hr_table("mb6", mb6_env$save_figtabs$mortality_panel_hr[[2]]),
-    cbind_hr_table("fhet3", fhet3_env$save_figtabs$mortality_panel_hr[[2]]),
-    cbind_hr_table("mhet3", mhet3_env$save_figtabs$mortality_panel_hr[[2]])
-  )
-  rownames(hr_table) <- NULL
-
-  hr_table <- flextable(hr_table) %>%
-    theme_vanilla() %>%
-    autofit() %>%
-    set_table_properties(layout = "autofit") %>%
-    fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-
-  invisible(save_as_image(hr_table, "output/tables/hr_sexstrain_fat.png", zoom = 10))
-
-  # ---- hr_sexstrain_gluc -----------------------------------------------
-  cbind_hr_table <- function(strata, hr_table) {
-    if (is.null(hr_table)) {
-      return(NULL)
-    }
-    cbind(sex_strain = strata, Class = rownames(hr_table), hr_table)
-  }
-
-  hr_table <- rbind(
-    cbind_hr_table("fb6", fb6_env$save_figtabs$mortality_panel_hr[[3]]),
-    cbind_hr_table("mb6", mb6_env$save_figtabs$mortality_panel_hr[[3]]),
-    cbind_hr_table("fhet3", fhet3_env$save_figtabs$mortality_panel_hr[[3]]),
-    cbind_hr_table("mhet3", mhet3_env$save_figtabs$mortality_panel_hr[[3]])
-  )
-  rownames(hr_table) <- NULL
-
-  hr_table <- flextable(hr_table) %>%
-    theme_vanilla() %>%
-    autofit() %>%
-    set_table_properties(layout = "autofit") %>%
-    fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-
-  invisible(save_as_image(hr_table, "output/tables/hr_sexstrain_gluc.png", zoom = 10))
-
-  # ---- hr_km_external --------------------------------------------------
-  hr_table <- held_out_env$save_figtabs$km_hr_combine_validation_panels_hr
-  hr_table <- lapply(hr_table, function(table) {
-    table <- cbind(Tertile = seq_len(nrow(table)) + 1, table)
-    table <- cbind(explicit = rownames(table), table)
-    table$column <- rep(colnames(table)[3], nrow(table))
-    colnames(table)[3] <- "HR"
-    rownames(table) <- NULL
-    table
+    invisible(save_as_image(hr_table, "output/tables/hr_itp.png", zoom = 10))
   })
-  hr_table <- cbind(explicit = rownames(hr_table), hr_table)
-  hr_table <- hr_table[1:10]
-  hr_table <- do.call(rbind, hr_table)
-  hr_table <- flextable(hr_table) %>%
-    theme_vanilla() %>%
-    autofit() %>%
-    set_table_properties(layout = "autofit") %>%
-    fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+  tbl("hr_sexstrain_fat", {
+    # ---- hr_sexstrain_fat ------------------------------------------------
+    cbind_hr_table <- function(strata, hr_table) {
+      cbind(sex_strain = strata, Class = rownames(hr_table), hr_table)
+    }
 
-  invisible(save_as_image(hr_table, "output/tables/hr_km_external.png", zoom = 10))
+    hr_table <- rbind(
+      cbind_hr_table("fb6", fb6_env$save_figtabs$mortality_panel_hr[[2]]),
+      cbind_hr_table("mb6", mb6_env$save_figtabs$mortality_panel_hr[[2]]),
+      cbind_hr_table("fhet3", fhet3_env$save_figtabs$mortality_panel_hr[[2]]),
+      cbind_hr_table("mhet3", mhet3_env$save_figtabs$mortality_panel_hr[[2]])
+    )
+    rownames(hr_table) <- NULL
 
-  # ---- hr_fb6 ----------------------------------------------------------
-  hr_table <- do.call(rbind, fb6_env$save_figtabs$mortality_panel_hr)
-  hr_table <- cbind(Class = rownames(hr_table), hr_table)
-  hr_table <- flextable(hr_table) %>%
-    theme_vanilla() %>%
-    autofit() %>%
-    set_table_properties(layout = "autofit") %>%
-    fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+    hr_table <- flextable(hr_table) %>%
+      fig_table_theme() %>%
+      autofit() %>%
+      set_table_properties(layout = "autofit") %>%
+      fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
-  invisible(save_as_image(hr_table, "output/tables/hr_fb6.png", zoom = 10))
-
-  # ---- hr_fhet3 --------------------------------------------------------
-  hr_table <- do.call(rbind, fhet3_env$save_figtabs$mortality_panel_hr)
-  hr_table <- cbind(Class = rownames(hr_table), hr_table)
-  hr_table <- flextable(hr_table) %>%
-    theme_vanilla() %>%
-    autofit() %>%
-    set_table_properties(layout = "autofit") %>%
-    fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-
-  invisible(save_as_image(hr_table, "output/tables/hr_fhet3.png", zoom = 10))
-
-  # ---- hr_mb6 ----------------------------------------------------------
-  hr_table <- do.call(rbind, mb6_env$save_figtabs$mortality_panel_hr)
-  hr_table <- cbind(Class = rownames(hr_table), hr_table)
-  hr_table <- flextable(hr_table) %>%
-    theme_vanilla() %>%
-    autofit() %>%
-    set_table_properties(layout = "autofit") %>%
-    fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-
-  invisible(save_as_image(hr_table, "output/tables/hr_mb6.png", zoom = 10))
-
-  # ---- hr_mhet3 --------------------------------------------------------
-  hr_table <- do.call(rbind, mhet3_env$save_figtabs$mortality_panel_hr)
-  hr_table <- cbind(Class = rownames(hr_table), hr_table)
-  hr_table <- flextable(hr_table) %>%
-    theme_vanilla() %>%
-    autofit() %>%
-    set_table_properties(layout = "autofit") %>%
-    fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-
-  invisible(save_as_image(hr_table, "output/tables/hr_mhet3.png", zoom = 10))
-
-  # ---- hr_km_internal --------------------------------------------------
-  hr_table <- all_env$save_figtabs$km_hr_combine_validation_panels_hr
-  hr_table <- lapply(hr_table, function(table) {
-    table <- cbind(Tertile = seq_len(nrow(table)) + 1, table)
-    table <- cbind(explicit = rownames(table), table)
-    table$column <- rep(colnames(table)[3], nrow(table))
-    colnames(table)[3] <- "HR"
-    rownames(table) <- NULL
-    table
+    invisible(save_as_image(hr_table, "output/tables/hr_sexstrain_fat.png", zoom = 10))
   })
-  hr_table <- cbind(explicit = rownames(hr_table), hr_table)
-  hr_table <- hr_table[1:10]
-  hr_table <- do.call(rbind, hr_table)
-  hr_table <- flextable(hr_table) %>%
-    theme_vanilla() %>%
-    autofit() %>%
-    set_table_properties(layout = "autofit") %>%
-    fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+  tbl("hr_sexstrain_gluc", {
+    # ---- hr_sexstrain_gluc -----------------------------------------------
+    cbind_hr_table <- function(strata, hr_table) {
+      if (is.null(hr_table)) {
+        return(NULL)
+      }
+      cbind(sex_strain = strata, Class = rownames(hr_table), hr_table)
+    }
 
-  invisible(save_as_image(hr_table, "output/tables/hr_km_internal.png", zoom = 10))
+    hr_table <- rbind(
+      cbind_hr_table("fb6", fb6_env$save_figtabs$mortality_panel_hr[[3]]),
+      cbind_hr_table("mb6", mb6_env$save_figtabs$mortality_panel_hr[[3]]),
+      cbind_hr_table("fhet3", fhet3_env$save_figtabs$mortality_panel_hr[[3]]),
+      cbind_hr_table("mhet3", mhet3_env$save_figtabs$mortality_panel_hr[[3]])
+    )
+    rownames(hr_table) <- NULL
+
+    hr_table <- flextable(hr_table) %>%
+      fig_table_theme() %>%
+      autofit() %>%
+      set_table_properties(layout = "autofit") %>%
+      fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+    invisible(save_as_image(hr_table, "output/tables/hr_sexstrain_gluc.png", zoom = 10))
+  })
+  tbl("hr_km_external", {
+    # ---- hr_km_external --------------------------------------------------
+    hr_table <- held_out_env$save_figtabs$km_hr_combine_validation_panels_hr
+    hr_table <- lapply(hr_table, function(table) {
+      table <- cbind(Tertile = seq_len(nrow(table)) + 1, table)
+      table <- cbind(explicit = rownames(table), table)
+      table$column <- rep(colnames(table)[3], nrow(table))
+      colnames(table)[3] <- "HR"
+      rownames(table) <- NULL
+      table
+    })
+    hr_table <- cbind(explicit = rownames(hr_table), hr_table)
+    hr_table <- hr_table[1:10]
+    hr_table <- do.call(rbind, hr_table)
+    hr_table <- flextable(hr_table) %>%
+      fig_table_theme() %>%
+      autofit() %>%
+      set_table_properties(layout = "autofit") %>%
+      fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+    invisible(save_as_image(hr_table, "output/tables/hr_km_external.png", zoom = 10))
+  })
+  tbl("hr_fb6", {
+    # ---- hr_fb6 ----------------------------------------------------------
+    hr_table <- do.call(rbind, fb6_env$save_figtabs$mortality_panel_hr)
+    hr_table <- cbind(Class = rownames(hr_table), hr_table)
+    hr_table <- flextable(hr_table) %>%
+      fig_table_theme() %>%
+      autofit() %>%
+      set_table_properties(layout = "autofit") %>%
+      fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+    invisible(save_as_image(hr_table, "output/tables/hr_fb6.png", zoom = 10))
+  })
+  tbl("hr_fhet3", {
+    # ---- hr_fhet3 --------------------------------------------------------
+    hr_table <- do.call(rbind, fhet3_env$save_figtabs$mortality_panel_hr)
+    hr_table <- cbind(Class = rownames(hr_table), hr_table)
+    hr_table <- flextable(hr_table) %>%
+      fig_table_theme() %>%
+      autofit() %>%
+      set_table_properties(layout = "autofit") %>%
+      fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+    invisible(save_as_image(hr_table, "output/tables/hr_fhet3.png", zoom = 10))
+  })
+  tbl("hr_mb6", {
+    # ---- hr_mb6 ----------------------------------------------------------
+    hr_table <- do.call(rbind, mb6_env$save_figtabs$mortality_panel_hr)
+    hr_table <- cbind(Class = rownames(hr_table), hr_table)
+    hr_table <- flextable(hr_table) %>%
+      fig_table_theme() %>%
+      autofit() %>%
+      set_table_properties(layout = "autofit") %>%
+      fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+    invisible(save_as_image(hr_table, "output/tables/hr_mb6.png", zoom = 10))
+  })
+  tbl("hr_mhet3", {
+    # ---- hr_mhet3 --------------------------------------------------------
+    hr_table <- do.call(rbind, mhet3_env$save_figtabs$mortality_panel_hr)
+    hr_table <- cbind(Class = rownames(hr_table), hr_table)
+    hr_table <- flextable(hr_table) %>%
+      fig_table_theme() %>%
+      autofit() %>%
+      set_table_properties(layout = "autofit") %>%
+      fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+    invisible(save_as_image(hr_table, "output/tables/hr_mhet3.png", zoom = 10))
+  })
+  tbl("hr_km_internal", {
+    # ---- hr_km_internal --------------------------------------------------
+    hr_table <- all_env$save_figtabs$km_hr_combine_validation_panels_hr
+    hr_table <- lapply(hr_table, function(table) {
+      table <- cbind(Tertile = seq_len(nrow(table)) + 1, table)
+      table <- cbind(explicit = rownames(table), table)
+      table$column <- rep(colnames(table)[3], nrow(table))
+      colnames(table)[3] <- "HR"
+      rownames(table) <- NULL
+      table
+    })
+    hr_table <- cbind(explicit = rownames(hr_table), hr_table)
+    hr_table <- hr_table[1:10]
+    hr_table <- do.call(rbind, hr_table)
+    hr_table <- flextable(hr_table) %>%
+      fig_table_theme() %>%
+      autofit() %>%
+      set_table_properties(layout = "autofit") %>%
+      fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+    invisible(save_as_image(hr_table, "output/tables/hr_km_internal.png", zoom = 10))
+  })
+
 }
 
 message("99_pub_ready_figs: done")
@@ -742,7 +1029,8 @@ LOCUS_ORDER <- c(
   "Soma19a", "Soma19b"
 )
 
-LOCUS_COLS <- c(census = "All", census_f = "Female", census_m = "Male")
+# Column order and headings as published: F, M, All.
+LOCUS_COLS <- c(census_f = "F", census_m = "M", census = "All")
 
 BONFERRONI_NEGLOG <- 3.84        # colour cut, and the 5L row filter
 
@@ -761,13 +1049,23 @@ neglog_stars <- function(x) {
   }, character(1))
 }
 
-locus_heatmap <- function(mat, title, file, pal, breaks, gap = NULL) {
+# `cells` selects what is printed in each square:
+#   "stars"   -> ***/**/* by the usual p thresholds        (5L)
+#   "values"  -> the -log10(p) number itself               (S9D)
+locus_heatmap <- function(mat, title, file, pal, breaks, gap = NULL,
+                          cells = c("stars", "values")) {
+  cells <- match.arg(cells)
   if (!nrow(mat)) { message("locus heatmap '", title, "': empty -- skipped"); return(invisible(NULL)) }
   # pheatmap opens its own device unless silent = TRUE; calling it inside
   # png()/dev.off() closes the wrong one and silently drops the file.
   hm <- pheatmap::pheatmap(
     mat, cluster_rows = FALSE, cluster_cols = FALSE,
-    display_numbers = matrix(neglog_stars(mat), nrow = nrow(mat), dimnames = dimnames(mat)),
+    display_numbers = if (cells == "stars") {
+      matrix(neglog_stars(mat), nrow = nrow(mat), dimnames = dimnames(mat))
+    } else {
+      matrix(formatC(mat, format = "f", digits = 2), nrow = nrow(mat),
+             dimnames = dimnames(mat))
+    },
     number_color = "black", fontsize_number = 12,
     color = pal, breaks = breaks, border_color = "grey85",
     gaps_row = if (!is.null(gap) && gap > 0 && gap < nrow(mat)) gap else NULL,
@@ -782,7 +1080,7 @@ locus_heatmap <- function(mat, title, file, pal, breaks, gap = NULL) {
 
 .map_path <- "../98_itp_genotype/census_mapping.txt"
 if (!file.exists(.map_path)) {
-  message("SKIP locus heatmaps -- not found: ", .map_path, " (trajectory.R has not run)")
+  skip("locus heatmaps -- not found: ", .map_path, " (trajectory.R has not run)")
 } else {
   .lod <- utils::read.table(.map_path, sep = "\t", header = TRUE,
                             check.names = FALSE, stringsAsFactors = FALSE)
@@ -805,7 +1103,8 @@ if (!file.exists(.map_path)) {
     locus_heatmap(full, "Vita and Soma loci",
                   file.path(out_dir, "loci_all.png"),
                   PAL_S9D, BREAKS_S9D,
-                  gap = sum(startsWith(rownames(full), "Vita")))
+                  gap = sum(startsWith(rownames(full), "Vita")),
+                  cells = "values")
 
     # 5L -- only loci with at least one Bonferroni-significant cell
     sig  <- apply(full, 1, function(r) any(r > BONFERRONI_NEGLOG, na.rm = TRUE))
@@ -817,6 +1116,7 @@ if (!file.exists(.map_path)) {
     locus_heatmap(filt, "Vita and Soma loci",
                   file.path(out_dir, "loci_filtered.png"),
                   PAL_5L, BREAKS_5L,
-                  gap = sum(startsWith(rownames(filt), "Vita")))
+                  gap = sum(startsWith(rownames(filt), "Vita")),
+                  cells = "stars")
   }
 }
