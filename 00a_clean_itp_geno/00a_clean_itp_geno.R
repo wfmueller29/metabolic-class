@@ -86,6 +86,14 @@ write.csv(itp_geno, "output/itp_genotyped_bw_og.csv")
 write.csv(itp_geno_m, "output/itp_genotyped_bw_og_m.csv")
 write.csv(itp_geno_f, "output/itp_genotyped_bw_og_f.csv")
 
+# Control survival table required by the itp_genotyped run (survival_dataset).
+# It is idno / le_wk / dead_censor selected from the cleaned main_cat_surv. This
+# reproduces the survival DATA exactly; the leading row-name index differs
+# cosmetically from an older run (whose parent frame is not retained) and is
+# unused downstream -- the pipeline reads this file by column name.
+itp_genotyped_surv <- read.csv("data/main_cat_surv.csv")[, c("idno", "le_wk", "dead_censor")]
+write.csv(itp_genotyped_surv, "output/itp_genotyped_surv.csv")
+
 write.csv(itp_geno_treat, "output/itp_genotyped_treat_bw_og.csv")
 write.csv(itp_geno_treat_m, "output/itp_genotyped_treat_bw_og_m.csv")
 write.csv(itp_geno_treat_f, "output/itp_genotyped_treat_bw_og_f.csv")

@@ -41,3 +41,13 @@ setwd("../00a_itp2/")
 
 exit_code <- system2("Rscript", args = c("itp2_clean.R"))
 if (exit_code != 0) stop("Error was thrown from system2 command")
+
+# For genotyped itp -----------------------------------------------------------
+# Cleans the raw genotyped-ITP data into 00a_clean_itp_geno/output/. The six
+# itp_genotyped* train configs read their datasets from there, and
+# 98_itp_genotype/prep_census.R reads output/itp_genotyped_treat_surv.csv, so
+# this has to run before any of them.
+setwd("../00a_clean_itp_geno/")
+
+exit_code <- system2("Rscript", args = c("00a_clean_itp_geno.R"))
+if (exit_code != 0) stop("Error was thrown from system2 command")
