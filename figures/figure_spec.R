@@ -191,6 +191,22 @@ FIGURES <- list(
   # version), which is superseded and intentionally dropped.
   list(
     part  = "supplemental",
+    title = "Joint Latent Class Model",
+    panels = c(
+      # 94_jointlcm writes EIGHT panels, lettered A-H in its own scheme, and its
+      # letters are NOT this figure's letters: 94's E/F are ADIPOSITY, which this
+      # figure does not show. Glucose is 94's G/H. Taking E_/F_ here because they
+      # sort next would silently publish adiposity as glucose.
+      "../94_jointlcm/output/panel/A_bw_observed.png",
+      "../94_jointlcm/output/panel/B_bw_km.png",
+      "../94_jointlcm/output/panel/C_fat_observed.png",
+      "../94_jointlcm/output/panel/D_fat_km.png",
+      "../94_jointlcm/output/panel/G_glucose_observed.png",
+      "../94_jointlcm/output/panel/H_glucose_km.png"
+    )
+  ),
+  list(
+    part  = "supplemental",
     title = "Reclassifcation analysis",
     panels = c(
       "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/class_prediction_panel/class_prediction_panel.png",

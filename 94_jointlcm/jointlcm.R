@@ -331,10 +331,10 @@ p_bw_obs <- plot_observed_classes(
   x = age_wk,
   y = bw,
   class = class,
-  title = "Observed Body Weight Classes",
-  x_label = "Age, weeks",
-  y_label = "Body weight",
-  class_label = "BW Class"
+  title = NULL,
+  x_label = "Age (weeks)",
+  y_label = "Body weight (g)",
+  class_label = "Body weight Class"
 )
 
 p_bw_km <- plot_km_classes(
@@ -342,10 +342,10 @@ p_bw_km <- plot_km_classes(
   time = le_wk,
   event = dead_censor,
   class = class,
-  title = "Kaplan-Meier Survival by Body Weight Class",
-  x_label = "Age, weeks",
+  title = NULL,
+  x_label = "Age (weeks)",
   y_label = "Survival probability",
-  class_label = "BW Class"
+  class_label = "Body weight Class"
 )
 
 
@@ -356,10 +356,10 @@ p_fat_obs <- plot_observed_classes(
   x = age_wk,
   y = fat,
   class = class,
-  title = "Observed Fat Mass Classes",
-  x_label = "Age, weeks",
-  y_label = "Fat Mass",
-  class_label = "FM Class"
+  title = NULL,
+  x_label = "Age (weeks)",
+  y_label = "Fat mass (g)",
+  class_label = "Fat mass Class"
 )
 
 p_fat_km <- plot_km_classes(
@@ -367,10 +367,10 @@ p_fat_km <- plot_km_classes(
   time = le_wk,
   event = dead_censor,
   class = class,
-  title = "Kaplan-Meier Survival by Fat Mass Class",
-  x_label = "Age, weeks",
+  title = NULL,
+  x_label = "Age (weeks)",
   y_label = "Survival probability",
-  class_label = "FM Class"
+  class_label = "Fat mass Class"
 )
 
 
@@ -381,9 +381,9 @@ p_adiposity_obs <- plot_observed_classes(
   x = age_wk,
   y = adiposity,
   class = class,
-  title = "Observed Adiposity Classes",
-  x_label = "Age, weeks",
-  y_label = "Adiposity",
+  title = NULL,
+  x_label = "Age (weeks)",
+  y_label = "Adiposity (%)",
   class_label = "Adiposity Class"
 )
 
@@ -392,8 +392,8 @@ p_adiposity_km <- plot_km_classes(
   time = le_wk,
   event = dead_censor,
   class = class,
-  title = "Kaplan-Meier Survival by Adiposity Class",
-  x_label = "Age, weeks",
+  title = NULL,
+  x_label = "Age (weeks)",
   y_label = "Survival probability",
   class_label = "Adiposity Class"
 )
@@ -406,10 +406,10 @@ p_gluc_obs <- plot_observed_classes(
   x = age_wk,
   y = gluc,
   class = class,
-  title = "Observed Glucose Classes",
-  x_label = "Age, weeks",
-  y_label = "Glucose",
-  class_label = "FPG Class"
+  title = NULL,
+  x_label = "Age (weeks)",
+  y_label = "Blood glucose (mg/dL)",
+  class_label = "Glucose Class"
 )
 
 p_gluc_km <- plot_km_classes(
@@ -417,10 +417,10 @@ p_gluc_km <- plot_km_classes(
   time = le_wk,
   event = dead_censor,
   class = class,
-  title = "Kaplan-Meier Survival by Glucose Class",
-  x_label = "Age, weeks",
+  title = NULL,
+  x_label = "Age (weeks)",
   y_label = "Survival probability",
-  class_label = "FPG Class"
+  class_label = "Glucose Class"
 )
 
 
@@ -440,13 +440,13 @@ class_panel <- plot_grid(
 class_panel
 
 # create output folder
-if (!dir.exists("panel")) {
-  dir.create("panel")
+if (!dir.exists(file.path("output", "panel"))) {
+  dir.create(file.path("output", "panel"), recursive = TRUE)
 }
 
 # save combined panel
 ggsave(
-  filename = file.path("panel", "class_panel.png"),
+  filename = file.path("output", "panel", "class_panel.png"),
   plot = class_panel,
   width = 14,
   height = 18,
@@ -456,7 +456,7 @@ ggsave(
 
 # save individual panels
 ggsave(
-  filename = file.path("panel", "A_bw_observed.png"),
+  filename = file.path("output", "panel", "A_bw_observed.png"),
   plot = p_bw_obs,
   width = 7,
   height = 4.5,
@@ -465,7 +465,7 @@ ggsave(
 )
 
 ggsave(
-  filename = file.path("panel", "B_bw_km.png"),
+  filename = file.path("output", "panel", "B_bw_km.png"),
   plot = p_bw_km$plot,
   width = 7,
   height = 4.5,
@@ -474,7 +474,7 @@ ggsave(
 )
 
 ggsave(
-  filename = file.path("panel", "C_fat_observed.png"),
+  filename = file.path("output", "panel", "C_fat_observed.png"),
   plot = p_fat_obs,
   width = 7,
   height = 4.5,
@@ -483,7 +483,7 @@ ggsave(
 )
 
 ggsave(
-  filename = file.path("panel", "D_fat_km.png"),
+  filename = file.path("output", "panel", "D_fat_km.png"),
   plot = p_fat_km$plot,
   width = 7,
   height = 4.5,
@@ -492,7 +492,7 @@ ggsave(
 )
 
 ggsave(
-  filename = file.path("panel", "E_adiposity_observed.png"),
+  filename = file.path("output", "panel", "E_adiposity_observed.png"),
   plot = p_adiposity_obs,
   width = 7,
   height = 4.5,
@@ -501,7 +501,7 @@ ggsave(
 )
 
 ggsave(
-  filename = file.path("panel", "F_adiposity_km.png"),
+  filename = file.path("output", "panel", "F_adiposity_km.png"),
   plot = p_adiposity_km$plot,
   width = 7,
   height = 4.5,
@@ -510,7 +510,7 @@ ggsave(
 )
 
 ggsave(
-  filename = file.path("panel", "G_glucose_observed.png"),
+  filename = file.path("output", "panel", "G_glucose_observed.png"),
   plot = p_gluc_obs,
   width = 7,
   height = 4.5,
@@ -519,7 +519,7 @@ ggsave(
 )
 
 ggsave(
-  filename = file.path("panel", "H_glucose_km.png"),
+  filename = file.path("output", "panel", "H_glucose_km.png"),
   plot = p_gluc_km$plot,
   width = 7,
   height = 4.5,

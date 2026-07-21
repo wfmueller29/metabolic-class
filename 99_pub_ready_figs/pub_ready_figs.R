@@ -761,17 +761,25 @@ if (TRUE) {
 
     write_hr_table(hr_table, "output/tables/hr_all.png")
   })
-  # ---- pared vs full HR tables ---------------------------------------------
-  # A Cox model drops the reference class, so a published HR table lists only
-  # the NON-reference classes and the reader cannot see what the ratios are
-  # against. While the figures are being finalised every class-based HR table is
-  # written twice:
+  # ---- HR table rules --------------------------------------------------------
+  # TWO conventions, applied to every class-based HR table in the deck.
   #
-  #   <name>.png        pared  exactly what goes in the manuscript
-  #   <name>_full.png   full   the same rows with the reference class restored
+  # 1. THE REFERENCE CLASS IS ALWAYS SHOWN. A Cox model drops it, so the raw
+  #    output lists only the non-reference classes and an HR like "0.34" has no
+  #    stated referent. The forest plots (4B, S6B, S7B) already print a
+  #    "reference" row, so omitting it here contradicted them. Stating it in the
+  #    caption instead does not scale: the sex/strain tables have a separate
+  #    reference per cohort, and those references are not the same class.
   #
-  # final_figure_deck.Rmd renders the _full twin straight after its panel WITHOUT
-  # giving it a panel letter, so these can be dropped later with no renumbering.
+  # 2. ROWS ARE ORDERED BY GROUP, THEN REFERENCE FIRST, THEN CLASS ASCENDING --
+  #    never by effect size. Class number is semantic here (1/4/7 are the
+  #    high-risk classes) and drives the KM legends, trajectory colours, the S2A
+  #    heatmap and overlap.R's high-risk definitions, so a reader must be able to
+  #    map a table row onto a curve. Sorting by HR would order the classes
+  #    differently in each cohort of S3I. It would also strand the reference,
+  #    which is 1.00 by definition. Effect-size sorting is right only where rows
+  #    have no intrinsic order -- which is why S2C IS sorted by |r|.
+  #
   # Excluded: hr_treatment (5I), whose rows are rapamycin-vs-control within each
   # class -- its reference is the control arm, not a class.
   #
@@ -796,23 +804,29 @@ if (TRUE) {
     cls[match(miss, .cls_key(cls))]
   }
 
-  # Write the pared PNG, and the full one when reference rows were supplied.
-  # `df` may carry a logical .ref column marking rows that exist only in the
-  # full version; it is stripped from both outputs.
+  # Order by the rules above and write the table. `df` carries a logical .ref
+  # column marking the reference row; it drives the ordering and is then dropped.
+  #
+  # The grouping columns are every column BEFORE "Class" -- LCM for 1N, LCM +
+  # Sex / Strain for 2I/S3I/S3R, Outcome for S1H, and none for 5D. Groups keep
+  # the order the builder produced them in; only rows WITHIN a group are sorted.
   write_hr_table <- function(df, file) {
-    ref <- if (".ref" %in% names(df)) df$.ref else rep(FALSE, nrow(df))
-    df$.ref <- NULL
-    render <- function(d, path) {
-      ft <- flextable(d) %>%
-        fig_table_theme() %>%
-        autofit() %>%
-        set_table_properties(layout = "autofit") %>%
-        fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-      invisible(save_as_image(ft, path, zoom = 10))
+    if (!".ref" %in% names(df)) df$.ref <- FALSE
+    if ("Class" %in% names(df)) {
+      grp_cols <- names(df)[seq_len(match("Class", names(df)) - 1L)]
+      grp <- if (length(grp_cols))
+               do.call(paste, c(df[grp_cols], sep = "\r")) else rep("", nrow(df))
+      cls_no <- suppressWarnings(as.numeric(gsub("[^0-9]", "", df$Class)))
+      df <- df[order(match(grp, unique(grp)), !df$.ref, cls_no), , drop = FALSE]
+      rownames(df) <- NULL
     }
-    render(df[!ref, , drop = FALSE], file)
-    if (any(ref)) render(df, sub("[.]png$", "_full.png", file))
-    invisible(NULL)
+    df$.ref <- NULL
+    ft <- flextable(df) %>%
+      fig_table_theme() %>%
+      autofit() %>%
+      set_table_properties(layout = "autofit") %>%
+      fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+    invisible(save_as_image(ft, file, zoom = 10))
   }
 
   # ---- sex/strain HR tables (2I, S3I, S3R) ---------------------------------
