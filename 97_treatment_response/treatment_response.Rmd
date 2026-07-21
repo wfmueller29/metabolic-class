@@ -286,9 +286,10 @@ ft_tx_class
 ```
 
 ```{r save flextable class}
+dir.create(file.path("output", "tables"), recursive = TRUE, showWarnings = FALSE)
 flextable::save_as_image(
   x = ft_tx_class,
-  path = "body_weight_class_by_treatment.png",
+  path = file.path("output", "tables", "body_weight_class_by_treatment.png"),
   res = 300,
   expand = 20
 )
@@ -298,7 +299,14 @@ flextable::save_as_image(
 hrs_table <- lapply(
   hrs,
   function(table) {
-    table <- table$hr_table[, "final", drop = FALSE]
+    # Keep the numeric columns alongside `final`. surv_gethr computes
+    # value/lower/upper/pval; only the pre-formatted string used to survive,
+    # which left downstream unable to apply its own significance thresholds
+    # (SLAM bakes in p<0.005 for "**", not the conventional 0.01).
+    # `final` stays first so anything indexing column 1 is unaffected.
+    keep <- intersect(c("final", "value", "lower", "upper", "pval"),
+                      colnames(table$hr_table))
+    table <- table$hr_table[, keep, drop = FALSE]
     table
   }
 )
@@ -358,7 +366,10 @@ plots <- lapply(classes, function(class) {
     var = "tx",
     age_death = "le_wk",
     event = "dead_censor",
-    title = if (class == 0) "Responder" else "Nonresponder",
+    # class 0 = responder group; class 1 = predicted classes 1 and 3 pooled
+    # (see the ifelse above). These are the published titles -- the combined
+    # curve is figure 5H.
+    title = if (class == 0) "Responder" else "Predicted Classes 1+3",
     pval = "",
     surv.median.line = "none"
   )
@@ -393,6 +404,21 @@ plots_panel <- cowplot::plot_grid(title_theme, plots_panel,
 )
 
 plots_panel
+
+# Save the pooled-class KMs individually. They previously existed only as this
+# inline panel, so nothing downstream could reference them -- the combined
+# "Predicted Classes 1+3" curve is figure 5H.
+combined_path <- file.path("output", "treatment_response_combined")
+dir.create(combined_path, recursive = TRUE, showWarnings = FALSE)
+combined_names <- c("responder", "predicted_classes_1_3")
+for (i in seq_along(plots)) {
+  ggplot2::ggsave(
+    filename = paste0(combined_names[[i]], ".png"),
+    plot = plots[[i]], device = "png",
+    path = normalizePath(combined_path),
+    width = 6, height = 6
+  )
+}
 ```
 
 ### Nonresponder by treatment tabulation
@@ -584,7 +610,7 @@ ft_tx_nonresponder
 ```{r save nonresponder}
 flextable::save_as_image(
   x = ft_tx_nonresponder,
-  path = "treatment_response_by_group.png",
+  path = file.path("output", "treatment_response_by_group.png"),
   res = 300,
   expand = 20
 )
@@ -594,7 +620,14 @@ flextable::save_as_image(
 hrs_table <- lapply(
   hrs,
   function(table) {
-    table <- table$hr_table[, "final", drop = FALSE]
+    # Keep the numeric columns alongside `final`. surv_gethr computes
+    # value/lower/upper/pval; only the pre-formatted string used to survive,
+    # which left downstream unable to apply its own significance thresholds
+    # (SLAM bakes in p<0.005 for "**", not the conventional 0.01).
+    # `final` stays first so anything indexing column 1 is unaffected.
+    keep <- intersect(c("final", "value", "lower", "upper", "pval"),
+                      colnames(table$hr_table))
+    table <- table$hr_table[, keep, drop = FALSE]
     table
   }
 )
@@ -881,9 +914,32 @@ ft <- add_header_lines(
   values = "Class 2 Rapamycin Survival Sensitivity Analysis"
 )
 
-ft <- add_footer_lines(
+# Lettered footnotes on the column headers. add_header_lines() above put the
+# title in header row 1, so the column names are row 2 -- that is what i = 2
+# targets. Order here sets the a/b/c order in the footer.
+ft <- flextable::footnote(
   ft,
-  values = "HR reflects rapamycin versus control. Downsampled estimates are based on repeated random sampling of Class 2 to n = 85."
+  i = 2, j = "HR", part = "header",
+  value = as_paragraph("HR reflects rapamycin vs. control."),
+  ref_symbols = "a"
+)
+
+ft <- flextable::footnote(
+  ft,
+  i = 2, j = "Sample size", part = "header",
+  value = as_paragraph(
+    "Downsampled estimates are based on repeated random sampling of Class 2 to n = 85."
+  ),
+  ref_symbols = "b"
+)
+
+ft <- flextable::footnote(
+  ft,
+  i = 2, j = "Interval", part = "header",
+  value = as_paragraph(
+    "Empirical 2.5-97.5th percentile range covers the middle 95% of the distribution."
+  ),
+  ref_symbols = "c"
 )
 
 ft <- bold(ft, i = 1, part = "header")
@@ -893,35 +949,45 @@ ft
 
 save_as_image(
   ft,
-  path = "class2_downsampled_hr_table.png",
+  path = file.path("output", "tables", "class2_downsampled_hr_table.png"),
   zoom = 2
 )
 ```
 
 
 ```{r hist HRs}
-hist(
-  downsample_hrs$hr,
-  breaks = 40,
+# Figure 5J. Axis labels are the published ones and are set HERE, not in
+# 99_pub_ready_figs: this is base graphics, so there is no ggplot object for a
+# later stage to restyle -- hist() draws straight to the device.
+#
+# The y axis is a PERCENTAGE of the downsampled replicates, not a count, so the
+# counts are converted before plotting. Labelling the raw counts "Frequency (%)"
+# would have misstated the axis.
+hr_hist <- hist(downsample_hrs$hr, breaks = 40, plot = FALSE)
+hr_hist$counts <- 100 * hr_hist$counts / sum(hr_hist$counts)
+
+hist_args <- list(
+  hr_hist,
   main = "Downsampled Class 2 Treatment HRs",
-  xlab = "Hazard ratio for rapamycin vs control"
+  xlab = "Hazard ratio for rapa vs. control",
+  ylab = "Frequency (%)"
 )
 
+do.call(plot, hist_args)
+
+hist_out <- file.path("output", "downsampled_hr_histogram")
+dir.create(hist_out, recursive = TRUE, showWarnings = FALSE)
 png(
-  filename = "downsampled_class2_hr_histogram.png",
-  width = 8,
+  # square: this is figure 5J and sits beside square panels
+  filename = file.path(hist_out, "downsampled_class2_hr_histogram.png"),
+  width = 6,
   height = 6,
   units = "in",
   res = 300,
   bg = "white"
 )
 
-hist(
-  downsample_hrs$hr,
-  breaks = 40,
-  main = "Downsampled Class 2 Treatment HRs",
-  xlab = "Hazard ratio for rapamycin vs control"
-)
+do.call(plot, hist_args)
 
 abline(v = 1, lty = 2, lwd = 2)
 abline(v = median(downsample_hrs$hr, na.rm = TRUE), lwd = 2)

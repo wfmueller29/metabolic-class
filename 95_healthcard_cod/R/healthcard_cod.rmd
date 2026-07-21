@@ -1158,7 +1158,7 @@ output:
   # Export all plots as high-quality pngs
     # Output folder, relative to this .rmd own dir (95_healthcard_cod/R/),
     # matching the input paths above (rendered from the .rmd directory).
-    output_dir <- "../Outputs"
+    output_dir <- "../output"
     dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
     # Define export function
     export_plot <- function(plot_obj, filename, width = 8.5, height = 11, dpi = 1200) {

@@ -99,26 +99,31 @@ FIGURES <- list(
     part  = "primary",
     title = "Held Out Cohort Validation",
     panels = c(
-      "images/External Validation.png",
+      "images/4A.png",
       "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/forest/plot_5.png",
       "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 58.5]_4.png",
       "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 84.5]_6.png",
       "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 110.5]_8.png",
-      "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 136.5]_10.png"
+      "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 136.5]_10.png",
+      "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_validation_forest/forest.png"
     )
   ),
   list(
     part  = "primary",
     title = "ITP Validation",
     panels = c(
-      "../07_display_figures/output/itp_c10c11c13c16_age_controls_bw/outcome/plot_1.png",
-      "../07_display_figures/output/itp_c10c11c13c16_age_controls_bw/outcome/plot_2.png",
+      "images/5A.png",
+      "../99_pub_ready_figs/output/itp_env/define_class/bw_by_bw.png",
+      "../99_pub_ready_figs/output/itp_env/define_class/km_bw.png",
       "../99_pub_ready_figs/output/tables/hr_itp.png",
-      "images/ITP Treatment.png",
       "../97_treatment_response/output/treatment_response/plot_1.png",
       "../97_treatment_response/output/treatment_response/plot_2.png",
       "../97_treatment_response/output/treatment_response/plot_3.png",
-      "../99_pub_ready_figs/output/tables/hr_treatment.png"
+      "../97_treatment_response/output/treatment_response_combined/predicted_classes_1_3.png",
+      "../99_pub_ready_figs/output/tables/hr_treatment.png",
+      "../97_treatment_response/output/downsampled_hr_histogram/downsampled_class2_hr_histogram.png",
+      "../97_treatment_response/output/tables/class2_downsampled_hr_table.png",
+      "../99_pub_ready_figs/output/locus_heatmaps/loci_filtered.png"
     )
   ),
   list(

@@ -57,20 +57,57 @@ library(ggplot2)
 # ---- panel definitions ------------------------------------------------------
 # position in new_figure1_plot_list -> name, outcome, and whether it is a
 # diagonal (own-class) panel. Order matches the plot list.
-PANELS <- list(
-  list(i = 1,  name = "bw_by_bw",     outcome = "bw",   diagonal = TRUE),
-  list(i = 2,  name = "fat_by_fat",   outcome = "fat",  diagonal = TRUE),
-  list(i = 3,  name = "gluc_by_gluc", outcome = "gluc", diagonal = TRUE),
-  list(i = 4,  name = "km_bw",        outcome = "km",   diagonal = FALSE),
-  list(i = 5,  name = "km_fat",       outcome = "km",   diagonal = FALSE),
-  list(i = 6,  name = "km_gluc",      outcome = "km",   diagonal = FALSE),
-  list(i = 7,  name = "fat_by_bw",    outcome = "fat",  diagonal = FALSE),
-  list(i = 8,  name = "bw_by_fat",    outcome = "bw",   diagonal = FALSE),
-  list(i = 9,  name = "bw_by_gluc",   outcome = "bw",   diagonal = FALSE),
-  list(i = 10, name = "gluc_by_bw",   outcome = "gluc", diagonal = FALSE),
-  list(i = 11, name = "gluc_by_fat",  outcome = "gluc", diagonal = FALSE),
-  list(i = 12, name = "fat_by_gluc",  outcome = "fat",  diagonal = FALSE)
+# NOT every config models three outcomes. The SLAM runs use bw/fat/gluc (12
+# plots), but the ITP control run models body weight only, and its plot list has
+# just TWO entries -- observed BW, then the BW Kaplan-Meier. Hard-coding the
+# 12-position table would save that KM as "fat_by_fat".
+#
+# Stage 07 builds the list as c(obs_plots, kap_plots, unique_plots), so for n
+# outcomes the length is n + n + n*(n-1) = n^2 + n. That inverts cleanly:
+#   2 plots -> 1 outcome    12 plots -> 3 outcomes
+# The first n are the diagonals, the next n the KMs, and the remainder the
+# cross-references (none when n == 1).
+OUTCOME_ORDER <- c("bw", "fat", "gluc")   # the order 07 builds them in
+
+# Cross-reference order for the 3-outcome case, positions 7-12. Derived from
+# stage 07's `selector` (the off-diagonal of a 3x3 outcome x class grid) and
+# confirmed against the rendered panels.
+CROSS_3 <- list(
+  list(name = "fat_by_bw",   outcome = "fat"),
+  list(name = "bw_by_fat",   outcome = "bw"),
+  list(name = "bw_by_gluc",  outcome = "bw"),
+  list(name = "gluc_by_bw",  outcome = "gluc"),
+  list(name = "gluc_by_fat", outcome = "gluc"),
+  list(name = "fat_by_gluc", outcome = "fat")
 )
+
+panels_for <- function(n_plots) {
+  n <- (-1 + sqrt(1 + 4 * n_plots)) / 2
+  if (abs(n - round(n)) > 1e-9) {
+    warning("plot list of length ", n_plots,
+            " does not fit n^2 + n -- skipping this environment")
+    return(NULL)
+  }
+  n <- round(n)
+  oc <- OUTCOME_ORDER[seq_len(n)]
+
+  out <- list()
+  for (k in seq_len(n))                      # diagonals
+    out[[length(out) + 1]] <- list(i = k, name = paste0(oc[k], "_by_", oc[k]),
+                                   outcome = oc[k], diagonal = TRUE)
+  for (k in seq_len(n))                      # Kaplan-Meiers
+    out[[length(out) + 1]] <- list(i = n + k, name = paste0("km_", oc[k]),
+                                   outcome = "km", diagonal = FALSE)
+  if (n == 3) {                              # cross-references
+    for (k in seq_along(CROSS_3))
+      out[[length(out) + 1]] <- list(i = 2 * n + k, name = CROSS_3[[k]]$name,
+                                     outcome = CROSS_3[[k]]$outcome, diagonal = FALSE)
+  } else if (n > 1) {
+    warning("no cross-reference naming defined for ", n, " outcomes -- ",
+            "only diagonals and KMs will be written")
+  }
+  out
+}
 
 Y_LABEL  <- c(bw = "Body weight (g)",
               fat = "Fat mass (g)",
@@ -195,7 +232,9 @@ OUTCOME_ENVS <- list(
   fb6_env   = "../07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_list.RDATA",
   fhet3_env = "../07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_list.RDATA",
   mb6_env   = "../07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_list.RDATA",
-  mhet3_env = "../07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_list.RDATA"
+  mhet3_env = "../07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_list.RDATA",
+  # body weight only -- 2 plots, not 12. panels_for() handles that.
+  itp_env   = "../07_display_figures/output/itp_c10c11c13c16_age_controls_bw/outcome/plot_list.RDATA"
 )
 
 VALIDATION_ENVS <- list(
@@ -223,7 +262,10 @@ for (env_name in names(OUTCOME_ENVS)) {
   plots   <- e$new_figure1_plot_list
   out_dir <- file.path("output", env_name, "define_class")
 
-  for (p in PANELS) {
+  panels <- panels_for(length(plots))
+  if (is.null(panels)) next
+
+  for (p in panels) {
     if (p$i > length(plots)) {
       message("SKIP ", env_name, "/", p$name,
               " -- plot list has only ", length(plots), " entries")
@@ -452,9 +494,51 @@ if (have_workspaces) {
   invisible(save_as_image(hr_table, "output/tables/hr_sexstrain_bw.png", zoom = 10))
 
   # ---- hr_treatment ----------------------------------------------------
-  load("../97_treatment_response/output/hr_table/hr_table.RDATA")
+  # Rapamycin vs control, one row per predicted class, plus the pooled 1+3 row
+  # at the bottom. Columns: Class | Treatment | Hazard Ratio (CI).
+  #
+  # 97 saves these as two separate objects, both named `hrs_table`, so they are
+  # loaded into their own environments to avoid clobbering:
+  #   hr_table/hr_table.RDATA                     per class (1, 2, 3)
+  #   hr_table_nonresponder/...RDATA              0 = responder (class 2),
+  #                                               1 = classes 1+3 pooled
+  # Only the pooled row is taken from the second; the responder row duplicates
+  # class 2, which is already present.
+  #
+  # Stars come from STAR_RULES via the pval that 97 now keeps, not from SLAM's
+  # pre-formatted string (which uses p<0.005 for "**").
+  .e1 <- new.env(); load("../97_treatment_response/output/hr_table/hr_table.RDATA", envir = .e1)
+  .e2 <- new.env()
+  .np <- "../97_treatment_response/output/hr_table_nonresponder/hr_table_nonresponder.RDATA"
+  if (file.exists(.np)) load(.np, envir = .e2)
 
-  hr_table <- do.call(rbind, hrs_table) %>%
+  .hr_row <- function(tb, class_label) {
+    ci <- if (all(c("value", "lower", "upper", "pval") %in% colnames(tb))) {
+      format_hr(tb$value[1], tb$lower[1], tb$upper[1], tb$pval[1])
+    } else {
+      warning("hr_treatment: no pval for '", class_label,
+              "' -- using SLAM's string, whose ** is p<0.005, not the legend's 0.01")
+      as.character(tb$final[1])
+    }
+    data.frame(Class = class_label, Treatment = "Rapamycin",
+               `Hazard Ratio (CI)` = ci,
+               check.names = FALSE, stringsAsFactors = FALSE)
+  }
+
+  hr_table <- do.call(rbind, lapply(.e1$hrs_table, function(tb)
+    .hr_row(tb, as.character(tb$Class[1]))))
+
+  if (!is.null(.e2$hrs_table)) {
+    .pooled <- Filter(function(tb) as.character(tb$Nonresponder[1]) == "1", .e2$hrs_table)
+    if (length(.pooled)) {
+      hr_table <- rbind(hr_table, .hr_row(.pooled[[1]], "1+3"))
+    }
+  } else {
+    warning("hr_treatment: pooled 1+3 table not found -- table will have 3 rows")
+  }
+  rownames(hr_table) <- NULL
+
+  hr_table <- hr_table %>%
     flextable() %>%
     theme_vanilla() %>%
     autofit() %>%
@@ -464,8 +548,29 @@ if (have_workspaces) {
   invisible(save_as_image(hr_table, "output/tables/hr_treatment.png", zoom = 10))
 
   # ---- hr_itp ----------------------------------------------------------
-  hr_table <- itp_env$save_figtabs$mortality_panel_hr[[1]]
-  hr_table <- cbind(Class = rownames(hr_table), hr_table)
+  # Figure 5D. Two columns: Class | Hazard Ratio (CI).
+  # The ITP control run models body weight only, so there is a single outcome
+  # and no LCM column is needed. Prefers hr_numeric so STAR_RULES sets the
+  # asterisks; falls back to SLAM's pre-formatted strings if 07 has not
+  # produced it for this config yet.
+  hn <- hr_numeric_rows(itp_env, "HR Model 1")
+  if (!is.null(hn)) {
+    hr_table <- data.frame(
+      Class               = as.character(hn$Class),
+      `Hazard Ratio (CI)` = mapply(format_hr, hn$value, hn$lower, hn$upper, hn$pval),
+      check.names = FALSE, stringsAsFactors = FALSE
+    )
+  } else {
+    warning("hr_itp: hr_numeric absent -- falling back to SLAM's strings, whose ",
+            "stars use p<0.005 for ** and do NOT match the legend (p<0.01).")
+    tb <- itp_env$save_figtabs$mortality_panel_hr[[1]]
+    hr_table <- data.frame(
+      Class               = rownames(tb),
+      `Hazard Ratio (CI)` = as.character(tb[["final"]]),
+      check.names = FALSE, stringsAsFactors = FALSE
+    )
+  }
+
   hr_table <- flextable(hr_table) %>%
     theme_vanilla() %>%
     autofit() %>%
@@ -607,3 +712,111 @@ if (have_workspaces) {
 }
 
 message("99_pub_ready_figs: done")
+
+
+# =============================================================================
+# VITA / SOMA LOCUS HEATMAPS   (5L filtered, S9D unfiltered)
+#
+# INPUT: 98_itp_genotype/census_mapping.txt (trajectory.R). Cells are -log10(p)
+# from a likelihood-ratio test, NOT p-values.
+#
+# COLOUR uses LOD breaks; 3.84 is the Bonferroni threshold. STARS use the usual
+# paper convention (p<0.05/0.01/0.001 -> -log10 > 1.30/2/3), so the two encode
+# different things ON PURPOSE -- a cell can carry a star while sitting below the
+# Bonferroni colour cut. The figure legend has to say so.
+#
+#   5L   filtered   loci with >=1 Bonferroni-significant cell   4 colours
+#   S9D  unfiltered  all loci                                    8 colours
+# =============================================================================
+
+LOCUS_ORDER <- c(
+  "Vita1a", "Vita1b", "Vita1c", "Vita1d", "Vita2a", "Vita2b", "Vita2c",
+  "Vita3a", "Vita4a", "Vita4b", "Vita5a", "Vita6a", "Vita6b", "Vita9a",
+  "Vita9b", "Vita9c", "Vita10a", "Vita11a", "Vita11b", "Vita11c", "Vita12a",
+  "Vita13a", "Vita14a", "Vita14b", "Vita15a", "Vita15b", "Vita17a", "Vita18a",
+  "VitaXa",
+  "Soma1a", "Soma1b", "Soma2a", "Soma2b", "Soma2c", "Soma3a", "Soma3b",
+  "Soma4a", "Soma4b", "Soma6a", "Soma6b", "Soma7a", "Soma7b", "Soma8a",
+  "Soma8b", "Soma9a", "Soma10a", "Soma11a", "Soma12a", "Soma12b", "Soma13a",
+  "Soma13b", "Soma14a", "Soma14b", "Soma15a", "Soma16a", "Soma17a", "Soma18a",
+  "Soma19a", "Soma19b"
+)
+
+LOCUS_COLS <- c(census = "All", census_f = "Female", census_m = "Male")
+
+BONFERRONI_NEGLOG <- 3.84        # colour cut, and the 5L row filter
+
+# sampled from the legend artwork (.A/sample_legend_hex.R)
+PAL_5L    <- c("#F3F3F3", "#FDCBB4", "#F9A077", "#F57941")
+BREAKS_5L <- c(0, 3.84, 5, 6, Inf)
+
+PAL_S9D    <- c("#F3F3F3", "#91DFF7", "#5FCCEC", "#22B9E1", "#00A5D5",
+                "#FDCBB4", "#F9A077", "#F57941")
+BREAKS_S9D <- c(0, 3.04, 3.24, 3.44, 3.64, 3.84, 5, 6, Inf)
+
+neglog_stars <- function(x) {
+  vapply(x, function(v) {
+    if (is.na(v)) return("")
+    if (v > 3) "***" else if (v > 2) "**" else if (v > -log10(0.05)) "*" else ""
+  }, character(1))
+}
+
+locus_heatmap <- function(mat, title, file, pal, breaks, gap = NULL) {
+  if (!nrow(mat)) { message("locus heatmap '", title, "': empty -- skipped"); return(invisible(NULL)) }
+  # pheatmap opens its own device unless silent = TRUE; calling it inside
+  # png()/dev.off() closes the wrong one and silently drops the file.
+  hm <- pheatmap::pheatmap(
+    mat, cluster_rows = FALSE, cluster_cols = FALSE,
+    display_numbers = matrix(neglog_stars(mat), nrow = nrow(mat), dimnames = dimnames(mat)),
+    number_color = "black", fontsize_number = 12,
+    color = pal, breaks = breaks, border_color = "grey85",
+    gaps_row = if (!is.null(gap) && gap > 0 && gap < nrow(mat)) gap else NULL,
+    main = title, silent = TRUE
+  )
+  grDevices::png(file, width = 5, height = max(4, 0.22 * nrow(mat) + 1),
+                 units = "in", res = 300, bg = "white")
+  grid::grid.newpage(); grid::grid.draw(hm$gtable)
+  grDevices::dev.off()
+  invisible(file)
+}
+
+.map_path <- "../98_itp_genotype/census_mapping.txt"
+if (!file.exists(.map_path)) {
+  message("SKIP locus heatmaps -- not found: ", .map_path, " (trajectory.R has not run)")
+} else {
+  .lod <- utils::read.table(.map_path, sep = "\t", header = TRUE,
+                            check.names = FALSE, stringsAsFactors = FALSE)
+  if (length(setdiff(names(LOCUS_COLS), colnames(.lod)))) {
+    warning("locus heatmaps: census_mapping.txt missing expected columns -- skipped")
+  } else {
+    .m <- as.matrix(.lod[, names(LOCUS_COLS), drop = FALSE])
+    storage.mode(.m) <- "numeric"
+    colnames(.m) <- unname(LOCUS_COLS); rownames(.m) <- rownames(.lod)
+
+    # ONE heatmap, Vita then Soma, in LOCUS_ORDER. gaps_row draws a break at the
+    # Vita/Soma boundary so the two groups stay visually separable.
+    keep <- intersect(LOCUS_ORDER, rownames(.m))
+    full <- .m[keep, , drop = FALSE]
+
+    out_dir <- file.path("output", "locus_heatmaps")
+    if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
+
+    # S9D -- every locus
+    locus_heatmap(full, "Vita and Soma loci",
+                  file.path(out_dir, "loci_all.png"),
+                  PAL_S9D, BREAKS_S9D,
+                  gap = sum(startsWith(rownames(full), "Vita")))
+
+    # 5L -- only loci with at least one Bonferroni-significant cell
+    sig  <- apply(full, 1, function(r) any(r > BONFERRONI_NEGLOG, na.rm = TRUE))
+    filt <- full[sig, , drop = FALSE]
+    message("locus heatmap: ", nrow(filt), " of ", nrow(full),
+            " loci pass Bonferroni (-log10 p > ", BONFERRONI_NEGLOG, ")  [",
+            sum(startsWith(rownames(filt), "Vita")), " Vita, ",
+            sum(startsWith(rownames(filt), "Soma")), " Soma]")
+    locus_heatmap(filt, "Vita and Soma loci",
+                  file.path(out_dir, "loci_filtered.png"),
+                  PAL_5L, BREAKS_5L,
+                  gap = sum(startsWith(rownames(filt), "Vita")))
+  }
+}
