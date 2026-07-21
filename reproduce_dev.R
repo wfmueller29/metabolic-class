@@ -11,7 +11,43 @@ dir.create("run_records", showWarnings = FALSE)
 RUN_LOG <- file.path("run_records", "run_log.csv")
 writeLines("step,start,end,minutes,status", RUN_LOG)
 
+# ---- resuming and continuing ------------------------------------------------
+# Two independent switches, both off by default so a plain run behaves exactly
+# as before.
+#
+#   REPRODUCE_FROM=<substring>   skip every step until one whose label contains
+#                                this substring, then run from there. Use it to
+#                                pick up after a failure without redoing the
+#                                hours already spent, e.g.
+#                                  REPRODUCE_FROM=fhet3 Rscript reproduce_dev.R
+#
+#   REPRODUCE_CONTINUE=1         log a failed step and keep going instead of
+#                                stopping. Steps are largely independent -- one
+#                                cohort config failing does not stop the ITP
+#                                configs -- but anything genuinely downstream
+#                                will also fail, and those cascades are logged
+#                                like any other failure.
+#
+# Both are for working through a known-broken run. Neither belongs in a clean
+# reproduction: there, the first failure should stop everything, because every
+# later step is suspect.
+RESUME_FROM       <- Sys.getenv("REPRODUCE_FROM")
+CONTINUE_ON_ERROR <- nzchar(Sys.getenv("REPRODUCE_CONTINUE"))
+RESUME_ARMED      <- !nzchar(RESUME_FROM)   # TRUE once we have reached the start
+FAILED_STEPS      <- character(0)
+SKIPPED_STEPS     <- character(0)
+
 run_step <- function(label, expr) {
+  if (!RESUME_ARMED) {
+    if (grepl(RESUME_FROM, label, fixed = TRUE)) {
+      RESUME_ARMED <<- TRUE
+    } else {
+      SKIPPED_STEPS <<- c(SKIPPED_STEPS, label)
+      cat("      skipped (REPRODUCE_FROM): ", label, "\n", sep = "")
+      cat(sprintf('"%s","","",0,"SKIPPED"\n', label), file = RUN_LOG, append = TRUE)
+      return(invisible(NA))
+    }
+  }
   cat("\n>>>>> ", label, "  (", format(Sys.time()), ")\n", sep = "")
   t0 <- Sys.time()
   status <- tryCatch({ expr; "OK" },
@@ -22,7 +58,12 @@ run_step <- function(label, expr) {
               label, format(t0), format(t1), mins, status),
       file = RUN_LOG, append = TRUE)
   cat(sprintf("      -> %s (%.1f min)\n", status, mins))
-  if (!identical(status, "OK")) stop("Error in: ", label, " -- ", status)
+  if (!identical(status, "OK")) {
+    if (!CONTINUE_ON_ERROR) stop("Error in: ", label, " -- ", status)
+    FAILED_STEPS <<- c(FAILED_STEPS, paste0(label, " -- ", status))
+    cat("      -> continuing (REPRODUCE_CONTINUE is set)\n")
+    return(invisible(FALSE))
+  }
   invisible(TRUE)
 }
 
@@ -158,3 +199,22 @@ for (yaml in yaml_files) {
 #  is written incrementally and will contain everything up to the failure.)
 ecode <- system2("Rscript", args = c("session_info.R"))
 if (ecode != 0) warning("session_info.R failed -- no environment record written")
+
+# ---- run summary ------------------------------------------------------------
+# A REPRODUCE_FROM that matches nothing would silently skip the entire run and
+# exit 0, which looks identical to success. Fail loudly instead.
+if (nzchar(RESUME_FROM) && !RESUME_ARMED) {
+  cat("\nREPRODUCE_FROM=\"", RESUME_FROM, "\" matched no step -- NOTHING RAN.\n",
+      "Check the spelling against the labels in run_records/run_log.csv.\n\n", sep = "")
+  quit(status = 1)
+}
+if (length(SKIPPED_STEPS))
+  cat("\nSkipped ", length(SKIPPED_STEPS), " step(s) before \"", RESUME_FROM, "\".\n", sep = "")
+if (length(FAILED_STEPS)) {
+  cat("\n", strrep("=", 74), "\n", sep = "")
+  cat(length(FAILED_STEPS), " STEP(S) FAILED\n", sep = "")
+  cat(strrep("=", 74), "\n", sep = "")
+  cat(paste0("  ", FAILED_STEPS), sep = "\n")
+  cat("\n\nThe run is INCOMPLETE. Anything downstream of these is unreliable.\n\n")
+  quit(status = 1)
+}
