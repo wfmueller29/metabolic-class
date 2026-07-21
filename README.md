@@ -117,7 +117,18 @@ Rscript session_info.R
 
 > The older `installer.R` script installs these same packages at their *latest* versions rather than the pinned ones. Prefer `renv::restore()`; use `installer.R` only if you deliberately want an unpinned environment.
 
+### Data files that must be added by hand
 
+`reproduce.R` regenerates everything downstream of the pipeline from pipeline outputs, with two exceptions. These two files are not tracked in the repo and have to be copied in before a full run:
+
+| File | Goes in | Needed by |
+| --- | --- | --- |
+| `SLAM Healthcard reconciled.xlsx` | `95_healthcard_cod/data/` | `95_healthcard_cod` |
+| `um-het3-rqtl.csvr` | `98_itp_genotype/` | `98_itp_genotype` |
+
+Both analyses stop immediately with an explicit message if their file is absent, so a run will not get halfway through and then produce quietly wrong output.
+
+Everything else these analyses need — including the healthcard's class census and its `cod`/`tod` columns — is read from pipeline outputs and the raw SLAM data the pipeline already uses. Nothing downstream reads a frozen copy of a previous run, so the figures always reflect the run that just happened.
 
 ## Overview
 

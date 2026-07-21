@@ -34,6 +34,12 @@ source("adjustXprobs.R")
 
 # Read the R/qtl cross object containing the UM-HET3 Data
 library(qtl)
+# The genotype file is not in the repo -- it is the one input to this analysis
+# that the pipeline cannot regenerate. Drop it in 98_itp_genotype/ before running.
+if (!file.exists("um-het3-rqtl.csvr")) {
+  stop("Missing um-het3-rqtl.csvr in ", normalizePath("."), "\n",
+       "It is not tracked in the repo -- copy it in and re-run.")
+}
 mcross <- read.cross(format="csvr", file="um-het3-rqtl.csvr", genotypes=NULL, na.strings=c("-", "NA"))
 mcross <- calc.genoprob(mcross)
 mcross <- adjustXprobs(mcross)

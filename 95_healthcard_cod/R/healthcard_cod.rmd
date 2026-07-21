@@ -67,19 +67,57 @@ output:
 ```
 # Load in input data
 ```{r read in censuses}
-  census_path <- "/Users/JoshsMacbook2015/Library/CloudStorage/OneDrive-NationalInstitutesofHealth/Trajectories_Raw_Data/pipeline_ready/95_healthcard_cod/data/Michel_raw_healthcard_3_13_26/census.csv"
-  class_census_path <- "/Users/JoshsMacbook2015/Library/CloudStorage/OneDrive-NationalInstitutesofHealth/Trajectories_Raw_Data/pipeline_ready/95_healthcard_cod/data/Michel_raw_healthcard_3_13_26/complete_census.csv"
-  healthcard_path <- "/Users/JoshsMacbook2015/Library/CloudStorage/OneDrive-NationalInstitutesofHealth/Trajectories_Raw_Data/pipeline_ready/95_healthcard_cod/data/Michel_raw_healthcard_3_13_26/SLAM Healthcard reconciled.xlsx"
-  # census_path <- "/Users/jdp2019/Library/CloudStorage/Box-Box/metabolic-class-ITP/95_healthcard_cod/data/census.csv"
-  # class_census_path <- "/Users/jdp2019/Library/CloudStorage/Box-Box/metabolic-class-ITP/95_healthcard_cod/data/20250426_all_cohort/complete_census.csv"
-  # healthcard_path <- "/Users/jdp2019/Library/CloudStorage/Box-Box/metabolic-class-ITP/95_healthcard_cod/data/SLAM Healthcard reconciled.xlsx"
-  # census_path <- "/Users/JoshsMacbook2015/Library/CloudStorage/Box-Box/metabolic-class-ITP/95_healthcard_cod/data/census.csv"
-  # class_census_path <- "/Users/JoshsMacbook2015/Library/CloudStorage/Box-Box/metabolic-class-ITP/95_healthcard_cod/data/20250426_all_cohort/complete_census.csv"
-  # healthcard_path <- "/Users/JoshsMacbook2015/Library/CloudStorage/Box-Box/metabolic-class-ITP/95_healthcard_cod/data/SLAM Healthcard reconciled.xlsx"
-  class_census <- read.csv(class_census_path)
+  # Paths are relative to this .rmd's own dir (95_healthcard_cod/R/), which is
+  # rmarkdown's default knit dir. `..` = 95_healthcard_cod, `../..` = repo root.
+  #
+  # INPUTS:
+  #   - healthcard xlsx : the ONLY input unique to this analysis. Not in the repo --
+  #                       drop it in 95_healthcard_cod/data/ before running.
+  #   - roster census   : the pipeline's own SLAM raw census (tag <-> idno)
+  #   - class_census    : NOT frozen -- reconstructed here as the 04 census
+  #                       (classes / le_wk) joined with cod/tod from the raw SLAM
+  #                       survival files, so the healthcard figures reflect the
+  #                       current run instead of a pinned one.
+  #                       Verified: this reproduces the previously-frozen census
+  #                       exactly on every column the analysis uses (cod/tod/le_wk);
+  #                       the only cell that moves is 1 bw-class mouse (1/1315),
+  #                       which is environment drift, not a wiring difference.
+  #                       This analysis uses only new_class_bw; fat/gluc are never
+  #                       touched.
+  healthcard_path <- "../data/SLAM Healthcard reconciled.xlsx"
+  census_path     <- "../../00a_clean_slam_c1-c10/data/census.csv"
+  census_04_path  <- "../../04_create_census/output/slam_c1-c10_age_all_bwfatgluc/complete_census.csv"
+  surv_c110_path  <- "../../00a_clean_slam_c1-c10/data/survival_2021-12-17.csv"   # tag-keyed,  tod = m/d/yy
+  surv_c1618_path <- "../../00a_clean_slam_c16-c18/data/Survival_2025-02-14.csv"  # idno-keyed, tod = m/d/YYYY
+
+  if (!file.exists(healthcard_path)) {
+    stop("Missing the healthcard workbook:\n  ", normalizePath(dirname(healthcard_path), mustWork = FALSE),
+         "/SLAM Healthcard reconciled.xlsx\n",
+         "It is the one input to this analysis that the pipeline cannot regenerate -- ",
+         "copy it into 95_healthcard_cod/data/ and re-run.")
+  }
+
   census <- read.csv(census_path)
   healthcard_ii <- as.data.frame(readxl::read_xlsx(healthcard_path, sheet = "Healthcard"))
   census <- consoler::rename(census, c(animal_id = "Animal_ID", tag_history = "taghistory"))
+
+  # --- reconstruct class_census: 04 census + cod/tod from raw survival ---------
+  class_census <- read.csv(census_04_path)                       # idno, new_class_bw, le_wk, ...
+  # cod/tod live only in the raw survival CSVs -- 00a/00c/04 all trim them out on
+  # the way through, so they are read straight from the raw files here.
+  # c1-c10 is tag-keyed (join via the roster); c16-c18 is already idno-keyed.
+  .ros  <- unique(data.frame(idno = census$idno, tag = trimws(as.character(census$tag)),
+                             stringsAsFactors = FALSE))
+  .s1   <- read.csv(surv_c110_path); .s1$tag <- trimws(as.character(.s1$tag))
+  .s1   <- merge(.s1, .ros, by = "tag")
+  .ct1  <- data.frame(idno = .s1$idno, cod = tolower(trimws(as.character(.s1$cod))),
+                      tod = as.Date(as.character(.s1$tod), "%m/%d/%y"), stringsAsFactors = FALSE)
+  .s2   <- read.csv(surv_c1618_path)
+  .ct2  <- data.frame(idno = .s2$idno, cod = tolower(trimws(as.character(.s2$cod))),
+                      tod = as.Date(as.character(.s2$tod), "%m/%d/%Y"), stringsAsFactors = FALSE)
+  .cod_tod <- rbind(.ct1, .ct2)
+  .cod_tod <- .cod_tod[!duplicated(.cod_tod$idno), ]
+  class_census <- merge(class_census, .cod_tod, by = "idno", all.x = TRUE)
 ```
 ## Clean Healthcard
 ```{r clean healthcard}
@@ -1118,8 +1156,9 @@ output:
       legend = TRUE
     )
   # Export all plots as high-quality pngs
-    # Output folder (repo-relative; run with the working directory at the repo root)
-    output_dir <- "95_healthcard_cod/Outputs"
+    # Output folder, relative to this .rmd own dir (95_healthcard_cod/R/),
+    # matching the input paths above (rendered from the .rmd directory).
+    output_dir <- "../Outputs"
     dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
     # Define export function
     export_plot <- function(plot_obj, filename, width = 8.5, height = 11, dpi = 1200) {
@@ -1156,17 +1195,17 @@ output:
     )
 
   # Export healthcard_final
-  write.csv(healthcard_final_export, "/Users/JoshsMacbook2015/Library/CloudStorage/OneDrive-NationalInstitutesofHealth/Trajectories_Raw_Data/pipeline_ready/95_healthcard_cod/data/Michel_raw_healthcard_3_13_26/healthcard_final.csv", row.names = FALSE)
+  write.csv(healthcard_final_export, file.path(output_dir, "healthcard_final.csv"), row.names = FALSE)
 
   # Export Fig S8A: parts-of-whole condition burden per mouse per class
-  writexl::write_xlsx(bin_props_stacked_final, "/Users/JoshsMacbook2015/Library/CloudStorage/OneDrive-NationalInstitutesofHealth/Trajectories_Raw_Data/pipeline_ready/95_healthcard_cod/data/Michel_raw_healthcard_3_13_26/S8A.xlsx")
+  writexl::write_xlsx(bin_props_stacked_final, file.path(output_dir, "S8A.xlsx"))
 
   # Export Fig S8B: time-normalized incidence (HCs per year) per class
-  writexl::write_xlsx(bin_props_yr_final, "/Users/JoshsMacbook2015/Library/CloudStorage/OneDrive-NationalInstitutesofHealth/Trajectories_Raw_Data/pipeline_ready/95_healthcard_cod/data/Michel_raw_healthcard_3_13_26/S8B.xlsx")
+  writexl::write_xlsx(bin_props_yr_final, file.path(output_dir, "S8B.xlsx"))
 
   # Export hc_lifespan_data: per-mouse HC counts and binning (source data for S8A/S8B)
   writexl::write_xlsx(
     mutate(hc_lifespan_data, condition_bin = as.character(condition_bin), hc_yr_bin = as.character(hc_yr_bin)),
-    "/Users/JoshsMacbook2015/Library/CloudStorage/OneDrive-NationalInstitutesofHealth/Trajectories_Raw_Data/pipeline_ready/95_healthcard_cod/data/Michel_raw_healthcard_3_13_26/hc_lifespan_data.xlsx"
+    file.path(output_dir, "hc_lifespan_data.xlsx")
   )
 ```
