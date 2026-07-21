@@ -160,6 +160,39 @@ if (length(missing_panels)) {
 } 
 ```
 
+# Tables
+
+Numbered separately from the figures, as in the manuscript. Tables marked
+`png` in figure_spec.R are also written to `output/tables/` as Canva assets;
+the rest render here only.
+
+```{r render tables, results='asis'}
+tn <- list(primary = 0L, supplemental = 0L)
+
+for (tb in TABLES) {
+  tn[[tb$part]] <- tn[[tb$part]] + 1L
+  label <- paste0(if (tb$part == "supplemental") "Supplemental Table " else "Table ",
+                  tn[[tb$part]])
+
+  cat("\n\n## ", label, ". ", tb$title, "\n\n", sep = "")
+
+  out <- tryCatch(tb$build(), error = function(e) e)
+  if (inherits(out, "error")) {
+    cat("\n*FAILED: ", conditionMessage(out), "*\n\n", sep = "")
+    next
+  }
+
+  # build() may return a flextable (already themed) or a plain data frame
+  if (inherits(out, "flextable")) {
+    cat(knitr::knit_child(text = "`r knitr::asis_output(flextable::htmltools_value(out))`",
+                          quiet = TRUE), "\n")
+  } else {
+    print(knitr::kable(out))
+    cat("\n")
+  }
+}
+```
+
 # Panel index
 
 ```{r index}

@@ -587,6 +587,60 @@ combine_cox_table <- function(final_models, mo_names) {
 model_names <- final_models[og_index, "model_name"]
 hr_table <- combine_cox_table(final_models, model_names)
 
+# --- numeric HR/CI/p, saved ALONGSIDE hr_table -------------------------------
+# ADDITIVE: hr_table above is untouched and still feeds every existing figure.
+# This captures what make_cox_table() discards. SLAM::surv_gethr() returns
+# value / lower / upper / pval / final, but make_cox_table keeps only the
+# pre-formatted `final` string -- so the model p-values, and the numeric HR and
+# CI bounds, never reach the figures.
+#
+# Kept in LONG format (one row per Outcome x Class x Model) deliberately: the
+# wide layout hr_table uses would collide on `pval` when the three models are
+# joined.
+#
+# Downstream (99_pub_ready_figs) this allows:
+#   - re-deriving significance stars at chosen thresholds rather than
+#     inheriting SLAM's 0.001 / 0.005 / 0.05
+#   - table columns with real numbers instead of parsed strings
+# Nothing is obliged to use it.
+cox_table_numeric <- function(final_models, mo_names) {
+  out <- list()
+  for (name in mo_names) {
+    row <- final_models[final_models$model_name == name, ]
+    if (row$ng == 1) next
+    cox_models <- row$cox_models[[1]]
+    outcome    <- row$oc_name
+
+    xlevels_list <- lapply(cox_models, `[[`, "xlevels")
+    xlevels_names <- lapply(xlevels_list, names)
+    xlevels_list <- lapply(seq_along(xlevels_names), function(i) {
+      unlist(lapply(mapply(paste0, xlevels_names[[i]], xlevels_list[[i]],
+                           SIMPLIFY = FALSE), `[`, -1))
+    })
+    xlevels_list <- lapply(xlevels_list, function(x) x[!grepl("strata\\(", x)])
+
+    for (i in seq_along(cox_models)) {
+      tb <- SLAM::surv_gethr(cox_models[[i]], vars = xlevels_list[[i]])$hr_table
+      keep <- intersect(c("value", "lower", "upper", "pval", "final"), names(tb))
+      out[[length(out) + 1]] <- data.frame(
+        Outcome = outcome,
+        Class   = rownames(tb),
+        Model   = paste("HR Model", i),
+        tb[, keep, drop = FALSE],
+        row.names = NULL, stringsAsFactors = FALSE
+      )
+    }
+  }
+  if (!length(out)) return(NULL)
+  res <- do.call(rbind, out)
+  res[grepl("^Class\\d+", res$Class), ]
+}
+
+hr_numeric <- tryCatch(
+  cox_table_numeric(final_models, model_names),
+  error = function(e) { warning("hr_numeric failed: ", conditionMessage(e)); NULL }
+)
+
 if (config$custom_palette) {
   splits <- base::strsplit(hr_table$Class, split = "Class")
   splits <- as.numeric(unlist(lapply(splits, function(split) {
@@ -2188,6 +2242,7 @@ for (i in seq_along(formulas)) {
 
 ```{r table hazard ratios, results = 'asis'}
 save_figtabs$hr_table <- hr_table
+save_figtabs$hr_numeric <- hr_numeric   # numeric HR/CI/p (see cox_table_numeric)
 print_table(environment(),
   table_name = "hr_table",
   title = "Table of Hazard Ratios by Metabolic Indices"

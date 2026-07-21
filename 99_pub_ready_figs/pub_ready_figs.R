@@ -118,6 +118,49 @@ normalise_labels <- function(g) {
   g
 }
 
+# ---- significance stars -----------------------------------------------------
+# SLAM::surv_gethr bakes stars into its `final` string using
+#   *** p<0.001 | ** p<0.005 | * p<0.05
+# Note the 0.005 -- NOT the conventional 0.01. Anything reading `final` inherits
+# that silently, which is how the manuscript legend came to say p<0.01.
+#
+# 07 now also saves save_figtabs$hr_numeric (Outcome/Class/Model/value/lower/
+# upper/pval/final), so where that exists we can format the string ourselves and
+# apply the thresholds below explicitly.
+#
+# TO CHANGE THE CONVENTION: edit STAR_RULES. Checked in order, first match wins.
+# Whatever is set here must match the figure legends.
+STAR_RULES <- list(
+  list(p = 0.001, mark = "***"),
+  list(p = 0.005, mark = "**"),   # SLAM's convention; use 0.01 for the usual one
+  list(p = 0.05,  mark = "*")
+)
+
+stars <- function(p) {
+  if (is.na(p)) return("")
+  for (r in STAR_RULES) if (p < r$p) return(r$mark)
+  ""
+}
+
+# "HR = 0.34 (0.28, 0.41)***" built from numbers rather than inherited.
+format_hr <- function(value, lower, upper, pval, digits = 4) {
+  sprintf("HR = %s (%s, %s)%s",
+          format(round(as.numeric(value), digits), nsmall = 0),
+          format(round(as.numeric(lower), digits), nsmall = 0),
+          format(round(as.numeric(upper), digits), nsmall = 0),
+          stars(as.numeric(pval)))
+}
+
+# Pull one model's rows out of hr_numeric; NULL if 07 did not produce it (the
+# caller then falls back to SLAM's pre-formatted `final` strings).
+hr_numeric_rows <- function(env, model = "HR Model 1") {
+  hn <- env$save_figtabs$hr_numeric
+  if (is.null(hn) || !nrow(hn)) return(NULL)
+  rows <- hn[hn$Model == model, , drop = FALSE]
+  if (!nrow(rows)) return(NULL)
+  rows
+}
+
 # ---- stage 07 workspaces ----------------------------------------------------
 OUTCOME_ENVS <- list(
   all_env   = "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_list.RDATA",
@@ -286,13 +329,28 @@ if (have_workspaces) {
   # 1A schematic. Extend it if an outcome is added.
   LCM_LABEL <- c("Body Weight" = "BW", "Body Fat" = "FM", "Glucose" = "FBG")
 
-  hr_src   <- all_env$save_figtabs$hr_table
-  hr_table <- data.frame(
-    LCM                 = unname(LCM_LABEL[as.character(hr_src$Outcome)]),
-    Class               = as.character(hr_src$Class),
-    `Hazard Ratio (CI)` = as.character(hr_src[["HR Model 1"]]),
-    check.names = FALSE, stringsAsFactors = FALSE
-  )
+  # Prefer hr_numeric: real p-values, so STAR_RULES above decide the asterisks.
+  # Fall back to hr_table's pre-formatted strings (SLAM's 0.005 convention) when
+  # 07 did not produce hr_numeric -- e.g. workspaces from an older run.
+  hn <- hr_numeric_rows(all_env, "HR Model 1")
+  if (!is.null(hn)) {
+    hr_table <- data.frame(
+      LCM                 = unname(LCM_LABEL[as.character(hn$Outcome)]),
+      Class               = as.character(hn$Class),
+      `Hazard Ratio (CI)` = mapply(format_hr, hn$value, hn$lower, hn$upper, hn$pval),
+      check.names = FALSE, stringsAsFactors = FALSE
+    )
+  } else {
+    message("hr_all: hr_numeric absent -- using SLAM's pre-formatted strings ",
+            "(stars follow 0.001/0.005/0.05, not STAR_RULES)")
+    hr_src   <- all_env$save_figtabs$hr_table
+    hr_table <- data.frame(
+      LCM                 = unname(LCM_LABEL[as.character(hr_src$Outcome)]),
+      Class               = as.character(hr_src$Class),
+      `Hazard Ratio (CI)` = as.character(hr_src[["HR Model 1"]]),
+      check.names = FALSE, stringsAsFactors = FALSE
+    )
+  }
   if (anyNA(hr_table$LCM)) {
     warning("hr_all: an outcome has no LCM_LABEL entry -- LCM column contains NA")
   }
@@ -306,15 +364,31 @@ if (have_workspaces) {
   invisible(save_as_image(hr_table, "output/tables/hr_all.png", zoom = 10))
 
   # ---- hr_sexstrain_bw -------------------------------------------------
-  cbind_hr_table <- function(strata, hr_table) {
-    cbind(sex_strain = strata, Class = rownames(hr_table), hr_table)
+  # Figure 2I. Columns: LCM | Sex/Strain | Class | Hazard Ratio (CI).
+  #
+  # mortality_panel_hr is ordered bw, fat, gluc -- so [[1]] is BW on every row,
+  # which is why LCM is "BW" throughout. The FM and FBG tables below use [[2]]
+  # and [[3]] and share sexstrain_rows(); to give them the same treatment,
+  # switch them to it and pass slot 2 / "FM" or 3 / "FBG".
+  SEX_STRAIN_LABEL <- c(fb6 = "F/B6", mb6 = "M/B6",
+                        fhet3 = "F/HET3", mhet3 = "M/HET3")
+
+  sexstrain_rows <- function(strata, env, slot, lcm) {
+    tb <- env$save_figtabs$mortality_panel_hr[[slot]]
+    data.frame(
+      LCM                 = lcm,
+      `Sex/Strain`        = unname(SEX_STRAIN_LABEL[[strata]]),
+      Class               = rownames(tb),
+      `Hazard Ratio (CI)` = as.character(tb[["final"]]),
+      check.names = FALSE, stringsAsFactors = FALSE
+    )
   }
 
   hr_table <- rbind(
-    cbind_hr_table("fb6", fb6_env$save_figtabs$mortality_panel_hr[[1]]),
-    cbind_hr_table("mb6", mb6_env$save_figtabs$mortality_panel_hr[[1]]),
-    cbind_hr_table("fhet3", fhet3_env$save_figtabs$mortality_panel_hr[[1]]),
-    cbind_hr_table("mhet3", mhet3_env$save_figtabs$mortality_panel_hr[[1]])
+    sexstrain_rows("fb6",   fb6_env,   1, "BW"),
+    sexstrain_rows("mb6",   mb6_env,   1, "BW"),
+    sexstrain_rows("fhet3", fhet3_env, 1, "BW"),
+    sexstrain_rows("mhet3", mhet3_env, 1, "BW")
   )
   rownames(hr_table) <- NULL
 

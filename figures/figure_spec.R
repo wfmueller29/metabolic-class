@@ -345,3 +345,298 @@ FIGURES <- list(
     )
   )
 )
+
+# =============================================================================
+# TABLES
+#
+# Numbered SEPARATELY from figures, matching the manuscript: primary tables are
+# Table 1, Table 2, ...; supplemental are Supplemental Table 1, 2, ...
+#
+# render = "png"     rasterised by 99 into output/tables/ and treated like any
+#                    other panel -- use for small display tables that need to
+#                    be placed in Canva.
+# render = "inline"  rendered as an HTML table in the deck, not exported. Use
+#                    for bulk data tables (some are hundreds of rows) where a
+#                    PNG would be unreadable and useless as a Canva asset.
+#
+# `build` is evaluated with the stage-07 environments already loaded
+# (all_env, itp_env, held_out_env, ...). It must return something flextable()
+# or knitr::kable() can render.
+#
+# TO MOVE A TABLE BETWEEN PNG AND INLINE: change its `render` field. Nothing
+# else needs touching.
+# =============================================================================
+
+TABLES <- list(
+  list(
+    part   = "primary",
+    title  = "SLAM C1-C10 Class Demographics",
+    render = "png",
+    build  = function() {
+      all_env$save_figtabs$t1_df %>%
+        select(-oc_name) %>%
+        mutate(Class = row_names) %>%
+        flextable() %>%
+        theme_vanilla() %>%
+        autofit() %>%
+        set_table_properties(layout = "autofit") %>%
+        fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+      tab_no <- 1 + tab_no
+    }
+  ),
+  list(
+    part   = "primary",
+    title  = "ITP Class Demographics",
+    render = "png",
+    build  = function() {
+      itp_env$save_figtabs$t1_df %>%
+        select(-oc_name) %>%
+        mutate(Class = row_names) %>%
+        flextable() %>%
+        theme_vanilla() %>%
+        autofit() %>%
+        set_table_properties(layout = "autofit") %>%
+        fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+      tab_no <- 1 + tab_no
+    }
+  ),
+  list(
+    part   = "supplemental",
+    title  = "Sex/Strain Adjusted Hazards",
+    render = "png",
+    build  = function() {
+      flextable(all_env$save_figtabs$hr_table) %>%
+        theme_vanilla() %>%
+        autofit() %>%
+        set_table_properties(layout = "autofit") %>%
+        fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+
+      tab_no <- 1 + tab_no
+    }
+  ),
+  list(
+    part   = "supplemental",
+    title  = "Linear Mixed Effects Models",
+    render = "inline",
+    build  = function() {
+      lme_coef_table <- all_env$save_figtabs$lme_coef_table_broom
+      lme_coef_table <- lapply(lme_coef_table, function(table) {
+        table <- table %>%
+          mutate(across(ends_with("p.value"), ~ case_when(
+            .x < 0.0001 ~ "< 0.0001",
+            .x < 0.001 ~ "< 0.001",
+            .x < 0.01 ~ "< 0.01",
+            .x < 0.05 ~ "< 0.05",
+            TRUE ~ "-"
+          )))
+        return(table)
+      })
+
+      # Function to alternate estimate and p.value columns
+      reorder_estimate_pvalue <- function(df) {
+        term_col <- "term"
+        all_cols <- names(df)
+        prefixes <- unique(gsub(
+          "_(estimate|p.value)$", "",
+          all_cols[!all_cols %in% term_col]
+        ))
+        new_order <- c(term_col, unlist(lapply(prefixes, function(prefix) {
+          c(paste0(prefix, "_estimate"), paste0(prefix, "_p.value"))
+        })))
+
+        df[, new_order]
+      }
+
+      # Apply to each table in your list
+      lme_coef_table <- lapply(lme_coef_table, reorder_estimate_pvalue)
+
+      lme_coef_table <- lapply(lme_coef_table, function(table) {
+        flextable(table) %>%
+          theme_vanilla() %>%
+          autofit() %>%
+          set_table_properties(layout = "autofit") %>%
+          fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+      })
+
+      lme_coef_table[[1]]
+      lme_coef_table[[2]]
+      lme_coef_table[[3]]
+
+      tab_no <- 1 + tab_no
+    }
+  ),
+  list(
+    part   = "supplemental",
+    title  = "Descriptive Statistics SLAM C1-C10 datasets",
+    render = "inline",
+    build  = function() {
+      flextable(rbind(
+        all_env$save_figtabs$sum_data,
+        all_env$save_figtabs$sum_test
+      )) %>%
+        theme_vanilla() %>%
+        autofit() %>%
+        set_table_properties(layout = "autofit") %>%
+        fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+      tab_no <- 1 + tab_no
+    }
+  ),
+  list(
+    part   = "supplemental",
+    title  = "Median Life Expectancy Data",
+    render = "inline",
+    build  = function() {
+      flextable(all_env$save_figtabs$table_mle) %>%
+        theme_vanilla() %>%
+        autofit() %>%
+        set_table_properties(layout = "autofit") %>%
+        fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+      tab_no <- 1 + tab_no
+    }
+  ),
+  list(
+    part   = "supplemental",
+    title  = "LCM Model Information",
+    render = "inline",
+    build  = function() {
+      all_env$save_figtabs$lcmm_table %>%
+        dplyr::rename(`Smallest Class %` = `Smallest.Class....`) %>%
+        dplyr::mutate(`Smallest Class %` = round(`Smallest Class %`, digits = 3)) %>%
+        flextable() %>%
+        theme_vanilla() %>%
+        autofit() %>%
+        set_table_properties(layout = "autofit") %>%
+        fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+      tab_no <- 1 + tab_no
+    }
+  ),
+  list(
+    part   = "supplemental",
+    title  = "Individual Cox Information",
+    render = "inline",
+    build  = function() {
+      flextable(all_env$save_figtabs$individual_coxzph_tables) %>%
+        theme_vanilla() %>%
+        autofit() %>%
+        set_table_properties(layout = "autofit") %>%
+        fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+      tab_no <- 1 + tab_no
+    }
+  ),
+  list(
+    part   = "supplemental",
+    title  = "Combined Cox Information",
+    render = "inline",
+    build  = function() {
+      all_env$save_figtabs$combined_coxzph_tables %>%
+        mutate(df = round(df, digits = 2)) %>%
+        select(-outcome) %>%
+        flextable() %>%
+        theme_vanilla() %>%
+        autofit() %>%
+        set_table_properties(layout = "autofit") %>%
+        fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+      tab_no <- 1 + tab_no
+    }
+  ),
+  list(
+    part   = "supplemental",
+    title  = "Descriptive Census Information",
+    render = "inline",
+    build  = function() {
+      flextable(round(all_env$save_figtabs$describe_census, digits = 3)) %>%
+        theme_vanilla() %>%
+        autofit() %>%
+        set_table_properties(layout = "autofit") %>%
+        fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+
+      tab_no <- 1 + tab_no
+    }
+  ),
+  list(
+    part   = "supplemental",
+    title  = "Descriptive Statistics SLAM C16-C18 datasets",
+    render = "inline",
+    build  = function() {
+      flextable(held_out_env$save_figtabs$sum_test) %>%
+        theme_vanilla() %>%
+        autofit() %>%
+        set_table_properties(layout = "autofit") %>%
+        fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+      tab_no <- 1 + tab_no
+    }
+  ),
+  list(
+    part   = "supplemental",
+    title  = "Missing Data Descriptive Statistics SLAM C1-C10 datasets",
+    render = "inline",
+    build  = function() {
+      flextable(all_env$save_figtabs$sum_missing) %>%
+        theme_vanilla() %>%
+        autofit() %>%
+        set_table_properties(layout = "autofit") %>%
+        fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+
+      tab_no <- 1 + tab_no
+    }
+  ),
+  list(
+    part   = "supplemental",
+    title  = "LCM Posterior Probabilities",
+    render = "inline",
+    build  = function() {
+      flextable(all_env$save_figtabs$post_prob_table) %>%
+        theme_vanilla() %>%
+        autofit() %>%
+        set_table_properties(layout = "autofit") %>%
+        fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+      tab_no <- 1 + tab_no
+    }
+  ),
+  list(
+    part   = "supplemental",
+    title  = "Candidate LCMs",
+    render = "inline",
+    build  = function() {
+      flextable(all_env$save_figtabs$all_models_table) %>%
+        # fontsize(size = 3, part = "all") %>%
+        theme_vanilla() %>%
+        autofit() %>%
+        set_table_properties(layout = "autofit") %>%
+        fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+
+      tab_no <- 1 + tab_no
+    }
+  ),
+  list(
+    part   = "supplemental",
+    title  = "LME Information",
+    render = "inline",
+    build  = function() {
+      all_env$save_figtabs$lme_table %>%
+        mutate(sigma = round(sigma, digits = 3)) %>%
+        mutate(loglik = round(loglik, digits = 0)) %>%
+        mutate(AICtab = round(AICtab, digits = 0)) %>%
+        flextable() %>%
+        theme_vanilla() %>%
+        autofit() %>%
+        set_table_properties(layout = "autofit") %>%
+        fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+      tab_no <- 1 + tab_no
+    }
+  )
+)
