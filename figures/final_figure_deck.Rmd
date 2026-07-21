@@ -1,0 +1,1618 @@
+---
+title: "SLAM Metabolic Class -- Final Figure Deck"
+author: "..."
+data: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  html_document:
+    df_print: paged
+geometry:
+  - top=1in
+  - bottom=1in
+  - left=0.5in
+  - right=0.5in
+---
+
+<!--
+  GENERATED FILE -- assembled from primary_figures.Rmd + sup_figures.Rmd.
+  Do not hand-edit; regenerate with .A/build_final_deck.sh.
+
+  Contents = ALL primary figures + ALL supplementary figures, EXCEPT the sections
+  depending on the strain-pooled training runs, which the reproduce script does not
+  produce:
+      slam_c1-c10_age_b6_bwfatgluc
+      slam_c1-c10_age_het3_bwfatgluc
+  Omitted accordingly:
+      - "Defining Metabolic Classes - B6"
+      - "Defining Metabolic Classes - HET3"
+      - the strain HR table (output/strain_mortality_panel_hr.png)
+  The SEX-stratified runs (fb6/fhet3/mb6/mhet3) are unaffected and fully retained.
+-->
+
+```{r figs setup, warning=FALSE, message=FALSE, echo=FALSE}
+# library(helphlme)
+library(tidyverse)
+library(kableExtra)
+# library(survival)
+# library(survminer)
+library(ggplotify)
+# library(sjPlot)
+# library(lme4)
+library(cowplot)
+library(RColorBrewer)
+library(viridis)
+library(consoler)
+library(flextable)
+# library(future)
+library(magick)
+library(gridExtra)
+set.seed(365)
+
+# setting global knitr options for r markdown output
+knitr::opts_chunk$set(autodep = TRUE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(cache = FALSE)
+```
+
+
+```{r figs read input yaml}
+# this loads in all the tables
+all_path <- "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/workspace.RDATA"
+fb6_path <- "../07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/workspace.RDATA"
+fhet3_path <- "../07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/workspace.RDATA"
+mb6_path <- "../07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/workspace.RDATA"
+mhet3_path <- "../07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/workspace.RDATA"
+itp_path <- "../07_display_figures/output/itp_c10c11c13c16_age_controls_bw/workspace.RDATA"
+held_out_path <- "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/workspace.RDATA"
+
+config <- NULL
+```
+
+```{r figs load models, include = FALSE}
+# Define a named list of input paths and environment names
+render_tasks <- list(
+  all_env = all_path,
+  fb6_env = fb6_path,
+  fhet3_env = fhet3_path,
+  mb6_env = mb6_path,
+  mhet3_env = mhet3_path,
+  itp_env = itp_path,
+  held_out_env = held_out_path
+)
+
+lapply(names(render_tasks), function(env_name) {
+  env <- new.env()
+  input_path <- render_tasks[[env_name]]
+  load(input_path, envir = env)
+  assign(env_name, env, envir = .GlobalEnv)
+})
+```
+
+```{r figs fig no }
+fig_no <- 1
+tab_no <- 1
+max_width <- 7
+```
+
+```{r save figure function}
+save_figure <- function(image_obj, fig_num, label) {
+  dir_path <- file.path("output", "primary", paste0("fig", fig_num))
+  file_path <- file.path(dir_path, paste0(fig_num, label, ".png"))
+
+  if (!dir.exists(dir_path)) {
+    dir.create(dir_path, recursive = TRUE)
+  }
+
+  magick::image_write(image_obj, path = file_path, format = "png")
+}
+```
+
+```{r annotate figure function}
+annotate_figure_label <- function(image_obj, label) {
+  magick::image_annotate(
+    image_obj,
+    text = toupper(label),
+    size = 50,
+    gravity = "northwest",
+    location = "+20+20",
+    color = "black"
+  )
+}
+```
+
+```{r grob to magick}
+grob_to_magick <- function(grob, width = 400, height = 400, res = 150) {
+  tf <- tempfile(fileext = ".png")
+  png(tf, width = width, height = height, res = res)
+  grid::grid.newpage()
+  grid::grid.draw(grob)
+  dev.off()
+  image_read(tf)
+}
+```
+
+\newpage
+
+\tableofcontents
+
+\newpage
+
+# Primary Figures
+
+### Graphical Abstract
+
+```{r figs overview, out.width = "100%"}
+fig <- list()
+fig$A <- image_read("images/Overview.png")
+save_figure(fig$A, as.character(fig_no), "A")
+
+fig$A
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Defining Metabolic Classes
+
+```{r define classes, out.width = "100%"}
+fig <- list()
+fig$A <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_1.png")
+fig$B <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_4.png")
+fig$C <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_7.png")
+fig$D <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_10.png")
+fig$E <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_2.png")
+fig$F <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_5.png")
+fig$G <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_8.png")
+fig$H <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_11.png")
+fig$I <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_3.png")
+fig$J <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_6.png")
+fig$K <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_9.png")
+fig$L <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_12.png")
+fig$M <- image_read("images/Basic LCM.png")
+
+
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+
+# create table
+hr_table <- do.call(rbind, all_env$save_figtabs$mortality_panel_hr)
+hr_table <- cbind(Class = rownames(hr_table), hr_table)
+hr_table <- flextable(hr_table) %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+invisible(save_as_image(hr_table, "output/mortality_panel_hr.png", zoom = 10))
+fig$N <- image_read("output/mortality_panel_hr.png")
+fig$N <- image_scale(fig$N, "400%")
+fig$N <- image_border(fig$N, color = "white", geometry = "100x100")
+fig$N <- annotate_figure_label(fig$N, "N")
+
+
+legend1 <- grob_to_magick(all_env$save_figtabs$legends_only[[1]]) %>%
+  image_scale("200%")
+legend2 <- grob_to_magick(all_env$save_figtabs$legends_only[[2]]) %>%
+  image_scale("200%")
+legend3 <- grob_to_magick(all_env$save_figtabs$legends_only[[3]]) %>%
+  image_scale("200%")
+
+
+# Build rows of 4 images
+row1 <- image_append(c(fig$A, fig$B, fig$C, fig$D, legend1), stack = FALSE)
+row2 <- image_append(c(fig$E, fig$F, fig$G, fig$H, legend2), stack = FALSE)
+row3 <- image_append(c(fig$I, fig$J, fig$K, fig$L, legend3), stack = FALSE)
+row4 <- image_append(c(fig$M, fig$N))
+# Stack the rows vertically
+final_panel <- image_append(c(row1, row2, row3, row4), stack = TRUE)
+
+# View or save
+final_panel
+# image_write(final_panel, "output/fig/panel.png")
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Sex/Strain Classes BW
+
+```{r sex strain bw classes, out.width = "100%"}
+fig <- list()
+fig$A <- image_read("../99_pub_ready_figs/output/fb6_env/define_class/bwbw.png")
+fig$B <- image_read("../99_pub_ready_figs/output/fb6_env/define_class/bwkm.png")
+fig$C <- image_read("../99_pub_ready_figs/output/mb6_env/define_class/bwbw.png")
+fig$D <- image_read("../99_pub_ready_figs/output/mb6_env/define_class/bwkm.png")
+fig$E <- image_read("../99_pub_ready_figs/output/fhet3_env/define_class/bwbw.png")
+fig$F <- image_read("../99_pub_ready_figs/output/fhet3_env/define_class/bwkm.png")
+fig$G <- image_read("../99_pub_ready_figs/output/mhet3_env/define_class/bwbw.png")
+fig$H <- image_read("../99_pub_ready_figs/output/mhet3_env/define_class/bwkm.png")
+
+for (label in names(fig)) {
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+
+cbind_hr_table <- function(strata, hr_table) {
+  cbind(sex_strain = strata, Class = rownames(hr_table), hr_table)
+}
+
+hr_table <- rbind(
+  cbind_hr_table("fb6", fb6_env$save_figtabs$mortality_panel_hr[[1]]),
+  cbind_hr_table("mb6", mb6_env$save_figtabs$mortality_panel_hr[[1]]),
+  cbind_hr_table("fhet3", fhet3_env$save_figtabs$mortality_panel_hr[[1]]),
+  cbind_hr_table("mhet3", mhet3_env$save_figtabs$mortality_panel_hr[[1]])
+)
+rownames(hr_table) <- NULL
+
+hr_table <- flextable(hr_table) %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+invisible(save_as_image(hr_table, "output/mortality_panel_hr.png", zoom = 10))
+fig$I <- image_read("output/mortality_panel_hr.png")
+fig$I <- image_scale(fig$I, "400%")
+fig$I <- image_border(fig$I, color = "white", geometry = "100x100")
+fig$I <- annotate_figure_label(fig$I, "I")
+
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+}
+
+legend1 <- image_read("../99_pub_ready_figs/output/fb6_env/define_class/bwbw_legend.png")
+legend2 <- image_read("../99_pub_ready_figs/output/mb6_env/define_class/bwbw_legend.png")
+legend3 <- image_read("../99_pub_ready_figs/output/fhet3_env/define_class/bwbw_legend.png")
+legend4 <- image_read("../99_pub_ready_figs/output/mhet3_env/define_class/bwbw_legend.png")
+
+row1 <- image_append(c(fig$A, fig$B, legend1, fig$C, fig$D, legend2), stack = FALSE)
+row2 <- image_append(c(fig$E, fig$F, legend3, fig$G, fig$H, legend4), stack = FALSE)
+
+final_panel <- image_append(c(row1, row2, fig$I), stack = TRUE)
+
+final_panel
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Graded Mortality Response
+
+```{r dose response, out.width = "100%"}
+fig <- list()
+fig$A <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/dose_response/plot_1.png")
+fig$B <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/dose_response/plot_4.png")
+fig$C <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/dose_response/plot_7.png")
+fig$D <- image_read("images/Basic LCM.png")
+fig$E <- image_read("images/Graded Mortality.png")
+
+
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+
+# HR table removed -- hazard ratios are now shown in the forest-plot figure
+# below (Graded Mortality Response - Forest Plot)
+
+# Stack the KM dose-response curves
+col1 <- image_append(c(fig$A, fig$B, fig$C), stack = TRUE)
+
+final_panel <- col1
+
+# View or save
+final_panel
+# image_write(final_panel, "output/fig2/panel.png")
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Graded Mortality Response - Forest Plot
+
+```{r dose response forest, out.width = "100%", fig.height=11, fig.width=12}
+all_env$save_figtabs$dose_plot_panel_forest
+
+fig_no <- fig_no + 1
+```
+
+### Figure `r as.character(fig_no)`: Held Out Cohort Validation
+
+```{r external validation, out.width = "100%"}
+fig <- list()
+fig$A <- image_read("images/External Validation.png")
+fig$B <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/forest/plot_5.png")
+# fig$C <- image_read("../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 32.5]_2.png")
+fig$C <- image_read("../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 58.5]_4.png")
+fig$D <- image_read("../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 84.5]_6.png")
+fig$E <- image_read("../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 110.5]_8.png")
+fig$F <- image_read("../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 136.5]_10.png")
+
+fig$A <- image_scale(fig$A, "75%")
+fig$B <- image_scale(fig$B, "125%")
+
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+
+# HR table removed -- hazard ratios are now shown in the forest-plot figure
+# below (Held Out Cohort Validation - Forest Plot)
+
+# Stack the rows vertically
+col1 <- image_append(c(fig$A, fig$B), stack = TRUE)
+col2 <- image_append(c(fig$C, fig$E), stack = TRUE)
+col3 <- image_append(c(fig$D, fig$F), stack = TRUE)
+
+final_panel <- image_append(c(col1, col2, col3), stack = FALSE)
+
+# View or save
+final_panel
+# image_write(final_panel, "output/fig2/panel.png")
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Held Out Cohort Validation - Forest Plot
+
+```{r external validation forest, out.width = "100%", fig.height=13, fig.width=12}
+held_out_env$save_figtabs$km_hr_combine_panel_forest
+
+fig_no <- fig_no + 1
+```
+
+### Figure `r as.character(fig_no)`: ITP Validation
+
+```{r ITP validation, out.width = "100%"}
+fig <- list()
+fig$A <- image_read("../07_display_figures/output/itp_c10c11c13c16_age_controls_bw/outcome/plot_1.png")
+fig$B <- image_read("../07_display_figures/output/itp_c10c11c13c16_age_controls_bw/outcome/plot_2.png")
+fig$D <- image_read("images/ITP Treatment.png")
+fig$E <- image_read("../97_treatment_response/output/treatment_response/plot_1.png")
+fig$F <- image_read("../97_treatment_response/output/treatment_response/plot_2.png")
+fig$G <- image_read("../97_treatment_response/output/treatment_response/plot_3.png")
+
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+
+load("../97_treatment_response/output/hr_table/hr_table.RDATA")
+
+hr_table <- do.call(rbind, hrs_table) %>%
+  flextable() %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+invisible(save_as_image(hr_table, "output/treatment_mortlity_panel_hr.png", zoom = 10))
+fig$H <- image_read("output/treatment_mortlity_panel_hr.png")
+fig$H <- image_scale(fig$H, "400%")
+fig$H <- image_border(fig$H, color = "white", geometry = "100x100")
+fig$H <- annotate_figure_label(fig$H, "H")
+
+# create table
+
+hr_table <- itp_env$save_figtabs$mortality_panel_hr[[1]]
+hr_table <- cbind(Class = rownames(hr_table), hr_table)
+hr_table <- flextable(hr_table) %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+invisible(save_as_image(hr_table, "output/mortality_panel_hr.png", zoom = 10))
+fig$C <- image_read("output/mortality_panel_hr.png")
+fig$C <- image_scale(fig$C, "400%")
+fig$C <- image_border(fig$C, color = "white", geometry = "100x100")
+fig$C <- annotate_figure_label(fig$C, "C")
+
+
+# Stack the rows vertically
+row1col1 <- image_append(c(fig$A, fig$B), stack = FALSE)
+row1col2 <- image_append(c(fig$C, fig$D), stack = TRUE)
+row1 <- image_append(c(row1col1, row1col2), stack = FALSE)
+row2 <- image_append(c(fig$E, fig$F, fig$G), stack = FALSE)
+row3 <- fig$H
+
+final_panel <- image_append(c(row1, row2, row3), stack = TRUE)
+
+# View or save
+final_panel
+# image_write(final_panel, "output/fig2/panel.png")
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Table `r as.character(tab_no)`: SLAM C1-C10 Class Demographics
+
+```{r slam class demographics, results = 'asis'}
+all_env$save_figtabs$t1_df %>%
+  select(-oc_name) %>%
+  mutate(Class = row_names) %>%
+  flextable() %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+tab_no <- 1 + tab_no
+```
+
+\newpage
+
+### Table `r as.character(tab_no)`: ITP Class Demographics
+
+```{r itp class demographics, results = 'asis'}
+itp_env$save_figtabs$t1_df %>%
+  select(-oc_name) %>%
+  mutate(Class = row_names) %>%
+  flextable() %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+tab_no <- 1 + tab_no
+```
+
+
+\newpage
+
+# Supplementary Figures
+
+```{r sup save figure function}
+save_figure <- function(image_obj, fig_num, label) {
+  dir_path <- file.path("output", "supplemental", paste0("fig", fig_num))
+  file_path <- file.path(dir_path, paste0(fig_num, label, ".png"))
+
+  if (!dir.exists(dir_path)) {
+    dir.create(dir_path, recursive = TRUE)
+  }
+
+  magick::image_write(image_obj, path = file_path, format = "png")
+}
+```
+
+```{r sup reset counters}
+fig_no <- 1
+tab_no <- 1
+```
+
+### Figure `r as.character(fig_no)`: Sex/Strain Classes FM
+
+```{r sex strain fat classes, out.width = "100%"}
+fig <- list()
+fig$A <- image_read("../99_pub_ready_figs/output/fb6_env/define_class/fatfat.png")
+fig$B <- image_read("../99_pub_ready_figs/output/fb6_env/define_class/fatkm.png")
+fig$C <- image_read("../99_pub_ready_figs/output/mb6_env/define_class/fatfat.png")
+fig$D <- image_read("../99_pub_ready_figs/output/mb6_env/define_class/fatkm.png")
+fig$E <- image_read("../99_pub_ready_figs/output/fhet3_env/define_class/fatfat.png")
+fig$F <- image_read("../99_pub_ready_figs/output/fhet3_env/define_class/fatkm.png")
+fig$G <- image_read("../99_pub_ready_figs/output/mhet3_env/define_class/fatfat.png")
+fig$H <- image_read("../99_pub_ready_figs/output/mhet3_env/define_class/fatkm.png")
+
+for (label in names(fig)) {
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+
+cbind_hr_table <- function(strata, hr_table) {
+  cbind(sex_strain = strata, Class = rownames(hr_table), hr_table)
+}
+
+hr_table <- rbind(
+  cbind_hr_table("fb6", fb6_env$save_figtabs$mortality_panel_hr[[2]]),
+  cbind_hr_table("mb6", mb6_env$save_figtabs$mortality_panel_hr[[2]]),
+  cbind_hr_table("fhet3", fhet3_env$save_figtabs$mortality_panel_hr[[2]]),
+  cbind_hr_table("mhet3", mhet3_env$save_figtabs$mortality_panel_hr[[2]])
+)
+rownames(hr_table) <- NULL
+
+hr_table <- flextable(hr_table) %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+invisible(save_as_image(hr_table, "output/mortality_panel_hr.png", zoom = 10))
+fig$I <- image_read("output/mortality_panel_hr.png")
+fig$I <- image_scale(fig$I, "400%")
+fig$I <- image_border(fig$I, color = "white", geometry = "100x100")
+fig$I <- annotate_figure_label(fig$I, "I")
+
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+}
+
+legend1 <- image_read("../99_pub_ready_figs/output/fb6_env/define_class/fatfat_legend.png")
+legend2 <- image_read("../99_pub_ready_figs/output/mb6_env/define_class/fatfat_legend.png")
+legend3 <- image_read("../99_pub_ready_figs/output/fhet3_env/define_class/fatfat_legend.png")
+legend4 <- image_read("../99_pub_ready_figs/output/mhet3_env/define_class/fatfat_legend.png")
+
+row1 <- image_append(c(fig$A, fig$B, legend1, fig$C, fig$D, legend2), stack = FALSE)
+row2 <- image_append(c(fig$E, fig$F, legend3, fig$G, fig$H, legend4), stack = FALSE)
+
+final_panel <- image_append(c(row1, row2, fig$I), stack = TRUE)
+
+final_panel
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Sex/Strain Classes FBG
+
+```{r sex strain gluc classes, out.width = "100%"}
+fig <- list()
+fig$A <- image_read("../99_pub_ready_figs/output/fb6_env/define_class/glucgluc.png")
+fig$B <- image_read("../99_pub_ready_figs/output/fb6_env/define_class/gluckm.png")
+fig$C <- image_read("../99_pub_ready_figs/output/mb6_env/define_class/glucgluc.png")
+fig$D <- image_read("../99_pub_ready_figs/output/mb6_env/define_class/gluckm.png")
+fig$E <- image_read("../99_pub_ready_figs/output/fhet3_env/define_class/glucgluc.png")
+fig$F <- image_read("../99_pub_ready_figs/output/fhet3_env/define_class/gluckm.png")
+fig$G <- image_read("../99_pub_ready_figs/output/mhet3_env/define_class/glucgluc.png")
+fig$H <- image_read("../99_pub_ready_figs/output/mhet3_env/define_class/gluckm.png")
+
+for (label in names(fig)) {
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+
+cbind_hr_table <- function(strata, hr_table) {
+  if (is.null(hr_table)) {
+    return(NULL)
+  }
+  cbind(sex_strain = strata, Class = rownames(hr_table), hr_table)
+}
+
+hr_table <- rbind(
+  cbind_hr_table("fb6", fb6_env$save_figtabs$mortality_panel_hr[[3]]),
+  cbind_hr_table("mb6", mb6_env$save_figtabs$mortality_panel_hr[[3]]),
+  cbind_hr_table("fhet3", fhet3_env$save_figtabs$mortality_panel_hr[[3]]),
+  cbind_hr_table("mhet3", mhet3_env$save_figtabs$mortality_panel_hr[[3]])
+)
+rownames(hr_table) <- NULL
+
+hr_table <- flextable(hr_table) %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+invisible(save_as_image(hr_table, "output/mortality_panel_hr.png", zoom = 10))
+fig$I <- image_read("output/mortality_panel_hr.png")
+fig$I <- image_scale(fig$I, "400%")
+fig$I <- image_border(fig$I, color = "white", geometry = "100x100")
+fig$I <- annotate_figure_label(fig$I, "I")
+
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+}
+
+legend1 <- image_read("../99_pub_ready_figs/output/fb6_env/define_class/glucgluc_legend.png")
+legend2 <- image_read("../99_pub_ready_figs/output/mb6_env/define_class/glucgluc_legend.png")
+legend3 <- image_read("../99_pub_ready_figs/output/fhet3_env/define_class/glucgluc_legend.png")
+legend4 <- image_read("../99_pub_ready_figs/output/mhet3_env/define_class/glucgluc_legend.png")
+
+row1 <- image_append(c(fig$A, fig$B, legend1, fig$C, fig$D, legend2), stack = FALSE)
+row2 <- image_append(c(fig$E, fig$F, legend3, fig$G, fig$H, legend4), stack = FALSE)
+
+final_panel <- image_append(c(row1, row2, fig$I), stack = TRUE)
+
+final_panel
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+
+### Figure `r as.character(fig_no)`: Heatmaps
+
+```{r heatmaps, out.width = "100%"}
+fig <- list()
+fig$A <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/heatmap/heatmap2.jpg")
+fig$B <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/heatmap/heatmap1.jpg")
+fig$C <- image_read("../91_partial_correlation/output/partial_correlation_network.jpg")
+fig$D <- image_read("../91_partial_correlation/output/partial_correlation_results_clean_table.png")
+
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+
+row1 <- image_append(c(fig$A, fig$B), stack = FALSE)
+row2 <- image_append(c(fig$C, fig$D), stack = FALSE)
+
+final_panel <- image_append(c(row1, row2), stack = TRUE)
+
+final_panel
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Reclassifcation analysis
+
+```{r sup reclassifcation analysis, out.width = "100%"}
+fig <- list()
+knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/class_prediction_panel/class_prediction_panel.png")
+fig$A <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/class_prediction_panel/class_prediction_panel.png")
+fig$M <- image_read("images/Reclassification.png")
+
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+
+final_panel <- image_append(c(fig$A, fig$M), stack = TRUE)
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Internal Validation
+
+```{r sup internal validation, out.width = "100%"}
+fig <- list()
+fig$A <- image_read("images/Internal Validation.png")
+fig$B <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/forest/plot_2.png")
+fig$C <- image_read("../99_pub_ready_figs/output/all_env/validation/window_coef.png")
+fig$D <- image_read("../99_pub_ready_figs/output/all_env/validation/cum_coef.png")
+fig$E <- image_read("../99_pub_ready_figs/output/all_env/validation/window_concord.png")
+fig$F <- image_read("../99_pub_ready_figs/output/all_env/validation/cum_concord.png")
+
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+
+fig$A <- image_scale(fig$A, "75%")
+fig$B <- image_scale(fig$B, "125%")
+
+
+legend1 <- image_read("../99_pub_ready_figs/output/all_env/validation/window_coef_legend.png")
+legend2 <- image_read("../99_pub_ready_figs/output/all_env/validation/cum_coef_legend.png")
+legend3 <- image_read("../99_pub_ready_figs/output/all_env/validation/window_concord_legend.png")
+legend4 <- image_read("../99_pub_ready_figs/output/all_env/validation/cum_concord_legend.png")
+
+# Stack the rows vertically
+row1 <- fig$A
+row2 <- fig$B
+row3 <- image_append(c(fig$C, legend1, fig$D, legend2), stack = FALSE)
+row4 <- image_append(c(fig$E, legend3, fig$F, legend4), stack = FALSE)
+
+final_panel <- image_append(c(row1, row2, row3, row4), stack = TRUE)
+
+# View or save
+final_panel
+# image_write(final_panel, "output/fig/panel.png")
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: External Validation
+
+```{r sup external validation, out.width = "100%"}
+fig <- list()
+fig$A <- image_read("images/External Validation.png")
+fig$B <- image_read("../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/forest/plot_2.png")
+fig$C <- image_read("../99_pub_ready_figs/output/held_out_env/validation/window_coef.png")
+fig$D <- image_read("../99_pub_ready_figs/output/held_out_env/validation/cum_coef.png")
+fig$E <- image_read("../99_pub_ready_figs/output/held_out_env/validation/window_concord.png")
+fig$F <- image_read("../99_pub_ready_figs/output/held_out_env/validation/cum_concord.png")
+
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+
+fig$A <- image_scale(fig$A, "75%")
+fig$B <- image_scale(fig$B, "125%")
+
+legend1 <- image_read("../99_pub_ready_figs/output/held_out_env/validation/window_coef_legend.png")
+legend2 <- image_read("../99_pub_ready_figs/output/held_out_env/validation/cum_coef_legend.png")
+legend3 <- image_read("../99_pub_ready_figs/output/held_out_env/validation/window_concord_legend.png")
+legend4 <- image_read("../99_pub_ready_figs/output/held_out_env/validation/cum_concord_legend.png")
+
+# Stack the rows vertically
+row1 <- fig$A
+row2 <- fig$B
+row3 <- image_append(c(fig$C, legend1, fig$D, legend2), stack = FALSE)
+row4 <- image_append(c(fig$E, legend3, fig$F, legend4), stack = FALSE)
+
+final_panel <- image_append(c(row1, row2, row3, row4), stack = TRUE)
+
+# View or save
+final_panel
+# image_write(final_panel, "output/fig/panel.png")
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: External Validation KM
+
+```{r sup external validation km, out.width = "100%"}
+fig <- list()
+fig$A <- image_read("../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 19.5]_1.png")
+fig$B <- image_read("../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 32.5]_2.png")
+fig$C <- image_read("../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 45.5]_3.png")
+fig$D <- image_read("../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 58.5]_4.png")
+fig$E <- image_read("../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 71.5]_5.png")
+fig$F <- image_read("../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 84.5]_6.png")
+fig$G <- image_read("../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 97.5]_7.png")
+fig$H <- image_read("../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 110.5]_8.png")
+fig$I <- image_read("../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 123.5]_9.png")
+fig$J <- image_read("../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 136.5]_10.png")
+
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+
+hr_table <- held_out_env$save_figtabs$km_hr_combine_validation_panels_hr
+hr_table <- lapply(hr_table, function(table) {
+  table <- cbind(Tertile = seq_len(nrow(table)) + 1, table)
+  table <- cbind(explicit = rownames(table), table)
+  table$column <- rep(colnames(table)[3], nrow(table))
+  colnames(table)[3] <- "HR"
+  rownames(table) <- NULL
+  table
+})
+hr_table <- cbind(explicit = rownames(hr_table), hr_table)
+hr_table <- hr_table[1:10]
+hr_table <- do.call(rbind, hr_table)
+hr_table <- flextable(hr_table) %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+invisible(save_as_image(hr_table, "output/km_external_validation_panel_hr.png", zoom = 10))
+fig$K <- image_read("output/km_external_validation_panel_hr.png")
+fig$K <- image_scale(fig$K, "200%")
+fig$K <- image_border(fig$K, color = "white", geometry = "100x100")
+fig$K <- annotate_figure_label(fig$K, "K")
+
+# Manually define rows (3 per row, last row only 1 image)
+rows <- list(
+  image_append(image_join(fig$A, fig$B, fig$C)),
+  image_append(image_join(fig$D, fig$E, fig$F)),
+  image_append(image_join(fig$G, fig$H, fig$I)),
+  image_append(image_join(fig$J, fig$K))
+)
+
+# Stack rows vertically
+final_panel <- image_append(image_join(rows), stack = TRUE)
+
+# View or save
+final_panel
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Healthcard Information
+
+```{r sup figs michel}
+fig <- list()
+knitr::include_graphics("images/Michel Healthcard.png")
+fig$A <- image_read("images/Michel Healthcard.png")
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Supplemental Table `r as.character(tab_no)`: Sex/Strain Adjusted Hazards
+
+```{r sex strain adjusted hazards, results = 'asis'}
+flextable(all_env$save_figtabs$hr_table) %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+
+tab_no <- 1 + tab_no
+```
+
+\newpage
+
+### Supplemental Table `r as.character(tab_no)`: Linear Mixed Effects Models
+
+```{r linear mixed effect, results = 'asis'}
+lme_coef_table <- all_env$save_figtabs$lme_coef_table_broom
+lme_coef_table <- lapply(lme_coef_table, function(table) {
+  table <- table %>%
+    mutate(across(ends_with("p.value"), ~ case_when(
+      .x < 0.0001 ~ "< 0.0001",
+      .x < 0.001 ~ "< 0.001",
+      .x < 0.01 ~ "< 0.01",
+      .x < 0.05 ~ "< 0.05",
+      TRUE ~ "-"
+    )))
+  return(table)
+})
+
+# Function to alternate estimate and p.value columns
+reorder_estimate_pvalue <- function(df) {
+  term_col <- "term"
+  all_cols <- names(df)
+  prefixes <- unique(gsub(
+    "_(estimate|p.value)$", "",
+    all_cols[!all_cols %in% term_col]
+  ))
+  new_order <- c(term_col, unlist(lapply(prefixes, function(prefix) {
+    c(paste0(prefix, "_estimate"), paste0(prefix, "_p.value"))
+  })))
+
+  df[, new_order]
+}
+
+# Apply to each table in your list
+lme_coef_table <- lapply(lme_coef_table, reorder_estimate_pvalue)
+
+lme_coef_table <- lapply(lme_coef_table, function(table) {
+  flextable(table) %>%
+    theme_vanilla() %>%
+    autofit() %>%
+    set_table_properties(layout = "autofit") %>%
+    fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+})
+
+lme_coef_table[[1]]
+lme_coef_table[[2]]
+lme_coef_table[[3]]
+
+tab_no <- 1 + tab_no
+```
+
+
+\newpage
+
+### Supplemental Table `r as.character(tab_no)`: Descriptive Statistics SLAM C1-C10 datasets
+
+```{r sup_tables dataset info complete and training, results = 'asis'}
+flextable(rbind(
+  all_env$save_figtabs$sum_data,
+  all_env$save_figtabs$sum_test
+)) %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+tab_no <- 1 + tab_no
+```
+
+
+
+\newpage
+
+### Supplemental Table `r as.character(tab_no)`: Median Life Expectancy Data
+
+```{r sup_tables census information, results = 'asis'}
+flextable(all_env$save_figtabs$table_mle) %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+tab_no <- 1 + tab_no
+```
+
+\newpage
+
+### Supplemental Table `r as.character(tab_no)`: LCM Model Information
+
+```{r sup_tables lcmm concise, results = 'asis'}
+all_env$save_figtabs$lcmm_table %>%
+  dplyr::rename(`Smallest Class %` = `Smallest.Class....`) %>%
+  dplyr::mutate(`Smallest Class %` = round(`Smallest Class %`, digits = 3)) %>%
+  flextable() %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+tab_no <- 1 + tab_no
+```
+
+\newpage
+
+# Back Pocket
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Treatment Response
+
+```{r treatment response, out.width = "100%"}
+fig <- list()
+fig$A <- image_read("../97_treatment_response/output/treatment_response/plot_1.png")
+fig$B <- image_read("../97_treatment_response/output/treatment_response/plot_2.png")
+fig$C <- image_read("../97_treatment_response/output/treatment_response/plot_3.png")
+
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+
+image_append(c(fig$A, fig$B, fig$C), stack = FALSE)
+
+load("../97_treatment_response/output/hr_table/hr_table.RDATA")
+
+do.call(rbind, hrs_table) %>%
+  flextable() %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+### Figure `r as.character(fig_no)`: Defining Metabolic Classes - Female B6
+
+```{r define classes fb6, out.width = "100%"}
+fig <- list()
+fig$A <- image_read("../07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_1.png")
+fig$B <- image_read("../07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_4.png")
+fig$C <- image_read("../07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_7.png")
+fig$D <- image_read("../07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_10.png")
+fig$E <- image_read("../07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_2.png")
+fig$F <- image_read("../07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_5.png")
+fig$G <- image_read("../07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_8.png")
+fig$H <- image_read("../07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_11.png")
+fig$I <- image_read("../07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_3.png")
+fig$J <- image_read("../07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_6.png")
+fig$K <- image_read("../07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_9.png")
+fig$L <- image_read("../07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_12.png")
+fig$M <- image_read("images/Basic LCM.png")
+
+
+for (label in names(fig)) {
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+
+# create table
+hr_table <- do.call(rbind, fb6_env$save_figtabs$mortality_panel_hr)
+hr_table <- cbind(Class = rownames(hr_table), hr_table)
+hr_table <- flextable(hr_table) %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+invisible(save_as_image(hr_table, "output/mortality_panel_hr.png", zoom = 10))
+fig$N <- image_read("output/mortality_panel_hr.png")
+fig$N <- image_scale(fig$N, "400%")
+fig$N <- image_border(fig$N, color = "white", geometry = "100x100")
+fig$N <- annotate_figure_label(fig$N, "N")
+
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+}
+
+legend1 <- grob_to_magick(fb6_env$save_figtabs$legends_only[[1]]) %>%
+  image_scale("200%")
+legend2 <- grob_to_magick(fb6_env$save_figtabs$legends_only[[2]]) %>%
+  image_scale("200%")
+legend3 <- grob_to_magick(fb6_env$save_figtabs$legends_only[[3]]) %>%
+  image_scale("200%")
+
+
+# Build rows of 4 images
+row1 <- image_append(c(fig$A, fig$B, fig$C, fig$D, legend1), stack = FALSE)
+row2 <- image_append(c(fig$E, fig$F, fig$G, fig$H, legend2), stack = FALSE)
+row3 <- image_append(c(fig$I, fig$J, fig$K, fig$L, legend3), stack = FALSE)
+row4 <- image_append(c(fig$M, fig$N))
+# Stack the rows vertically
+final_panel <- image_append(c(row1, row2, row3, row4), stack = TRUE)
+
+# View or save
+final_panel
+# image_write(final_panel, "output/fig/panel.png")
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Defining Metabolic Classes - Female HET3
+
+```{r define classes fhet3, out.width = "100%"}
+fig <- list()
+fig$A <- image_read("../07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_1.png")
+fig$B <- image_read("../07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_4.png")
+fig$C <- image_read("../07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_7.png")
+fig$D <- image_read("../07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_10.png")
+fig$E <- image_read("../07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_2.png")
+fig$F <- image_read("../07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_5.png")
+fig$G <- image_read("../07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_8.png")
+fig$H <- image_read("../07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_11.png")
+fig$I <- image_read("../07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_3.png")
+fig$J <- image_read("../07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_6.png")
+fig$K <- image_read("../07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_9.png")
+fig$L <- image_read("../07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_12.png")
+fig$M <- image_read("images/Basic LCM.png")
+
+
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+
+# create table
+hr_table <- do.call(rbind, fhet3_env$save_figtabs$mortality_panel_hr)
+hr_table <- cbind(Class = rownames(hr_table), hr_table)
+hr_table <- flextable(hr_table) %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+invisible(save_as_image(hr_table, "output/mortality_panel_hr.png", zoom = 10))
+fig$N <- image_read("output/mortality_panel_hr.png")
+fig$N <- image_scale(fig$N, "400%")
+fig$N <- image_border(fig$N, color = "white", geometry = "100x100")
+fig$N <- annotate_figure_label(fig$N, "N")
+
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+}
+
+legend1 <- grob_to_magick(fhet3_env$save_figtabs$legends_only[[1]]) %>%
+  image_scale("200%")
+legend2 <- grob_to_magick(fhet3_env$save_figtabs$legends_only[[2]]) %>%
+  image_scale("200%")
+legend3 <- grob_to_magick(fhet3_env$save_figtabs$legends_only[[3]]) %>%
+  image_scale("200%")
+
+
+# Build rows of 4 images
+row1 <- image_append(c(fig$A, fig$B, fig$C, fig$D, legend1), stack = FALSE)
+row2 <- image_append(c(fig$E, fig$F, fig$G, fig$H, legend2), stack = FALSE)
+row3 <- image_append(c(fig$I, fig$J, fig$K, fig$L, legend3), stack = FALSE)
+row4 <- image_append(c(fig$M, fig$N))
+# Stack the rows vertically
+final_panel <- image_append(c(row1, row2, row3, row4), stack = TRUE)
+
+# View or save
+final_panel
+# image_write(final_panel, "output/fig/panel.png")
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Defining Metabolic Classes - Male B6
+
+```{r define classes mb6, out.width = "100%"}
+fig <- list()
+fig$A <- image_read("../07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_1.png")
+fig$B <- image_read("../07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_4.png")
+fig$C <- image_read("../07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_7.png")
+fig$D <- image_read("../07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_10.png")
+fig$E <- image_read("../07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_2.png")
+fig$F <- image_read("../07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_5.png")
+fig$G <- image_read("../07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_8.png")
+fig$H <- image_read("../07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_11.png")
+fig$I <- image_read("../07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_3.png")
+fig$J <- image_read("../07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_6.png")
+fig$K <- image_read("../07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_9.png")
+fig$L <- image_read("../07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_12.png")
+fig$M <- image_read("images/Basic LCM.png")
+
+
+for (label in names(fig)) {
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+
+# create table
+hr_table <- do.call(rbind, mb6_env$save_figtabs$mortality_panel_hr)
+hr_table <- cbind(Class = rownames(hr_table), hr_table)
+hr_table <- flextable(hr_table) %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+invisible(save_as_image(hr_table, "output/mortality_panel_hr.png", zoom = 10))
+fig$N <- image_read("output/mortality_panel_hr.png")
+fig$N <- image_scale(fig$N, "400%")
+fig$N <- image_border(fig$N, color = "white", geometry = "100x100")
+fig$N <- annotate_figure_label(fig$N, "N")
+
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+}
+
+legend1 <- grob_to_magick(mb6_env$save_figtabs$legends_only[[1]]) %>%
+  image_scale("200%")
+legend2 <- grob_to_magick(mb6_env$save_figtabs$legends_only[[2]]) %>%
+  image_scale("200%")
+legend3 <- grob_to_magick(mb6_env$save_figtabs$legends_only[[3]]) %>%
+  image_scale("200%")
+
+
+# Build rows of 4 images
+row1 <- image_append(c(fig$A, fig$B, fig$C, fig$D, legend1), stack = FALSE)
+row2 <- image_append(c(fig$E, fig$F, fig$G, fig$H, legend2), stack = FALSE)
+row3 <- image_append(c(fig$I, fig$J, fig$K, fig$L, legend3), stack = FALSE)
+row4 <- image_append(c(fig$M, fig$N))
+# Stack the rows vertically
+final_panel <- image_append(c(row1, row2, row3, row4), stack = TRUE)
+
+# View or save
+final_panel
+# image_write(final_panel, "output/fig/panel.png")
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+
+### Figure `r as.character(fig_no)`: Defining Metabolic Classes - Male HET3
+
+```{r define classes mhet3, out.width = "100%"}
+fig <- list()
+fig$A <- image_read("../07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_1.png")
+fig$B <- image_read("../07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_4.png")
+fig$C <- image_read("../07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_7.png")
+fig$D <- image_read("../07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_10.png")
+fig$E <- image_read("../07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_2.png")
+fig$F <- image_read("../07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_5.png")
+fig$G <- image_read("../07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_8.png")
+fig$H <- image_read("../07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_11.png")
+fig$I <- image_read("../07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_3.png")
+fig$J <- image_read("../07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_6.png")
+fig$K <- image_read("../07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_9.png")
+fig$L <- image_read("../07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_12.png")
+fig$M <- image_read("images/Basic LCM.png")
+
+
+for (label in names(fig)) {
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+
+# create table
+hr_table <- do.call(rbind, mhet3_env$save_figtabs$mortality_panel_hr)
+hr_table <- cbind(Class = rownames(hr_table), hr_table)
+hr_table <- flextable(hr_table) %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+invisible(save_as_image(hr_table, "output/mortality_panel_hr.png", zoom = 10))
+fig$N <- image_read("output/mortality_panel_hr.png")
+fig$N <- image_scale(fig$N, "400%")
+fig$N <- image_border(fig$N, color = "white", geometry = "100x100")
+fig$N <- annotate_figure_label(fig$N, "N")
+
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+}
+
+legend1 <- grob_to_magick(mhet3_env$save_figtabs$legends_only[[1]]) %>%
+  image_scale("200%")
+legend2 <- grob_to_magick(mhet3_env$save_figtabs$legends_only[[2]]) %>%
+  image_scale("200%")
+legend3 <- grob_to_magick(mhet3_env$save_figtabs$legends_only[[3]]) %>%
+  image_scale("200%")
+
+
+# Build rows of 4 images
+row1 <- image_append(c(fig$A, fig$B, fig$C, fig$D, legend1), stack = FALSE)
+row2 <- image_append(c(fig$E, fig$F, fig$G, fig$H, legend2), stack = FALSE)
+row3 <- image_append(c(fig$I, fig$J, fig$K, fig$L, legend3), stack = FALSE)
+row4 <- image_append(c(fig$M, fig$N))
+# Stack the rows vertically
+final_panel <- image_append(c(row1, row2, row3, row4), stack = TRUE)
+
+# View or save
+final_panel
+# image_write(final_panel, "output/fig/panel.png")
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Internal Validation KM
+
+```{r sup internal validation km, out.width = "100%"}
+fig <- list()
+fig$A <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 19.5]_1.png")
+fig$B <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 32.5]_2.png")
+fig$C <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 45.5]_3.png")
+fig$D <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 58.5]_4.png")
+fig$E <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 71.5]_5.png")
+fig$F <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 84.5]_6.png")
+fig$G <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 97.5]_7.png")
+fig$H <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 110.5]_8.png")
+fig$I <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 123.5]_9.png")
+fig$J <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 136.5]_10.png")
+
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+
+hr_table <- all_env$save_figtabs$km_hr_combine_validation_panels_hr
+hr_table <- lapply(hr_table, function(table) {
+  table <- cbind(Tertile = seq_len(nrow(table)) + 1, table)
+  table <- cbind(explicit = rownames(table), table)
+  table$column <- rep(colnames(table)[3], nrow(table))
+  colnames(table)[3] <- "HR"
+  rownames(table) <- NULL
+  table
+})
+hr_table <- cbind(explicit = rownames(hr_table), hr_table)
+hr_table <- hr_table[1:10]
+hr_table <- do.call(rbind, hr_table)
+hr_table <- flextable(hr_table) %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+invisible(save_as_image(hr_table, "output/km_internal_validation_panel_hr.png", zoom = 10))
+fig$K <- image_read("output/km_internal_validation_panel_hr.png")
+fig$K <- image_scale(fig$K, "200%")
+fig$K <- image_border(fig$K, color = "white", geometry = "100x100")
+fig$K <- annotate_figure_label(fig$K, "K")
+
+# Manually define rows (3 per row, last row only 1 image)
+rows <- list(
+  image_append(image_join(fig$A, fig$B, fig$C)),
+  image_append(image_join(fig$D, fig$E, fig$F)),
+  image_append(image_join(fig$G, fig$H, fig$I)),
+  image_append(image_join(fig$J, fig$K))
+)
+
+# Stack rows vertically
+final_panel <- image_append(image_join(rows), stack = TRUE)
+
+# View or save
+final_panel
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Supplemental Table `r as.character(tab_no)`: Individual Cox Information
+
+```{r sup_tables table coxzph individual cox model, results = 'asis'}
+flextable(all_env$save_figtabs$individual_coxzph_tables) %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+tab_no <- 1 + tab_no
+```
+
+\newpage
+
+### Supplemental Table `r as.character(tab_no)`: Combined Cox Information
+
+```{r sup_tables table coxzph combined cox model, results = 'asis'}
+all_env$save_figtabs$combined_coxzph_tables %>%
+  mutate(df = round(df, digits = 2)) %>%
+  select(-outcome) %>%
+  flextable() %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+tab_no <- 1 + tab_no
+```
+
+\newpage
+
+# Extended Supplemental
+
+\newpage
+
+### Figure `r as.character(fig_no)`: How it works
+
+```{r sup figs how it works, out.width = "100%"}
+knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/how_it_works/how_it_works.png")
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Kaplan Meier by Harmonizer
+
+```{r sup figs kap plot by harmonize, out.width = "100%"}
+knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/harmonize_km/plot_1.png")
+
+table <- all_env$save_figtabs$harmonize_km[[1]]
+table <- cbind(Cohort = rownames(table), table)
+flextable(table) %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+fig_no <- fig_no + 1
+rm(table)
+```
+
+\newpage
+
+```{r sup figs heights and widths}
+pred_obs_height <- nrow(all_env$final_models) / 2 * 6
+unique_class <- unique(all_env$final_models$census[[1]]$class)
+dose_height_width <- sqrt(length(unique_class)) * 6
+```
+
+### Figure `r as.character(fig_no)`: KM plots of covariates - By Sex
+
+```{r sup figs plot km covs sex, out.width = "100%"}
+knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/cov_km/plot_1.png")
+
+table <- all_env$save_figtabs$cov_km[[1]]
+table <- cbind(Sex = rownames(table), table)
+flextable(table) %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+fig_no <- fig_no + 1
+rm(table)
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: KM plots of covariates - By Strain
+
+```{r sup figs plot km covs strain, out.width = "100%"}
+knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/cov_km/plot_2.png")
+
+table <- all_env$save_figtabs$cov_km[[2]]
+table <- cbind(Strain = rownames(table), table)
+flextable(table) %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+fig_no <- fig_no + 1
+rm(table)
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Histogram of Outcome Variables - Complete and Training Data
+
+```{r sup figs disply hist outcome panel, out.width = "100%"}
+knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/hist_outcome_plot_panel/hist_outcome_plot_panel.png")
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Histogram of log transform of outcome Variables - Complete and Training Data
+
+```{r sup figs disply hist log outcome panel, out.width = "100%"}
+knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/hist_log_outcome_plot_panel/hist_log_outcome_plot_panel.png")
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Histogram of probability of class membership - Complete Data
+
+```{r sup figs disply hist class prob panel, out.width = "100%"}
+knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/hist_plot_panel/hist_plot_panel.png")
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Display Testing Data - Cumulative
+
+```{r sup figs cumulative validation plots, out.width = "100%"}
+knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/cum_validation_plots/cum_validation_plots.png")
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Display Testing Data - Window
+
+```{r sup figs window validation plots, out.width = "100%"}
+knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/window_validation_plots/window_validation_plots.png")
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Display Testing Data - Interval
+
+```{r sup figs interval validation plots, out.width = "100%"}
+knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/interval_validation_plots/interval_validation_plots.png")
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Display Testing Data - Proportion Resampled
+
+
+```{r sup figs resampled validation plots, out.width = "100%"}
+knitr::include_graphics("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/resampled_validation_plots/resampled_validation_plots.png")
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Supplemental Table `r as.character(tab_no)`: Descriptive Census Information
+
+```{r sup_tables describe prob class, results = 'asis'}
+flextable(round(all_env$save_figtabs$describe_census, digits = 3)) %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+
+tab_no <- 1 + tab_no
+```
+
+\newpage
+
+### Supplemental Table `r as.character(tab_no)`: Descriptive Statistics SLAM C16-C18 datasets
+
+```{r sup_tables held_out dataset info complete and training, results = 'asis'}
+flextable(held_out_env$save_figtabs$sum_test) %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+tab_no <- 1 + tab_no
+```
+
+\newpage
+
+### Supplemental Table `r as.character(tab_no)`: Missing Data Descriptive Statistics SLAM C1-C10 datasets
+
+```{r sup_tables dataset info missing complete and training, results = 'asis'}
+flextable(all_env$save_figtabs$sum_missing) %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+
+tab_no <- 1 + tab_no
+```
+
+\newpage
+
+### Supplemental Table `r as.character(tab_no)`: LCM Posterior Probabilities
+
+```{r sup_tables lcmm model average posterior probs, results = 'asis'}
+flextable(all_env$save_figtabs$post_prob_table) %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+tab_no <- 1 + tab_no
+```
+
+\newpage
+
+### Supplemental Table `r as.character(tab_no)`: Candidate LCMs
+
+```{r sup_tables compare all models, results = 'asis'}
+flextable(all_env$save_figtabs$all_models_table) %>%
+  # fontsize(size = 3, part = "all") %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+
+tab_no <- 1 + tab_no
+```
+
+\newpage
+
+### Supplemental Table `r as.character(tab_no)`: LME Information
+
+```{r sup_tables lme table}
+all_env$save_figtabs$lme_table %>%
+  mutate(sigma = round(sigma, digits = 3)) %>%
+  mutate(loglik = round(loglik, digits = 0)) %>%
+  mutate(AICtab = round(AICtab, digits = 0)) %>%
+  flextable() %>%
+  theme_vanilla() %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit") %>%
+  fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+tab_no <- 1 + tab_no
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Healthcard Supplemental 1
+
+```{r sup figs hc1 }
+fig <- list()
+knitr::include_graphics("images/HC Suppl 1.jpg")
+fig$A <- image_read("images/HC Suppl 1.jpg")
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Healthcard Supplemental 2
+
+```{r sup figs hc2 }
+fig <- list()
+knitr::include_graphics("images/HC Suppl 2.jpg")
+fig$A <- image_read("images/HC Suppl 2.jpg")
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+fig_no <- fig_no + 1
+```
+
+\newpage
+
+### Figure `r as.character(fig_no)`: Healthcard Supplemental 3
+
+```{r sup figs hc3 }
+knitr::include_graphics("images/HC Suppl 3.jpg")
+fig$A <- image_read("images/HC Suppl 3.jpg")
+for (label in names(fig)) {
+  save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
+  fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
+}
+fig_no <- fig_no + 1
+```
+
+\newpage
