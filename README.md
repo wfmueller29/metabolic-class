@@ -10,15 +10,112 @@ git clone https://github.com/wfmueller29/metabolic-class
 ```
 ## Dependencies 
 
-To install R package dependencies, navigate to the `metabolic-class` directory and run this command in your terminal:
+R package versions are pinned with [renv](https://rstudio.github.io/renv/) so that you get the same versions the analysis was run with. The project `.Rprofile` activates renv automatically whenever you start R in the `metabolic-class` directory, so you only need to restore the library once. Navigate to the `metabolic-class` directory, start R, and run:
 
-```bash
-Rscript installer.R
+```r
+renv::restore()
 ```
-This should install all R packages that the pipeline depends upon, including two in-house dependencies listed below:
+
+This installs every package at the version recorded in `renv.lock`, including the in-house dependencies listed below (installed from GitHub at pinned commits):
 
 * [Callframe Package](https://github.com/wfmueller29/callframe)
 * [Helphlme Package](https://github.com/wfmueller29/helphlme)
+* [SLAM Package](https://github.com/wfmueller29/SLAM)
+* [Consoler Package](https://github.com/wfmueller29/consoler)
+
+`renv.lock` also records the R version the analysis was run under. Running a different version of R will pull different builds of the base/recommended packages (`Matrix`, `MASS`, `nlme`, etc.), which can affect model fitting — so match the recorded R version if you are trying to reproduce the published results exactly.
+
+### Computing environment (important for exact reproduction)
+
+renv pins R *packages*. It cannot pin R itself, your CPU architecture, or the BLAS/LAPACK
+libraries R links against — and the LCMM fits in this pipeline are sensitive to all three.
+Class assignments can shift, and marginally positive-definite covariance matrices can fail
+`chol()` outright, purely from a different numerical stack.
+
+The reference environment is:
+
+| | |
+|---|---|
+| R version | as recorded in `renv.lock` (`renv::lockfile_read("renv.lock")$R$Version`) |
+| build | official CRAN R for macOS (Apple Silicon / arm64) |
+| BLAS / LAPACK | R's bundled reference `libRblas` / `libRlapack` (single-threaded) |
+
+Check what you are running with:
+
+```r
+c(R.version.string, R.version$platform, sessionInfo()[c("BLAS","LAPACK")])
+```
+
+The BLAS matters most. A **multi-threaded** BLAS (e.g. a pthreads OpenBLAS build, which
+Homebrew's R links by default) computes sums in whatever order threads finish, so results can
+vary *run to run on the same machine*. If you cannot use the reference BLAS, at minimum force
+single-threaded math before running the pipeline:
+
+```bash
+export OPENBLAS_NUM_THREADS=1
+```
+
+The project `.Rprofile` prints a notice at startup if your R version or BLAS differs from the
+reference, so a mismatched environment is visible rather than silent.
+
+#### Building source packages on Apple Silicon
+
+Most packages install as prebuilt binaries, but a few pinned versions have no arm64 binary
+(notably `gdtools` and `flextable`) and must compile from source. They need `cairo`,
+`fontconfig` and `freetype` — and these must be **arm64** libraries. If your Homebrew is the
+Intel one under `/usr/local`, `pkg-config` will hand the arm64 compiler x86_64 libraries, the
+linker will silently drop them, and the build fails with:
+
+```
+symbol not found in flat namespace '_FT_Done_Face'
+```
+
+Fix by installing CRAN's prebuilt arm64 libraries into `/opt/R/arm64` (where R already looks):
+
+```bash
+BASE=https://mac.r-project.org/bin/darwin20/arm64
+for l in cairo-1.17.6 fontconfig-2.14.2 freetype-2.13.2 pixman-0.42.2 \
+         libpng-1.6.44 expat-2.6.4 gettext-0.22.5; do
+  curl -O "$BASE/${l}-darwin.20-arm64.tar.xz"
+  sudo tar -xJf "${l}-darwin.20-arm64.tar.xz" -C /
+done
+export PKG_CONFIG_PATH=/opt/R/arm64/lib/pkgconfig
+```
+
+Verify with `pkg-config --variable=prefix cairo` — it should print `/opt/R/arm64`, not a
+Homebrew path. Any other source package needing system libraries can be fixed the same way
+using the matching tarball from that CRAN directory.
+
+#### Recording what a run used
+
+`reproduce.R` times every step as it goes (appending to `run_records/run_log.csv`) and finishes
+by running `session_info.R`, which writes a **pair of records** into `run_records/`:
+
+```
+run_records/2026-07-20_2215_Josh-Preston_session_info.txt
+run_records/2026-07-20_2215_Josh-Preston_run_timing.txt
+```
+
+* **`*_session_info.txt`** — the environment: git commit, R version **and architecture**,
+  BLAS/LAPACK and thread settings, renv sync state, key package versions, and the in-house
+  packages with their exact commit SHAs.
+* **`*_run_timing.txt`** — the execution: run start/end, wall clock, and per-step duration and
+  status for every training config, render, and analysis.
+
+Records are **stamped with the run's start time and the git author**, so they accumulate rather
+than overwrite: multiple people running on different machines each leave their own record, runs
+can be compared against one another, and nobody's record collides with anybody else's. **Commit
+these alongside any results you report** — since renv cannot pin the numerical stack, they are
+what lets a result be traced back to the environment that produced it.
+
+You can regenerate the pair at any time (e.g. after a run that failed partway — `log/run_log.csv`
+is written incrementally and survives) with:
+
+```bash
+Rscript session_info.R
+```
+
+> The older `installer.R` script installs these same packages at their *latest* versions rather than the pinned ones. Prefer `renv::restore()`; use `installer.R` only if you deliberately want an unpinned environment.
 
 
 
