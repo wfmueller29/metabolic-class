@@ -110,6 +110,190 @@ plots_panel <- cowplot::plot_grid(title_theme, plots_panel,
 plots_panel
 ```
 
+### Class by treatment tabulation
+
+```{r create demographic table}
+tab <- as.data.frame.matrix(
+  table(predicted$tx, predicted$new_class_bw)
+)
+
+tab$Treatment <- rownames(tab)
+rownames(tab) <- NULL
+
+tab <- tab[, c("Treatment", "1", "2", "3")]
+names(tab) <- c("Treatment", "Class 1", "Class 2", "Class 3")
+
+tab$Treatment <- c(
+  control = "Control",
+  rapa = "Rapamycin"
+)[tab$Treatment]
+
+tab$Total <- rowSums(
+  tab[, c("Class 1", "Class 2", "Class 3")]
+)
+
+# Add a total row
+total_row <- data.frame(
+  Treatment = "Total",
+  `Class 1` = sum(tab$`Class 1`),
+  `Class 2` = sum(tab$`Class 2`),
+  `Class 3` = sum(tab$`Class 3`),
+  Total = sum(tab$Total),
+  check.names = FALSE
+)
+
+tab <- rbind(tab, total_row)
+
+ft_tx_class <- flextable(tab)
+
+ft_tx_class <- add_header_row(
+  ft_tx_class,
+  values = c(
+    "Treatment",
+    "Body-Weight Trajectory Class",
+    "Total"
+  ),
+  colwidths = c(1, 3, 1)
+)
+
+ft_tx_class <- set_header_labels(
+  ft_tx_class,
+  Treatment = "Treatment Group",
+  `Class 1` = "Class 1",
+  `Class 2` = "Class 2",
+  `Class 3` = "Class 3",
+  Total = "Total"
+)
+
+ft_tx_class <- theme_booktabs(ft_tx_class)
+
+ft_tx_class <- bold(
+  ft_tx_class,
+  part = "header"
+)
+
+ft_tx_class <- bg(
+  ft_tx_class,
+  part = "header",
+  bg = "#D9EAF7"
+)
+
+ft_tx_class <- bg(
+  ft_tx_class,
+  i = 2,
+  bg = "#F2F7FB",
+  part = "body"
+)
+
+# Format the total row
+ft_tx_class <- bold(
+  ft_tx_class,
+  i = nrow(tab),
+  part = "body"
+)
+
+ft_tx_class <- bg(
+  ft_tx_class,
+  i = nrow(tab),
+  bg = "#D9EAF7",
+  part = "body"
+)
+
+ft_tx_class <- hline(
+  ft_tx_class,
+  i = nrow(tab) - 1,
+  border = officer::fp_border(
+    color = "black",
+    width = 1.5
+  ),
+  part = "body"
+)
+
+ft_tx_class <- align(
+  ft_tx_class,
+  j = "Treatment",
+  align = "left",
+  part = "all"
+)
+
+ft_tx_class <- align(
+  ft_tx_class,
+  j = c("Class 1", "Class 2", "Class 3", "Total"),
+  align = "center",
+  part = "all"
+)
+
+ft_tx_class <- bold(
+  ft_tx_class,
+  j = "Total",
+  part = "body"
+)
+
+ft_tx_class <- font(
+  ft_tx_class,
+  fontname = "Arial",
+  part = "all"
+)
+
+ft_tx_class <- fontsize(
+  ft_tx_class,
+  size = 10,
+  part = "body"
+)
+
+ft_tx_class <- fontsize(
+  ft_tx_class,
+  size = 10.5,
+  part = "header"
+)
+
+ft_tx_class <- padding(
+  ft_tx_class,
+  padding = 6,
+  part = "all"
+)
+
+ft_tx_class <- autofit(ft_tx_class)
+
+ft_tx_class <- set_caption(
+  ft_tx_class,
+  caption = paste(
+    "Distribution of Body-Weight Trajectory Classes",
+    "by Treatment Group"
+  )
+)
+
+ft_tx_class <- add_footer_lines(
+  ft_tx_class,
+  values = paste(
+    "Values represent the number of animals assigned",
+    "to each latent trajectory class."
+  )
+)
+
+ft_tx_class <- italic(
+  ft_tx_class,
+  part = "footer"
+)
+
+ft_tx_class <- fontsize(
+  ft_tx_class,
+  size = 8.5,
+  part = "footer"
+)
+
+ft_tx_class
+```
+
+```{r save flextable class}
+flextable::save_as_image(
+  x = ft_tx_class,
+  path = "body_weight_class_by_treatment.png",
+  res = 300,
+  expand = 20
+)
+```
+
 ```{r save hrs }
 hrs_table <- lapply(
   hrs,
@@ -209,6 +393,201 @@ plots_panel <- cowplot::plot_grid(title_theme, plots_panel,
 )
 
 plots_panel
+```
+
+### Nonresponder by treatment tabulation
+
+```{r nonresponder flextable}
+tab_nr <- as.data.frame.matrix(
+  table(predicted$tx, predicted$nonresponder)
+)
+
+tab_nr$Treatment <- rownames(tab_nr)
+rownames(tab_nr) <- NULL
+
+tab_nr <- tab_nr[, c("Treatment", "0", "1")]
+
+names(tab_nr) <- c(
+  "Treatment",
+  "Responder",
+  "Nonresponder"
+)
+
+tab_nr$Treatment <- c(
+  control = "Control",
+  rapa = "Rapamycin"
+)[tab_nr$Treatment]
+
+tab_nr$Total <- rowSums(
+  tab_nr[, c("Responder", "Nonresponder")]
+)
+
+# Add total row
+total_row_nr <- data.frame(
+  Treatment = "Total",
+  Responder = sum(tab_nr$Responder),
+  Nonresponder = sum(tab_nr$Nonresponder),
+  Total = sum(tab_nr$Total),
+  check.names = FALSE
+)
+
+tab_nr <- rbind(tab_nr, total_row_nr)
+
+ft_tx_nonresponder <- flextable(tab_nr)
+
+ft_tx_nonresponder <- add_header_row(
+  ft_tx_nonresponder,
+  values = c(
+    "Treatment",
+    "Response Classification",
+    "Total"
+  ),
+  colwidths = c(1, 2, 1)
+)
+
+ft_tx_nonresponder <- set_header_labels(
+  ft_tx_nonresponder,
+  Treatment = "Treatment Group",
+  Responder = "Responder",
+  Nonresponder = "Nonresponder",
+  Total = "Total"
+)
+
+ft_tx_nonresponder <- theme_booktabs(
+  ft_tx_nonresponder
+)
+
+ft_tx_nonresponder <- bold(
+  ft_tx_nonresponder,
+  part = "header"
+)
+
+ft_tx_nonresponder <- bg(
+  ft_tx_nonresponder,
+  part = "header",
+  bg = "#D9EAF7"
+)
+
+ft_tx_nonresponder <- bg(
+  ft_tx_nonresponder,
+  i = 2,
+  bg = "#F2F7FB",
+  part = "body"
+)
+
+# Format total row
+ft_tx_nonresponder <- bold(
+  ft_tx_nonresponder,
+  i = nrow(tab_nr),
+  part = "body"
+)
+
+ft_tx_nonresponder <- bg(
+  ft_tx_nonresponder,
+  i = nrow(tab_nr),
+  bg = "#D9EAF7",
+  part = "body"
+)
+
+ft_tx_nonresponder <- hline(
+  ft_tx_nonresponder,
+  i = nrow(tab_nr) - 1,
+  border = officer::fp_border(
+    color = "black",
+    width = 1.5
+  ),
+  part = "body"
+)
+
+ft_tx_nonresponder <- align(
+  ft_tx_nonresponder,
+  j = "Treatment",
+  align = "left",
+  part = "all"
+)
+
+ft_tx_nonresponder <- align(
+  ft_tx_nonresponder,
+  j = c(
+    "Responder",
+    "Nonresponder",
+    "Total"
+  ),
+  align = "center",
+  part = "all"
+)
+
+ft_tx_nonresponder <- bold(
+  ft_tx_nonresponder,
+  j = "Total",
+  part = "body"
+)
+
+ft_tx_nonresponder <- font(
+  ft_tx_nonresponder,
+  fontname = "Arial",
+  part = "all"
+)
+
+ft_tx_nonresponder <- fontsize(
+  ft_tx_nonresponder,
+  size = 10,
+  part = "body"
+)
+
+ft_tx_nonresponder <- fontsize(
+  ft_tx_nonresponder,
+  size = 10.5,
+  part = "header"
+)
+
+ft_tx_nonresponder <- padding(
+  ft_tx_nonresponder,
+  padding = 6,
+  part = "all"
+)
+
+ft_tx_nonresponder <- autofit(
+  ft_tx_nonresponder
+)
+
+ft_tx_nonresponder <- set_caption(
+  ft_tx_nonresponder,
+  caption = paste(
+    "Distribution of Treatment Response",
+    "by Treatment Group"
+  )
+)
+
+ft_tx_nonresponder <- add_footer_lines(
+  ft_tx_nonresponder,
+  values = paste(
+    "Values represent the number of animals classified",
+    "as responders or nonresponders."
+  )
+)
+
+ft_tx_nonresponder <- italic(
+  ft_tx_nonresponder,
+  part = "footer"
+)
+
+ft_tx_nonresponder <- fontsize(
+  ft_tx_nonresponder,
+  size = 8.5,
+  part = "footer"
+)
+
+ft_tx_nonresponder
+```
+
+```{r save nonresponder}
+flextable::save_as_image(
+  x = ft_tx_nonresponder,
+  path = "treatment_response_by_group.png",
+  res = 300,
+  expand = 20
+)
 ```
 
 ```{r save hrs responder}
