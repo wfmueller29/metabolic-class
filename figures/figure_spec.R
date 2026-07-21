@@ -207,34 +207,66 @@ FIGURES <- list(
   ),
   list(
     part  = "supplemental",
-    title = "Reclassifcation analysis",
+    title = "Resampling Validation",
     panels = c(
-      "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/class_prediction_panel/class_prediction_panel.png",
-      "images/Reclassification.png"
+      # ORDER IS NOT FILE ORDER. Stage 07 builds the list as
+      #   c(interval_plots, window_plots, cumulative_plots, resampled_plots)
+      # where each is a 3-element column over the outcomes, so plot_N is
+      # STRATEGY-major: 1-3 interval, 4-6 window, 7-9 cumulative, 10-12
+      # resampling, each in bw/fat/gluc order. This figure is OUTCOME-major --
+      # four strategies per outcome -- so the numbers interleave. Reading them
+      # in file order would put four different outcomes in one row.
+      "images/Internal Validation.png",
+      # Body weight: interval, age window, cumulative, resampling
+      "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/classification/plot_1.png",
+      "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/classification/plot_4.png",
+      "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/classification/plot_7.png",
+      "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/classification/plot_10.png",
+      # Fat mass: interval, age window, cumulative, resampling
+      "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/classification/plot_2.png",
+      "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/classification/plot_5.png",
+      "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/classification/plot_8.png",
+      "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/classification/plot_11.png",
+      # Glucose: interval, age window, cumulative, resampling
+      "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/classification/plot_3.png",
+      "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/classification/plot_6.png",
+      "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/classification/plot_9.png",
+      "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/classification/plot_12.png"
     )
   ),
   list(
     part  = "supplemental",
-    title = "Internal Validation",
+    title = "Internal and External Validation",
     panels = c(
+      # Two previously freestanding figures, merged: A-F are the internal
+      # validation (C1-C10, 80:20 split), G-L the identical analysis run as
+      # external validation (train C1-C10, test C16-C18). Same panel sequence
+      # in both halves, so A<->G, B<->H, C<->I and so on line up.
+      #
+      # Within each half the order is LP-then-concordance BY SAMPLING SCHEME,
+      # not 99's file order: 99 writes window_coef, window_concord, cum_coef,
+      # cum_concord, whereas the figure reads across as window/cumulative for
+      # the linear predictor, then window/cumulative for concordance.
       "images/Internal Validation.png",
       "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/forest/plot_2.png",
       "../99_pub_ready_figs/output/all_env/validation/window_coef.png",
       "../99_pub_ready_figs/output/all_env/validation/cum_coef.png",
       "../99_pub_ready_figs/output/all_env/validation/window_concord.png",
-      "../99_pub_ready_figs/output/all_env/validation/cum_concord.png"
-    )
-  ),
-  list(
-    part  = "supplemental",
-    title = "External Validation",
-    panels = c(
+      "../99_pub_ready_figs/output/all_env/validation/cum_concord.png",
       "images/External Validation.png",
       "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/forest/plot_2.png",
       "../99_pub_ready_figs/output/held_out_env/validation/window_coef.png",
       "../99_pub_ready_figs/output/held_out_env/validation/cum_coef.png",
       "../99_pub_ready_figs/output/held_out_env/validation/window_concord.png",
       "../99_pub_ready_figs/output/held_out_env/validation/cum_concord.png"
+    )
+  ),
+  list(
+    part  = "supplemental",
+    title = "Reclassifcation analysis",
+    panels = c(
+      "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/class_prediction_panel/class_prediction_panel.png",
+      "images/Reclassification.png"
     )
   ),
   list(
