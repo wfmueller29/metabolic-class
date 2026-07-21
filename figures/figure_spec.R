@@ -66,7 +66,7 @@ FIGURES <- list(
       "../99_pub_ready_figs/output/all_env/define_class/fat_by_gluc.png",
       "../99_pub_ready_figs/output/all_env/define_class/gluc_by_gluc.png",
       "../99_pub_ready_figs/output/all_env/define_class/km_gluc.png",
-      "output/tables/hr_all.png"
+      "../99_pub_ready_figs/output/tables/hr_all.png"
     )
   ),
   list(
@@ -81,7 +81,7 @@ FIGURES <- list(
       "../99_pub_ready_figs/output/fhet3_env/define_class/km_bw.png",
       "../99_pub_ready_figs/output/mhet3_env/define_class/bw_by_bw.png",
       "../99_pub_ready_figs/output/mhet3_env/define_class/km_bw.png",
-      "output/tables/hr_sexstrain_bw.png"
+      "../99_pub_ready_figs/output/tables/hr_sexstrain_bw.png"
     )
   ),
   list(
@@ -113,12 +113,12 @@ FIGURES <- list(
     panels = c(
       "../07_display_figures/output/itp_c10c11c13c16_age_controls_bw/outcome/plot_1.png",
       "../07_display_figures/output/itp_c10c11c13c16_age_controls_bw/outcome/plot_2.png",
-      "output/tables/hr_itp.png",
+      "../99_pub_ready_figs/output/tables/hr_itp.png",
       "images/ITP Treatment.png",
       "../97_treatment_response/output/treatment_response/plot_1.png",
       "../97_treatment_response/output/treatment_response/plot_2.png",
       "../97_treatment_response/output/treatment_response/plot_3.png",
-      "output/tables/hr_treatment.png"
+      "../99_pub_ready_figs/output/tables/hr_treatment.png"
     )
   ),
   list(
@@ -133,7 +133,7 @@ FIGURES <- list(
       "../99_pub_ready_figs/output/fhet3_env/define_class/km_fat.png",
       "../99_pub_ready_figs/output/mhet3_env/define_class/fat_by_fat.png",
       "../99_pub_ready_figs/output/mhet3_env/define_class/km_fat.png",
-      "output/tables/hr_sexstrain_fat.png"
+      "../99_pub_ready_figs/output/tables/hr_sexstrain_fat.png"
     )
   ),
   list(
@@ -148,7 +148,7 @@ FIGURES <- list(
       "../99_pub_ready_figs/output/fhet3_env/define_class/km_gluc.png",
       "../99_pub_ready_figs/output/mhet3_env/define_class/gluc_by_gluc.png",
       "../99_pub_ready_figs/output/mhet3_env/define_class/km_gluc.png",
-      "output/tables/hr_sexstrain_gluc.png"
+      "../99_pub_ready_figs/output/tables/hr_sexstrain_gluc.png"
     )
   ),
   list(
@@ -207,7 +207,7 @@ FIGURES <- list(
       "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 110.5]_8.png",
       "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 123.5]_9.png",
       "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 136.5]_10.png",
-      "output/tables/hr_km_external.png"
+      "../99_pub_ready_figs/output/tables/hr_km_external.png"
     )
   ),
   list(
@@ -243,7 +243,7 @@ FIGURES <- list(
       "../07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_9.png",
       "../07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_12.png",
       "images/Basic LCM.png",
-      "output/tables/hr_fb6.png"
+      "../99_pub_ready_figs/output/tables/hr_fb6.png"
     )
   ),
   list(
@@ -263,7 +263,7 @@ FIGURES <- list(
       "../07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_9.png",
       "../07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/outcome/plot_12.png",
       "images/Basic LCM.png",
-      "output/tables/hr_fhet3.png"
+      "../99_pub_ready_figs/output/tables/hr_fhet3.png"
     )
   ),
   list(
@@ -283,7 +283,7 @@ FIGURES <- list(
       "../07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_9.png",
       "../07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_12.png",
       "images/Basic LCM.png",
-      "output/tables/hr_mb6.png"
+      "../99_pub_ready_figs/output/tables/hr_mb6.png"
     )
   ),
   list(
@@ -303,7 +303,7 @@ FIGURES <- list(
       "../07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_9.png",
       "../07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/outcome/plot_12.png",
       "images/Basic LCM.png",
-      "output/tables/hr_mhet3.png"
+      "../99_pub_ready_figs/output/tables/hr_mhet3.png"
     )
   ),
   list(
@@ -320,7 +320,7 @@ FIGURES <- list(
       "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 110.5]_8.png",
       "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 123.5]_9.png",
       "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/km_combined_hr_validation/plot_[6.5, 136.5]_10.png",
-      "output/tables/hr_km_internal.png"
+      "../99_pub_ready_figs/output/tables/hr_km_internal.png"
     )
   ),
   list(

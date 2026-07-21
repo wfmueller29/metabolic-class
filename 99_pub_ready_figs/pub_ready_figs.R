@@ -215,4 +215,270 @@ for (env_name in names(VALIDATION_ENVS)) {
   }
 }
 
+# =============================================================================
+# TABLES
+#
+# The HR tables live inside each stage-07 workspace as data (save_figtabs),
+# not as files, so they are assembled and rendered here -- the same place as
+# every other panel, so that ALL appearance decisions live in one stage.
+#
+# WHERE TO CHANGE WHAT
+#   appearance (fonts, borders, spacing, number formatting)  -> the flextable
+#     pipeline in each block below
+#   which columns appear, if derivable from what is already
+#     in save_figtabs                                        -> the cbind/rbind
+#     lines in each block below
+#   a column that does not exist at all                      -> stage 07. Note
+#     07_display_figures.Rmd:453 keeps ONLY the "final" column of
+#     kap_plot_hrs$hr_table and discards the rest, so anything else (p-values,
+#     separate CI bounds, n) has to be kept there first, which costs a re-run
+#     of stage 07 for the affected configs.
+#
+# Each table writes to its own file. They previously all wrote to
+# "mortality_panel_hr.png" and were read back immediately, so only the last one
+# survived on disk and correctness depended on that adjacency.
+# =============================================================================
+
+WORKSPACE_ENVS <- list(
+  all_env      = "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/workspace.RDATA",
+  fb6_env      = "../07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/workspace.RDATA",
+  fhet3_env    = "../07_display_figures/output/slam_c1-c10_age_fhet3_bwfatgluc/workspace.RDATA",
+  mb6_env      = "../07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/workspace.RDATA",
+  mhet3_env    = "../07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/workspace.RDATA",
+  itp_env      = "../07_display_figures/output/itp_c10c11c13c16_age_controls_bw/workspace.RDATA",
+  held_out_env = "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/workspace.RDATA"
+)
+
+have_workspaces <- TRUE
+for (env_name in names(WORKSPACE_ENVS)) {
+  path <- WORKSPACE_ENVS[[env_name]]
+  if (!file.exists(path)) {
+    message("SKIP tables -- workspace not found: ", path)
+    have_workspaces <- FALSE
+    next
+  }
+  e <- new.env(); load(path, envir = e); assign(env_name, e, envir = .GlobalEnv)
+}
+
+if (have_workspaces) {
+  library(flextable)
+  library(magrittr)
+  max_width <- 7
+  if (!dir.exists("output/tables")) dir.create("output/tables", recursive = TRUE)
+
+
+  # ---- hr_all ----------------------------------------------------------
+  # Figure 1N. Three columns: LCM | Class | Hazard Ratio (CI).
+  #
+  # Source is save_figtabs$hr_table rather than mortality_panel_hr: it holds
+  # the same numbers (its "HR Model 1" column is identical to
+  # mortality_panel_hr's "final") but already carries the Outcome label, which
+  # is what the LCM column needs.
+  #
+  # "HR Model 1" is the UNADJUSTED model -- individual_cox[[1]] in the config
+  # is "~ Class", no covariates. Models 2 and 3 are the adjusted ones.
+  #
+  # The significance stars arrive already baked into the string by the
+  # in-house package that builds kap_plot$hr; nothing here sets them. They
+  # behave like p<0.05 / <0.01 / <0.001 (verified against 31 of 32 rows).
+  #
+  # LCM_LABEL maps stage-07 outcome names onto the abbreviations used in the
+  # 1A schematic. Extend it if an outcome is added.
+  LCM_LABEL <- c("Body Weight" = "BW", "Body Fat" = "FM", "Glucose" = "FBG")
+
+  hr_src   <- all_env$save_figtabs$hr_table
+  hr_table <- data.frame(
+    LCM                 = unname(LCM_LABEL[as.character(hr_src$Outcome)]),
+    Class               = as.character(hr_src$Class),
+    `Hazard Ratio (CI)` = as.character(hr_src[["HR Model 1"]]),
+    check.names = FALSE, stringsAsFactors = FALSE
+  )
+  if (anyNA(hr_table$LCM)) {
+    warning("hr_all: an outcome has no LCM_LABEL entry -- LCM column contains NA")
+  }
+
+  hr_table <- flextable(hr_table) %>%
+    theme_vanilla() %>%
+    autofit() %>%
+    set_table_properties(layout = "autofit") %>%
+    fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+  invisible(save_as_image(hr_table, "output/tables/hr_all.png", zoom = 10))
+
+  # ---- hr_sexstrain_bw -------------------------------------------------
+  cbind_hr_table <- function(strata, hr_table) {
+    cbind(sex_strain = strata, Class = rownames(hr_table), hr_table)
+  }
+
+  hr_table <- rbind(
+    cbind_hr_table("fb6", fb6_env$save_figtabs$mortality_panel_hr[[1]]),
+    cbind_hr_table("mb6", mb6_env$save_figtabs$mortality_panel_hr[[1]]),
+    cbind_hr_table("fhet3", fhet3_env$save_figtabs$mortality_panel_hr[[1]]),
+    cbind_hr_table("mhet3", mhet3_env$save_figtabs$mortality_panel_hr[[1]])
+  )
+  rownames(hr_table) <- NULL
+
+  hr_table <- flextable(hr_table) %>%
+    theme_vanilla() %>%
+    autofit() %>%
+    set_table_properties(layout = "autofit") %>%
+    fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+  invisible(save_as_image(hr_table, "output/tables/hr_sexstrain_bw.png", zoom = 10))
+
+  # ---- hr_treatment ----------------------------------------------------
+  load("../97_treatment_response/output/hr_table/hr_table.RDATA")
+
+  hr_table <- do.call(rbind, hrs_table) %>%
+    flextable() %>%
+    theme_vanilla() %>%
+    autofit() %>%
+    set_table_properties(layout = "autofit") %>%
+    fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+  invisible(save_as_image(hr_table, "output/tables/hr_treatment.png", zoom = 10))
+
+  # ---- hr_itp ----------------------------------------------------------
+  hr_table <- itp_env$save_figtabs$mortality_panel_hr[[1]]
+  hr_table <- cbind(Class = rownames(hr_table), hr_table)
+  hr_table <- flextable(hr_table) %>%
+    theme_vanilla() %>%
+    autofit() %>%
+    set_table_properties(layout = "autofit") %>%
+    fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+  invisible(save_as_image(hr_table, "output/tables/hr_itp.png", zoom = 10))
+
+  # ---- hr_sexstrain_fat ------------------------------------------------
+  cbind_hr_table <- function(strata, hr_table) {
+    cbind(sex_strain = strata, Class = rownames(hr_table), hr_table)
+  }
+
+  hr_table <- rbind(
+    cbind_hr_table("fb6", fb6_env$save_figtabs$mortality_panel_hr[[2]]),
+    cbind_hr_table("mb6", mb6_env$save_figtabs$mortality_panel_hr[[2]]),
+    cbind_hr_table("fhet3", fhet3_env$save_figtabs$mortality_panel_hr[[2]]),
+    cbind_hr_table("mhet3", mhet3_env$save_figtabs$mortality_panel_hr[[2]])
+  )
+  rownames(hr_table) <- NULL
+
+  hr_table <- flextable(hr_table) %>%
+    theme_vanilla() %>%
+    autofit() %>%
+    set_table_properties(layout = "autofit") %>%
+    fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+  invisible(save_as_image(hr_table, "output/tables/hr_sexstrain_fat.png", zoom = 10))
+
+  # ---- hr_sexstrain_gluc -----------------------------------------------
+  cbind_hr_table <- function(strata, hr_table) {
+    if (is.null(hr_table)) {
+      return(NULL)
+    }
+    cbind(sex_strain = strata, Class = rownames(hr_table), hr_table)
+  }
+
+  hr_table <- rbind(
+    cbind_hr_table("fb6", fb6_env$save_figtabs$mortality_panel_hr[[3]]),
+    cbind_hr_table("mb6", mb6_env$save_figtabs$mortality_panel_hr[[3]]),
+    cbind_hr_table("fhet3", fhet3_env$save_figtabs$mortality_panel_hr[[3]]),
+    cbind_hr_table("mhet3", mhet3_env$save_figtabs$mortality_panel_hr[[3]])
+  )
+  rownames(hr_table) <- NULL
+
+  hr_table <- flextable(hr_table) %>%
+    theme_vanilla() %>%
+    autofit() %>%
+    set_table_properties(layout = "autofit") %>%
+    fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+  invisible(save_as_image(hr_table, "output/tables/hr_sexstrain_gluc.png", zoom = 10))
+
+  # ---- hr_km_external --------------------------------------------------
+  hr_table <- held_out_env$save_figtabs$km_hr_combine_validation_panels_hr
+  hr_table <- lapply(hr_table, function(table) {
+    table <- cbind(Tertile = seq_len(nrow(table)) + 1, table)
+    table <- cbind(explicit = rownames(table), table)
+    table$column <- rep(colnames(table)[3], nrow(table))
+    colnames(table)[3] <- "HR"
+    rownames(table) <- NULL
+    table
+  })
+  hr_table <- cbind(explicit = rownames(hr_table), hr_table)
+  hr_table <- hr_table[1:10]
+  hr_table <- do.call(rbind, hr_table)
+  hr_table <- flextable(hr_table) %>%
+    theme_vanilla() %>%
+    autofit() %>%
+    set_table_properties(layout = "autofit") %>%
+    fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+  invisible(save_as_image(hr_table, "output/tables/hr_km_external.png", zoom = 10))
+
+  # ---- hr_fb6 ----------------------------------------------------------
+  hr_table <- do.call(rbind, fb6_env$save_figtabs$mortality_panel_hr)
+  hr_table <- cbind(Class = rownames(hr_table), hr_table)
+  hr_table <- flextable(hr_table) %>%
+    theme_vanilla() %>%
+    autofit() %>%
+    set_table_properties(layout = "autofit") %>%
+    fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+  invisible(save_as_image(hr_table, "output/tables/hr_fb6.png", zoom = 10))
+
+  # ---- hr_fhet3 --------------------------------------------------------
+  hr_table <- do.call(rbind, fhet3_env$save_figtabs$mortality_panel_hr)
+  hr_table <- cbind(Class = rownames(hr_table), hr_table)
+  hr_table <- flextable(hr_table) %>%
+    theme_vanilla() %>%
+    autofit() %>%
+    set_table_properties(layout = "autofit") %>%
+    fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+  invisible(save_as_image(hr_table, "output/tables/hr_fhet3.png", zoom = 10))
+
+  # ---- hr_mb6 ----------------------------------------------------------
+  hr_table <- do.call(rbind, mb6_env$save_figtabs$mortality_panel_hr)
+  hr_table <- cbind(Class = rownames(hr_table), hr_table)
+  hr_table <- flextable(hr_table) %>%
+    theme_vanilla() %>%
+    autofit() %>%
+    set_table_properties(layout = "autofit") %>%
+    fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+  invisible(save_as_image(hr_table, "output/tables/hr_mb6.png", zoom = 10))
+
+  # ---- hr_mhet3 --------------------------------------------------------
+  hr_table <- do.call(rbind, mhet3_env$save_figtabs$mortality_panel_hr)
+  hr_table <- cbind(Class = rownames(hr_table), hr_table)
+  hr_table <- flextable(hr_table) %>%
+    theme_vanilla() %>%
+    autofit() %>%
+    set_table_properties(layout = "autofit") %>%
+    fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+  invisible(save_as_image(hr_table, "output/tables/hr_mhet3.png", zoom = 10))
+
+  # ---- hr_km_internal --------------------------------------------------
+  hr_table <- all_env$save_figtabs$km_hr_combine_validation_panels_hr
+  hr_table <- lapply(hr_table, function(table) {
+    table <- cbind(Tertile = seq_len(nrow(table)) + 1, table)
+    table <- cbind(explicit = rownames(table), table)
+    table$column <- rep(colnames(table)[3], nrow(table))
+    colnames(table)[3] <- "HR"
+    rownames(table) <- NULL
+    table
+  })
+  hr_table <- cbind(explicit = rownames(hr_table), hr_table)
+  hr_table <- hr_table[1:10]
+  hr_table <- do.call(rbind, hr_table)
+  hr_table <- flextable(hr_table) %>%
+    theme_vanilla() %>%
+    autofit() %>%
+    set_table_properties(layout = "autofit") %>%
+    fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+
+  invisible(save_as_image(hr_table, "output/tables/hr_km_internal.png", zoom = 10))
+}
+
 message("99_pub_ready_figs: done")
