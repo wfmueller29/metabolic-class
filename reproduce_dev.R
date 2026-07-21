@@ -127,6 +127,11 @@ for (a in analyses) {
 # sections that depend on the strain-pooled runs (slam_c1-c10_age_{b6,het3}_
 # bwfatgluc), which this script does not train. Generated from the two source
 # Rmds by .A/build_final_deck.sh -- rebuild it after editing either source.
+#
+# figures/output is gitignored, so it does not exist on a fresh clone or after a
+# wipe; rmarkdown does not create output_dir for you.
+if (!dir.exists("figures/output")) dir.create("figures/output", recursive = TRUE)
+
 run_step("figures: final deck", {
   rmarkdown::render("figures/final_figure_deck.Rmd",
     output_format = "pdf_document",

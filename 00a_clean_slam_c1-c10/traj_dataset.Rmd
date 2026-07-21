@@ -1421,6 +1421,8 @@ main_cat_surv <- main_cat_surv[, keep_cols_surv]
 ```
 
 ```{r save main_all2}
+# output/ is gitignored, so it does not exist on a fresh clone or after a wipe
+if (!dir.exists("output")) dir.create("output", recursive = TRUE)
 save(main_all2, file = "output/main_all2.RDATA")
 save(main_cat_surv, file = "output/main_cat_surv.RDATA")
 ```

@@ -123,6 +123,10 @@ for (a in analyses) {
 }
 
 # Figures ---------------------------------------------------------------------
+# figures/output is gitignored, so it does not exist on a fresh clone or after a
+# wipe; rmarkdown does not create output_dir for you.
+if (!dir.exists("figures/output")) dir.create("figures/output", recursive = TRUE)
+
 run_step("figures: primary", {
   rmarkdown::render("figures/primary_figures.Rmd",
     output_format = "pdf_document",

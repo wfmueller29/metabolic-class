@@ -52,7 +52,7 @@ ggplot2::ggplot(itp_control_tx_test, ggplot2::aes(x = age_wk)) +
 
 # save csvs -------------------------------------------------------------------
 
-dir.create("output", recursive = TRUE)
+if (!dir.exists("output")) dir.create("output", recursive = TRUE)
 train_path <- file.path("output", "itp_control_train.csv")
 write.csv(itp_control_train, train_path)
 
