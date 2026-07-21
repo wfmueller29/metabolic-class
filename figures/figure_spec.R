@@ -284,17 +284,28 @@ FIGURES <- list(
   ),
   list(
     part  = "supplemental",
-    title = "Reclassifcation analysis",
+    title = "Healthcard Conditions",
     panels = c(
-      "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/class_prediction_panel/class_prediction_panel.png",
-      "images/Reclassification.png"
+      # 95_healthcard_cod names these S8A-S8E itself, so the file names track
+      # the panel letters directly -- unlike every other stage here. If this
+      # figure is ever renumbered, those names go stale and only this comment
+      # will say so; the panel ORDER below is what actually assigns the letters.
+      #   A, B  stacked bars: condition burden, and incidence per year
+      #   C, D  cumulative HCs/mouse: mice with events, then all mice
+      #   E     per-condition events/year heatmap, clustered
+      "../95_healthcard_cod/output/S8A.png",
+      "../95_healthcard_cod/output/S8B.png",
+      "../95_healthcard_cod/output/S8C.png",
+      "../95_healthcard_cod/output/S8D.png",
+      "../95_healthcard_cod/output/S8E.png"
     )
   ),
   list(
     part  = "supplemental",
-    title = "Healthcard Information",
+    title = "Reclassifcation analysis",
     panels = c(
-      "images/Michel Healthcard.png"
+      "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/class_prediction_panel/class_prediction_panel.png",
+      "images/Reclassification.png"
     )
   ),
   list(
