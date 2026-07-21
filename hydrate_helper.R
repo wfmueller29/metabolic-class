@@ -29,7 +29,7 @@
 #
 # EXPECTED SOURCE LAYOUT
 #   raw/
-#     00a_clean_itp/data/            00a_clean_slam_c16-c18/data/
+#     00a_itp2/data/                 00a_clean_slam_c16-c18/data/
 #     00a_clean_itp_geno/data/       95_healthcard_cod/data/
 #     00a_clean_slam_c1-c10/data/    98_itp_genotype/data/
 # =============================================================================
@@ -39,7 +39,7 @@
 # reads "um-het3-rqtl.csvr" from its OWN directory, not from a data/ subfolder,
 # so that one file is flattened up a level.
 MAP <- list(
-  list(from = "00a_clean_itp/data",          to = "00a_clean_itp/data"),
+  list(from = "00a_itp2/data",               to = "00a_itp2/data"),
   list(from = "00a_clean_itp_geno/data",     to = "00a_clean_itp_geno/data"),
   list(from = "00a_clean_slam_c1-c10/data",  to = "00a_clean_slam_c1-c10/data"),
   list(from = "00a_clean_slam_c16-c18/data", to = "00a_clean_slam_c16-c18/data"),
@@ -56,10 +56,20 @@ args <- setdiff(args, "--overwrite")
 raw <- if (length(args) > 0) {
   args[[1]]
 } else {
-  cat("\nPath to the raw data folder",
-      "\n(e.g. ~/Library/CloudStorage/OneDrive-.../Mueller2026_final_data/raw)\n> ")
+  cat("\n", strrep("=", 72), "\n", sep = "")
+  cat("  WAITING FOR YOUR INPUT -- this script is paused until you answer.\n")
+  cat(strrep("=", 72), "\n\n", sep = "")
+  cat("  Paste the full path to the raw data folder, then press Enter.\n")
+  cat("  (You can also drag the folder from Finder onto this window.)\n\n")
+  cat("  It should be the folder named 'raw', e.g.\n")
+  cat("    ~/Library/CloudStorage/OneDrive-.../Mueller2026_final_data/raw\n\n")
+  cat("  Press Ctrl-C to cancel without copying anything.\n\n")
+  cat("  PATH> ")
+  utils::flush.console()
   # readline() returns "" under Rscript, so read stdin directly when not interactive
-  if (interactive()) readline() else readLines("stdin", n = 1)
+  ans <- if (interactive()) readline() else readLines("stdin", n = 1)
+  cat("\n")
+  ans
 }
 
 raw <- trimws(raw)
