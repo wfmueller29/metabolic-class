@@ -224,17 +224,15 @@ stars <- function(p) {
   ""
 }
 
-# "HR = 0.34 (0.28, 0.41)***" built from numbers rather than inherited.
-format_hr <- function(value, lower, upper, pval, digits = 4) {
-  sprintf("HR = %s (%s, %s)%s",
-          format(round(as.numeric(value), digits), nsmall = 0),
-          format(round(as.numeric(lower), digits), nsmall = 0),
-          format(round(as.numeric(upper), digits), nsmall = 0),
-          stars(as.numeric(pval)))
-}
-
-# Same numbers as format_hr but bare: "0.81 (0.72, 0.91) ***". Used where the
-# column heading already says "HR (CI)", so the "HR = " prefix is redundant.
+# The one HR formatter: "0.8123 (0.7204, 0.9145) ***", built from the numeric
+# value/CI/p rather than inheriting SLAM's pre-formatted string, so the stars
+# come from STAR_RULES above and therefore match the manuscript legends.
+#
+# Every HR column in the deck is headed "Hazard Ratio (CI)" or "HR (CI)", so
+# the string carries no "HR = " prefix -- it would be redundant with the header.
+# There used to be a second formatter that added one; it was removed rather than
+# left alongside this one, because choosing the wrong of two near-identical
+# formatters is invisible until the PNG is rendered.
 format_hr_bare <- function(value, lower, upper, pval, digits = 4) {
   st <- stars(as.numeric(pval))
   trimws(sprintf("%s (%s, %s) %s",
@@ -683,12 +681,20 @@ if (TRUE) {
     if (exists("adiposity_env")) {
       hr_table <- .adip_hr(adiposity_env)
       if (!is.null(hr_table) && nrow(hr_table)) {
-        hr_table <- flextable(hr_table) %>%
-          fig_table_theme() %>%
-          autofit() %>%
-          set_table_properties(layout = "autofit") %>%
-          fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-        invisible(save_as_image(hr_table, "output/tables/hr_adiposity.png", zoom = 10))
+        hr_table$.ref <- FALSE
+        oc  <- unique(as.character(hr_table$Outcome))
+        ref <- if (length(oc) == 1)
+                 reference_class(adiposity_env, oc, hr_table$Class) else NULL
+        if (!is.null(ref)) {
+          r <- hr_table[1, , drop = FALSE]
+          r$Class <- ref
+          # every model column reads Reference in the full table
+          for (cc in grep("^HR", names(r), value = TRUE)) r[[cc]] <- "Reference"
+          r$.ref <- TRUE
+          hr_table <- rbind(r, hr_table)
+          rownames(hr_table) <- NULL
+        }
+        write_hr_table(hr_table, "output/tables/hr_adiposity.png")
       }
     }
   })
@@ -720,7 +726,7 @@ if (TRUE) {
       hr_table <- data.frame(
         LCM                 = unname(LCM_LABEL[as.character(hn$Outcome)]),
         Class               = as.character(hn$Class),
-        `Hazard Ratio (CI)` = mapply(format_hr, hn$value, hn$lower, hn$upper, hn$pval),
+        `Hazard Ratio (CI)` = mapply(format_hr_bare, hn$value, hn$lower, hn$upper, hn$pval),
         check.names = FALSE, stringsAsFactors = FALSE
       )
     } else {
@@ -739,73 +745,154 @@ if (TRUE) {
       warning("hr_all: an outcome has no LCM_LABEL entry -- LCM column contains NA")
     }
 
-    hr_table <- flextable(hr_table) %>%
-      fig_table_theme() %>%
-      autofit() %>%
-      set_table_properties(layout = "autofit") %>%
-      fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-
-    invisible(save_as_image(hr_table, "output/tables/hr_all.png", zoom = 10))
-  })
-  tbl("hr_sexstrain_bw", {
-    # ---- hr_sexstrain_bw -------------------------------------------------
-    # Figure 2I. Columns: LCM | Sex/Strain | Class | Hazard Ratio (CI).
-    #
-    # mortality_panel_hr is ordered bw, fat, gluc -- so [[1]] is BW on every row,
-    # which is why LCM is "BW" throughout. The FM and FBG tables below use [[2]]
-    # and [[3]] and share sexstrain_rows(); to give them the same treatment,
-    # switch them to it and pass slot 2 / "FM" or 3 / "FBG".
-    SEX_STRAIN_LABEL <- c(fb6 = "F/B6", mb6 = "M/B6",
-                          fhet3 = "F/HET3", mhet3 = "M/HET3")
-
-    # Prefer hr_numeric so STAR_RULES decides the asterisks, exactly as in hr_all.
-    # `outcome` selects the rows within hr_numeric; `slot` is only used by the
-    # fallback (mortality_panel_hr is ordered bw, fat, gluc).
-    #
-    # The two sources agree: hr_numeric comes from final_models$cox_models via
-    # surv_gethr, mortality_panel_hr from kap_plot_hrs -- both are the unadjusted
-    # "~ Class" fit, and their HR/CI strings were verified identical (values and
-    # class ordering) across cohorts before this was wired up.
-    sexstrain_rows <- function(strata, env, slot, lcm, outcome) {
-      hn <- hr_numeric_rows(env, "HR Model 1")
-      if (!is.null(hn)) {
-        hn <- hn[hn$Outcome == outcome & !is.na(hn$Class) & !is.na(hn$pval), , drop = FALSE]
-      }
-      if (!is.null(hn) && nrow(hn)) {
-        data.frame(
-          LCM                 = lcm,
-          `Sex/Strain`        = unname(SEX_STRAIN_LABEL[[strata]]),
-          Class               = as.character(hn$Class),
-          `Hazard Ratio (CI)` = mapply(format_hr, hn$value, hn$lower, hn$upper, hn$pval),
-          check.names = FALSE, stringsAsFactors = FALSE
-        )
-      } else {
-        tb <- env$save_figtabs$mortality_panel_hr[[slot]]
-        data.frame(
-          LCM                 = lcm,
-          `Sex/Strain`        = unname(SEX_STRAIN_LABEL[[strata]]),
-          Class               = rownames(tb),
-          `Hazard Ratio (CI)` = as.character(tb[["final"]]),
-          check.names = FALSE, stringsAsFactors = FALSE
-        )
-      }
-    }
-
-    hr_table <- rbind(
-      sexstrain_rows("fb6",   fb6_env,   1, "BW", "Body Weight"),
-      sexstrain_rows("mb6",   mb6_env,   1, "BW", "Body Weight"),
-      sexstrain_rows("fhet3", fhet3_env, 1, "BW", "Body Weight"),
-      sexstrain_rows("mhet3", mhet3_env, 1, "BW", "Body Weight")
-    )
+    # One reference per outcome: for the pooled cohort Body Weight -> Class 1,
+    # Body Fat -> Class 4, Glucose -> Class 7. Derived from t1_df, not hardcoded.
+    hr_table$.ref <- FALSE
+    hr_table <- do.call(rbind, lapply(unique(hr_table$LCM), function(l) {
+      blk <- hr_table[hr_table$LCM == l, , drop = FALSE]
+      oc  <- names(LCM_LABEL)[match(l, unname(LCM_LABEL))]
+      ref <- reference_class(all_env, oc, blk$Class)
+      if (is.null(ref)) return(blk)
+      r <- blk[1, , drop = FALSE]
+      r$Class <- ref; r[["Hazard Ratio (CI)"]] <- "Reference"; r$.ref <- TRUE
+      rbind(r, blk)
+    }))
     rownames(hr_table) <- NULL
 
-    hr_table <- flextable(hr_table) %>%
-      fig_table_theme() %>%
-      autofit() %>%
-      set_table_properties(layout = "autofit") %>%
-      fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+    write_hr_table(hr_table, "output/tables/hr_all.png")
+  })
+  # ---- pared vs full HR tables ---------------------------------------------
+  # A Cox model drops the reference class, so a published HR table lists only
+  # the NON-reference classes and the reader cannot see what the ratios are
+  # against. While the figures are being finalised every class-based HR table is
+  # written twice:
+  #
+  #   <name>.png        pared  exactly what goes in the manuscript
+  #   <name>_full.png   full   the same rows with the reference class restored
+  #
+  # final_figure_deck.Rmd renders the _full twin straight after its panel WITHOUT
+  # giving it a panel letter, so these can be dropped later with no renumbering.
+  # Excluded: hr_treatment (5I), whose rows are rapamycin-vs-control within each
+  # class -- its reference is the control arm, not a class.
+  #
+  # The reference is DERIVED, never assumed: t1_df lists every class for the
+  # outcome, the model rows list every non-reference class, and the one class in
+  # the first but not the second is the reference. For the pooled cohort that is
+  # always the shortest-lived class (1/4/7, medians 94/100/107 weeks against
+  # 114-117), but this is NOT guaranteed -- some sex/strain HRs exceed 1, which
+  # means their reference is not the highest-hazard group.
+  .cls_key <- function(x) gsub("[^A-Za-z0-9]", "", as.character(x))
 
-    invisible(save_as_image(hr_table, "output/tables/hr_sexstrain_bw.png", zoom = 10))
+  reference_class <- function(env, outcome, present) {
+    t1 <- env$save_figtabs$t1_df
+    if (is.null(t1) || !all(c("oc_name", "row_names") %in% names(t1))) return(NULL)
+    rows <- t1[trimws(as.character(t1$oc_name)) == outcome, , drop = FALSE]
+    cls  <- trimws(as.character(rows$row_names))
+    keep <- grepl("^Class", cls)                      # drop the 'total'/'pval' rows
+    cls  <- cls[keep]
+    if (!length(cls)) return(NULL)
+    miss <- setdiff(.cls_key(cls), .cls_key(present))
+    if (length(miss) != 1) return(NULL)               # ambiguous -- say nothing
+    cls[match(miss, .cls_key(cls))]
+  }
+
+  # Write the pared PNG, and the full one when reference rows were supplied.
+  # `df` may carry a logical .ref column marking rows that exist only in the
+  # full version; it is stripped from both outputs.
+  write_hr_table <- function(df, file) {
+    ref <- if (".ref" %in% names(df)) df$.ref else rep(FALSE, nrow(df))
+    df$.ref <- NULL
+    render <- function(d, path) {
+      ft <- flextable(d) %>%
+        fig_table_theme() %>%
+        autofit() %>%
+        set_table_properties(layout = "autofit") %>%
+        fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+      invisible(save_as_image(ft, path, zoom = 10))
+    }
+    render(df[!ref, , drop = FALSE], file)
+    if (any(ref)) render(df, sub("[.]png$", "_full.png", file))
+    invisible(NULL)
+  }
+
+  # ---- sex/strain HR tables (2I, S3I, S3R) ---------------------------------
+  # ONE builder for all three. Columns: LCM | Sex / Strain | Class | Hazard
+  # Ratio (CI). No spanning headers anywhere, and the Class column is kept even
+  # when every row carries the same class (S3R is all Class 7) so the three
+  # tables share a layout.
+  #
+  # `outcome` selects rows inside hr_numeric, whose Outcome values are the
+  # config's oc_name strings; `slot` does the same in the fallback, where
+  # mortality_panel_hr is ordered bw, fat, gluc.
+  #
+  # Prefer hr_numeric so STAR_RULES decides the asterisks. The two sources
+  # agree: hr_numeric comes from final_models$cox_models via surv_gethr,
+  # mortality_panel_hr from kap_plot_hrs -- both the unadjusted "~ Class" fit,
+  # verified identical (values and class ordering) across cohorts.
+  #
+  # A cohort contributes one row per NON-REFERENCE class, so a model that
+  # converged on a single class contributes NOTHING and has to drop out rather
+  # than error. That is the FBG case: both B6 cohorts are single-class, so only
+  # F/HET3 and M/HET3 appear in S3R, one row each.
+  SEX_STRAIN_LABEL <- c(fb6 = "F/B6", mb6 = "M/B6",
+                        fhet3 = "F/HET3", mhet3 = "M/HET3")
+
+  sexstrain_rows <- function(strata, env, slot, lcm, outcome) {
+    hn <- hr_numeric_rows(env, "HR Model 1")
+    if (!is.null(hn))
+      hn <- hn[hn$Outcome == outcome & !is.na(hn$Class) & !is.na(hn$pval), , drop = FALSE]
+    if (!is.null(hn) && nrow(hn)) {
+      return(data.frame(
+        LCM                 = lcm,
+        `Sex / Strain`      = unname(SEX_STRAIN_LABEL[[strata]]),
+        Class               = as.character(hn$Class),
+        `Hazard Ratio (CI)` = mapply(format_hr_bare, hn$value, hn$lower, hn$upper, hn$pval),
+        check.names = FALSE, stringsAsFactors = FALSE
+      ))
+    }
+    tb <- env$save_figtabs$mortality_panel_hr[[slot]]
+    if (is.null(tb) || !nrow(tb)) return(NULL)          # single-class model
+    data.frame(
+      LCM                 = lcm,
+      `Sex / Strain`      = unname(SEX_STRAIN_LABEL[[strata]]),
+      Class               = rownames(tb),
+      `Hazard Ratio (CI)` = as.character(tb[["final"]]),
+      check.names = FALSE, stringsAsFactors = FALSE
+    )
+  }
+
+  # Prepend this cohort's reference class, marked .ref so only the full table
+  # keeps it. Each cohort has its own reference, so this happens per group
+  # rather than once for the whole table.
+  with_reference <- function(rows, env, outcome) {
+    if (is.null(rows) || !nrow(rows)) return(rows)
+    rows$.ref <- FALSE
+    ref <- reference_class(env, outcome, rows$Class)
+    if (is.null(ref)) return(rows)
+    r <- rows[1, , drop = FALSE]
+    r$Class <- ref
+    r[["Hazard Ratio (CI)"]] <- "Reference"
+    r$.ref <- TRUE
+    rbind(r, rows)
+  }
+
+  sexstrain_table <- function(slot, lcm, outcome, file) {
+    hr_table <- rbind(
+      with_reference(sexstrain_rows("fb6",   fb6_env,   slot, lcm, outcome), fb6_env,   outcome),
+      with_reference(sexstrain_rows("mb6",   mb6_env,   slot, lcm, outcome), mb6_env,   outcome),
+      with_reference(sexstrain_rows("fhet3", fhet3_env, slot, lcm, outcome), fhet3_env, outcome),
+      with_reference(sexstrain_rows("mhet3", mhet3_env, slot, lcm, outcome), mhet3_env, outcome)
+    )
+    if (is.null(hr_table) || !nrow(hr_table))
+      stop("no HR rows for ", lcm, " -- did every cohort converge on one class?")
+    rownames(hr_table) <- NULL
+    write_hr_table(hr_table, file)
+  }
+
+  tbl("hr_sexstrain_bw", {
+    # Figure 2I -- body weight.
+    sexstrain_table(1, "BW", "Body Weight",
+                    "output/tables/hr_sexstrain_bw.png")
   })
   tbl("hr_treatment", {
     # ---- hr_treatment ----------------------------------------------------
@@ -829,7 +916,7 @@ if (TRUE) {
 
     .hr_row <- function(tb, class_label) {
       ci <- if (all(c("value", "lower", "upper", "pval") %in% colnames(tb))) {
-        format_hr(tb$value[1], tb$lower[1], tb$upper[1], tb$pval[1])
+        format_hr_bare(tb$value[1], tb$lower[1], tb$upper[1], tb$pval[1])
       } else {
         warning("hr_treatment: no pval for '", class_label,
                 "' -- using SLAM's string, whose ** is p<0.005, not the legend's 0.01")
@@ -873,7 +960,7 @@ if (TRUE) {
     if (!is.null(hn)) {
       hr_table <- data.frame(
         Class               = as.character(hn$Class),
-        `Hazard Ratio (CI)` = mapply(format_hr, hn$value, hn$lower, hn$upper, hn$pval),
+        `Hazard Ratio (CI)` = mapply(format_hr_bare, hn$value, hn$lower, hn$upper, hn$pval),
         check.names = FALSE, stringsAsFactors = FALSE
       )
     } else {
@@ -887,60 +974,27 @@ if (TRUE) {
       )
     }
 
-    hr_table <- flextable(hr_table) %>%
-      fig_table_theme() %>%
-      autofit() %>%
-      set_table_properties(layout = "autofit") %>%
-      fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+    # Body weight only, so a single reference class.
+    hr_table$.ref <- FALSE
+    ref <- reference_class(itp_env, "Body Weight", hr_table$Class)
+    if (!is.null(ref)) {
+      r <- hr_table[1, , drop = FALSE]
+      r$Class <- ref; r[["Hazard Ratio (CI)"]] <- "Reference"; r$.ref <- TRUE
+      hr_table <- rbind(r, hr_table)
+      rownames(hr_table) <- NULL
+    }
 
-    invisible(save_as_image(hr_table, "output/tables/hr_itp.png", zoom = 10))
+    write_hr_table(hr_table, "output/tables/hr_itp.png")
   })
   tbl("hr_sexstrain_fat", {
-    # ---- hr_sexstrain_fat ------------------------------------------------
-    cbind_hr_table <- function(strata, hr_table) {
-      cbind(sex_strain = strata, Class = rownames(hr_table), hr_table)
-    }
-
-    hr_table <- rbind(
-      cbind_hr_table("fb6", fb6_env$save_figtabs$mortality_panel_hr[[2]]),
-      cbind_hr_table("mb6", mb6_env$save_figtabs$mortality_panel_hr[[2]]),
-      cbind_hr_table("fhet3", fhet3_env$save_figtabs$mortality_panel_hr[[2]]),
-      cbind_hr_table("mhet3", mhet3_env$save_figtabs$mortality_panel_hr[[2]])
-    )
-    rownames(hr_table) <- NULL
-
-    hr_table <- flextable(hr_table) %>%
-      fig_table_theme() %>%
-      autofit() %>%
-      set_table_properties(layout = "autofit") %>%
-      fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-
-    invisible(save_as_image(hr_table, "output/tables/hr_sexstrain_fat.png", zoom = 10))
+    # Figure S3I -- fat mass.
+    sexstrain_table(2, "FM", "Body Fat",
+                    "output/tables/hr_sexstrain_fat.png")
   })
   tbl("hr_sexstrain_gluc", {
-    # ---- hr_sexstrain_gluc -----------------------------------------------
-    cbind_hr_table <- function(strata, hr_table) {
-      if (is.null(hr_table)) {
-        return(NULL)
-      }
-      cbind(sex_strain = strata, Class = rownames(hr_table), hr_table)
-    }
-
-    hr_table <- rbind(
-      cbind_hr_table("fb6", fb6_env$save_figtabs$mortality_panel_hr[[3]]),
-      cbind_hr_table("mb6", mb6_env$save_figtabs$mortality_panel_hr[[3]]),
-      cbind_hr_table("fhet3", fhet3_env$save_figtabs$mortality_panel_hr[[3]]),
-      cbind_hr_table("mhet3", mhet3_env$save_figtabs$mortality_panel_hr[[3]])
-    )
-    rownames(hr_table) <- NULL
-
-    hr_table <- flextable(hr_table) %>%
-      fig_table_theme() %>%
-      autofit() %>%
-      set_table_properties(layout = "autofit") %>%
-      fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-
-    invisible(save_as_image(hr_table, "output/tables/hr_sexstrain_gluc.png", zoom = 10))
+    # Figure S3R -- fasting blood glucose. Only the HET3 cohorts contribute.
+    sexstrain_table(3, "FBG", "Glucose",
+                    "output/tables/hr_sexstrain_gluc.png")
   })
   tbl("hr_km_external", {
     # ---- hr_km_external --------------------------------------------------

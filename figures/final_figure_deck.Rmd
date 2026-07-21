@@ -50,6 +50,8 @@ output:
 .panel-img { max-width: 75%; height: auto; }
 /* forests only -- must follow .panel-img to win at equal specificity */
 .panel-img-full { max-width: 100%; }
+/* the temporary "(full)" twin label */
+.panel-alt { font-size: .45em; font-weight: 400; color: #888; }
 </style>
 
 ```{r setup, warning=FALSE, message=FALSE, echo=FALSE}
@@ -224,6 +226,24 @@ for (fi in seq_along(FIGURES)) {
     cat('\n<p class="panel-id">', id, '</p>\n', sep = "")
     cat('<p class="panel-src"><code>', path, '</code></p>\n', sep = "")
     cat('<img class="', cls, '" src="', out, '" width="', w, '">\n\n', sep = "")
+
+    # TEMPORARY, while the HR tables are being finalised. 99 writes a "_full"
+    # twin of each class-based HR table with the reference class restored -- the
+    # model drops it, so the pared table published in the manuscript never shows
+    # what the ratios are against. Shown here directly after its panel and
+    # WITHOUT its own letter: panel ids are positional, so making these real
+    # panels would re-letter every figure that contains one. Deleting this block
+    # later removes them with no renumbering.
+    fullp <- sub("[.]png$", "_full.png", path)
+    if (path != fullp && file.exists(fullp)) {
+      fimg <- magick::image_read(fullp)
+      fout <- file.path(PANEL_DIR, paste0(id, "_full.png"))
+      magick::image_write(fimg, fout, format = "png")
+      cat('<p class="panel-id">', id, ' <span class="panel-alt">(full)</span></p>\n', sep = "")
+      cat('<p class="panel-src"><code>', fullp, '</code></p>\n', sep = "")
+      cat('<img class="', cls, '" src="', fout, '" width="',
+          round(magick::image_info(fimg)$width[1] * scale), '">\n\n', sep = "")
+    }
   }
 }
 ```

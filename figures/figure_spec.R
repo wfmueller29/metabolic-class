@@ -161,7 +161,10 @@ FIGURES <- list(
   ),
   list(
     part  = "supplemental",
-    title = "Sex/Strain Classes FM",
+    # The FM and FBG analogues of main figure 2, in one figure: panels A-I are
+    # fat mass (four cohorts, trajectory + KM each, then the HR table), J-R the
+    # same for glucose. 18 panels, so the letters run exactly A..R.
+    title = "Sex/Strain Classes FM and FBG",
     panels = c(
       "../99_pub_ready_figs/output/fb6_env/define_class/fat_by_fat.png",
       "../99_pub_ready_figs/output/fb6_env/define_class/km_fat.png",
@@ -171,13 +174,7 @@ FIGURES <- list(
       "../99_pub_ready_figs/output/fhet3_env/define_class/km_fat.png",
       "../99_pub_ready_figs/output/mhet3_env/define_class/fat_by_fat.png",
       "../99_pub_ready_figs/output/mhet3_env/define_class/km_fat.png",
-      "../99_pub_ready_figs/output/tables/hr_sexstrain_fat.png"
-    )
-  ),
-  list(
-    part  = "supplemental",
-    title = "Sex/Strain Classes FBG",
-    panels = c(
+      "../99_pub_ready_figs/output/tables/hr_sexstrain_fat.png",
       "../99_pub_ready_figs/output/fb6_env/define_class/gluc_by_gluc.png",
       "../99_pub_ready_figs/output/fb6_env/define_class/km_gluc.png",
       "../99_pub_ready_figs/output/mb6_env/define_class/gluc_by_gluc.png",
