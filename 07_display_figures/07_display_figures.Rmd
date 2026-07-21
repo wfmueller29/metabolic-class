@@ -1711,24 +1711,38 @@ km_hr_combine_validation_panels_hr <- lapply(
   }
 )
 
-# tertile forest: windows 4,6,8,10 (58.5/84.5/110.5/136.5), matching KM
-# panels C-F in the manuscript figure (window 2 = [6.5, 32.5] omitted). Uses
-# the same forest_* helpers and already-computed numbers as the dose forest.
-km_forest_index <- c(4, 6, 8, 10)
-km_forest_index <- km_forest_index[km_forest_index <= length(km_hr_combine_validation_panels_hr)]
-km_forest_rows <- lapply(km_forest_index, function(i) {
-  panel_i <- km_hr_combine_validation_panels_hr[[i]]
-  forest_tidy_panel(panel_i, colnames(panel_i)[1], "Tertile")
-})
-km_hr_combine_panel_forest <- if (length(km_forest_rows) > 0) {
+# Tertile forests. A forest's facets always match the KM panels of the figure
+# it appears in, so the reader can read a curve and its hazard ratio off the
+# same page. The ten upper bounds are split between two figures and the two
+# index vectors below are complements -- together they cover all ten, with no
+# window appearing twice:
+#
+#   c(4, 6, 8, 10)        58.5/84.5/110.5/136.5   figure 4, panels C-F   -> 4G
+#   c(1, 2, 3, 5, 7, 9)   19.5/32.5/45.5/71.5/    figure S7, panels A-F  -> S7G
+#                         97.5/123.5
+#
+# Uses the same forest_* helpers and already-computed numbers as the dose
+# forest, so the stars come from forest_stars() at p<0.05/0.01/0.001 rather
+# than from SLAM's pre-formatted strings.
+build_km_forest <- function(index) {
+  index <- index[index <= length(km_hr_combine_validation_panels_hr)]
+  rows <- lapply(index, function(i) {
+    panel_i <- km_hr_combine_validation_panels_hr[[i]]
+    forest_tidy_panel(panel_i, colnames(panel_i)[1], "Tertile")
+  })
+  if (!length(rows)) return(NULL)
   forest_plot_style(
-    do.call(rbind, km_forest_rows),
+    do.call(rbind, rows),
     palette = forest_tertile_palette,
     legend_title = "Tertile"
   )
-} else {
-  NULL
 }
+
+km_forest_index <- c(4, 6, 8, 10)
+km_hr_combine_panel_forest <- build_km_forest(km_forest_index)
+
+km_forest_index_supp <- c(1, 2, 3, 5, 7, 9)
+km_hr_combine_panel_forest_supp <- build_km_forest(km_forest_index_supp)
 ```
 
 ```{r save km combined cox vaidation plots}
@@ -2373,6 +2387,19 @@ if (!is.null(km_hr_combine_panel_forest)) {
   ggsave(
     file.path(forest_out, "forest.png"), km_hr_combine_panel_forest,
     width = 10, height = 8.4
+  )
+}
+
+# S7G: same plot for the six supplemental windows. Height follows the same
+# 0.7in/row rule (6 windows x 3 tertiles = 18 rows), so the two forests print
+# at the same scale despite different facet counts.
+save_figtabs$km_hr_combine_panel_forest_supp <- km_hr_combine_panel_forest_supp
+if (!is.null(km_hr_combine_panel_forest_supp)) {
+  forest_out_supp <- file.path("output", config$out_tag, "km_validation_forest_supp")
+  dir.create(forest_out_supp, recursive = TRUE, showWarnings = FALSE)
+  ggsave(
+    file.path(forest_out_supp, "forest.png"), km_hr_combine_panel_forest_supp,
+    width = 10, height = 12.6
   )
 }
 ```

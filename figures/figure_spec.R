@@ -263,27 +263,31 @@ FIGURES <- list(
   ),
   list(
     part  = "supplemental",
-    title = "Reclassifcation analysis",
+    title = "External Validation KM",
     panels = c(
-      "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/class_prediction_panel/class_prediction_panel.png",
-      "images/Reclassification.png"
+      # Windows 1,2,3,5,7,9 -- the COMPLEMENT of figure 4, which shows 4,6,8,10
+      # (58.5/84.5/110.5/136.5). Between them the two figures cover all ten
+      # upper bounds with no panel repeated. Stage 07 encodes the same split:
+      # km_forest_index <- c(4, 6, 8, 10) makes 4G's facets match figure 4's
+      # KM panels, so a forest for this figure has to use these indices.
+      "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 19.5]_1.png",
+      "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 32.5]_2.png",
+      "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 45.5]_3.png",
+      "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 71.5]_5.png",
+      "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 97.5]_7.png",
+      "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 123.5]_9.png",
+      # G -- faceted forest over exactly the six windows above, built by the
+      # same forest_* helpers as 4G. Replaces the old hr_km_external table,
+      # which carried raw column names and SLAM's p<0.005 threshold for "**".
+      "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_validation_forest_supp/forest.png"
     )
   ),
   list(
     part  = "supplemental",
-    title = "External Validation KM",
+    title = "Reclassifcation analysis",
     panels = c(
-      "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 19.5]_1.png",
-      "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 32.5]_2.png",
-      "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 45.5]_3.png",
-      "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 58.5]_4.png",
-      "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 71.5]_5.png",
-      "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 84.5]_6.png",
-      "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 97.5]_7.png",
-      "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 110.5]_8.png",
-      "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 123.5]_9.png",
-      "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 136.5]_10.png",
-      "../99_pub_ready_figs/output/tables/hr_km_external.png"
+      "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/class_prediction_panel/class_prediction_panel.png",
+      "images/Reclassification.png"
     )
   ),
   list(
