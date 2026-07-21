@@ -16,7 +16,7 @@
 # claim that cor_auto is definitively more correct. cor_auto p-values here are
 # approximate (normal-theory t-test on the polychoric-based estimates).
 #
-# Run from the 97_partial_correlation/ directory: Rscript partial_corr_methods_comp.R
+# Run from the 91_partial_correlation/ directory: Rscript partial_corr_methods_comp.R
 # =============================================================================
 
 library(ppcor)
@@ -26,9 +26,13 @@ library(grid)
 library(gtable)
 library(magick)
 
-# run from the 97_partial_correlation/ directory regardless of where this is
-# sourced/invoked from, so the ../ and output/ relative paths resolve
-setwd("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/97_partial_correlation")
+# Run from this script's own directory regardless of where it is invoked from,
+# so the ../ and output/ relative paths resolve. (Only takes effect under
+# Rscript; if you source() this interactively, be in 91_partial_correlation/.)
+local({
+  f <- sub("^--file=", "", grep("^--file=", commandArgs(FALSE), value = TRUE))
+  if (length(f)) setwd(dirname(normalizePath(f)))
+})
 
 # --- load the SAME data partial_corr.R uses ---------------------------------
 census <- read.csv("../04_create_census/output/slam_c1-c10_age_all_bwfatgluc/complete_census.csv")

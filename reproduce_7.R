@@ -21,7 +21,7 @@ for (yaml in yaml_files) {
 }
 
 # Treatment Response ----------------------------------------------------------
-rmarkdown::render("99_treatment_response/treatment_response.Rmd")
+rmarkdown::render("97_treatment_response/treatment_response.Rmd")
 
 # Figures ---------------------------------------------------------------------
 rmarkdown::render("figures/primary_figures.Rmd",

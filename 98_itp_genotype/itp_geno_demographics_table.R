@@ -5,26 +5,37 @@
 # survival) from the three treatment censuses. Chi-square p-values: class x sex
 # and class x treatment.
 #
-# This script builds the figure from the LOCAL 91_arends_genotype censuses (the
-# data this analysis is supposed to use) and ALSO rebuilds the same table from
-# the Downloads set (the run that produced the published S9C), then compares the
-# two assembled tables cell-by-cell in code -- so the drift between the two runs
-# is visible directly, without eyeballing PNGs.
+# This script builds the figure from the censuses prep_census.R wrote into
+# output/. Optionally, if ITP_GENO_REF_CENSUS points at a second census set
+# (e.g. the run that produced the published S9C), it rebuilds the same table
+# from that set and compares the two cell-by-cell in code -- so drift between
+# two runs is visible directly, without eyeballing PNGs.
 #
 # Outputs (in output/):
-#   itp_geno_demographics.png            <- built from the 91 data (this figure)
-#   itp_geno_demographics_downloads.png  <- built from the Downloads data (S9C)
-#   itp_geno_demographics_comparison.csv <- the cell-by-cell differences
+#   itp_geno_demographics.png            <- this run's figure
+#   itp_geno_demographics_reference.png  <- reference set (only if enabled)
+#   itp_geno_demographics_comparison.csv <- cell-by-cell diffs (only if enabled)
 
 library(survival)
 library(flextable)
 library(magick)
 
-setwd("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/91_arends_genotype")
+# Run from this script's own directory regardless of where it is invoked from,
+# so the output/ relative paths resolve. (Only takes effect under Rscript; if
+# you source() this interactively, be in 98_itp_genotype/ already.)
+local({
+  f <- sub("^--file=", "", grep("^--file=", commandArgs(FALSE), value = TRUE))
+  if (length(f)) setwd(dirname(normalizePath(f)))
+})
 
 # ---- the two census sources -------------------------------------------------
-SRC_91 <- "."                                        # local 91 copies -> this figure
-SRC_DL <- "/Users/JoshsMacbook2015/Downloads/output" # the run that made published S9C
+# SRC_LOCAL is what prep_census.R just wrote -> this figure.
+# SRC_REF is an OPTIONAL second census set to compare against (the run that
+# produced the published S9C). It is not in the repo and is machine-specific;
+# set ITP_GENO_REF_CENSUS to its path to enable the comparison, otherwise the
+# comparison outputs are skipped and only this figure is built.
+SRC_LOCAL <- "output"
+SRC_REF   <- Sys.getenv("ITP_GENO_REF_CENSUS", unset = NA)
 
 CLASSES <- 1:3
 r0 <- function(x) if (length(x) == 0 || is.na(x)) "NA" else as.character(round(x))
@@ -165,45 +176,50 @@ save_table_png <- function(tab, path) {
   invisible(path)
 }
 
-# ---- build both tables ------------------------------------------------------
-tab_91 <- build_table(SRC_91)
-tab_dl <- build_table(SRC_DL)
+# ---- build the table --------------------------------------------------------
+tab_local <- build_table(SRC_LOCAL)
 
 if (!dir.exists("output")) dir.create("output", recursive = TRUE)
 
-# primary figure = the 91 data; also render the Downloads (S9C) version
-save_table_png(tab_91, "output/itp_geno_demographics.png")
-save_table_png(tab_dl, "output/itp_geno_demographics_downloads.png")
-cat("wrote: output/itp_geno_demographics.png (91 data)\n")
-cat("wrote: output/itp_geno_demographics_downloads.png (Downloads/S9C data)\n")
+save_table_png(tab_local, "output/itp_geno_demographics.png")
+cat("wrote: output/itp_geno_demographics.png\n")
 
-# ---- cell-by-cell comparison of the two assembled tables --------------------
-stopifnot(identical(dim(tab_91), dim(tab_dl)))
-stopifnot(identical(tab_91[, c("Stratum", "Row")], tab_dl[, c("Stratum", "Row")]))
-val_cols <- setdiff(names(tab_91), c("Stratum", "Row"))
+# ---- OPTIONAL: cell-by-cell comparison against a reference census set -------
+# Only runs when ITP_GENO_REF_CENSUS points at a second set of censuses.
+if (!is.na(SRC_REF) && nzchar(SRC_REF) && dir.exists(SRC_REF)) {
+  tab_ref <- build_table(SRC_REF)
+  save_table_png(tab_ref, "output/itp_geno_demographics_reference.png")
+  cat("wrote: output/itp_geno_demographics_reference.png (from", SRC_REF, ")\n")
 
-diffs <- list()
-for (i in seq_len(nrow(tab_91))) {
-  for (col in val_cols) {
-    a <- tab_91[i, col]; b <- tab_dl[i, col]
-    if (!identical(a, b)) {
-      diffs[[length(diffs) + 1]] <- data.frame(
-        Stratum = tab_91$Stratum[i], Row = tab_91$Row[i], Column = col,
-        from_91 = a, from_downloads = b,
-        stringsAsFactors = FALSE, check.names = FALSE
-      )
+  stopifnot(identical(dim(tab_local), dim(tab_ref)))
+  stopifnot(identical(tab_local[, c("Stratum", "Row")], tab_ref[, c("Stratum", "Row")]))
+  val_cols <- setdiff(names(tab_local), c("Stratum", "Row"))
+
+  diffs <- list()
+  for (i in seq_len(nrow(tab_local))) {
+    for (col in val_cols) {
+      a <- tab_local[i, col]; b <- tab_ref[i, col]
+      if (!identical(a, b)) {
+        diffs[[length(diffs) + 1]] <- data.frame(
+          Stratum = tab_local$Stratum[i], Row = tab_local$Row[i], Column = col,
+          from_local = a, from_reference = b,
+          stringsAsFactors = FALSE, check.names = FALSE
+        )
+      }
     }
   }
-}
 
-cat("\n=== TABLE COMPARISON: 91 data  vs  Downloads (S9C) data ===\n")
-n_cells <- nrow(tab_91) * length(val_cols)
-if (length(diffs) == 0) {
-  cat("IDENTICAL: all", n_cells, "cells match between the two runs.\n")
+  cat("\n=== TABLE COMPARISON: this run  vs  reference census set ===\n")
+  n_cells <- nrow(tab_local) * length(val_cols)
+  if (length(diffs) == 0) {
+    cat("IDENTICAL: all", n_cells, "cells match between the two runs.\n")
+  } else {
+    cmp <- do.call(rbind, diffs)
+    write.csv(cmp, "output/itp_geno_demographics_comparison.csv", row.names = FALSE)
+    cat(nrow(cmp), "of", n_cells, "cells differ between this run and the reference:\n\n")
+    print(cmp, row.names = FALSE)
+    cat("\nwrote: output/itp_geno_demographics_comparison.csv\n")
+  }
 } else {
-  cmp <- do.call(rbind, diffs)
-  write.csv(cmp, "output/itp_geno_demographics_comparison.csv", row.names = FALSE)
-  cat(nrow(cmp), "of", n_cells, "cells differ between the 91 run and the Downloads (S9C) run:\n\n")
-  print(cmp, row.names = FALSE)
-  cat("\nwrote: output/itp_geno_demographics_comparison.csv\n")
+  cat("\nITP_GENO_REF_CENSUS not set (or missing) -- skipping the run-vs-run comparison.\n")
 }

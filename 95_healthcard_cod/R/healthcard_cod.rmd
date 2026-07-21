@@ -67,15 +67,15 @@ output:
 ```
 # Load in input data
 ```{r read in censuses}
-  census_path <- "/Users/JoshsMacbook2015/Library/CloudStorage/OneDrive-NationalInstitutesofHealth/Trajectories_Raw_Data/pipeline_ready/98_healthcard_cod/data/Michel_raw_healthcard_3_13_26/census.csv"
-  class_census_path <- "/Users/JoshsMacbook2015/Library/CloudStorage/OneDrive-NationalInstitutesofHealth/Trajectories_Raw_Data/pipeline_ready/98_healthcard_cod/data/Michel_raw_healthcard_3_13_26/complete_census.csv"
-  healthcard_path <- "/Users/JoshsMacbook2015/Library/CloudStorage/OneDrive-NationalInstitutesofHealth/Trajectories_Raw_Data/pipeline_ready/98_healthcard_cod/data/Michel_raw_healthcard_3_13_26/SLAM Healthcard reconciled.xlsx"
-  # census_path <- "/Users/jdp2019/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/census.csv"
-  # class_census_path <- "/Users/jdp2019/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/20250426_all_cohort/complete_census.csv"
-  # healthcard_path <- "/Users/jdp2019/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/SLAM Healthcard reconciled.xlsx"
-  # census_path <- "/Users/JoshsMacbook2015/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/census.csv"
-  # class_census_path <- "/Users/JoshsMacbook2015/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/20250426_all_cohort/complete_census.csv"
-  # healthcard_path <- "/Users/JoshsMacbook2015/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/SLAM Healthcard reconciled.xlsx"
+  census_path <- "/Users/JoshsMacbook2015/Library/CloudStorage/OneDrive-NationalInstitutesofHealth/Trajectories_Raw_Data/pipeline_ready/95_healthcard_cod/data/Michel_raw_healthcard_3_13_26/census.csv"
+  class_census_path <- "/Users/JoshsMacbook2015/Library/CloudStorage/OneDrive-NationalInstitutesofHealth/Trajectories_Raw_Data/pipeline_ready/95_healthcard_cod/data/Michel_raw_healthcard_3_13_26/complete_census.csv"
+  healthcard_path <- "/Users/JoshsMacbook2015/Library/CloudStorage/OneDrive-NationalInstitutesofHealth/Trajectories_Raw_Data/pipeline_ready/95_healthcard_cod/data/Michel_raw_healthcard_3_13_26/SLAM Healthcard reconciled.xlsx"
+  # census_path <- "/Users/jdp2019/Library/CloudStorage/Box-Box/metabolic-class-ITP/95_healthcard_cod/data/census.csv"
+  # class_census_path <- "/Users/jdp2019/Library/CloudStorage/Box-Box/metabolic-class-ITP/95_healthcard_cod/data/20250426_all_cohort/complete_census.csv"
+  # healthcard_path <- "/Users/jdp2019/Library/CloudStorage/Box-Box/metabolic-class-ITP/95_healthcard_cod/data/SLAM Healthcard reconciled.xlsx"
+  # census_path <- "/Users/JoshsMacbook2015/Library/CloudStorage/Box-Box/metabolic-class-ITP/95_healthcard_cod/data/census.csv"
+  # class_census_path <- "/Users/JoshsMacbook2015/Library/CloudStorage/Box-Box/metabolic-class-ITP/95_healthcard_cod/data/20250426_all_cohort/complete_census.csv"
+  # healthcard_path <- "/Users/JoshsMacbook2015/Library/CloudStorage/Box-Box/metabolic-class-ITP/95_healthcard_cod/data/SLAM Healthcard reconciled.xlsx"
   class_census <- read.csv(class_census_path)
   census <- read.csv(census_path)
   healthcard_ii <- as.data.frame(readxl::read_xlsx(healthcard_path, sheet = "Healthcard"))
@@ -1119,7 +1119,7 @@ output:
     )
   # Export all plots as high-quality pngs
     # Output folder (repo-relative; run with the working directory at the repo root)
-    output_dir <- "98_healthcard_cod/Outputs"
+    output_dir <- "95_healthcard_cod/Outputs"
     dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
     # Define export function
     export_plot <- function(plot_obj, filename, width = 8.5, height = 11, dpi = 1200) {
@@ -1156,17 +1156,17 @@ output:
     )
 
   # Export healthcard_final
-  write.csv(healthcard_final_export, "/Users/JoshsMacbook2015/Library/CloudStorage/OneDrive-NationalInstitutesofHealth/Trajectories_Raw_Data/pipeline_ready/98_healthcard_cod/data/Michel_raw_healthcard_3_13_26/healthcard_final.csv", row.names = FALSE)
+  write.csv(healthcard_final_export, "/Users/JoshsMacbook2015/Library/CloudStorage/OneDrive-NationalInstitutesofHealth/Trajectories_Raw_Data/pipeline_ready/95_healthcard_cod/data/Michel_raw_healthcard_3_13_26/healthcard_final.csv", row.names = FALSE)
 
   # Export Fig S8A: parts-of-whole condition burden per mouse per class
-  writexl::write_xlsx(bin_props_stacked_final, "/Users/JoshsMacbook2015/Library/CloudStorage/OneDrive-NationalInstitutesofHealth/Trajectories_Raw_Data/pipeline_ready/98_healthcard_cod/data/Michel_raw_healthcard_3_13_26/S8A.xlsx")
+  writexl::write_xlsx(bin_props_stacked_final, "/Users/JoshsMacbook2015/Library/CloudStorage/OneDrive-NationalInstitutesofHealth/Trajectories_Raw_Data/pipeline_ready/95_healthcard_cod/data/Michel_raw_healthcard_3_13_26/S8A.xlsx")
 
   # Export Fig S8B: time-normalized incidence (HCs per year) per class
-  writexl::write_xlsx(bin_props_yr_final, "/Users/JoshsMacbook2015/Library/CloudStorage/OneDrive-NationalInstitutesofHealth/Trajectories_Raw_Data/pipeline_ready/98_healthcard_cod/data/Michel_raw_healthcard_3_13_26/S8B.xlsx")
+  writexl::write_xlsx(bin_props_yr_final, "/Users/JoshsMacbook2015/Library/CloudStorage/OneDrive-NationalInstitutesofHealth/Trajectories_Raw_Data/pipeline_ready/95_healthcard_cod/data/Michel_raw_healthcard_3_13_26/S8B.xlsx")
 
   # Export hc_lifespan_data: per-mouse HC counts and binning (source data for S8A/S8B)
   writexl::write_xlsx(
     mutate(hc_lifespan_data, condition_bin = as.character(condition_bin), hc_yr_bin = as.character(hc_yr_bin)),
-    "/Users/JoshsMacbook2015/Library/CloudStorage/OneDrive-NationalInstitutesofHealth/Trajectories_Raw_Data/pipeline_ready/98_healthcard_cod/data/Michel_raw_healthcard_3_13_26/hc_lifespan_data.xlsx"
+    "/Users/JoshsMacbook2015/Library/CloudStorage/OneDrive-NationalInstitutesofHealth/Trajectories_Raw_Data/pipeline_ready/95_healthcard_cod/data/Michel_raw_healthcard_3_13_26/hc_lifespan_data.xlsx"
   )
 ```

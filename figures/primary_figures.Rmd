@@ -203,14 +203,14 @@ fig_no <- fig_no + 1
 
 ```{r sex strain bw classes, out.width = "100%"}
 fig <- list()
-fig$A <- image_read("../96_pub_ready_figs/output/fb6_env/define_class/bwbw.png")
-fig$B <- image_read("../96_pub_ready_figs/output/fb6_env/define_class/bwkm.png")
-fig$C <- image_read("../96_pub_ready_figs/output/mb6_env/define_class/bwbw.png")
-fig$D <- image_read("../96_pub_ready_figs/output/mb6_env/define_class/bwkm.png")
-fig$E <- image_read("../96_pub_ready_figs/output/fhet3_env/define_class/bwbw.png")
-fig$F <- image_read("../96_pub_ready_figs/output/fhet3_env/define_class/bwkm.png")
-fig$G <- image_read("../96_pub_ready_figs/output/mhet3_env/define_class/bwbw.png")
-fig$H <- image_read("../96_pub_ready_figs/output/mhet3_env/define_class/bwkm.png")
+fig$A <- image_read("../99_pub_ready_figs/output/fb6_env/define_class/bwbw.png")
+fig$B <- image_read("../99_pub_ready_figs/output/fb6_env/define_class/bwkm.png")
+fig$C <- image_read("../99_pub_ready_figs/output/mb6_env/define_class/bwbw.png")
+fig$D <- image_read("../99_pub_ready_figs/output/mb6_env/define_class/bwkm.png")
+fig$E <- image_read("../99_pub_ready_figs/output/fhet3_env/define_class/bwbw.png")
+fig$F <- image_read("../99_pub_ready_figs/output/fhet3_env/define_class/bwkm.png")
+fig$G <- image_read("../99_pub_ready_figs/output/mhet3_env/define_class/bwbw.png")
+fig$H <- image_read("../99_pub_ready_figs/output/mhet3_env/define_class/bwkm.png")
 
 for (label in names(fig)) {
   fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
@@ -244,10 +244,10 @@ for (label in names(fig)) {
   save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
 }
 
-legend1 <- image_read("../96_pub_ready_figs/output/fb6_env/define_class/bwbw_legend.png")
-legend2 <- image_read("../96_pub_ready_figs/output/mb6_env/define_class/bwbw_legend.png")
-legend3 <- image_read("../96_pub_ready_figs/output/fhet3_env/define_class/bwbw_legend.png")
-legend4 <- image_read("../96_pub_ready_figs/output/mhet3_env/define_class/bwbw_legend.png")
+legend1 <- image_read("../99_pub_ready_figs/output/fb6_env/define_class/bwbw_legend.png")
+legend2 <- image_read("../99_pub_ready_figs/output/mb6_env/define_class/bwbw_legend.png")
+legend3 <- image_read("../99_pub_ready_figs/output/fhet3_env/define_class/bwbw_legend.png")
+legend4 <- image_read("../99_pub_ready_figs/output/mhet3_env/define_class/bwbw_legend.png")
 
 row1 <- image_append(c(fig$A, fig$B, legend1, fig$C, fig$D, legend2), stack = FALSE)
 row2 <- image_append(c(fig$E, fig$F, legend3, fig$G, fig$H, legend4), stack = FALSE)
@@ -265,9 +265,9 @@ fig_no <- fig_no + 1
 
 ```{r dose response, out.width = "100%"}
 fig <- list()
-fig$A <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/dose_response/plot_1.png")
-fig$B <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/dose_response/plot_4.png")
-fig$C <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/dose_response/plot_7.png")
+fig$A <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/dose_response/plot_1.png")
+fig$B <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/dose_response/plot_4.png")
+fig$C <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/dose_response/plot_7.png")
 fig$D <- image_read("images/Basic LCM.png")
 fig$E <- image_read("images/Graded Mortality.png")
 
@@ -306,12 +306,12 @@ fig_no <- fig_no + 1
 ```{r external validation, out.width = "100%"}
 fig <- list()
 fig$A <- image_read("images/External Validation.png")
-fig$B <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/forest/plot_5.png")
-# fig$C <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 32.5]_2.png")
-fig$C <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 58.5]_4.png")
-fig$D <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 84.5]_6.png")
-fig$E <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 110.5]_8.png")
-fig$F <- image_read("/Users/JoshsMacbook2015/Desktop/Repos/Manuscripts/Submitted/metabolic-class/07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 136.5]_10.png")
+fig$B <- image_read("../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/forest/plot_5.png")
+# fig$C <- image_read("../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 32.5]_2.png")
+fig$C <- image_read("../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 58.5]_4.png")
+fig$D <- image_read("../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 84.5]_6.png")
+fig$E <- image_read("../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 110.5]_8.png")
+fig$F <- image_read("../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/km_combined_hr_validation/plot_[6.5, 136.5]_10.png")
 
 fig$A <- image_scale(fig$A, "75%")
 fig$B <- image_scale(fig$B, "125%")
@@ -354,16 +354,16 @@ fig <- list()
 fig$A <- image_read("../07_display_figures/output/itp_c10c11c13c16_age_controls_bw/outcome/plot_1.png")
 fig$B <- image_read("../07_display_figures/output/itp_c10c11c13c16_age_controls_bw/outcome/plot_2.png")
 fig$D <- image_read("images/ITP Treatment.png")
-fig$E <- image_read("../99_treatment_response/output/treatment_response/plot_1.png")
-fig$F <- image_read("../99_treatment_response/output/treatment_response/plot_2.png")
-fig$G <- image_read("../99_treatment_response/output/treatment_response/plot_3.png")
+fig$E <- image_read("../97_treatment_response/output/treatment_response/plot_1.png")
+fig$F <- image_read("../97_treatment_response/output/treatment_response/plot_2.png")
+fig$G <- image_read("../97_treatment_response/output/treatment_response/plot_3.png")
 
 for (label in names(fig)) {
   save_figure(fig[[label]], as.character(fig_no), label) # Save with correct label
   fig[[label]] <- annotate_figure_label(fig[[label]], label) # Annotate
 }
 
-load("../99_treatment_response/output/hr_table/hr_table.RDATA")
+load("../97_treatment_response/output/hr_table/hr_table.RDATA")
 
 hr_table <- do.call(rbind, hrs_table) %>%
   flextable() %>%

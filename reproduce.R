@@ -83,7 +83,7 @@ for (yaml in yaml_files) {
 
 # Treatment Response ----------------------------------------------------------
 run_step("treatment_response", {
-  rmarkdown::render("99_treatment_response/treatment_response.Rmd")
+  rmarkdown::render("97_treatment_response/treatment_response.Rmd")
 })
 
 # Figures ---------------------------------------------------------------------

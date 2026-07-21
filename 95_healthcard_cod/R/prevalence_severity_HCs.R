@@ -1,8 +1,8 @@
 #* Setup
   #+ Set paths and import
-  census_path <- "/Users/jdp2019/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/census.csv"
-  class_census_path <- "/Users/jdp2019/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/20250426_all_cohort/complete_census.csv"
-  healthcard_path <- "/Users/jdp2019/Library/CloudStorage/Box-Box/metabolic-class-ITP/98_healthcard_cod/data/SLAM Healthcard reconciled.xlsx"
+  census_path <- "/Users/jdp2019/Library/CloudStorage/Box-Box/metabolic-class-ITP/95_healthcard_cod/data/census.csv"
+  class_census_path <- "/Users/jdp2019/Library/CloudStorage/Box-Box/metabolic-class-ITP/95_healthcard_cod/data/20250426_all_cohort/complete_census.csv"
+  healthcard_path <- "/Users/jdp2019/Library/CloudStorage/Box-Box/metabolic-class-ITP/95_healthcard_cod/data/SLAM Healthcard reconciled.xlsx"
 
   class_census <- read.csv(class_census_path)
   census <- read.csv(census_path)

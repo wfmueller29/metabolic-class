@@ -15,8 +15,8 @@
 #
 # Data source: the pipeline census CSVs (no model refitting, no posteriors).
 #
-# RUN FROM INSIDE THIS FOLDER (paths are relative, like 90_overlap_analysis):
-#   cd 100_similarity_slam_itp
+# RUN FROM INSIDE THIS FOLDER (paths are relative, like 92_overlap_analysis):
+#   cd 96_similarity_slam_itp
 #   Rscript similarity_table.R
 #
 # Outputs (written here):
@@ -37,13 +37,13 @@ datasets <- list(
   list(key = "d3", label = "ITP (HET3)",  tag = "itp_c10c11c13c16_age_controls_bw")
 )
 
-# Resolve paths so this works whether run from INSIDE 100_similarity_slam_itp/
+# Resolve paths so this works whether run from INSIDE 96_similarity_slam_itp/
 # (Rscript / cd here / source(..., chdir = TRUE)) OR sourced from the repo root.
 .base <- if (dir.exists("../04_create_census")) ".." else
          if (dir.exists("04_create_census")) "." else
-         stop("Cannot find 04_create_census/. Run from the repo root or from 100_similarity_slam_itp/.")
+         stop("Cannot find 04_create_census/. Run from the repo root or from 96_similarity_slam_itp/.")
 # where to write outputs: the folder itself, wherever we were launched from
-.out <- if (.base == "..") "." else "100_similarity_slam_itp"
+.out <- if (.base == "..") "." else "96_similarity_slam_itp"
 
 census_file <- function(tag) {
   file.path(.base, "04_create_census", "output", tag, "complete_census.csv")
