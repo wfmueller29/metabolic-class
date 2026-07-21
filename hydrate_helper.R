@@ -3,7 +3,7 @@
 #
 # WHAT THIS IS
 #   A convenience helper, nothing more. You run it once on a fresh clone, give it
-#   the path to the raw data folder, and it copies the raw files into the six
+#   the path to the raw data folder, and it copies the raw files into the seven
 #   places the pipeline expects them. Then you never need it again.
 #
 #   It is NOT part of the pipeline. `reproduce.R` does not call it, no analysis
@@ -32,12 +32,13 @@
 #     00a_itp2/data/                 00a_clean_slam_c16-c18/data/
 #     00a_clean_itp_geno/data/       95_healthcard_cod/data/
 #     00a_clean_slam_c1-c10/data/    98_itp_genotype/data/
+#     figures/images/                (hand-made schematics)
 # =============================================================================
 
 # ---- source -> destination map ----------------------------------------------
-# Five folders copy straight across. The sixth is the exception: trajectory.R
-# reads "um-het3-rqtl.csvr" from its OWN directory, not from a data/ subfolder,
-# so that one file is flattened up a level.
+# Six folders copy straight across. 98_itp_genotype is the exception:
+# trajectory.R reads "um-het3-rqtl.csvr" from its OWN directory, not from a
+# data/ subfolder, so that one file is flattened up a level.
 MAP <- list(
   list(from = "00a_itp2/data",               to = "00a_itp2/data"),
   list(from = "00a_clean_itp_geno/data",     to = "00a_clean_itp_geno/data"),
@@ -45,7 +46,9 @@ MAP <- list(
   list(from = "00a_clean_slam_c16-c18/data", to = "00a_clean_slam_c16-c18/data"),
   list(from = "95_healthcard_cod/data",      to = "95_healthcard_cod/data"),
   list(from = "98_itp_genotype/data",        to = "98_itp_genotype",
-       note = "flattened -- trajectory.R reads the .csvr from its own directory")
+       note = "flattened -- trajectory.R reads the .csvr from its own directory"),
+  list(from = "figures/images",              to = "figures/images",
+       note = "hand-made schematics (BioRender etc.) -- not regenerable, not tracked")
 )
 
 # ---- get the raw path -------------------------------------------------------
