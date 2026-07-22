@@ -302,6 +302,40 @@ FIGURES <- list(
   ),
   list(
     part  = "supplemental",
+    title = "ITP Genotyped Cohorts",
+    panels = c(
+      # The composite groups these as four lettered panels -- A is the whole
+      # 3x2 control block, B the treated block, C the table, D the heatmap.
+      # The deck letters every PNG separately, so these run A-N here against
+      # A-D in the manuscript. That is deliberate: the deck is the asset
+      # inventory for layout, and there are no pre-composited A/B images to
+      # point at. Panel ORDER matches the composite's reading order.
+      # Controls (Unstratified): trajectory, then KM
+      "../99_pub_ready_figs/output/itp_geno_env/define_class/bw_by_bw.png",
+      "../99_pub_ready_figs/output/itp_geno_env/define_class/km_bw.png",
+      # Controls (Females): trajectory, then KM
+      "../99_pub_ready_figs/output/itp_geno_f_env/define_class/bw_by_bw.png",
+      "../99_pub_ready_figs/output/itp_geno_f_env/define_class/km_bw.png",
+      # Controls (Males): trajectory, then KM
+      "../99_pub_ready_figs/output/itp_geno_m_env/define_class/bw_by_bw.png",
+      "../99_pub_ready_figs/output/itp_geno_m_env/define_class/km_bw.png",
+      # Treated (Unstratified): trajectory, then KM
+      "../99_pub_ready_figs/output/itp_geno_tx_env/define_class/bw_by_bw.png",
+      "../99_pub_ready_figs/output/itp_geno_tx_env/define_class/km_bw.png",
+      # Treated (Females): trajectory, then KM
+      "../99_pub_ready_figs/output/itp_geno_tx_f_env/define_class/bw_by_bw.png",
+      "../99_pub_ready_figs/output/itp_geno_tx_f_env/define_class/km_bw.png",
+      # Treated (Males): trajectory, then KM
+      "../99_pub_ready_figs/output/itp_geno_tx_m_env/define_class/bw_by_bw.png",
+      "../99_pub_ready_figs/output/itp_geno_tx_m_env/define_class/km_bw.png",
+      # C -- controls/treated demographics across the three strata
+      "../98_itp_genotype/output/itp_geno_demographics.png",
+      # D -- the unfiltered locus heatmap (5L is the Bonferroni-filtered twin)
+      "../99_pub_ready_figs/output/locus_heatmaps/loci_all.png"
+    )
+  ),
+  list(
+    part  = "supplemental",
     title = "Reclassifcation analysis",
     panels = c(
       "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/class_prediction_panel/class_prediction_panel.png",

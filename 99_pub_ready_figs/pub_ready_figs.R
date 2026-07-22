@@ -282,7 +282,26 @@ OUTCOME_ENVS <- list(
                        outcomes = "bw"),
   # adiposity in place of fat mass
   adiposity_env = list(path = "../07_display_figures/output/slam_c1-c10_age_all_bwadipositygluc/outcome/plot_list.RDATA",
-                       outcomes = c("bw", "adiposity", "gluc"))
+                       outcomes = c("bw", "adiposity", "gluc")),
+
+  # ITP genotyped cohorts (S9). Body weight only, so two plots each: the
+  # trajectory then its KM. Routed through this stage for the same reason as
+  # everything else -- 07 labels these "Body Weight" / "Survival Probability" /
+  # "Age (Weeks) " from the config, and CANON normalises all three on the way
+  # out. The three *_tx_* configs are the rapamycin-treated arms; they have a
+  # history of failing upstream, and simply do not appear if that happens.
+  itp_geno_env      = list(path = "../07_display_figures/output/itp_genotyped/outcome/plot_list.RDATA",
+                           outcomes = "bw"),
+  itp_geno_f_env    = list(path = "../07_display_figures/output/itp_genotyped_F/outcome/plot_list.RDATA",
+                           outcomes = "bw"),
+  itp_geno_m_env    = list(path = "../07_display_figures/output/itp_genotyped_M/outcome/plot_list.RDATA",
+                           outcomes = "bw"),
+  itp_geno_tx_env   = list(path = "../07_display_figures/output/itp_genotyped_treat/outcome/plot_list.RDATA",
+                           outcomes = "bw"),
+  itp_geno_tx_f_env = list(path = "../07_display_figures/output/itp_genotyped_treat_F/outcome/plot_list.RDATA",
+                           outcomes = "bw"),
+  itp_geno_tx_m_env = list(path = "../07_display_figures/output/itp_genotyped_treat_M/outcome/plot_list.RDATA",
+                           outcomes = "bw")
 )
 
 VALIDATION_ENVS <- list(
