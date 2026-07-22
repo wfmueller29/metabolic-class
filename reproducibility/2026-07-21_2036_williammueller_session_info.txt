@@ -1,0 +1,119 @@
+================================================================
+ SESSION INFO -- metabolic-class
+ captured: 2026-07-21 20:36:27 EDT
+================================================================
+
+---- code version --------------------------------------------
+  git commit : 990bd97b4db5873cbac489bd0ba943584b8f56e1
+  git branch : main
+  worktree   : MODIFIED (uncommitted changes present)
+
+---- R & platform --------------------------------------------
+  R version 4.4.2 (2024-10-31)
+  R platform : aarch64-apple-darwin20
+  running    : macOS Sonoma 14.1.1
+  os         : Darwin 23.1.0
+
+---- hardware ------------------------------------------------
+  cpu        : Apple M2 Pro
+  machine    : arm64
+  cores      : 10 physical / 10 logical
+  memory     : 16 GB
+  emulation  : no (R build matches the CPU architecture)
+
+---- numerical stack (NOT pinned by renv; affects LCMM results) 
+  BLAS       : /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRblas.0.dylib
+  LAPACK     : /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRlapack.dylib
+  reference BLAS? yes (single-threaded, deterministic)
+  thread caps:
+    OPENBLAS_NUM_THREADS     <unset>
+    OMP_NUM_THREADS          <unset>
+    VECLIB_MAXIMUM_THREADS   <unset>
+    MKL_NUM_THREADS          <unset>
+
+---- renv ----------------------------------------------------
+  renv.lock records R : 4.4.2
+  this session is R   : 4.4.2
+  library state       : NOT synchronized -- see renv::status()
+
+---- in-house packages (version + commit) --------------------
+  helphlme         0.2.1        <no commit recorded>
+  callframe        0.0.0.9000   <no commit recorded>
+  SLAM             0.2.0.9000   <no commit recorded>
+  consoler         0.1.1        <no commit recorded>
+
+---- key package versions ------------------------------------
+  lcmm             2.2.1
+  marqLevAlg       2.0.8
+  survival         3.8.3
+  lme4             1.1.36
+  Matrix           1.7.1
+  nlme             3.1.166
+  MASS             7.3.61
+  splines          4.4.2
+  future           1.58.0
+  future.apply     1.20.0
+  parallelly       1.45.0
+  dplyr            1.1.4
+  tidyr            1.3.1
+  ggplot2          3.5.1
+  rmarkdown        2.29
+  knitr            1.49
+  flextable        0.9.9
+  gdtools          0.4.2
+  officer          0.6.10
+  qtl              1.74
+  mclust           6.1.2
+  qgraph           1.9.8
+
+---- locale --------------------------------------------------
+  en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+---- full sessionInfo() --------------------------------------
+R version 4.4.2 (2024-10-31)
+Platform: aarch64-apple-darwin20
+Running under: macOS Sonoma 14.1.1
+
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRblas.0.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.0
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+time zone: America/New_York
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices datasets  utils     methods   base     
+
+loaded via a namespace (and not attached):
+[1] compiler_4.4.2 tools_4.4.2    yaml_2.3.10    renv_1.1.8    
+
+---- sessioninfo::session_info() -----------------------------
+─ Session info ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ setting  value
+ version  R version 4.4.2 (2024-10-31)
+ os       macOS Sonoma 14.1.1
+ system   aarch64, darwin20
+ ui       X11
+ language (EN)
+ collate  en_US.UTF-8
+ ctype    en_US.UTF-8
+ tz       America/New_York
+ date     2026-07-21
+ pandoc   3.1.9 @ /opt/homebrew/bin/pandoc
+
+─ Packages ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ ! package     * version date (UTC) lib source
+ P cli           3.6.5   2025-04-23 [?] CRAN (R 4.4.1)
+   renv          1.1.8   2026-03-05 [1] CRAN (R 4.4.3)
+ P sessioninfo   1.2.2   2021-12-06 [?] CRAN (R 4.4.0)
+ P yaml          2.3.10  2024-07-26 [?] CRAN (R 4.4.1)
+
+ [1] /Users/williammueller/programs/metabolic_class/analysis/renv/library/macos/R-4.4/aarch64-apple-darwin20
+ [2] /Users/williammueller/Library/Caches/org.R-project.R/R/renv/sandbox/macos/R-4.4/aarch64-apple-darwin20/f7156815
+
+ P ── Loaded and on-disk path mismatch.
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────

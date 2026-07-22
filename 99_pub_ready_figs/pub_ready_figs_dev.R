@@ -3,6 +3,28 @@ library(consoler)
 library(cowplot)
 library(ggplot2)
 
+# Configs whose upstream stage-07 output doesn't exist yet (e.g. still
+# unresolved model-selection issues) are skipped rather than aborting the
+# whole script -- mirrors the missing-panel handling in
+# figures/final_figure_deck.Rmd. Every downstream loop iterates
+# names(render_tasks), so filtering the list itself is enough; nothing else
+# needs to change.
+#
+# Same FIGS_STRICT switch as final_figure_deck.Rmd: tolerate gaps while the
+# pipeline is still running, but fail loudly for the run that produces the
+# submitted figures, so a missing config cannot be skipped past unnoticed.
+filter_existing_tasks <- function(tasks) {
+  missing <- names(tasks)[!vapply(tasks, file.exists, logical(1))]
+  for (name in missing) {
+    cat("SKIPPED (missing input): ", name, " -> ", tasks[[name]], "\n", sep = "")
+  }
+  if (length(missing) && nzchar(Sys.getenv("FIGS_STRICT"))) {
+    stop(length(missing), " config(s) missing input: ",
+         paste(missing, collapse = ", "), call. = FALSE)
+  }
+  tasks[!names(tasks) %in% missing]
+}
+
 all_path <- "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/outcome/plot_list.RDATA"
 fb6_path <- "../07_display_figures/output/slam_c1-c10_age_fb6_bwfatgluc/outcome/plot_list.RDATA"
 mb6_path <- "../07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/outcome/plot_list.RDATA"
@@ -16,6 +38,7 @@ render_tasks <- list(
   mb6_env = mb6_path,
   mhet3_env = mhet3_path
 )
+render_tasks <- filter_existing_tasks(render_tasks)
 
 lapply(names(render_tasks), function(env_name) {
   env <- new.env()
@@ -129,6 +152,7 @@ render_tasks <- list(
   all_env = all_path,
   held_out_env = held_out_path
 )
+render_tasks <- filter_existing_tasks(render_tasks)
 
 lapply(names(render_tasks), function(env_name) {
   env <- new.env()
