@@ -973,7 +973,9 @@ hist_args <- list(
   ylab = "Frequency (%)"
 )
 
-do.call(plot, hist_args)
+# graphics::plot, not bare plot: earlier chunks bind `plot` to a ggplot object,
+# which masks the base generic and would break do.call here.
+do.call(graphics::plot, hist_args)
 
 hist_out <- file.path("output", "downsampled_hr_histogram")
 dir.create(hist_out, recursive = TRUE, showWarnings = FALSE)
@@ -987,7 +989,7 @@ png(
   bg = "white"
 )
 
-do.call(plot, hist_args)
+do.call(graphics::plot, hist_args)
 
 abline(v = 1, lty = 2, lwd = 2)
 abline(v = median(downsample_hrs$hr, na.rm = TRUE), lwd = 2)

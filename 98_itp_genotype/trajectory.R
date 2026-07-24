@@ -212,4 +212,5 @@ colnames(lodM) <- c("census", "census_f", "census_m", "census_tx", "census_tx_f"
 chr <- as.character(lapply(strsplit(all,"_"),"[",1))
 pos <- as.character(lapply(strsplit(all,"_"),"[",2))
 lodA <- cbind(chr, pos, lodM)
-write.table(lodA, "census_mapping.txt", sep = "\t", quote = FALSE)
+if (!dir.exists("output")) dir.create("output", recursive = TRUE)
+write.table(lodA, "output/census_mapping.txt", sep = "\t", quote = FALSE)

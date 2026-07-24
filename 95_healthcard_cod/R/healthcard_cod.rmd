@@ -478,6 +478,17 @@ output:
 
 ## Examine lifelong healthcards accounting for incidence (non-condition specific)
 ```{r Incidence study}
+  # Unified theme. Defined here (not in the later "compiled plots" chunk) because
+  # this Incidence study chunk is the first to reference it -- defining it downstream
+  # left it undefined at first use.
+  unified_plot_theme <- theme_minimal(base_size = 18) +
+    theme(
+      plot.title = element_text(size = 18, face = "bold", hjust = 0.5),
+      axis.title = element_text(size = 16, face = "bold"),
+      axis.text = element_text(size = 13),
+      legend.title = element_text(size = 16, face = "bold"),
+      legend.text = element_text(size = 13, face = "bold")
+    )
   #* Now, create a lifelong healthcard
     HC_relevant_LL <- classes_i %>%
       select(idno,le_wk,new_class_bw,created_date,recovery_date, tod,abscess:condition_to_death) 
@@ -941,15 +952,7 @@ output:
 ```     
 ## Compile plots
 ```{r compiled plots}
-  # Unified theme
-  unified_plot_theme <- theme_minimal(base_size = 18) +
-    theme(
-      plot.title = element_text(size = 18, face = "bold", hjust = 0.5),
-      axis.title = element_text(size = 16, face = "bold"),
-      axis.text = element_text(size = 13),
-      legend.title = element_text(size = 16, face = "bold"),
-      legend.text = element_text(size = 13, face = "bold")
-    )
+  # unified_plot_theme is defined up in the "Incidence study" chunk (its first use).
   #* Start a PDF device, compile all the pages
   pdf("Healthcard_Figures.pdf", width = 8.5, height = 11, onefile = TRUE)
 

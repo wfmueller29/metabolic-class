@@ -1060,7 +1060,7 @@ message("99_pub_ready_figs: done")
 # =============================================================================
 # VITA / SOMA LOCUS HEATMAPS   (5L filtered, S9D unfiltered)
 #
-# INPUT: 98_itp_genotype/census_mapping.txt (trajectory.R). Cells are -log10(p)
+# INPUT: 98_itp_genotype/output/census_mapping.txt (trajectory.R). Cells are -log10(p)
 # from a likelihood-ratio test, NOT p-values.
 #
 # COLOUR uses LOD breaks; 3.84 is the Bonferroni threshold. STARS use the usual
@@ -1134,7 +1134,7 @@ locus_heatmap <- function(mat, title, file, pal, breaks, gap = NULL,
   invisible(file)
 }
 
-.map_path <- "../98_itp_genotype/census_mapping.txt"
+.map_path <- "../98_itp_genotype/output/census_mapping.txt"
 if (!file.exists(.map_path)) {
   skip("locus heatmaps -- not found: ", .map_path, " (trajectory.R has not run)")
 } else {
