@@ -351,7 +351,12 @@ for (env_name in names(OUTCOME_ENVS)) {
       }
     }
 
-    save_png(g + ggplot2::theme(legend.position = "none"), out_dir, p$name)
+    # S9 (itp_geno_*) panels KEEP their class legend -- the deck had no key for
+    # those lines. Every other define-class panel is stripped for manual layout,
+    # where one shared legend is placed per group instead.
+    keep_legend <- startsWith(env_name, "itp_geno")
+    g_out <- if (keep_legend) g else g + ggplot2::theme(legend.position = "none")
+    save_png(g_out, out_dir, p$name)
   }
 
   # the three class legends, exported separately for placement
@@ -429,7 +434,11 @@ WORKSPACE_ENVS <- list(
   mb6_env      = "../07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/workspace.RDATA",
   mhet3_env    = "../07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/workspace.RDATA",
   itp_env      = "../07_display_figures/output/itp_c10c11c13c16_age_controls_bw/workspace.RDATA",
-  held_out_env = "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/workspace.RDATA"
+  held_out_env = "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/workspace.RDATA",
+  # adiposity variant (bwadipositygluc): its workspace carries save_figtabs/t1_df
+  # for the demographics_adiposity (S1G) and hr_adiposity (S1H) tables. Without it
+  # here it is never assigned to .GlobalEnv, so those two blocks cannot see it.
+  adiposity_env = "../07_display_figures/output/slam_c1-c10_age_all_bwadipositygluc/workspace.RDATA"
 )
 
 # Load whatever workspaces exist. Each table below is wrapped in tbl(), so a
@@ -657,6 +666,49 @@ if (TRUE) {
 
     invisible(save_as_image(pc_ft, "output/tables/partial_correlation.png", zoom = 10))
   })
+  # reference_class: derive the reference (dropped) class for an outcome from
+  # t1_df. Defined here, ABOVE the table blocks, because tbl() evaluates its block
+  # eagerly -- a definition placed after the blocks is not yet visible when they run.
+  # (For the full rationale of showing the reference row, see the HR table rules
+  # comment further down.)
+  .cls_key <- function(x) gsub("[^A-Za-z0-9]", "", as.character(x))
+
+  reference_class <- function(env, outcome, present) {
+    t1 <- env$save_figtabs$t1_df
+    if (is.null(t1) || !all(c("oc_name", "row_names") %in% names(t1))) return(NULL)
+    rows <- t1[trimws(as.character(t1$oc_name)) == outcome, , drop = FALSE]
+    cls  <- trimws(as.character(rows$row_names))
+    keep <- grepl("^Class", cls)                      # drop the 'total'/'pval' rows
+    cls  <- cls[keep]
+    if (!length(cls)) return(NULL)
+    miss <- setdiff(.cls_key(cls), .cls_key(present))
+    if (length(miss) != 1) return(NULL)               # ambiguous -- say nothing
+    cls[match(miss, .cls_key(cls))]
+  }
+
+  # Order rows by the HR table rules (grouping columns before "Class", reference
+  # first, then class ascending) and write the PNG. Defined here, above the table
+  # blocks, because tbl() runs its block eagerly. `df` carries a logical .ref
+  # column marking the reference row; it drives the ordering and is then dropped.
+  write_hr_table <- function(df, file) {
+    if (!".ref" %in% names(df)) df$.ref <- FALSE
+    if ("Class" %in% names(df)) {
+      grp_cols <- names(df)[seq_len(match("Class", names(df)) - 1L)]
+      grp <- if (length(grp_cols))
+               do.call(paste, c(df[grp_cols], sep = "\r")) else rep("", nrow(df))
+      cls_no <- suppressWarnings(as.numeric(gsub("[^0-9]", "", df$Class)))
+      df <- df[order(match(grp, unique(grp)), !df$.ref, cls_no), , drop = FALSE]
+      rownames(df) <- NULL
+    }
+    df$.ref <- NULL
+    ft <- flextable(df) %>%
+      fig_table_theme() %>%
+      autofit() %>%
+      set_table_properties(layout = "autofit") %>%
+      fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+    invisible(save_as_image(ft, file, zoom = 10))
+  }
+
   tbl("hr_adiposity", {
     # ---- hr_adiposity (S1H) ----------------------------------------------
     # Outcome | Class | HR (CI) Model 1 | Model 2 | Model 3, adiposity only.
@@ -808,45 +860,11 @@ if (TRUE) {
   # always the shortest-lived class (1/4/7, medians 94/100/107 weeks against
   # 114-117), but this is NOT guaranteed -- some sex/strain HRs exceed 1, which
   # means their reference is not the highest-hazard group.
-  .cls_key <- function(x) gsub("[^A-Za-z0-9]", "", as.character(x))
+  # .cls_key / reference_class are defined ABOVE the first table block (tbl() runs
+  # its block eagerly, so a definition here would come too late for hr_all/hr_adiposity).
 
-  reference_class <- function(env, outcome, present) {
-    t1 <- env$save_figtabs$t1_df
-    if (is.null(t1) || !all(c("oc_name", "row_names") %in% names(t1))) return(NULL)
-    rows <- t1[trimws(as.character(t1$oc_name)) == outcome, , drop = FALSE]
-    cls  <- trimws(as.character(rows$row_names))
-    keep <- grepl("^Class", cls)                      # drop the 'total'/'pval' rows
-    cls  <- cls[keep]
-    if (!length(cls)) return(NULL)
-    miss <- setdiff(.cls_key(cls), .cls_key(present))
-    if (length(miss) != 1) return(NULL)               # ambiguous -- say nothing
-    cls[match(miss, .cls_key(cls))]
-  }
-
-  # Order by the rules above and write the table. `df` carries a logical .ref
-  # column marking the reference row; it drives the ordering and is then dropped.
-  #
-  # The grouping columns are every column BEFORE "Class" -- LCM for 1N, LCM +
-  # Sex / Strain for 2I/S3I/S3R, Outcome for S1H, and none for 5D. Groups keep
-  # the order the builder produced them in; only rows WITHIN a group are sorted.
-  write_hr_table <- function(df, file) {
-    if (!".ref" %in% names(df)) df$.ref <- FALSE
-    if ("Class" %in% names(df)) {
-      grp_cols <- names(df)[seq_len(match("Class", names(df)) - 1L)]
-      grp <- if (length(grp_cols))
-               do.call(paste, c(df[grp_cols], sep = "\r")) else rep("", nrow(df))
-      cls_no <- suppressWarnings(as.numeric(gsub("[^0-9]", "", df$Class)))
-      df <- df[order(match(grp, unique(grp)), !df$.ref, cls_no), , drop = FALSE]
-      rownames(df) <- NULL
-    }
-    df$.ref <- NULL
-    ft <- flextable(df) %>%
-      fig_table_theme() %>%
-      autofit() %>%
-      set_table_properties(layout = "autofit") %>%
-      fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-    invisible(save_as_image(ft, file, zoom = 10))
-  }
+  # write_hr_table is defined ABOVE the first table block, alongside
+  # reference_class, for the same reason (tbl() evaluates its block eagerly).
 
   # ---- sex/strain HR tables (2I, S3I, S3R) ---------------------------------
   # ONE builder for all three. Columns: LCM | Sex / Strain | Class | Hazard
@@ -1085,8 +1103,12 @@ LOCUS_ORDER <- c(
   "Soma19a", "Soma19b"
 )
 
-# Column order and headings as published: F, M, All.
-LOCUS_COLS <- c(census_f = "F", census_m = "M", census = "All")
+# Column order and headings as published: F, M, All. These are the
+# TREATMENT-ADJUSTED census columns (census_tx_*), matching canonical Fig 5L /
+# S9D: the plain census_f/census_m/census columns peak at 3.38 (all below the
+# 3.84 Bonferroni cut), which would empty the 5L filter; the significant loci
+# (Vita9b, VitaXa, Soma17a, ...) live in the treatment-adjusted mapping.
+LOCUS_COLS <- c(census_tx_f = "F", census_tx_m = "M", census_tx = "All")
 
 BONFERRONI_NEGLOG <- 3.84        # colour cut, and the 5L row filter
 
@@ -1165,14 +1187,22 @@ if (!file.exists(.map_path)) {
     # 5L -- only loci with at least one Bonferroni-significant cell
     sig  <- apply(full, 1, function(r) any(r > BONFERRONI_NEGLOG, na.rm = TRUE))
     filt <- full[sig, , drop = FALSE]
+    # rownames() on an all-FALSE matrix subset is NULL, not character(0), so read
+    # them through a NULL-safe helper before startsWith() to avoid a crash if no
+    # locus passes the cut.
+    filt_rn <- rownames(filt); if (is.null(filt_rn)) filt_rn <- character(0)
     message("locus heatmap: ", nrow(filt), " of ", nrow(full),
             " loci pass Bonferroni (-log10 p > ", BONFERRONI_NEGLOG, ")  [",
-            sum(startsWith(rownames(filt), "Vita")), " Vita, ",
-            sum(startsWith(rownames(filt), "Soma")), " Soma]")
-    locus_heatmap(filt, "Vita and Soma loci",
-                  file.path(out_dir, "loci_filtered.png"),
-                  PAL_5L, BREAKS_5L,
-                  gap = sum(startsWith(rownames(filt), "Vita")),
-                  cells = "stars")
+            sum(startsWith(filt_rn, "Vita")), " Vita, ",
+            sum(startsWith(filt_rn, "Soma")), " Soma]")
+    if (nrow(filt) == 0) {
+      warning("no loci pass the Bonferroni cut -- skipping loci_filtered.png (5L)")
+    } else {
+      locus_heatmap(filt, "Vita and Soma loci",
+                    file.path(out_dir, "loci_filtered.png"),
+                    PAL_5L, BREAKS_5L,
+                    gap = sum(startsWith(filt_rn, "Vita")),
+                    cells = "stars")
+    }
   }
 }

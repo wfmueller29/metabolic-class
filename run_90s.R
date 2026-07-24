@@ -35,6 +35,9 @@ analyses <- list(
   list(tag = "97_treatment_response",  dir = "97_treatment_response",  script = "treatment_response.Rmd", type = "render"),
   list(tag = "98_prep_census",         dir = "98_itp_genotype",        script = "prep_census.R",          type = "source"),
   list(tag = "98_trajectory",          dir = "98_itp_genotype",        script = "trajectory.R",           type = "source"),
+  # S9C class-demographics table. Reads the censuses prep_census.R wrote into
+  # output/; independent of trajectory.R. Feeds figure_spec's itp_geno_demographics.png.
+  list(tag = "98_geno_demographics",   dir = "98_itp_genotype",        script = "itp_geno_demographics_table.R", type = "source"),
   list(tag = "99_pub_ready_figs",      dir = "99_pub_ready_figs",      script = "pub_ready_figs.R",       type = "source")
 )
 

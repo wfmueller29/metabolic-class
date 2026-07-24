@@ -192,6 +192,10 @@ FIGURES <- list(
   list(
     part  = "supplemental",
     title = "Joint Latent Class Model",
+    note  = paste("These joint latent-class panels are the canonical output from",
+                  "Billy Mueller's original run. The joint model is re-fit stochastically",
+                  "and is environment-sensitive, so it is not regenerated on this machine",
+                  "to avoid drift from the paper-displayed figure."),
     panels = c(
       # 94_jointlcm writes EIGHT panels, lettered A-H in its own scheme, and its
       # letters are NOT this figure's letters: 94's E/F are ADIPOSITY, which this
@@ -216,7 +220,7 @@ FIGURES <- list(
       # resampling, each in bw/fat/gluc order. This figure is OUTCOME-major --
       # four strategies per outcome -- so the numbers interleave. Reading them
       # in file order would put four different outcomes in one row.
-      "images/Internal Validation.png",
+      "images/S5A.png",
       # Body weight: interval, age window, cumulative, resampling
       "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/classification/plot_1.png",
       "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/classification/plot_4.png",
@@ -247,13 +251,13 @@ FIGURES <- list(
       # not 99's file order: 99 writes window_coef, window_concord, cum_coef,
       # cum_concord, whereas the figure reads across as window/cumulative for
       # the linear predictor, then window/cumulative for concordance.
-      "images/Internal Validation.png",
+      "images/S6A.png",
       "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/forest/plot_2.png",
       "../99_pub_ready_figs/output/all_env/validation/window_coef.png",
       "../99_pub_ready_figs/output/all_env/validation/cum_coef.png",
       "../99_pub_ready_figs/output/all_env/validation/window_concord.png",
       "../99_pub_ready_figs/output/all_env/validation/cum_concord.png",
-      "images/External Validation.png",
+      "images/S6G.png",
       "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/forest/plot_2.png",
       "../99_pub_ready_figs/output/held_out_env/validation/window_coef.png",
       "../99_pub_ready_figs/output/held_out_env/validation/cum_coef.png",
@@ -410,6 +414,10 @@ TABLES <- list(
   list(
     part   = "supplemental",
     title  = "Linear Mixed Effects Models",
+    note   = paste("These coefficients are re-fit on this machine and can differ",
+                   "from the published values by a tiny, environment-dependent amount",
+                   "(the lmer optimizer / BLAS / OS math differ between machines).",
+                   "The canonical, paper-displayed version is Billy Mueller's original run."),
     render = "inline",
     build  = function() {
       lme_coef_table <- all_env$save_figtabs$lme_coef_table_broom

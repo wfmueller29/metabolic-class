@@ -162,6 +162,7 @@ for (tb in TABLES) {
                   tn[[tb$part]])
 
   cat("\n\n## ", label, ". ", tb$title, "\n\n", sep = "")
+  if (!is.null(tb$note)) cat("\n> *", tb$note, "*\n\n", sep = "")
 
   out <- tryCatch(tb$build(), error = function(e) e)
   if (inherits(out, "error")) {
@@ -193,6 +194,7 @@ for (fi in seq_along(FIGURES)) {
   fig_id <- figure_ids[[fi]]
 
   cat("\n\n## ", fig_id, ". ", f$title, "\n\n", sep = "")
+  if (!is.null(f$note)) cat("\n> *", f$note, "*\n\n", sep = "")
 
   for (i in seq_along(f$panels)) {
     id   <- panel_id(fig_id, i)
