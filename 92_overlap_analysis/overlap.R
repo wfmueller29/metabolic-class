@@ -281,12 +281,15 @@ png(
   bg = "white"
 )
 
-upset(
+# print(): UpSetR::upset() draws via an auto-printed grid object. run_90s.R runs
+# this script through source(), whose default print.eval = FALSE suppresses that
+# auto-print, so the device stayed blank. Forcing print() commits it to the png.
+print(upset(
   upset_data,
   sets = c("BW High Risk", "FM High Risk", "FBG High Risk"),
   order.by = "freq",
   text.scale = 1.5
-)
+))
 
 dev.off()
 

@@ -893,10 +893,18 @@ if (TRUE) {
     if (!is.null(hn))
       hn <- hn[hn$Outcome == outcome & !is.na(hn$Class) & !is.na(hn$pval), , drop = FALSE]
     if (!is.null(hn) && nrow(hn)) {
+      # hr_numeric$Class labels non-reference classes SEQUENTIALLY (Class2, Class3,
+      # ...), which is only right when the true classes are 2,3,.. in that row
+      # order. It is wrong for cohorts whose classes aren't (F/B6's fourth class is
+      # "9"; M/HET3's are ordered 3,2), which also breaks reference_class(). The
+      # true identities are in mortality_panel_hr, in the SAME row order (both are
+      # the unadjusted ~Class fit), so take the labels from there.
+      tb  <- env$save_figtabs$mortality_panel_hr[[slot]]
+      cls <- if (!is.null(tb) && nrow(tb) == nrow(hn)) rownames(tb) else as.character(hn$Class)
       return(data.frame(
         LCM                 = lcm,
         `Sex / Strain`      = unname(SEX_STRAIN_LABEL[[strata]]),
-        Class               = as.character(hn$Class),
+        Class               = cls,
         `Hazard Ratio (CI)` = mapply(format_hr_bare, hn$value, hn$lower, hn$upper, hn$pval),
         check.names = FALSE, stringsAsFactors = FALSE
       ))

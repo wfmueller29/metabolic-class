@@ -1234,6 +1234,11 @@ forest_parse_final <- function(final) {
 # the forests take the model p-value directly, so they are not bound by it.
 # If no p-value is available the parsed star is used as a fallback.
 forest_stars <- function(pval, fallback = "") {
+  # The hr_table `pval` column is CHARACTER, so a bare `pval < 0.001` compares
+  # LEXICALLY: "9.9e-15" < "0.001" is FALSE because "9" > "0". That silently sent
+  # every scientific-notation (i.e. most-significant) p-value to "" -> "n.s.",
+  # which is why Fig 3E showed HR 3.84 (3.21-4.58) as n.s. Coerce to numeric first.
+  pval <- suppressWarnings(as.numeric(pval))
   if (is.null(pval) || length(pval) == 0 || is.na(pval)) return(fallback)
   if (pval < 0.001) "***" else if (pval < 0.01) "**" else if (pval < 0.05) "*" else ""
 }
