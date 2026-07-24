@@ -1,36 +1,8 @@
 # Reproduce entire analysis
 
-# Run timing ------------------------------------------------------------------
-# Each step's start/end/duration is appended to run_records/run_log.csv AS THE
-# RUN PROCEEDS -- timing has to be captured during the run, since nothing at the
-# end can reconstruct when each step began. session_info.R summarizes this into a
-# timestamped run_timing record. This raw log is rewritten fresh each run (and is
-# gitignored), but is appended to incrementally, so it survives a step failing
-# partway through.
-dir.create("run_records", showWarnings = FALSE)
-RUN_LOG <- file.path("run_records", "run_log.csv")
-writeLines("step,start,end,minutes,status", RUN_LOG)
-
-run_step <- function(label, expr) {
-  cat("\n>>>>> ", label, "  (", format(Sys.time()), ")\n", sep = "")
-  t0 <- Sys.time()
-  status <- tryCatch({ expr; "OK" },
-                     error = function(e) paste0("FAILED: ", conditionMessage(e)))
-  t1 <- Sys.time()
-  mins <- as.numeric(difftime(t1, t0, units = "mins"))
-  cat(sprintf('"%s","%s","%s",%.2f,"%s"\n',
-              label, format(t0), format(t1), mins, status),
-      file = RUN_LOG, append = TRUE)
-  cat(sprintf("      -> %s (%.1f min)\n", status, mins))
-  if (!identical(status, "OK")) stop("Error in: ", label, " -- ", status)
-  invisible(TRUE)
-}
-
 # Preprocess  -----------------------------------------------------------------
-run_step("preprocess", {
-  ecode <- system2("Rscript", args = c("preprocess.R"))
-  if (ecode != 0) stop("exit code ", ecode)
-})
+ecode <- system2("Rscript", args = c("preprocess.R"))
+if (ecode != 0) stop("Error in: preprocess.R")
 
 # Train  ----------------------------------------------------------------------
 yaml_files <- c(
@@ -50,10 +22,9 @@ yaml_files <- c(
 )
 
 for (yaml in yaml_files) {
-  run_step(paste("train:", basename(yaml)), {
-    ecode <- system2("Rscript", args = c("train.R", yaml))
-    if (ecode != 0) stop("exit code ", ecode)
-  })
+  cat("Running:", yaml, "\n")
+  ecode <- system2("Rscript", args = c("train.R", yaml))
+  if (ecode != 0) stop(paste("Error in:", yaml))
 }
 
 # Validate  -------------------------------------------------------------------
@@ -63,10 +34,9 @@ yaml_files <- c(
 )
 
 for (yaml in yaml_files) {
-  run_step(paste("validate:", basename(yaml)), {
-    ecode <- system2("Rscript", args = c("validate.R", yaml))
-    if (ecode != 0) stop("exit code ", ecode)
-  })
+  cat("Running:", yaml, "\n")
+  ecode <- system2("Rscript", args = c("validate.R", yaml))
+  if (ecode != 0) stop(paste("Error in:", yaml))
 }
 
 # Predict ---------------------------------------------------------------------
@@ -75,10 +45,9 @@ yaml_files <- c(
 )
 
 for (yaml in yaml_files) {
-  run_step(paste("predict:", basename(yaml)), {
-    ecode <- system2("Rscript", args = c("predict.R", yaml))
-    if (ecode != 0) stop("exit code ", ecode)
-  })
+  cat("Running:", yaml, "\n")
+  ecode <- system2("Rscript", args = c("predict.R", yaml))
+  if (ecode != 0) stop(paste("Error in:", yaml))
 }
 
 # Downstream analyses ---------------------------------------------------------
@@ -110,16 +79,15 @@ analyses <- list(
 
 repo_root <- getwd()
 for (a in analyses) {
-  run_step(a$tag, {
-    args <- if (identical(a$type, "render")) {
-      c("-e", sprintf('rmarkdown::render("%s")', a$script))
-    } else {
-      a$script
-    }
-    setwd(file.path(repo_root, a$dir))
-    ecode <- tryCatch(system2("Rscript", args = args), finally = setwd(repo_root))
-    if (ecode != 0) stop("exit code ", ecode)
-  })
+  cat("Running:", a$tag, "\n")
+  args <- if (identical(a$type, "render")) {
+    c("-e", sprintf('rmarkdown::render("%s")', a$script))
+  } else {
+    a$script
+  }
+  setwd(file.path(repo_root, a$dir))
+  ecode <- tryCatch(system2("Rscript", args = args), finally = setwd(repo_root))
+  if (ecode != 0) stop(paste("Error in:", a$tag))
 }
 
 # Figures ---------------------------------------------------------------------
@@ -127,29 +95,13 @@ for (a in analyses) {
 # wipe; rmarkdown does not create output_dir for you.
 if (!dir.exists("figures/output")) dir.create("figures/output", recursive = TRUE)
 
-run_step("figures: primary", {
-  rmarkdown::render("figures/primary_figures.Rmd",
-    output_format = "pdf_document",
-    output_dir = "figures/output",
-    output_file = "Primary Figures.pdf"
-  )
-})
-run_step("figures: supplemental", {
-  rmarkdown::render("figures/sup_figures.Rmd",
-    output_format = "pdf_document",
-    output_dir = "figures/output",
-    output_file = "Supplemental Material.pdf"
-  )
-})
-
-# Session info ----------------------------------------------------------------
-# Record the environment that produced this run (R build, architecture, BLAS,
-# package versions + in-house commit SHAs) and summarize run_records/run_log.csv into
-# run_timing.txt. renv pins packages but cannot pin the numerical stack, and LCMM
-# class assignments are sensitive to it -- so this is the provenance record that
-# ties results to the environment that made them.
-# A failure here must not invalidate a completed run, so it only warns.
-# (If an earlier step fails, run `Rscript session_info.R` by hand -- run_records/run_log.csv
-#  is written incrementally and will contain everything up to the failure.)
-ecode <- system2("Rscript", args = c("session_info.R"))
-if (ecode != 0) warning("session_info.R failed -- no environment record written")
+rmarkdown::render("figures/primary_figures.Rmd",
+  output_format = "pdf_document",
+  output_dir = "figures/output",
+  output_file = "Primary Figures.pdf"
+)
+rmarkdown::render("figures/sup_figures.Rmd",
+  output_format = "pdf_document",
+  output_dir = "figures/output",
+  output_file = "Supplemental Material.pdf"
+)
