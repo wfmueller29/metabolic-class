@@ -1110,10 +1110,11 @@ message("99_pub_ready_figs: done")
 # INPUT: 98_itp_genotype/output/census_mapping.txt (trajectory.R). Cells are -log10(p)
 # from a likelihood-ratio test, NOT p-values.
 #
-# COLOUR uses LOD breaks; 3.84 is the Bonferroni threshold. STARS use the usual
-# paper convention (p<0.05/0.01/0.001 -> -log10 > 1.30/2/3), so the two encode
-# different things ON PURPOSE -- a cell can carry a star while sitting below the
-# Bonferroni colour cut. The figure legend has to say so.
+# COLOUR uses LOD breaks; 3.84 is the Bonferroni threshold. STARS follow the
+# manuscript's manual annotation -- a per-LOCUS Bonferroni-LEVEL scheme (* at
+# alpha 0.05 / -log10 3.84, ** at alpha 0.01 / -log10 4.54; see locus_stars),
+# NOT the per-cell p<0.05/0.01/0.001 used on the other figures. Only cells that
+# clear the 3.84 colour cut are marked, so colour and stars agree here.
 #
 #   5L   filtered   loci with >=1 Bonferroni-significant cell   4 colours
 #   S9D  unfiltered  all loci                                    8 colours
@@ -1149,15 +1150,32 @@ PAL_S9D    <- c("#F3F3F3", "#91DFF7", "#5FCCEC", "#22B9E1", "#00A5D5",
                 "#FDCBB4", "#F9A077", "#F57941")
 BREAKS_S9D <- c(0, 3.04, 3.24, 3.44, 3.64, 3.84, 5, 6, Inf)
 
-neglog_stars <- function(x) {
-  vapply(x, function(v) {
-    if (is.na(v)) return("")
-    if (v > 3) "***" else if (v > 2) "**" else if (v > -log10(0.05)) "*" else ""
-  }, character(1))
+# 5L asterisks follow the manuscript's manual annotation: a Bonferroni-LEVEL,
+# PER-LOCUS scheme (NOT the per-cell p<0.05/0.01/0.001 used on the other figures).
+#   - a cell is marked only if its OWN -log10(p) clears the genome-wide cut
+#     (3.84 = -log10(0.05/N), Bonferroni alpha = 0.05);
+#   - the number of stars is set by the LOCUS's strongest cohort (row max):
+#       *  = alpha 0.05  (row max > 3.84)
+#       ** = alpha 0.01  (row max > 4.54 = 3.84 + log10(5), same N)
+#     capped at ** as in the annotation (even -log10 = 7.36 stays **);
+#   - that level is stamped on EVERY marked cohort of the locus, so all its
+#     significant cells share one count (e.g. Vita9c F=4.96 and M=4.30 both **).
+# Reproduces the manual annotation exactly (the * loci top out at 4.07, the **
+# loci start at 4.94, so any cut in that gap -- 4.54 is the principled one).
+STAR_A01_NEGLOG <- BONFERRONI_NEGLOG + log10(5)   # 4.54: shift alpha 0.05 -> 0.01
+locus_stars <- function(mat) {
+  out <- matrix("", nrow(mat), ncol(mat), dimnames = dimnames(mat))
+  for (i in seq_len(nrow(mat))) {
+    row  <- mat[i, ]
+    rmax <- suppressWarnings(max(row, na.rm = TRUE))
+    lvl  <- if (rmax > STAR_A01_NEGLOG) "**" else if (rmax > BONFERRONI_NEGLOG) "*" else ""
+    out[i, ] <- ifelse(!is.na(row) & row > BONFERRONI_NEGLOG, lvl, "")
+  }
+  out
 }
 
 # `cells` selects what is printed in each square:
-#   "stars"   -> ***/**/* by the usual p thresholds        (5L)
+#   "stars"   -> */** by per-locus Bonferroni level         (5L)
 #   "values"  -> the -log10(p) number itself               (S9D)
 locus_heatmap <- function(mat, title, file, pal, breaks, gap = NULL,
                           cells = c("stars", "values")) {
@@ -1168,7 +1186,7 @@ locus_heatmap <- function(mat, title, file, pal, breaks, gap = NULL,
   hm <- pheatmap::pheatmap(
     mat, cluster_rows = FALSE, cluster_cols = FALSE,
     display_numbers = if (cells == "stars") {
-      matrix(neglog_stars(mat), nrow = nrow(mat), dimnames = dimnames(mat))
+      locus_stars(mat)
     } else {
       matrix(formatC(mat, format = "f", digits = 2), nrow = nrow(mat),
              dimnames = dimnames(mat))

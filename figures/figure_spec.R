@@ -142,6 +142,26 @@ FIGURES <- list(
   ),
   list(
     part  = "supplemental",
+    title = "Joint Latent Class Model",
+    note  = paste("These joint latent-class panels are the canonical output from",
+                  "Billy Mueller's original run. The joint model is re-fit stochastically",
+                  "and is environment-sensitive, so it is not regenerated on this machine",
+                  "to avoid drift from the paper-displayed figure."),
+    panels = c(
+      # 94_jointlcm writes EIGHT panels, lettered A-H in its own scheme, and its
+      # letters are NOT this figure's letters: 94's E/F are ADIPOSITY, which this
+      # figure does not show. Glucose is 94's G/H. Taking E_/F_ here because they
+      # sort next would silently publish adiposity as glucose.
+      "../94_jointlcm/output/panel/A_bw_observed.png",
+      "../94_jointlcm/output/panel/B_bw_km.png",
+      "../94_jointlcm/output/panel/C_fat_observed.png",
+      "../94_jointlcm/output/panel/D_fat_km.png",
+      "../94_jointlcm/output/panel/G_glucose_observed.png",
+      "../94_jointlcm/output/panel/H_glucose_km.png"
+    )
+  ),
+  list(
+    part  = "supplemental",
     title = "Class Overlap and Co-occurrence",
     panels = c(
       # A -- subject x class posterior probability, HCA on both axes. Stage 07
@@ -184,29 +204,6 @@ FIGURES <- list(
       "../99_pub_ready_figs/output/mhet3_env/define_class/gluc_by_gluc.png",
       "../99_pub_ready_figs/output/mhet3_env/define_class/km_gluc.png",
       "../99_pub_ready_figs/output/tables/hr_sexstrain_gluc.png"
-    )
-  ),
-  # The old "Heatmaps" figure lived here. All four of its panels are now in the
-  # Class Overlap figure above, except heatmap1.jpg (the covariates-as-columns
-  # version), which is superseded and intentionally dropped.
-  list(
-    part  = "supplemental",
-    title = "Joint Latent Class Model",
-    note  = paste("These joint latent-class panels are the canonical output from",
-                  "Billy Mueller's original run. The joint model is re-fit stochastically",
-                  "and is environment-sensitive, so it is not regenerated on this machine",
-                  "to avoid drift from the paper-displayed figure."),
-    panels = c(
-      # 94_jointlcm writes EIGHT panels, lettered A-H in its own scheme, and its
-      # letters are NOT this figure's letters: 94's E/F are ADIPOSITY, which this
-      # figure does not show. Glucose is 94's G/H. Taking E_/F_ here because they
-      # sort next would silently publish adiposity as glucose.
-      "../94_jointlcm/output/panel/A_bw_observed.png",
-      "../94_jointlcm/output/panel/B_bw_km.png",
-      "../94_jointlcm/output/panel/C_fat_observed.png",
-      "../94_jointlcm/output/panel/D_fat_km.png",
-      "../94_jointlcm/output/panel/G_glucose_observed.png",
-      "../94_jointlcm/output/panel/H_glucose_km.png"
     )
   ),
   list(

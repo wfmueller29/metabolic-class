@@ -141,22 +141,31 @@ is_full_width <- function(path) grepl("forest", path, fixed = TRUE)
   path under ../99_pub_ready_figs/output/tables/.
 -->
 
-# Tables
-
-Table 1 and Table 2 -- the class demographics that lead the manuscript.
-
-Numbered separately from the figures, as in the manuscript. Tables marked
-`png` in figure_spec.R are also written to `output/tables/` as Canva assets;
-the rest render here only.
-
-```{r render tables, results='asis'}
-# Split into two passes: primary tables lead the document (they are Table 1
-# and Table 2 of the manuscript), supplemental tables trail the figures.
+```{r table-setup, echo=FALSE}
+# Table rendering is DEFINED here but the tables render AFTER the figures, to
+# match the manuscript order:  figures -> supplemental figures -> Tables ->
+# Supplemental Tables.  (Primary = Table 1 / Table 2.)
 tn <- list(primary = 0L, supplemental = 0L)
+
+# The deck's supplemental tables are limited to the FIVE that appear in the
+# submitted supplement (canonical_supl.pdf), in order S1-S5. figure_spec.R can
+# build several more working/diagnostic tables (Individual/Combined Cox,
+# Descriptive Census, C16-C18 stats, Missing Data, LCM Posterior Probabilities,
+# Candidate LCMs, LME Information) -- those are NOT part of the submitted
+# supplement, so they are excluded from the deck here.
+SUPP_TABLE_KEEP <- c(
+  "Sex/Strain Adjusted Hazards",                  # Table S1
+  "Linear Mixed Effects Models",                  # Table S2
+  "Descriptive Statistics SLAM C1-C10 datasets",  # Table S3
+  "Median Life Expectancy Data",                  # Table S4
+  "LCM Model Information"                          # Table S5
+)
 
 render_tables <- function(which_part) {
 for (tb in TABLES) {
   if (tb$part != which_part) next
+  # supplemental deck tables are only the five in canonical_supl.pdf
+  if (which_part == "supplemental" && !(tb$title %in% SUPP_TABLE_KEEP)) next
   tn[[tb$part]] <- tn[[tb$part]] + 1L
   label <- paste0(if (tb$part == "supplemental") "Supplemental Table " else "Table ",
                   tn[[tb$part]])
@@ -180,8 +189,6 @@ for (tb in TABLES) {
   }
 }
 }
-
-render_tables("primary")
 ```
 
 # Figures
@@ -243,7 +250,19 @@ if (length(missing_panels)) {
 }
 ```
 
+# Tables
+
+Table 1 and Table 2 -- the class demographics that lead the manuscript,
+numbered separately from the figures. Tables marked `png` in figure_spec.R are
+also written to `output/tables/` as Canva assets; the rest render here only.
+
+```{r render primary tables, results='asis'}
+render_tables("primary")
+```
+
 # Supplemental Tables
+
+The five tables of the submitted supplement (canonical_supl.pdf), S1-S5.
 
 ```{r render supplemental tables, results='asis'}
 render_tables("supplemental")
