@@ -517,6 +517,21 @@ if (TRUE) {
       "Class 9" = "Low",        "Class 10" = "High"
     )
 
+    # Adiposity classes are renumbered 4/5 -> 9/10 for display, CONTINUING the
+    # manuscript's sequential class numbering across metabolic indices:
+    #   Body Weight 1-3 | Fat Mass 4-6 | FBG 7-8 | Adiposity 9-10.
+    # The adiposity config (bwadipositygluc) has no Fat Mass, so its LCM numbers
+    # the two adiposity classes LOCALLY as 4/5. Left as-is they would (a) collide
+    # with Fat Mass's 4/5 and (b) inherit Fat Mass's descriptors (Early-peak /
+    # Stable) rather than adiposity's (Low / High). Remapping before display fixes
+    # both -- CLASS_DESCRIPTOR above already carries the correct 9=Low / 10=High.
+    # PURE DISPLAY RELABEL: class assignments, HRs and the reference derivation are
+    # unchanged -- the reference is derived on the raw 4/5 labels, THEN relabeled.
+    ADIPOSITY_CLASS_RELABEL <- c("Class 4" = "Class 9", "Class 5" = "Class 10")
+    relabel_classes <- function(x, map) {
+      x <- as.character(x); hit <- x %in% names(map); x[hit] <- map[x[hit]]; x
+    }
+
     # "Body Weight" / "Fat Mass" / "FBG" as printed in the Metabolic Variable
     # column (07 supplies "Body Weight" / "Body Fat" / "Glucose").
     METVAR_LABEL <- c("Body Weight" = "Body Weight", "Body Fat" = "Fat Mass",
@@ -531,7 +546,7 @@ if (TRUE) {
     }
 
     demographics_table <- function(env, file, lcm = NULL, title = NULL,
-                                   strain = TRUE) {
+                                   strain = TRUE, class_relabel = NULL) {
       t1 <- env$save_figtabs$t1_df
       if (is.null(t1)) { warning("demographics: t1_df missing -- skipped"); return(invisible(NULL)) }
       tb <- t1
@@ -545,6 +560,9 @@ if (TRUE) {
 
       # descriptive class names: "Class 2" -> "Class 2 (Stable)"
       rn   <- as.character(tb$row_names)
+      # relabel BEFORE the descriptor lookup so remapped classes pick up the right
+      # descriptor (e.g. adiposity 4/5 -> 9/10 -> Low/High, not Early-peak/Stable)
+      if (!is.null(class_relabel)) rn <- relabel_classes(rn, class_relabel)
       desc <- CLASS_DESCRIPTOR[rn]
       unk  <- grepl("^Class ", rn) & is.na(desc)
       if (any(unk)) warning("demographics: no descriptor for ",
@@ -633,7 +651,7 @@ if (TRUE) {
                        strain = FALSE)
     # S1G -- adiposity classes only (9 and 10)
     demographics_table(adiposity_env, "output/tables/demographics_adiposity.png",
-                       lcm = "Adiposity")
+                       lcm = "Adiposity", class_relabel = ADIPOSITY_CLASS_RELABEL)
   })
   tbl("partial_correlation", {
     # ---- partial_correlation (S2C) ---------------------------------------
@@ -765,6 +783,9 @@ if (TRUE) {
           hr_table <- rbind(r, hr_table)
           rownames(hr_table) <- NULL
         }
+        # relabel AFTER the reference row is added (reference_class ran on the raw
+        # 4/5 labels above): adiposity 4/5 -> 9/10 for the sequential class scheme.
+        hr_table$Class <- relabel_classes(hr_table$Class, ADIPOSITY_CLASS_RELABEL)
         write_hr_table(hr_table, "output/tables/hr_adiposity.png")
       }
     }
