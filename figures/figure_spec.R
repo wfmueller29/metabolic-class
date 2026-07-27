@@ -305,30 +305,17 @@ FIGURES <- list(
     part  = "supplemental",
     title = "ITP Genotyped Cohorts",
     panels = c(
-      # The composite groups these as four lettered panels -- A is the whole
-      # 3x2 control block, B the treated block, C the table, D the heatmap.
-      # The deck letters every PNG separately, so these run A-N here against
-      # A-D in the manuscript. That is deliberate: the deck is the asset
-      # inventory for layout, and there are no pre-composited A/B images to
-      # point at. Panel ORDER matches the composite's reading order.
-      # Controls (Unstratified): trajectory, then KM
-      "../99_pub_ready_figs/output/itp_geno_env/define_class/bw_by_bw.png",
-      "../99_pub_ready_figs/output/itp_geno_env/define_class/km_bw.png",
-      # Controls (Females): trajectory, then KM
-      "../99_pub_ready_figs/output/itp_geno_f_env/define_class/bw_by_bw.png",
-      "../99_pub_ready_figs/output/itp_geno_f_env/define_class/km_bw.png",
-      # Controls (Males): trajectory, then KM
-      "../99_pub_ready_figs/output/itp_geno_m_env/define_class/bw_by_bw.png",
-      "../99_pub_ready_figs/output/itp_geno_m_env/define_class/km_bw.png",
-      # Treated (Unstratified): trajectory, then KM
-      "../99_pub_ready_figs/output/itp_geno_tx_env/define_class/bw_by_bw.png",
-      "../99_pub_ready_figs/output/itp_geno_tx_env/define_class/km_bw.png",
-      # Treated (Females): trajectory, then KM
-      "../99_pub_ready_figs/output/itp_geno_tx_f_env/define_class/bw_by_bw.png",
-      "../99_pub_ready_figs/output/itp_geno_tx_f_env/define_class/km_bw.png",
-      # Treated (Males): trajectory, then KM
-      "../99_pub_ready_figs/output/itp_geno_tx_m_env/define_class/bw_by_bw.png",
-      "../99_pub_ready_figs/output/itp_geno_tx_m_env/define_class/km_bw.png",
+      # Four lettered panels, matching the manuscript. A and B are pre-composited
+      # by 99 (assemble_itp_composite): each is the whole 3x2 block -- the three
+      # cohort rows (Unstratified / Females / Males) x (BW trajectory / KM), with
+      # one shared class legend. The six per-env PNGs still exist under
+      # output/itp_geno_*/define_class/ if a piece is ever wanted individually;
+      # the deck just points at the two assembled blocks instead of lettering
+      # eleven separate images.
+      # A -- controls composite (3 cohort rows x trajectory/KM)
+      "../99_pub_ready_figs/output/itp_geno_composite/controls.png",
+      # B -- treated composite (3 cohort rows x trajectory/KM)
+      "../99_pub_ready_figs/output/itp_geno_composite/treated.png",
       # C -- controls/treated demographics across the three strata
       "../98_itp_genotype/output/itp_geno_demographics.png",
       # D -- the unfiltered locus heatmap (5L is the Bonferroni-filtered twin)

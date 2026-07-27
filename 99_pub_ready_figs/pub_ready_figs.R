@@ -318,6 +318,10 @@ save_png <- function(plot, dir, name, width = 4, height = 5, dpi = 300) {
 }
 
 # ---- define-class panels ----------------------------------------------------
+# Collect the ITP-genotype trajectory/KM ggplots as they are rendered, to
+# assemble the S9 composite panels (controls = A, treated = B) after the loop.
+itp_geno_ggplots <- new.env()
+
 for (env_name in names(OUTCOME_ENVS)) {
   spec <- OUTCOME_ENVS[[env_name]]
   path <- spec$path
@@ -357,6 +361,11 @@ for (env_name in names(OUTCOME_ENVS)) {
     keep_legend <- startsWith(env_name, "itp_geno")
     g_out <- if (keep_legend) g else g + ggplot2::theme(legend.position = "none")
     save_png(g_out, out_dir, p$name)
+
+    # keep the legend'd ITP-genotype plot for the S9 composite assembly below
+    if (keep_legend)
+      assign(paste0(env_name, "__", p$name), normalise_labels(g),
+             envir = itp_geno_ggplots)
   }
 
   # the three class legends, exported separately for placement
@@ -368,6 +377,57 @@ for (env_name in names(OUTCOME_ENVS)) {
     }
   }
 }
+
+# ---- S9 composite panels: controls (A) and treated (B) ----------------------
+# The published S9 collapses the twelve ITP-genotype subplots into TWO lettered
+# panels: A = controls, B = treated. Each is a 3-row x 2-col grid --
+#   (Unstratified / Females / Males) x (BW trajectory / KM survival) --
+# with each cohort row titled and ONE shared class legend on the right. Assemble
+# them here from the per-env ggplots collected in the loop above, so the deck's
+# S9A/S9B match the figure rather than showing eleven separate letters. The six
+# per-env PNGs are still written above, in case the individual pieces are wanted
+# for manual layout.
+assemble_itp_composite <- function(envs, cohorts, group, file) {
+  gp <- function(en, nm)
+    get0(paste0(en, "__", nm), envir = itp_geno_ggplots, inherits = FALSE)
+  missing <- vapply(envs, function(en)
+    is.null(gp(en, "bw_by_bw")) || is.null(gp(en, "km_bw")), logical(1))
+  if (any(missing)) {
+    skip("S9 composite '", group, "' -- missing subplot(s) for: ",
+         paste(envs[missing], collapse = ", "))
+    return(invisible(NULL))
+  }
+  # one shared legend for the whole panel; strip the per-subplot legends
+  shared_legend <- cowplot::get_legend(
+    gp(envs[[1]], "bw_by_bw") +
+      ggplot2::theme(legend.position = "right",
+                     legend.box.margin = ggplot2::margin(0, 0, 0, 6)))
+  strip <- ggplot2::theme(legend.position = "none")
+  rows <- lapply(seq_along(envs), function(k) {
+    body <- cowplot::plot_grid(
+      gp(envs[[k]], "bw_by_bw") + strip,
+      gp(envs[[k]], "km_bw")    + strip,
+      nrow = 1)
+    title <- cowplot::ggdraw() +
+      cowplot::draw_label(paste0(group, " (", cohorts[[k]], ")"),
+                          fontface = "bold", size = 13, x = 0.02, hjust = 0)
+    cowplot::plot_grid(title, body, ncol = 1, rel_heights = c(0.10, 1))
+  })
+  grid <- cowplot::plot_grid(plotlist = rows, ncol = 1)
+  full <- cowplot::plot_grid(grid, shared_legend, nrow = 1, rel_widths = c(1, 0.15))
+  dir.create(dirname(file), recursive = TRUE, showWarnings = FALSE)
+  ggplot2::ggsave(file, full, width = 9, height = 11, dpi = 300, bg = "white")
+  message("wrote S9 composite: ", file)
+}
+
+assemble_itp_composite(
+  c("itp_geno_env", "itp_geno_f_env", "itp_geno_m_env"),
+  c("Unstratified", "Females", "Males"), "Controls",
+  file.path("output", "itp_geno_composite", "controls.png"))
+assemble_itp_composite(
+  c("itp_geno_tx_env", "itp_geno_tx_f_env", "itp_geno_tx_m_env"),
+  c("Unstratified", "Females", "Males"), "Treated",
+  file.path("output", "itp_geno_composite", "treated.png"))
 
 # ---- validation panels ------------------------------------------------------
 VALIDATION_PANELS <- list(
