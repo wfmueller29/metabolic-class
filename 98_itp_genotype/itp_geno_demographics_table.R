@@ -119,7 +119,7 @@ build_table <- function(src) {
 
     # total row
     rows[[length(rows) + 1]] <- data.frame(
-      Stratum = stratum, Row = "total",
+      Stratum = stratum, Row = "Total",
       c_n = as.character(cN),
       c_fem = if (has_sex) as.character(c_f_tot) else "",
       c_male = if (has_sex) as.character(c_m_tot) else "",
@@ -135,7 +135,7 @@ build_table <- function(src) {
     chi_sex_t <- if (has_sex) suppressWarnings(chisq.test(table(t_df$new_class_bw, t_df$sex_F))$p.value) else NA
     chi_tx_t  <- if (length(unique(t_df$new_class_bw)) > 1) suppressWarnings(chisq.test(table(t_df$new_class_bw, t_df$tx))$p.value) else NA
     rows[[length(rows) + 1]] <- data.frame(
-      Stratum = stratum, Row = "pval",
+      Stratum = stratum, Row = "P value",
       c_n = "NA",
       c_fem = if (has_sex) fmt_p(chi_sex_c) else "",
       c_male = if (has_sex) fmt_p(chi_sex_c) else "",
