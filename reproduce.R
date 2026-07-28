@@ -51,18 +51,6 @@ for (yaml in yaml_files) {
 }
 
 # Downstream analyses ---------------------------------------------------------
-# The 90-99 series, in dependency order. Each runs as its own Rscript from its
-# own directory, because they all use paths relative to themselves (../04_... ,
-# output/...). 99_pub_ready_figs runs LAST of these -- the figure Rmds below
-# read its PNGs, so it has to be built before they render.
-#
-# 88_time_partial_cor and 89_quadratic_test are deliberately NOT run here; they
-# are exploratory and not part of the manuscript output.
-#
-# Two analyses need a file that the pipeline cannot regenerate, dropped in by
-# hand (see README): 95 needs 95_healthcard_cod/data/SLAM Healthcard
-# reconciled.xlsx, and 98 needs 98_itp_genotype/um-het3-rqtl.csvr. Both fail
-# fast with an explicit message if it is missing.
 analyses <- list(
   list(tag = "90_med_max_le",          dir = "90_med_max_le",          script = "med_max_le.R",           type = "source"),
   list(tag = "91_partial_correlation", dir = "91_partial_correlation", script = "partial_corr.R",         type = "source"),
@@ -74,7 +62,7 @@ analyses <- list(
   list(tag = "97_treatment_response",  dir = "97_treatment_response",  script = "treatment_response.Rmd", type = "render"),
   list(tag = "98_prep_census",         dir = "98_itp_genotype",        script = "prep_census.R",          type = "source"),
   list(tag = "98_trajectory",          dir = "98_itp_genotype",        script = "trajectory.R",           type = "source"),
-  list(tag = "99_pub_ready_figs",      dir = "99_pub_ready_figs",      script = "pub_ready_figs.R",       type = "source")
+  list(tag = "98_geno_demographics",   dir = "98_itp_genotype",        script = "itp_geno_demographics_table.R", type = "source")
 )
 
 repo_root <- getwd()
@@ -91,17 +79,11 @@ for (a in analyses) {
 }
 
 # Figures ---------------------------------------------------------------------
-# figures/output is gitignored, so it does not exist on a fresh clone or after a
-# wipe; rmarkdown does not create output_dir for you.
 if (!dir.exists("figures/output")) dir.create("figures/output", recursive = TRUE)
 
-rmarkdown::render("figures/primary_figures.Rmd",
-  output_format = "pdf_document",
-  output_dir = "figures/output",
-  output_file = "Primary Figures.pdf"
-)
-rmarkdown::render("figures/sup_figures.Rmd",
-  output_format = "pdf_document",
-  output_dir = "figures/output",
-  output_file = "Supplemental Material.pdf"
-)
+setwd("99_pub_ready_figs/")
+ecode <- system2("Rscript", "pub_ready_figs.R")
+if (ecode != 0) stop(paste("Error in pub_ready_figs.R"))
+setwd("..")
+
+rmarkdown::render("figures/final_figure_deck.Rmd")
