@@ -861,8 +861,14 @@ fmt_p <- function(p) {
   )
 }
 
+# round() alone turns 0.996 into "100%", which reads as "every resample" when 4
+# in 1000 were not protective. Never let a rounded percentage claim an extreme
+# it has not actually reached; short of all/none it is reported as a bound.
 fmt_pct <- function(x) {
-  paste0(round(100 * x), "%")
+  p <- 100 * x
+  if (x < 1 && round(p) >= 100) return(">99%")
+  if (x > 0 && round(p) <= 0)   return("<1%")
+  paste0(round(p), "%")
 }
 
 

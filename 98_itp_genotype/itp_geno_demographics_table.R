@@ -38,10 +38,22 @@ SRC_LOCAL <- "output"
 SRC_REF   <- Sys.getenv("ITP_GENO_REF_CENSUS", unset = NA)
 
 CLASSES <- 1:3
-r0 <- function(x) if (length(x) == 0 || is.na(x)) "NA" else as.character(round(x))
+# Cells that carry no value print an en dash, matching Table 1 in the paper
+# (which uses "–" for the Total/p-value cells that do not apply). "NA" reads as
+# missing data rather than not-applicable.
+DASH <- "–"
+
+r0 <- function(x) if (length(x) == 0 || is.na(x)) DASH else as.character(round(x))
 cnt <- function(df, cls, mask) sum(df$new_class_bw == cls & mask)
 pct <- function(k, tot) if (is.na(k) || is.na(tot) || tot == 0) "" else sprintf(" (%.1f%%)", 100 * k / tot)
-fmt_p <- function(p) if (length(p) == 0 || is.na(p)) "NA" else formatC(p, format = "e", digits = 2)
+# Scientific notation only where it earns its keep. Forcing it on every p-value
+# turned 0.1791 into "1.79e-01", which is harder to read and disagrees with the
+# convention stated on S1G ("p-values < 0.001 are written in scientific
+# notation"). Below that cutoff keep the exponent; at or above it, plain digits.
+fmt_p <- function(p) {
+  if (length(p) == 0 || is.na(p)) return(DASH)
+  if (p < 0.001) formatC(p, format = "e", digits = 2) else formatC(p, format = "g", digits = 4)
+}
 
 # median survival "med (lcl, ucl)" per class (named by class number, 1..3)
 med_surv <- function(df) {
@@ -103,7 +115,7 @@ build_table <- function(src) {
 
       rows[[length(rows) + 1]] <- data.frame(
         Stratum = stratum, Row = paste("Class", cl),
-        c_n    = if (pc) as.character(cn) else "---",
+        c_n    = if (pc) paste0(cn, pct(cn, cN)) else "---",
         c_fem  = if (has_sex) (if (pc) paste0(cf, pct(cf, c_f_tot)) else "---") else "",
         c_male = if (has_sex) (if (pc) paste0(cm, pct(cm, c_m_tot)) else "---") else "",
         c_med  = if (pc) c_med[as.character(cl)] else "---",
@@ -123,10 +135,10 @@ build_table <- function(src) {
       c_n = as.character(cN),
       c_fem = if (has_sex) as.character(c_f_tot) else "",
       c_male = if (has_sex) as.character(c_m_tot) else "",
-      c_med = "", t_n = as.character(tN),
+      c_med = DASH, t_n = as.character(tN),
       t_fem = if (has_sex) as.character(t_f_tot) else "",
       t_male = if (has_sex) as.character(t_m_tot) else "",
-      t_ctrl = as.character(t_ctrl_tot), t_trt = as.character(t_trt_tot), t_med = "",
+      t_ctrl = as.character(t_ctrl_tot), t_trt = as.character(t_trt_tot), t_med = DASH,
       stringsAsFactors = FALSE, check.names = FALSE
     )
 
@@ -136,13 +148,13 @@ build_table <- function(src) {
     chi_tx_t  <- if (length(unique(t_df$new_class_bw)) > 1) suppressWarnings(chisq.test(table(t_df$new_class_bw, t_df$tx))$p.value) else NA
     rows[[length(rows) + 1]] <- data.frame(
       Stratum = stratum, Row = "P value",
-      c_n = "NA",
+      c_n = DASH,
       c_fem = if (has_sex) fmt_p(chi_sex_c) else "",
       c_male = if (has_sex) fmt_p(chi_sex_c) else "",
-      c_med = "NA", t_n = "NA",
+      c_med = DASH, t_n = DASH,
       t_fem = if (has_sex) fmt_p(chi_sex_t) else "",
       t_male = if (has_sex) fmt_p(chi_sex_t) else "",
-      t_ctrl = fmt_p(chi_tx_t), t_trt = fmt_p(chi_tx_t), t_med = "NA",
+      t_ctrl = fmt_p(chi_tx_t), t_trt = fmt_p(chi_tx_t), t_med = DASH,
       stringsAsFactors = FALSE, check.names = FALSE
     )
 
@@ -157,8 +169,8 @@ save_table_png <- function(tab, path) {
   ft <- flextable(tab)
   ft <- set_header_labels(ft,
     Stratum = "", Row = "",
-    c_n = "n", c_fem = "Female", c_male = "Male", c_med = "Median survival (weeks)",
-    t_n = "n", t_fem = "Female", t_male = "Male",
+    c_n = "n (%)", c_fem = "Female", c_male = "Male", c_med = "Median survival (weeks)",
+    t_n = "n (%)", t_fem = "Female", t_male = "Male",
     t_ctrl = "Control", t_trt = "Treatment", t_med = "Median survival (weeks)"
   )
   ft <- add_header_row(ft, values = c("", "", "Controls", "Treated"), colwidths = c(1, 1, 4, 6))
