@@ -126,20 +126,49 @@ is_full_width <- function(path) grepl("forest", path, fixed = TRUE)
 ```
 
 <!--
-  This deck deliberately loads NO stage-07 workspaces. Every table it shows is
-  produced upstream by ../99_pub_ready_figs/pub_ready_figs.R and referenced as
-  a PNG through figure_spec.R, so the deck depends only on files on disk. The
-  old `load stage outputs` chunk loaded seven workspaces unconditionally and
-  aborted the whole render if any one config had not run yet -- and nothing in
-  the document used them.
+  Every FIGURE PANEL in this deck is a PNG on disk, produced upstream by
+  ../99_pub_ready_figs/pub_ready_figs.R and referenced by path through
+  figure_spec.R -- those need no workspace.
+
+  The TABLES are different. Table 1/2 and Supplemental Tables S1-S5 are built
+  inline by the build() functions in figure_spec.R's TABLES list, and those read
+  all_env / itp_env / held_out_env. An earlier revision dropped the workspace
+  load on the grounds that "nothing in the document used them", which was true
+  of the panels but not of these tables -- every table then rendered as
+  "FAILED: object 'all_env' not found". The chunk below puts them back.
+
+  It loads only the three workspaces the tables actually reference (not the
+  seven the old chunk pulled in), and a missing one is reported and skipped
+  rather than aborting the render, so a partially-run pipeline still produces a
+  deck -- the affected table alone reports FAILED.
 -->
 
-<!--
-  Tables are NOT built here any more. They are produced by
-  ../99_pub_ready_figs/pub_ready_figs.R along with every other panel, so that
-  all appearance decisions live in one stage. figure_spec.R references them by
-  path under ../99_pub_ready_figs/output/tables/.
--->
+```{r load table workspaces, echo=FALSE, message=FALSE}
+# Width budget (inches) handed to flextable's fit_to_width() by every build()
+# in figure_spec.R's TABLES. It used to be defined by primary_figures.Rmd /
+# sup_figures.Rmd, which produced the old PDFs; those are gone, so without this
+# the tables error with "comparison (>) is possible only for atomic and list
+# types". This is an HTML page, so the value is generous -- it only governs how
+# hard flextable shrinks a table that would otherwise overflow.
+max_width <- 10
+
+TABLE_ENVS <- c(
+  all_env      = "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/workspace.RDATA",
+  itp_env      = "../07_display_figures/output/itp_c10c11c13c16_age_controls_bw/workspace.RDATA",
+  held_out_env = "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/workspace.RDATA"
+)
+
+for (nm in names(TABLE_ENVS)) {
+  path <- TABLE_ENVS[[nm]]
+  if (!file.exists(path)) {
+    message("table workspace missing, tables using ", nm, " will report FAILED: ", path)
+    next
+  }
+  e <- new.env()
+  load(path, envir = e)
+  assign(nm, e)
+}
+```
 
 ```{r table-setup, echo=FALSE}
 # Table rendering is DEFINED here but the tables render AFTER the figures, to
@@ -173,19 +202,35 @@ for (tb in TABLES) {
   cat("\n\n## ", label, ". ", tb$title, "\n\n", sep = "")
   if (!is.null(tb$note)) cat("\n> *", tb$note, "*\n\n", sep = "")
 
-  out <- tryCatch(tb$build(), error = function(e) e)
-  if (inherits(out, "error")) {
-    cat("\n*FAILED: ", conditionMessage(out), "*\n\n", sep = "")
+  # NOT named `out`: the figures loop above leaves an `out` (a PNG file path) in
+  # the knit environment, so a local of that name here invites confusion.
+  ft_out <- tryCatch(tb$build(), error = function(e) e)
+  if (inherits(ft_out, "error")) {
+    cat("\n*FAILED: ", conditionMessage(ft_out), "*\n\n", sep = "")
     next
   }
 
-  # build() may return a flextable (already themed) or a plain data frame
-  if (inherits(out, "flextable")) {
-    cat(knitr::knit_child(text = "`r knitr::asis_output(flextable::htmltools_value(out))`",
-                          quiet = TRUE), "\n")
+  # flextable_to_rmd() is flextable's own emitter for asis chunks: it writes the
+  # right markup for the current output format. The previous
+  # asis_output(htmltools_value(...)) handed knitr an htmltools object rather
+  # than a string, which knitr rendered structurally -- that is where the stray
+  # 'NULL, list(name = "style", attribs = list(), ...)' text came from.
+  emit <- function(x) {
+    if (inherits(x, "flextable")) {
+      flextable::flextable_to_rmd(x)
+      cat("\n\n")
+    } else {
+      print(knitr::kable(x))
+      cat("\n")
+    }
+  }
+
+  # build() returns a flextable, a plain data frame, or -- for Table S2, which
+  # is three stacked LCM blocks (Body Weight / Fat Mass / FBG) -- a LIST of them.
+  if (is.list(ft_out) && !inherits(ft_out, "flextable") && !is.data.frame(ft_out)) {
+    for (part in ft_out) emit(part)
   } else {
-    print(knitr::kable(out))
-    cat("\n")
+    emit(ft_out)
   }
 }
 }

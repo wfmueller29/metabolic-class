@@ -359,8 +359,6 @@ TABLES <- list(
         autofit() %>%
         set_table_properties(layout = "autofit") %>%
         fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-
-      tab_no <- 1 + tab_no
     }
   ),
   list(
@@ -376,8 +374,6 @@ TABLES <- list(
         autofit() %>%
         set_table_properties(layout = "autofit") %>%
         fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-
-      tab_no <- 1 + tab_no
     }
   ),
   list(
@@ -391,8 +387,6 @@ TABLES <- list(
         set_table_properties(layout = "autofit") %>%
         fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
-
-      tab_no <- 1 + tab_no
     }
   ),
   list(
@@ -443,11 +437,11 @@ TABLES <- list(
           fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
       })
 
-      lme_coef_table[[1]]
-      lme_coef_table[[2]]
-      lme_coef_table[[3]]
-
-      tab_no <- 1 + tab_no
+      # All THREE blocks (LCM for Body Weight / Fat Mass / FBG), returned as a
+      # list. Listing them as bare expressions only ever returned the last one,
+      # so the deck showed the FBG block alone -- a holdover from the old PDF
+      # Rmd, where each top-level line auto-printed.
+      lme_coef_table
     }
   ),
   list(
@@ -463,8 +457,6 @@ TABLES <- list(
         autofit() %>%
         set_table_properties(layout = "autofit") %>%
         fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-
-      tab_no <- 1 + tab_no
     }
   ),
   list(
@@ -477,8 +469,6 @@ TABLES <- list(
         autofit() %>%
         set_table_properties(layout = "autofit") %>%
         fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-
-      tab_no <- 1 + tab_no
     }
   ),
   list(
@@ -494,8 +484,6 @@ TABLES <- list(
         autofit() %>%
         set_table_properties(layout = "autofit") %>%
         fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-
-      tab_no <- 1 + tab_no
     }
   ),
   list(
@@ -508,8 +496,6 @@ TABLES <- list(
         autofit() %>%
         set_table_properties(layout = "autofit") %>%
         fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-
-      tab_no <- 1 + tab_no
     }
   ),
   list(
@@ -525,8 +511,6 @@ TABLES <- list(
         autofit() %>%
         set_table_properties(layout = "autofit") %>%
         fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-
-      tab_no <- 1 + tab_no
     }
   ),
   list(
@@ -540,8 +524,6 @@ TABLES <- list(
         set_table_properties(layout = "autofit") %>%
         fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
-
-      tab_no <- 1 + tab_no
     }
   ),
   list(
@@ -554,8 +536,6 @@ TABLES <- list(
         autofit() %>%
         set_table_properties(layout = "autofit") %>%
         fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-
-      tab_no <- 1 + tab_no
     }
   ),
   list(
@@ -569,8 +549,6 @@ TABLES <- list(
         set_table_properties(layout = "autofit") %>%
         fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
-
-      tab_no <- 1 + tab_no
     }
   ),
   list(
@@ -583,8 +561,6 @@ TABLES <- list(
         autofit() %>%
         set_table_properties(layout = "autofit") %>%
         fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-
-      tab_no <- 1 + tab_no
     }
   ),
   list(
@@ -599,8 +575,6 @@ TABLES <- list(
         set_table_properties(layout = "autofit") %>%
         fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
-
-      tab_no <- 1 + tab_no
     }
   ),
   list(
@@ -617,8 +591,6 @@ TABLES <- list(
         autofit() %>%
         set_table_properties(layout = "autofit") %>%
         fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-
-      tab_no <- 1 + tab_no
     }
   )
 )
