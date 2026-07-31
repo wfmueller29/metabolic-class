@@ -115,6 +115,10 @@ for (i in 2:length(vars)) {
       "cor_auto coef" = round(estB[i, j], 3),
       "cor_auto p" = signif(pB[i, j], 2),
       "Delta coef" = round(estB[i, j] - estA[i, j], 3),
+      # raw Pearson estimate, carried for the canonical guard below and dropped
+      # before rendering. Must round from the RAW value, not from the 3-dp
+      # display value -- round(round(-0.1053, 3), 2) is -0.10, not -0.11.
+      .rawA = estA[i, j],
       check.names = FALSE, stringsAsFactors = FALSE
     )
   }
@@ -122,6 +126,38 @@ for (i in 2:length(vars)) {
 comp <- do.call(rbind, rows)
 comp <- comp[order(-abs(comp$"Pearson coef")), ]
 rownames(comp) <- NULL
+
+# --- guard: the Pearson column MUST reproduce canonical Figure S3C ----------
+# partial_corr.R writes output/partial_correlation_results.csv off this same
+# census; that file is the table rendered as Figure S3C. If the census or the
+# BLAS drifts, this figure would silently benchmark cor_auto against a
+# NON-canonical Pearson baseline, so fail loudly instead of shipping it.
+canon_f <- "output/partial_correlation_results.csv"
+if (!file.exists(canon_f)) stop("canonical benchmark missing: ", canon_f)
+canon <- read.csv(canon_f, check.names = FALSE)
+k_can <- paste(canon[["Variable 1 (Class)"]], canon[["Variable 2 (Class)"]], sep = " | ")
+k_new <- paste(comp[["Variable 1 (Class)"]], comp[["Variable 2 (Class)"]], sep = " | ")
+m <- match(k_new, k_can)
+if (anyNA(m)) stop("variable pairs do not match the canonical table")
+r_new <- round(comp$.rawA, 2) # canonical CSV rounds the raw estimate to 2 dp
+p_new <- comp$"Pearson p" # both are signif(, 2)
+bad <- which(abs(r_new - canon$"Corr."[m]) > 1e-8 |
+  abs(p_new - canon$"P value"[m]) > 1e-8 * pmax(p_new, canon$"P value"[m]))
+if (length(bad)) {
+  print(data.frame(
+    pair = k_new[bad],
+    canonical_r = canon$"Corr."[m][bad], this_run_r = r_new[bad],
+    canonical_p = canon$"P value"[m][bad], this_run_p = p_new[bad],
+    check.names = FALSE
+  ), row.names = FALSE)
+  stop(
+    "Pearson column does NOT reproduce canonical Figure S3C. The census or the\n",
+    "  environment has drifted -- do not use this figure. Run under the pinned\n",
+    "  arm64 R 4.4.2 / reference BLAS (see .envrc) against the canonical census."
+  )
+}
+cat("guard OK: Pearson column reproduces canonical Figure S3C (", nrow(comp), " pairs).\n", sep = "")
+comp$.rawA <- NULL # guard-only column, not for display
 
 # render table (with title + footnote) to its own PNG at its natural size
 tg <- tableGrob(comp, rows = NULL)
