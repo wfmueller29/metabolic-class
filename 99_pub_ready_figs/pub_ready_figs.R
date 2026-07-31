@@ -426,7 +426,10 @@ assemble_itp_composite(
   file.path("output", "itp_geno_composite", "controls.png"))
 assemble_itp_composite(
   c("itp_geno_tx_env", "itp_geno_tx_f_env", "itp_geno_tx_m_env"),
-  c("Unstratified", "Females", "Males"), "Treated",
+  # The *_tx_* configs model controls AND NDE-treated mice together (n = 5118 =
+  # 2395 control + 2723 treated), so this block is NOT treated-only -- label it
+  # to match the S9 legend ("combined control and NDE-treated mice").
+  c("Unstratified", "Females", "Males"), "Controls + Treated",
   file.path("output", "itp_geno_composite", "treated.png"))
 
 # ---- validation panels ------------------------------------------------------

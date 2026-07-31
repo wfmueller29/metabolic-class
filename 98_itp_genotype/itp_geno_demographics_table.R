@@ -173,7 +173,11 @@ save_table_png <- function(tab, path) {
     t_n = "n (%)", t_fem = "Female", t_male = "Male",
     t_ctrl = "Control", t_trt = "Treatment", t_med = "Median survival (weeks)"
   )
-  ft <- add_header_row(ft, values = c("", "", "Controls", "Treated"), colwidths = c(1, 1, 4, 6))
+  # Second block comes from the *_tx_* censuses, which contain controls AND
+  # NDE-treated mice (n = 5118 = 2395 control + 2723 treatment -- hence the
+  # Control/Treatment split columns). "Treated" alone would contradict the
+  # legend and the n = 2,723 stated there.
+  ft <- add_header_row(ft, values = c("", "", "Controls", "Controls + Treated"), colwidths = c(1, 1, 4, 6))
   ft <- merge_v(ft, j = "Stratum")
   ft <- theme_booktabs(ft)
   ft <- align(ft, align = "center", part = "all")
