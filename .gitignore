@@ -30,6 +30,7 @@ rerun_cleaning_and_compare.R
 
 .envrc
 .direnv/
+.vscode/
 
 # Manually-provisioned raw inputs for the 90s-series analyses.
 # These are the only files the pipeline cannot regenerate; they are too large /
