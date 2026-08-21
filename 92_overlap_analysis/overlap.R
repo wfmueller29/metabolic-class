@@ -12,7 +12,20 @@ library(UpSetR)
 # All figures from this stage go under output/, as in every other stage.
 if (!dir.exists("output")) dir.create("output", recursive = TRUE)
 
-census <- read.csv("../04_create_census/output/slam_c1-c10_age_all_bwfatgluc/train_census.csv")
+# Complete C1-10 census (n = 1,315), NOT the 80% training split. This analysis is
+# descriptive -- it asks how far three independently fitted class assignments
+# agree -- so it fits nothing and predicts nothing, and the train/test split does
+# no work here. Using the complete set also matches the Methods ("across all
+# animals with complete class assignments") and the partial-correlation panels
+# S3B/S3C, which read this same file. C16-18 are excluded either way.
+#
+# CAUTION on the file names: "train_census.csv" means different things per config.
+# Here (internal) it is an 80% SAMPLE WITHIN C1-10 -- 1,056 of 1,315, cohorts 1-10
+# on both sides of the split. In the external config
+# (slam_c1-10_x_slam_c16-18) "train" instead means ALL of C1-10 (1,315) with
+# C16-18 held out as test. Same file name, different meaning -- this is also why
+# Fig 4B ("Complete") and Fig S6H ("Training") render identical statistics.
+census <- read.csv("../04_create_census/output/slam_c1-c10_age_all_bwfatgluc/complete_census.csv")
 
 
 ari_bw_fat <- adjustedRandIndex(
@@ -147,8 +160,8 @@ for (i in seq_along(risk_df)) {
 }
 
 dimnames(ari_risk_mat) <- list(
-  c("BW High Risk", "FM High Risk", "FBG High Risk"),
-  c("BW High Risk", "FM High Risk", "FBG High Risk")
+  c("BW high-risk", "FM high-risk", "FBG high-risk"),
+  c("BW high-risk", "FM high-risk", "FBG high-risk")
 )
 
 ari_risk_mat
@@ -228,8 +241,8 @@ for (i in seq_along(risk_df)) {
 }
 
 dimnames(jaccard_risk_mat) <- list(
-  c("BW High Risk", "FM High Risk", "FBG High Risk"),
-  c("BW High Risk", "FM High Risk", "FBG High Risk")
+  c("BW high-risk", "FM high-risk", "FBG high-risk"),
+  c("BW high-risk", "FM high-risk", "FBG high-risk")
 )
 
 jaccard_risk_mat
@@ -267,9 +280,9 @@ upset_data <- census_risk[, c(
 )]
 
 names(upset_data) <- c(
-  "BW High Risk",
-  "FM High Risk",
-  "FBG High Risk"
+  "BW high-risk",
+  "FM high-risk",
+  "FBG high-risk"
 )
 
 png(
@@ -286,7 +299,7 @@ png(
 # auto-print, so the device stayed blank. Forcing print() commits it to the png.
 print(upset(
   upset_data,
-  sets = c("BW High Risk", "FM High Risk", "FBG High Risk"),
+  sets = c("BW high-risk", "FM high-risk", "FBG high-risk"),
   order.by = "freq",
   text.scale = 1.5
 ))
@@ -396,7 +409,9 @@ cph <- hr_burden_stats[[3]]                # summary.coxph object
 star <- function(p) {
   if (p < .001) "***" else if (p < .01) "**" else if (p < .05) "*" else ""
 }
-fmt2 <- function(x) format(round(x, 2), nsmall = 2)
+# Four decimals to match every other HR table in the deck (1N, 2I, 5D, 5I,
+# S1H, S4I, S4R). Name kept as fmt2 for the call sites below.
+fmt2 <- function(x) format(round(x, 4), nsmall = 4)
 
 hr_strings <- vapply(seq_len(nrow(cph$conf.int)), function(i) {
   hr <- fmt2(cph$conf.int[i, "exp(coef)"])

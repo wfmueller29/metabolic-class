@@ -44,9 +44,9 @@ output:
       "3" = "#5087fe" # blue
     )
     class_colors_final <- c(
-      "Early-Peak-BW" = "#000", # black
-      "Stable BW"     = "#d53b59", # red
-      "Mid-Peak-BW"   = "#53ca3e" # green
+      "Class 1" = "#000", # black
+      "Class 2" = "#d53b59", # red
+      "Class 3" = "#53ca3e" # green
     )
     bin_colors <- c(
       "0" = "#74ae66", # green
@@ -1063,9 +1063,9 @@ output:
       df %>%
         mutate({{ var }} := recode_factor(
           {{ var }},
-          "1" = "Early-Peak-BW",
-          "2" = "Stable BW",
-          "3" = "Mid-Peak-BW"
+          "1" = "Class 1",
+          "2" = "Class 2",
+          "3" = "Class 3"
         ))
     }
   # Apply to relevant datasets
@@ -1134,13 +1134,10 @@ output:
       final_plot_theme
 
   # Finalize version of S8E (cumulative incidence of HCs, all mice)
+    # Columns already arrive as "Class 1"/"Class 2"/"Class 3"; the descriptor
+    # recode that used to sit here was dropped so S8 labels its classes the same
+    # way every other figure does.
     condition_matrix_norm_renamed <- condition_matrix_norm
-    colnames(condition_matrix_norm_renamed) <- recode(
-      colnames(condition_matrix_norm_renamed),
-      "Class 1" = "Early-Peak-BW",
-      "Class 2" = "Stable BW",
-      "Class 3" = "Mid-Peak-BW"
-    )
     S8E <- pheatmap::pheatmap(
       condition_matrix_norm_renamed,
       scale = "none", # Fix inconsistent coloring
