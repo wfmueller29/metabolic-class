@@ -84,9 +84,11 @@ plots <- lapply(classes, function(class) {
       labels = c("Control", "Rapamycin"),
       values = c("tx=control" = "#0096ff", "tx=rapa" = "#ff5147")
     ) +
-    # Override the package default "Survival Probability": axis titles are
-    # sentence case throughout the deck. Applied here rather than upstream.
-    ggplot2::labs(y = "Survival probability") +
+    # Override the package defaults "Survival Probability" and "Age (Weeks) ":
+    # axis titles are sentence case throughout the deck. 99's CANON normaliser
+    # does this for every panel IT writes, but these come from 97, so they are
+    # set here instead. Applied downstream rather than upstream.
+    ggplot2::labs(y = "Survival probability", x = "Age (weeks)") +
     ggplot2::theme_bw() +
     ggplot2::coord_cartesian(xlim = c(0, 200), ylim = c(0, NA))
 
@@ -382,9 +384,11 @@ plots <- lapply(classes, function(class) {
       labels = c("Control", "Rapamycin"),
       values = c("tx=control" = "#0096ff", "tx=rapa" = "#ff5147")
     ) +
-    # Override the package default "Survival Probability": axis titles are
-    # sentence case throughout the deck. Applied here rather than upstream.
-    ggplot2::labs(y = "Survival probability") +
+    # Override the package defaults "Survival Probability" and "Age (Weeks) ":
+    # axis titles are sentence case throughout the deck. 99's CANON normaliser
+    # does this for every panel IT writes, but these come from 97, so they are
+    # set here instead. Applied downstream rather than upstream.
+    ggplot2::labs(y = "Survival probability", x = "Age (weeks)") +
     ggplot2::theme_bw() +
     ggplot2::coord_cartesian(xlim = c(0, 200), ylim = c(0, NA))
 
@@ -901,7 +905,11 @@ hr_table <- data.frame(
     )
   ),
   `p-value / Robustness` = c(
-    paste0("p = ", fmt_p(full_p)),
+    # fmt_p returns "<0.001" for small p, so prepending "p = " produced
+    # "p = <0.001" -- two relational operators. Below the threshold the operator
+    # IS the statement, so drop the "=". (fmt_p is left alone: its other call
+    # site fills a bare cell under a "p-value" header, where "<0.001" is right.)
+    if (!is.na(full_p) && full_p < 0.001) "p < 0.001" else paste0("p = ", fmt_p(full_p)),
     paste0(
       "HR < 1 in ", fmt_pct(prop_protective),
       "; p < 0.05 in ", fmt_pct(prop_significant)
