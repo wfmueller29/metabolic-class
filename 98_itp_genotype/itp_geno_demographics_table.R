@@ -115,16 +115,16 @@ build_table <- function(src) {
 
       rows[[length(rows) + 1]] <- data.frame(
         Stratum = stratum, Row = paste("Class", cl),
-        c_n    = if (pc) paste0(cn, pct(cn, cN)) else "---",
-        c_fem  = if (has_sex) (if (pc) paste0(cf, pct(cf, c_f_tot)) else "---") else "",
-        c_male = if (has_sex) (if (pc) paste0(cm, pct(cm, c_m_tot)) else "---") else "",
-        c_med  = if (pc) c_med[as.character(cl)] else "---",
-        t_n    = if (pt) paste0(tn, pct(tn, tN)) else "---",
-        t_fem  = if (has_sex) (if (pt) paste0(tf, pct(tf, t_f_tot)) else "---") else "",
-        t_male = if (has_sex) (if (pt) paste0(tm, pct(tm, t_m_tot)) else "---") else "",
-        t_ctrl = if (pt) paste0(tc, pct(tc, t_ctrl_tot)) else "---",
-        t_trt  = if (pt) paste0(tt, pct(tt, t_trt_tot)) else "---",
-        t_med  = if (pt) t_med[as.character(cl)] else "---",
+        c_n    = if (pc) paste0(cn, pct(cn, cN)) else DASH,
+        c_fem  = if (has_sex) (if (pc) paste0(cf, pct(cf, c_f_tot)) else DASH) else "",
+        c_male = if (has_sex) (if (pc) paste0(cm, pct(cm, c_m_tot)) else DASH) else "",
+        c_med  = if (pc) c_med[as.character(cl)] else DASH,
+        t_n    = if (pt) paste0(tn, pct(tn, tN)) else DASH,
+        t_fem  = if (has_sex) (if (pt) paste0(tf, pct(tf, t_f_tot)) else DASH) else "",
+        t_male = if (has_sex) (if (pt) paste0(tm, pct(tm, t_m_tot)) else DASH) else "",
+        t_ctrl = if (pt) paste0(tc, pct(tc, t_ctrl_tot)) else DASH,
+        t_trt  = if (pt) paste0(tt, pct(tt, t_trt_tot)) else DASH,
+        t_med  = if (pt) t_med[as.character(cl)] else DASH,
         stringsAsFactors = FALSE, check.names = FALSE
       )
     }
@@ -147,7 +147,7 @@ build_table <- function(src) {
     chi_sex_t <- if (has_sex) suppressWarnings(chisq.test(table(t_df$new_class_bw, t_df$sex_F))$p.value) else NA
     chi_tx_t  <- if (length(unique(t_df$new_class_bw)) > 1) suppressWarnings(chisq.test(table(t_df$new_class_bw, t_df$tx))$p.value) else NA
     rows[[length(rows) + 1]] <- data.frame(
-      Stratum = stratum, Row = "P value",
+      Stratum = stratum, Row = "p-value",
       c_n = DASH,
       c_fem = if (has_sex) fmt_p(chi_sex_c) else "",
       c_male = if (has_sex) fmt_p(chi_sex_c) else "",
@@ -169,9 +169,9 @@ save_table_png <- function(tab, path) {
   ft <- flextable(tab)
   ft <- set_header_labels(ft,
     Stratum = "", Row = "",
-    c_n = "n (%)", c_fem = "Female", c_male = "Male", c_med = "Median survival (weeks)",
+    c_n = "n (%)", c_fem = "Female", c_male = "Male", c_med = "Median Survival (weeks)",
     t_n = "n (%)", t_fem = "Female", t_male = "Male",
-    t_ctrl = "Control", t_trt = "Treatment", t_med = "Median survival (weeks)"
+    t_ctrl = "Control", t_trt = "Treatment", t_med = "Median Survival (weeks)"
   )
   # Second block comes from the *_tx_* censuses, which contain controls AND
   # NDE-treated mice (n = 5118 = 2395 control + 2723 treatment -- hence the

@@ -173,7 +173,10 @@ CANON <- list(
   # KM must match these two strings by hand -- 92_overlap_analysis writes its
   # PNG directly and so is the one place that has to be kept in step.
   list(pattern = "^age *\\(weeks?\\)$",     label = "Age (weeks)"),
-  list(pattern = "^survival probability$",  label = "Survival probability")
+  list(pattern = "^survival probability$",  label = "Survival probability"),
+  # Forest-panel x axis. Table HEADERS stay Title Case ("Hazard Ratio (CI)");
+  # this is an axis title, so sentence case like every other axis in the deck.
+  list(pattern = "^hazard ratio$",          label = "Hazard ratio")
 )
 
 canonical_label <- function(lab) {
@@ -235,10 +238,13 @@ stars <- function(p) {
 # formatters is invisible until the PNG is rendered.
 format_hr_bare <- function(value, lower, upper, pval, digits = 4) {
   st <- stars(as.numeric(pval))
+  # nsmall MUST equal `digits`. With nsmall = 0 a value whose 4th decimal is a
+  # zero printed short (0.7240 -> "0.724"), leaving a few cells at 3 dp in a
+  # 4 dp column. Verified: those values genuinely carry a trailing zero.
   trimws(sprintf("%s (%s, %s) %s",
-                 format(round(as.numeric(value), digits), nsmall = 0),
-                 format(round(as.numeric(lower), digits), nsmall = 0),
-                 format(round(as.numeric(upper), digits), nsmall = 0), st))
+                 format(round(as.numeric(value), digits), nsmall = digits),
+                 format(round(as.numeric(lower), digits), nsmall = digits),
+                 format(round(as.numeric(upper), digits), nsmall = digits), st))
 }
 
 # Pull one model's rows out of hr_numeric; NULL if 07 did not produce it (the
@@ -456,11 +462,11 @@ for (env_name in names(VALIDATION_ENVS)) {
     g <- if (p$kind == "coef") {
       g + ggplot2::coord_cartesian(ylim = c(-1, 3)) +
         ggplot2::geom_hline(yintercept = 1, linetype = "dotted", colour = "gray40") +
-        ggplot2::ylab("Linear Predictor") + ggplot2::xlab("Upper Bound Age (weeks)")
+        ggplot2::ylab("Linear predictor") + ggplot2::xlab("Upper bound age (weeks)")
     } else {
       g + ggplot2::coord_cartesian(ylim = c(0.4, 0.8)) +
         ggplot2::geom_hline(yintercept = 0.5, linetype = "dotted", colour = "red") +
-        ggplot2::ylab("Concordance") + ggplot2::xlab("Upper Bound Age (weeks)")
+        ggplot2::ylab("Concordance") + ggplot2::xlab("Upper bound age (weeks)")
     }
     save_png(g + ggplot2::theme(legend.position = "none"), out_dir, p$name)
   }
@@ -736,6 +742,22 @@ if (TRUE) {
     # 91 already sorted by descending |correlation|; preserve that order.
     pc[["Corr."]]   <- formatC(pc[["Corr."]], format = "f", digits = 2)
     pc[["P value"]] <- formatC(pc[["P value"]], format = "e", digits = 1)
+
+    # Display-layer only -- 91's CSV is left untouched so its own guard still
+    # matches on the original strings. The manuscript hyphenates class nicknames
+    # throughout ("early-peak-BW"), so the table should too.
+    PC_LABEL_FIX <- c(
+      "Early-peak FM (4)" = "Early-peak-FM (4)",
+      "Early-peak BW (1)" = "Early-peak-BW (1)",
+      "Decline FBG (7)"   = "Decline-FBG (7)"
+    )
+    for (.j in c("Variable 1 (Class)", "Variable 2 (Class)")) {
+      .hit <- pc[[.j]] %in% names(PC_LABEL_FIX)
+      pc[[.j]][.hit] <- unname(PC_LABEL_FIX[pc[[.j]][.hit]])
+    }
+    # "p" is a statistical symbol and stays lowercase; hyphenated per the
+    # manuscript convention.
+    names(pc)[names(pc) == "P value"] <- "p-value"
 
     pc_ft <- flextable(pc) %>%
       fig_table_theme() %>%

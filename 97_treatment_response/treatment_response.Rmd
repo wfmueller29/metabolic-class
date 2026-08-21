@@ -80,10 +80,13 @@ plots <- lapply(classes, function(class) {
   )
   plot <- plot_km$plot$plot +
     ggplot2::scale_color_manual(
-      name = "",
+      name = "Treatment group",
       labels = c("Control", "Rapamycin"),
       values = c("tx=control" = "#0096ff", "tx=rapa" = "#ff5147")
     ) +
+    # Override the package default "Survival Probability": axis titles are
+    # sentence case throughout the deck. Applied here rather than upstream.
+    ggplot2::labs(y = "Survival probability") +
     ggplot2::theme_bw() +
     ggplot2::coord_cartesian(xlim = c(0, 200), ylim = c(0, NA))
 
@@ -375,10 +378,13 @@ plots <- lapply(classes, function(class) {
   )
   plot <- plot_km$plot$plot +
     ggplot2::scale_color_manual(
-      name = "",
+      name = "Treatment group",
       labels = c("Control", "Rapamycin"),
       values = c("tx=control" = "#0096ff", "tx=rapa" = "#ff5147")
     ) +
+    # Override the package default "Survival Probability": axis titles are
+    # sentence case throughout the deck. Applied here rather than upstream.
+    ggplot2::labs(y = "Survival probability") +
     ggplot2::theme_bw() +
     ggplot2::coord_cartesian(xlim = c(0, 200), ylim = c(0, NA))
 
@@ -866,8 +872,8 @@ fmt_p <- function(p) {
 # it has not actually reached; short of all/none it is reported as a bound.
 fmt_pct <- function(x) {
   p <- 100 * x
-  if (x < 1 && round(p) >= 100) return(">99%")
-  if (x > 0 && round(p) <= 0)   return("<1%")
+  if (x < 1 && round(p) >= 100) return("> 99%")
+  if (x > 0 && round(p) <= 0)   return("< 1%")
   paste0(round(p), "%")
 }
 
@@ -879,7 +885,7 @@ hr_table <- data.frame(
     "Full Class 2 cohort",
     "Class 2 downsampled sensitivity analysis"
   ),
-  `Sample size` = c(
+  `Sample Size` = c(
     paste0(full_n, " animals; ", full_events, " events"),
     paste0(downsample_n, " animals per resample")
   ),
@@ -894,7 +900,7 @@ hr_table <- data.frame(
       fmt_num(down_lower_hr, 2), "–", fmt_num(down_upper_hr, 2)
     )
   ),
-  `p-value / robustness` = c(
+  `p-value / Robustness` = c(
     paste0("p = ", fmt_p(full_p)),
     paste0(
       "HR < 1 in ", fmt_pct(prop_protective),
@@ -932,7 +938,7 @@ ft <- flextable::footnote(
 
 ft <- flextable::footnote(
   ft,
-  i = 2, j = "Sample size", part = "header",
+  i = 2, j = "Sample Size", part = "header",
   value = as_paragraph(
     "Downsampled estimates are based on repeated random sampling of Class 2 to n = 85."
   ),

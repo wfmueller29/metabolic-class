@@ -322,7 +322,7 @@ source("../07_display_figures/R/surv_all.R")
 # Each high-risk "class" belongs to a different phenotype (BW / FM / FBG), and a
 # mouse can be high-risk in at most one class per phenotype, so the count is the
 # number of high-risk PHENOTYPES (0-3). Rename here to taste.
-burden_title  <- "No. of high-risk phenotypes"   # HR-table column header
+burden_title  <- "No. of High-Risk Phenotypes"   # HR-table column header
 burden_legend <- "High-risk phenotypes"          # KM legend title
 
 # census_risk is already the single shared complete-case frame (built near the
