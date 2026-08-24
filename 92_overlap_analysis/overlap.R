@@ -90,12 +90,13 @@ ari_ft <- flextable(ari_df) %>%
   bold(part = "header") %>%
   # NOTE: save_as_image() DROPS flextable captions -- verified against the
   # rendered PNGs (this table and the one at ~189 both export titleless despite
-  # having captions here). So this string never reaches S3D. The visible "Rand
-  # Index, All Classes" title in the composite deck is typeset by the figure
-  # maintainer, and revision card 3 is a composite-level instruction, not a code
-  # one. Kept short and correct for any future HTML/docx render of this table;
-  # do not "fix" S3D's title here, it will have no effect.
-  set_caption("Rand Index, All Classes")
+  # having captions here). So this string never reaches S3D. The visible
+  # "Adjusted Rand Index, All Classes" title in the composite deck is typeset by
+  # the figure maintainer, so it is a composite-level instruction, not a code one.
+  # Kept accurate here for any future HTML/docx render of this table; changing it
+  # will NOT change S3D. To bake the title into the PNG instead, swap this for
+  # add_header_lines() as done at ~197 -- but then the maintainer must drop his.
+  set_caption("Adjusted Rand Index, All Classes")
 
 # Preview in RStudio Viewer
 # ari_ft   # (auto-print suppressed; values are in the S3 block at the end)
@@ -194,7 +195,7 @@ ari_risk_ft <- flextable(ari_risk_df) %>%
   bold(part = "header") %>%
   # add_header_lines(), not set_caption(): save_as_image() drops captions,
   # but a header row renders. These two are pasted into the response doc.
-  add_header_lines("Rand Index, High risk vs. non-high risk") %>%
+  add_header_lines("Adjusted Rand Index, High risk vs. non-high risk") %>%
   align(i = 1, align = "center", part = "header") %>%
   bold(i = 1, part = "header")
 
