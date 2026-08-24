@@ -1,12 +1,12 @@
 # In this analysis we will investigate the overlap between classes
 # We will use the Rand index
 
-library(consoler)
-library(mclust)
-library(flextable)
-library(magrittr)
-library(webshot2)
-library(UpSetR)
+suppressPackageStartupMessages(library(consoler))
+suppressPackageStartupMessages(library(mclust))
+suppressPackageStartupMessages(library(flextable))
+suppressPackageStartupMessages(library(magrittr))
+suppressPackageStartupMessages(library(webshot2))
+suppressPackageStartupMessages(library(UpSetR))
 
 # load data -------------------------------------------------------------------
 # All figures from this stage go under output/, as in every other stage.
@@ -43,9 +43,9 @@ ari_fat_gluc <- adjustedRandIndex(
   census$new_class_gluc
 )
 
-ari_bw_fat
-ari_bw_gluc
-ari_fat_gluc
+# ari_bw_fat   # (auto-print suppressed; values are in the S3 block at the end)
+# ari_bw_gluc   # (auto-print suppressed; values are in the S3 block at the end)
+# ari_fat_gluc   # (auto-print suppressed; values are in the S3 block at the end)
 
 # make pairwise matrix --------------------------------------------------------
 class_df <- census[, c("new_class_bw", "new_class_fat", "new_class_gluc")]
@@ -64,7 +64,7 @@ for (i in seq_along(class_df)) {
   }
 }
 
-ari_mat
+# ari_mat   # (auto-print suppressed; values are in the S3 block at the end)
 
 
 dimnames(ari_mat) <- list(
@@ -98,16 +98,16 @@ ari_ft <- flextable(ari_df) %>%
   set_caption("Rand Index, All Classes")
 
 # Preview in RStudio Viewer
-ari_ft
+# ari_ft   # (auto-print suppressed; values are in the S3 block at the end)
 
-save_as_image(
+invisible(save_as_image(
   ari_ft,
   path = "output/ari_matrix.png",
   # res = 600 to match the HR table below and the table exports in 99.
   # Without it flextable defaults to 200, which put S3D at 831 px -- ~119 dpi
   # at full column width, below the 300 dpi floor for a submitted panel.
   res = 600
-)
+))
 
 # redo analysis comparing just high risk to non-high risk groups
 # NOTE: Class 1, 4, and 7 are the high risk groups
@@ -142,9 +142,9 @@ ari_fat_gluc_risk <- adjustedRandIndex(
   census_risk$gluc_high_risk
 )
 
-ari_bw_fat_risk
-ari_bw_gluc_risk
-ari_fat_gluc_risk
+# ari_bw_fat_risk   # (auto-print suppressed; values are in the S3 block at the end)
+# ari_bw_gluc_risk   # (auto-print suppressed; values are in the S3 block at the end)
+# ari_fat_gluc_risk   # (auto-print suppressed; values are in the S3 block at the end)
 
 
 # Make pairwise matrix ---------------------------------------------------------
@@ -175,7 +175,7 @@ dimnames(ari_risk_mat) <- list(
   c("BW high-risk", "FM high-risk", "FBG high-risk")
 )
 
-ari_risk_mat
+# ari_risk_mat   # (auto-print suppressed; values are in the S3 block at the end)
 
 # Make flextable ---------------------------------------------------------------
 
@@ -192,18 +192,22 @@ ari_risk_ft <- flextable(ari_risk_df) %>%
   align(align = "center", part = "all") %>%
   align(j = "Comparison", align = "left", part = "all") %>%
   bold(part = "header") %>%
-  set_caption("Adjusted Rand Index Between High-Risk Latent Class Assignments")
+  # add_header_lines(), not set_caption(): save_as_image() drops captions,
+  # but a header row renders. These two are pasted into the response doc.
+  add_header_lines("Rand Index, High risk vs. non-high risk") %>%
+  align(i = 1, align = "center", part = "header") %>%
+  bold(i = 1, part = "header")
 
-ari_risk_ft
+# ari_risk_ft   # (auto-print suppressed; values are in the S3 block at the end)
 
-save_as_image(
+invisible(save_as_image(
   ari_risk_ft,
   path = "output/ari_high_risk_matrix.png",
   # res = 600 to match the HR table below and the table exports in 99.
   # Without it flextable defaults to 200, which put S3D at 831 px -- ~119 dpi
   # at full column width, below the 300 dpi floor for a submitted panel.
   res = 600
-)
+))
 
 # Jaccard index function -------------------------------------------------------
 
@@ -236,9 +240,9 @@ jaccard_fat_gluc_risk <- jaccard_index(
   census_risk$gluc_high_risk
 )
 
-jaccard_bw_fat_risk
-jaccard_bw_gluc_risk
-jaccard_fat_gluc_risk
+# jaccard_bw_fat_risk   # (auto-print suppressed; values are in the S3 block at the end)
+# jaccard_bw_gluc_risk   # (auto-print suppressed; values are in the S3 block at the end)
+# jaccard_fat_gluc_risk   # (auto-print suppressed; values are in the S3 block at the end)
 
 # Make pairwise Jaccard matrix -------------------------------------------------
 
@@ -260,7 +264,7 @@ dimnames(jaccard_risk_mat) <- list(
   c("BW high-risk", "FM high-risk", "FBG high-risk")
 )
 
-jaccard_risk_mat
+# jaccard_risk_mat   # (auto-print suppressed; values are in the S3 block at the end)
 
 # Make flextable ---------------------------------------------------------------
 
@@ -277,18 +281,22 @@ jaccard_risk_ft <- flextable(jaccard_risk_df) %>%
   align(align = "center", part = "all") %>%
   align(j = "Comparison", align = "left", part = "all") %>%
   bold(part = "header") %>%
-  set_caption("Jaccard Index Between High-Risk Latent Class Assignments")
+  # add_header_lines(), not set_caption(): save_as_image() drops captions,
+  # but a header row renders. These two are pasted into the response doc.
+  add_header_lines("Jaccard Index, High risk vs. non-high risk") %>%
+  align(i = 1, align = "center", part = "header") %>%
+  bold(i = 1, part = "header")
 
-jaccard_risk_ft
+# jaccard_risk_ft   # (auto-print suppressed; values are in the S3 block at the end)
 
-save_as_image(
+invisible(save_as_image(
   jaccard_risk_ft,
   path = "output/jaccard_high_risk_matrix.png",
   # res = 600 to match the HR table below and the table exports in 99.
   # Without it flextable defaults to 200, which put S3D at 831 px -- ~119 dpi
   # at full column width, below the 300 dpi floor for a submitted panel.
   res = 600
-)
+))
 
 # UpSet plot ------------------------------------------------------------------
 
@@ -330,7 +338,7 @@ print(upset(
   sets.x.label = "Set size"
 ))
 
-dev.off()
+invisible(dev.off())
 
 # High-risk burden survival analysis ------------------------------------------
 # Classify each mouse by the NUMBER of high-risk phenotypes it belongs to
@@ -338,8 +346,8 @@ dev.off()
 # paper's other KM curves, but WITHOUT the dashed median lines and WITHOUT the
 # HR text on the plot) and export the Cox HRs to a separate table image.
 
-library(survival)
-library(survminer)
+suppressPackageStartupMessages(library(survival))
+suppressPackageStartupMessages(library(survminer))
 
 # reuse the project's Cox-HR helper (same HR/CI/star format used elsewhere)
 source("../07_display_figures/R/surv_all.R")
@@ -422,7 +430,7 @@ make_km <- function(pal) {
 png("output/km_high_risk_burden.png", width = 8, height = 6, units = "in",
     res = 600, bg = "white")
 print(make_km(pal))
-dev.off()
+invisible(dev.off())
 cat(sprintf("Wrote km_high_risk_burden.png  (palette: %s)\n",
             paste(pal, collapse = ", ")))
 
@@ -469,6 +477,27 @@ hr_ft <- flextable(hr_table) %>%
     "(reference = 0). * p<.05, ** p<.01, *** p<.001."
   ))
 
-hr_ft
+# hr_ft   # (auto-print suppressed; values are in the S3 block at the end)
 
-save_as_image(hr_ft, path = "output/km_high_risk_burden_hr.png", res = 600)
+invisible(save_as_image(hr_ft, path = "output/km_high_risk_burden_hr.png", res = 600))
+
+
+# Values quoted in the S3 Results paragraph.
+cat("\n-- S3 values ------------------------------------------------\n")
+r2 <- function(x) formatC(round(x, 2), format = "f", digits = 2)
+
+cat(sprintf("ARI all classes, FM vs BW      %s\n", r2(ari_mat[1, 2])))
+cat(sprintf("high-risk BW-FM    ARI %s  Jaccard %s\n",
+            r2(ari_risk_mat[1, 2]), r2(jaccard_risk_mat[1, 2])))
+cat(sprintf("high-risk BW-FBG   ARI %s  Jaccard %s\n",
+            r2(ari_risk_mat[1, 3]), r2(jaccard_risk_mat[1, 3])))
+cat(sprintf("high-risk FM-FBG   ARI %s  Jaccard %s\n",
+            r2(ari_risk_mat[2, 3]), r2(jaccard_risk_mat[2, 3])))
+
+b <- census_risk$bw_high_risk == 1
+f <- census_risk$fat_high_risk == 1
+g <- census_risk$gluc_high_risk == 1
+cat(sprintf("\nUpSet   FM only %d   FBG only %d   BW only %d\n",
+            sum(!b & f & !g), sum(!b & !f & g), sum(b & !f & !g)))
+cat(sprintf("        BW+FM %d   FM+FBG %d   BW+FBG %d   all three %d\n\n",
+            sum(b & f & !g), sum(!b & f & g), sum(b & !f & g), sum(b & f & g)))
