@@ -88,7 +88,14 @@ ari_ft <- flextable(ari_df) %>%
   align(align = "center", part = "all") %>%
   align(j = "Comparison", align = "left", part = "all") %>%
   bold(part = "header") %>%
-  set_caption("Adjusted Rand Index Between Latent Class Assignments")
+  # NOTE: save_as_image() DROPS flextable captions -- verified against the
+  # rendered PNGs (this table and the one at ~189 both export titleless despite
+  # having captions here). So this string never reaches S3D. The visible "Rand
+  # Index, All Classes" title in the composite deck is typeset by the figure
+  # maintainer, and revision card 3 is a composite-level instruction, not a code
+  # one. Kept short and correct for any future HTML/docx render of this table;
+  # do not "fix" S3D's title here, it will have no effect.
+  set_caption("Rand Index, All Classes")
 
 # Preview in RStudio Viewer
 ari_ft
