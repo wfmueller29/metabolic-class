@@ -709,7 +709,11 @@ if (TRUE) {
       ft <- font(ft, fontname = "Arial", part = "all")
       ft <- autofit(ft) %>% set_table_properties(layout = "autofit") %>%
         fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-      invisible(save_as_image(ft, file, zoom = 10))
+      # res = 600, NOT zoom = 10. flextable 0.9.9 removed the `zoom` argument
+    # from save_as_image(); it was being swallowed by `...` and every table
+    # here silently rendered at the default res = 200 (~600-960 px), which is
+    # why 1N/2I/5D/5I/S3C/S4I/S4R were the lowest-resolution panels in the deck.
+    invisible(save_as_image(ft, file, res = 600))
     }
 
     demographics_table(all_env, "output/tables/demographics_slam.png",
@@ -767,7 +771,7 @@ if (TRUE) {
       set_table_properties(layout = "autofit") %>%
       fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
-    invisible(save_as_image(pc_ft, "output/tables/partial_correlation.png", zoom = 10))
+    invisible(save_as_image(pc_ft, "output/tables/partial_correlation.png", res = 600))
   })
   # reference_class: derive the reference (dropped) class for an outcome from
   # t1_df. Defined here, ABOVE the table blocks, because tbl() evaluates its block
@@ -809,7 +813,7 @@ if (TRUE) {
       autofit() %>%
       set_table_properties(layout = "autofit") %>%
       fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-    invisible(save_as_image(ft, file, zoom = 10))
+    invisible(save_as_image(ft, file, res = 600))
   }
 
   tbl("hr_adiposity", {
@@ -1112,7 +1116,7 @@ if (TRUE) {
       set_table_properties(layout = "autofit") %>%
       fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
-    invisible(save_as_image(hr_table, "output/tables/hr_treatment.png", zoom = 10))
+    invisible(save_as_image(hr_table, "output/tables/hr_treatment.png", res = 600))
   })
   tbl("hr_itp", {
     # ---- hr_itp ----------------------------------------------------------
@@ -1181,7 +1185,7 @@ if (TRUE) {
       set_table_properties(layout = "autofit") %>%
       fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
-    invisible(save_as_image(hr_table, "output/tables/hr_km_external.png", zoom = 10))
+    invisible(save_as_image(hr_table, "output/tables/hr_km_external.png", res = 600))
   })
 
 }

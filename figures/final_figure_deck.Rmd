@@ -260,6 +260,17 @@ for (fi in seq_along(FIGURES)) {
     }
 
     img <- magick::image_read(path)
+
+    # Composite onto white. 24 of the 128 source panels carry a genuinely
+    # transparent background (corner alpha 0x00) -- every flextable table PNG
+    # plus the schematics (1A, 3A, 4A, 5A, GA, S6A, S6G). Transparent panels
+    # look fine on a white page but pick up whatever sits behind them in a
+    # composite, a dark-mode viewer, or a slide. Flattening here fixes all of
+    # them at the single copy point rather than in each producing script.
+    # NOTE: this only affects the copies written to output/panels/. The source
+    # PNGs under 9*/output/ keep their alpha.
+    img <- magick::image_background(img, "white")
+
     out <- file.path(PANEL_DIR, paste0(id, ".png"))
     magick::image_write(img, out, format = "png")
 
@@ -267,7 +278,7 @@ for (fi in seq_along(FIGURES)) {
     # image's natural pixel width, which is what shrinks a panel already
     # narrower than the text column. The max-width CSS rule scales it relative
     # to the column instead, which is what shrinks the table PNGs -- those are
-    # written at zoom = 10, so a fraction of their natural width still
+    # written at res = 600, so a fraction of their natural width still
     # overflows the column and would otherwise look unchanged. Both have to
     # move together, hence one scale driving the width and one matching class.
     full  <- is_full_width(path)

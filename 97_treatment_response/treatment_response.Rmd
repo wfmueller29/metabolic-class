@@ -970,7 +970,9 @@ ft
 save_as_image(
   ft,
   path = file.path("output", "tables", "class2_downsampled_hr_table.png"),
-  zoom = 2
+  # res, not zoom: flextable 0.9.9 dropped `zoom` from save_as_image(), so it was
+  # being absorbed by `...` and this rendered at the default res = 200.
+  res = 600
 )
 ```
 

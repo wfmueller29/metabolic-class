@@ -102,7 +102,11 @@ ari_ft
 
 save_as_image(
   ari_ft,
-  path = "output/ari_matrix.png"
+  path = "output/ari_matrix.png",
+  # res = 600 to match the HR table below and the table exports in 99.
+  # Without it flextable defaults to 200, which put S3D at 831 px -- ~119 dpi
+  # at full column width, below the 300 dpi floor for a submitted panel.
+  res = 600
 )
 
 # redo analysis comparing just high risk to non-high risk groups
@@ -194,7 +198,11 @@ ari_risk_ft
 
 save_as_image(
   ari_risk_ft,
-  path = "output/ari_high_risk_matrix.png"
+  path = "output/ari_high_risk_matrix.png",
+  # res = 600 to match the HR table below and the table exports in 99.
+  # Without it flextable defaults to 200, which put S3D at 831 px -- ~119 dpi
+  # at full column width, below the 300 dpi floor for a submitted panel.
+  res = 600
 )
 
 # Jaccard index function -------------------------------------------------------
@@ -275,7 +283,11 @@ jaccard_risk_ft
 
 save_as_image(
   jaccard_risk_ft,
-  path = "output/jaccard_high_risk_matrix.png"
+  path = "output/jaccard_high_risk_matrix.png",
+  # res = 600 to match the HR table below and the table exports in 99.
+  # Without it flextable defaults to 200, which put S3D at 831 px -- ~119 dpi
+  # at full column width, below the 300 dpi floor for a submitted panel.
+  res = 600
 )
 
 # UpSet plot ------------------------------------------------------------------
@@ -297,18 +309,25 @@ png(
   width = 10,
   height = 6,
   units = "in",
-  res = 300,
+  # 600 to match S3D/S3F/S3G, the other three panels in this row.
+  res = 600,
   bg = "white"
 )
 
 # print(): UpSetR::upset() draws via an auto-printed grid object. run_90s.R runs
 # this script through source(), whose default print.eval = FALSE suppresses that
 # auto-print, so the device stayed blank. Forcing print() commits it to the png.
+# UpSetR defaults these to "Intersection Size" / "Set Size" (Title Case), which
+# was the only Title Case axis left on the S3 page -- S3F beside it reads
+# "Survival probability" / "Age (weeks)". Both are plain arguments, so this is a
+# label change, not a package modification.
 print(upset(
   upset_data,
   sets = c("BW high-risk", "FM high-risk", "FBG high-risk"),
   order.by = "freq",
-  text.scale = 1.5
+  text.scale = 1.5,
+  mainbar.y.label = "Intersection size",
+  sets.x.label = "Set size"
 ))
 
 dev.off()
