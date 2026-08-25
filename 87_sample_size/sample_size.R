@@ -96,6 +96,16 @@ local({
 itp_cls <- n_class(file.path(cen, "itp_c10c11c13c16_age_controls_bw/complete_census.csv"),
                    "new_class_bw")
 
+# Adiposity (FM/BW) classes -- a sensitivity analysis shown in Figure S1, quoted
+# in the Results but absent from Table 1. Its census carries its own class
+# numbering (4 and 5) that does NOT correspond to the FM classes 4-6 above.
+# Class 4 is the elevated mid-life adiposity class, i.e. the LOWER-survival one,
+# which is how the prose orders them ("the first ... the second"). Only one
+# adiposity census exists, so there is no _age_/_lnage_ ambiguity here.
+adip_census <- file.path(cen, "slam_c1-c10_age_all_bwadipositygluc/complete_census.csv")
+adip_cls <- n_class(adip_census, "new_class_adiposity")
+stopifnot(identical(as.integer(adip_cls[c("4", "5")]), c(420L, 895L)))
+
 # Figures 2 and S4 are built from four sex x genetic-background configs, not from
 # the pooled one. Each config directory also holds train/test censuses, so the
 # complete one is named explicitly -- stage 07 draws its outcome plots from
@@ -162,6 +172,10 @@ sizes <- rbind(
              n = fbg_cls[["7"]], Source = "new_class_gluc, canonical _age_ census (NOT _lnage_)"),
   data.frame(Group = "SLAM classes", Description = "FBG Class 8 (stable-FBG)",
              n = fbg_cls[["8"]], Source = "new_class_gluc, canonical _age_ census (NOT _lnage_)"),
+  data.frame(Group = "SLAM classes", Description = "Adiposity Class 1 (elevated mid-life; Figure S1)",
+             n = adip_cls[["4"]], Source = "new_class_adiposity, bwadipositygluc census"),
+  data.frame(Group = "SLAM classes", Description = "Adiposity Class 2 (blunted/constant; Figure S1)",
+             n = adip_cls[["5"]], Source = "new_class_adiposity, bwadipositygluc census"),
 
   data.frame(Group = "Sex x background", Description = "Female B6",
              n = n_rows(strat("fb6")),
@@ -277,6 +291,9 @@ stopifnot(
   sum(bw_cls)  == complete,
   sum(fm_cls)  == complete,
   sum(fbg_cls) == complete,
+
+  # the two adiposity classes partition the adiposity model population
+  sum(adip_cls) == N("Adiposity model"),
 
   # train/test is an 80/20 split of the complete census, with nothing lost
   N("Training (80% split)") + N("Testing (20% split)") == complete,
