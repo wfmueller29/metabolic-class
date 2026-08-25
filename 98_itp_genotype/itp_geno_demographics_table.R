@@ -43,7 +43,12 @@ CLASSES <- 1:3
 # missing data rather than not-applicable.
 DASH <- "–"
 
-r0 <- function(x) if (length(x) == 0 || is.na(x)) DASH else as.character(round(x))
+r0 <- function(x) if (length(x) == 0 || is.na(x)) DASH else n0(round(x))
+# Thousands separators on every count >= 1000, matching the manuscript
+# convention. Applied at the point each integer becomes a string, NOT by a
+# regex over the assembled cell -- a cell reads "2395 (46.8%)" and a naive
+# 4-digit match would also hit the decimals of a p-value like "0.2593".
+n0 <- function(k) if (length(k) == 0 || is.na(k)) DASH else formatC(k, format = "d", big.mark = ",")
 cnt <- function(df, cls, mask) sum(df$new_class_bw == cls & mask)
 pct <- function(k, tot) if (is.na(k) || is.na(tot) || tot == 0) "" else sprintf(" (%.1f%%)", 100 * k / tot)
 # Scientific notation only where it earns its keep. Forcing it on every p-value
@@ -117,15 +122,15 @@ build_table <- function(src) {
 
       rows[[length(rows) + 1]] <- data.frame(
         Stratum = stratum, Row = paste("Class", cl),
-        c_n    = if (pc) paste0(cn, pct(cn, cN)) else DASH,
-        c_fem  = if (has_sex) (if (pc) paste0(cf, pct(cf, c_f_tot)) else DASH) else "",
-        c_male = if (has_sex) (if (pc) paste0(cm, pct(cm, c_m_tot)) else DASH) else "",
+        c_n    = if (pc) paste0(n0(cn), pct(cn, cN)) else DASH,
+        c_fem  = if (has_sex) (if (pc) paste0(n0(cf), pct(cf, c_f_tot)) else DASH) else "",
+        c_male = if (has_sex) (if (pc) paste0(n0(cm), pct(cm, c_m_tot)) else DASH) else "",
         c_med  = if (pc) c_med[as.character(cl)] else DASH,
-        t_n    = if (pt) paste0(tn, pct(tn, tN)) else DASH,
-        t_fem  = if (has_sex) (if (pt) paste0(tf, pct(tf, t_f_tot)) else DASH) else "",
-        t_male = if (has_sex) (if (pt) paste0(tm, pct(tm, t_m_tot)) else DASH) else "",
-        t_ctrl = if (pt) paste0(tc, pct(tc, t_ctrl_tot)) else DASH,
-        t_trt  = if (pt) paste0(tt, pct(tt, t_trt_tot)) else DASH,
+        t_n    = if (pt) paste0(n0(tn), pct(tn, tN)) else DASH,
+        t_fem  = if (has_sex) (if (pt) paste0(n0(tf), pct(tf, t_f_tot)) else DASH) else "",
+        t_male = if (has_sex) (if (pt) paste0(n0(tm), pct(tm, t_m_tot)) else DASH) else "",
+        t_ctrl = if (pt) paste0(n0(tc), pct(tc, t_ctrl_tot)) else DASH,
+        t_trt  = if (pt) paste0(n0(tt), pct(tt, t_trt_tot)) else DASH,
         t_med  = if (pt) t_med[as.character(cl)] else DASH,
         stringsAsFactors = FALSE, check.names = FALSE
       )
@@ -134,13 +139,13 @@ build_table <- function(src) {
     # total row
     rows[[length(rows) + 1]] <- data.frame(
       Stratum = stratum, Row = "Total",
-      c_n = as.character(cN),
-      c_fem = if (has_sex) as.character(c_f_tot) else "",
-      c_male = if (has_sex) as.character(c_m_tot) else "",
-      c_med = DASH, t_n = as.character(tN),
-      t_fem = if (has_sex) as.character(t_f_tot) else "",
-      t_male = if (has_sex) as.character(t_m_tot) else "",
-      t_ctrl = as.character(t_ctrl_tot), t_trt = as.character(t_trt_tot), t_med = DASH,
+      c_n = n0(cN),
+      c_fem = if (has_sex) n0(c_f_tot) else "",
+      c_male = if (has_sex) n0(c_m_tot) else "",
+      c_med = DASH, t_n = n0(tN),
+      t_fem = if (has_sex) n0(t_f_tot) else "",
+      t_male = if (has_sex) n0(t_m_tot) else "",
+      t_ctrl = n0(t_ctrl_tot), t_trt = n0(t_trt_tot), t_med = DASH,
       stringsAsFactors = FALSE, check.names = FALSE
     )
 

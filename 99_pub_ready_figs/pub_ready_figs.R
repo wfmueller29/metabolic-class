@@ -667,10 +667,26 @@ if (TRUE) {
       cols <- c(n = "n (%)", sex_F = "Female", sex_M = "Male")
       if (strain) cols <- c(cols, strain_B6 = "B6", strain_HET3 = "HET3")
       cols <- c(cols, median_surv = median_header)
+      # Thousands separators on the LEADING count only: "1315" -> "1,315" and
+      # "1315 (68.1%)" -> "1,315 (68.1%)". Anchored at the start of the string
+      # and skipped on the p-value row, so it can never reach a percentage, a
+      # CI bound, or the decimals of a p-value like "0.2593" -- an unanchored
+      # 4-digit match would corrupt all three.
+      add_big_mark <- function(x) {
+        r <- regexpr("^[0-9]{4,}", x)
+        hit <- r > 0
+        if (!any(hit)) return(x)
+        len  <- attr(r, "match.length")[hit]
+        num  <- substring(x[hit], 1, len)
+        rest <- substring(x[hit], len + 1)
+        x[hit] <- paste0(formatC(as.numeric(num), format = "d", big.mark = ","), rest)
+        x
+      }
       for (nm in names(cols)) {
         if (!nm %in% names(tb)) next
         v <- as.character(tb[[nm]])
         v[is_p] <- fmt_demog_p(v[is_p], p_digits)  # p-value row -> scientific
+        v[!is_p] <- add_big_mark(v[!is_p])
         # Plain hyphen, not an en dash: the pipeline can run under a C locale,
         # where a multi-byte dash is read as raw bytes and breaks the flextable
         # renderer. Visually equivalent at table scale.
