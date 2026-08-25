@@ -693,7 +693,11 @@ if (TRUE) {
       # header row, whichever spanning/title rows were added above it.
       hrow <- nrow(ft$header$dataset)
       ft <- flextable::footnote(ft, i = hrow, j = "Median Survival", part = "header",
-        value = as_paragraph("95% confidence interval indicated in parentheses following values."),
+        # Wording tracks the Word tables, which abbreviate: CI is defined in the
+        # Results ("Confidence intervals (CIs) for the macro-F1 scores...").
+        # Keep the verb -- all three instances in the manuscript and supplement
+        # read "95% CIs are indicated ...", so this string must match verbatim.
+        value = as_paragraph("95% CIs are indicated in parentheses following values."),
         ref_symbols = "a")
       ft <- flextable::footnote(ft, i = hrow, j = "Median Survival", part = "header",
         value = as_paragraph("In weeks."), ref_symbols = "b")
@@ -718,9 +722,17 @@ if (TRUE) {
 
     demographics_table(all_env, "output/tables/demographics_slam.png",
                        title = "Table 1. Metabolic Class Demographics.")
-    # ITP is all HET3, so no genetic-background columns
+    # ITP is all HET3, so no genetic-background columns.
+    # "Full", not "Complete": the manuscript reserves *complete* for the
+    # 1,315-mouse SLAM set (Methods L581), so reusing it for the 2,240-mouse ITP
+    # data would collide with that vocabulary.
+    # "Control": these 2,240 are the ITP control arm only, not all ITP mice. The
+    # trajectory input is 00a_itp2/output/itp_control_train.csv, whose `tx`
+    # column is "control" for all 7,889 rows; the 2005 tx+control cohort
+    # (itp_tx_control_test.csv) is a disjoint id set and feeds 5E-5K instead.
     demographics_table(itp_env, "output/tables/demographics_itp.png",
-                       title = "Table 2. Body Weight Class Demographics of ITP Complete Dataset.",
+                       title = paste("Table 2. Body Weight Class Demographics of",
+                                     "the Full ITP Control Dataset."),
                        strain = FALSE)
     # S1G -- adiposity classes only (9 and 10)
     demographics_table(adiposity_env, "output/tables/demographics_adiposity.png",

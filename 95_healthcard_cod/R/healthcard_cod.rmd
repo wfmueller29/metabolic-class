@@ -58,11 +58,11 @@ output:
     )
     bin_colors_per_yr <- c(
       "[0]" = "#74ae66", # green
-      "(0–0.5)" = "#f2d14c", # yellow
-      "[0.5–1)" = "#efa52e", # darker yellow-orange
-      "[1–2)" = "#f06151", # red
-      "[2–4)" = "#982215", # dark red
-      "≥4" = "#350202" # dark dark red
+      "(0, 0.5)" = "#f2d14c", # yellow
+      "[0.5, 1)" = "#efa52e", # darker yellow-orange
+      "[1, 2)" = "#f06151", # red
+      "[2, 4)" = "#982215", # dark red
+      "≥ 4" = "#350202" # dark dark red
     )
 ```
 # Load in input data
@@ -518,13 +518,13 @@ output:
       )) %>%
       mutate(hc_yr_bin = case_when(
         hc_per_yr == 0 ~ "[0]",
-        hc_per_yr < 0.5 ~ "(0–0.5)",
-        hc_per_yr < 1.0 ~ "[0.5–1)",
-        hc_per_yr < 2 ~ "[1–2)",
-        hc_per_yr < 4 ~ "[2–4)",
-        TRUE ~ "≥4"
+        hc_per_yr < 0.5 ~ "(0, 0.5)",
+        hc_per_yr < 1.0 ~ "[0.5, 1)",
+        hc_per_yr < 2 ~ "[1, 2)",
+        hc_per_yr < 4 ~ "[2, 4)",
+        TRUE ~ "≥ 4"
       )) %>%
-        mutate(hc_yr_bin = factor(hc_yr_bin, levels = c("[0]", "(0–0.5)", "[0.5–1)", "[1–2)", "[2–4)", "≥4")))
+        mutate(hc_yr_bin = factor(hc_yr_bin, levels = c("[0]", "(0, 0.5)", "[0.5, 1)", "[1, 2)", "[2, 4)", "≥ 4")))
   #* Plot raw counts over lifetime
     raw_counts_LL_HCs <- ggplot(hc_lifespan_data, aes(x = condition_bin, fill = factor(new_class_bw))) +
     geom_bar(position = "stack") +

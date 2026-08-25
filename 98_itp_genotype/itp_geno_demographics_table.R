@@ -167,11 +167,16 @@ build_table <- function(src) {
 # ---- render a table to a white-background PNG -------------------------------
 save_table_png <- function(tab, path) {
   ft <- flextable(tab)
+  # "Median Survival, weeks (95% CI)" -- NOT the plain "Median Survival" used by
+  # Tables 1/2. Those carry the unit and the CI level in footnotes a and b, but
+  # this panel is composited into S9 and its footnotes are dropped, so the header
+  # is the only channel. Stating (95% CI) also stops the header's parenthetical
+  # reading as a unit when the cells below use parentheses for the interval.
   ft <- set_header_labels(ft,
     Stratum = "", Row = "",
-    c_n = "n (%)", c_fem = "Female", c_male = "Male", c_med = "Median Survival (weeks)",
+    c_n = "n (%)", c_fem = "Female", c_male = "Male", c_med = "Median Survival, weeks (95% CI)",
     t_n = "n (%)", t_fem = "Female", t_male = "Male",
-    t_ctrl = "Control", t_trt = "Treatment", t_med = "Median Survival (weeks)"
+    t_ctrl = "Control", t_trt = "Treatment", t_med = "Median Survival, weeks (95% CI)"
   )
   # Second block comes from the *_tx_* censuses, which contain controls AND
   # NDE-treated mice (n = 5118 = 2395 control + 2723 treatment -- hence the
