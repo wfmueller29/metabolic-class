@@ -606,16 +606,32 @@ if (TRUE) {
     METVAR_LABEL <- c("Body Weight" = "Body Weight", "Body Fat" = "Fat Mass",
                       "Glucose" = "FBG", "Adiposity" = "Adiposity")
 
-    fmt_demog_p <- function(x) {
+    # p_digits: mantissa precision below 0.001. Tables 1/2 are Word tables that
+    # keep footnote c ("...and rounded to the nearest integer"), so they use 0.
+    # S1G is composited into a supplementary figure where footnotes are dropped,
+    # so it uses 1 -- matching S3C and S9C, whose legends state only the 0.001
+    # threshold and make no claim about rounding.
+    fmt_demog_p <- function(x, p_digits = 0) {
       p <- suppressWarnings(as.numeric(x))
       ifelse(is.na(p), "-",
         ifelse(p < 0.001,
-               sub("e([+-])0", "e\\1", formatC(p, format = "e", digits = 0)),
+               sub("e([+-])0", "e\\1", formatC(p, format = "e", digits = p_digits)),
                formatC(p, format = "f", digits = 4)))
     }
 
+    # median_header: Tables 1 and 2 are Word tables that keep their footnotes, so
+    # they use the plain label and put the unit in footnote b. S1G is composited
+    # into a supplementary figure where the footnotes are dropped, so the unit has
+    # to live in the header; the CI notation is stated in the S1 legend instead.
+    # A comma-offset unit (not "(weeks)") avoids a header parenthetical competing
+    # with the interval parentheses in the cells below.
+    # Note this string is also the data-frame column name, hence the footnote
+    # calls reference `median_header` rather than a literal.
     demographics_table <- function(env, file, lcm = NULL, title = NULL,
-                                   strain = TRUE, class_relabel = NULL) {
+                                   strain = TRUE, class_relabel = NULL,
+                                   median_header = "Median Survival",
+                                   p_digits = 0) {
+      self_describing <- !identical(median_header, "Median Survival")
       t1 <- env$save_figtabs$t1_df
       if (is.null(t1)) { warning("demographics: t1_df missing -- skipped"); return(invisible(NULL)) }
       tb <- t1
@@ -650,11 +666,11 @@ if (TRUE) {
 
       cols <- c(n = "n (%)", sex_F = "Female", sex_M = "Male")
       if (strain) cols <- c(cols, strain_B6 = "B6", strain_HET3 = "HET3")
-      cols <- c(cols, median_surv = "Median Survival")
+      cols <- c(cols, median_surv = median_header)
       for (nm in names(cols)) {
         if (!nm %in% names(tb)) next
         v <- as.character(tb[[nm]])
-        v[is_p] <- fmt_demog_p(v[is_p])           # p-value row -> scientific
+        v[is_p] <- fmt_demog_p(v[is_p], p_digits)  # p-value row -> scientific
         # Plain hyphen, not an en dash: the pipeline can run under a C locale,
         # where a multi-byte dash is read as raw bytes and breaks the flextable
         # renderer. Visually equivalent at table scale.
@@ -692,21 +708,23 @@ if (TRUE) {
       # lettered markers, as in the Word tables. The column-name row is the last
       # header row, whichever spanning/title rows were added above it.
       hrow <- nrow(ft$header$dataset)
-      ft <- flextable::footnote(ft, i = hrow, j = "Median Survival", part = "header",
+      if (!self_describing) {
+      ft <- flextable::footnote(ft, i = hrow, j = median_header, part = "header",
         # Wording tracks the Word tables, which abbreviate: CI is defined in the
         # Results ("Confidence intervals (CIs) for the macro-F1 scores...").
         # Keep the verb -- all three instances in the manuscript and supplement
         # read "95% CIs are indicated ...", so this string must match verbatim.
         value = as_paragraph("95% CIs are indicated in parentheses following values."),
         ref_symbols = "a")
-      ft <- flextable::footnote(ft, i = hrow, j = "Median Survival", part = "header",
+      ft <- flextable::footnote(ft, i = hrow, j = median_header, part = "header",
         value = as_paragraph("In weeks."), ref_symbols = "b")
+      }
       if (any(is_p)) {
         ft <- flextable::footnote(ft, i = which(is_p)[1], j = "Class or Variable",
           part = "body",
           value = as_paragraph(
             "p-values < 0.001 are written in scientific notation and rounded to the nearest integer."),
-          ref_symbols = "c")
+          ref_symbols = if (self_describing) "a" else "c")
       }
       ft <- italic(ft, part = "footer"); ft <- fontsize(ft, size = 8, part = "footer")
       # Arial renders the en dash; the default substitutes a glyph for it
@@ -736,7 +754,8 @@ if (TRUE) {
                        strain = FALSE)
     # S1G -- adiposity classes only (9 and 10)
     demographics_table(adiposity_env, "output/tables/demographics_adiposity.png",
-                       lcm = "Adiposity", class_relabel = ADIPOSITY_CLASS_RELABEL)
+                       lcm = "Adiposity", class_relabel = ADIPOSITY_CLASS_RELABEL,
+                       median_header = "Median Survival, weeks", p_digits = 1)
   })
   tbl("partial_correlation", {
     # ---- partial_correlation (S2C) ---------------------------------------

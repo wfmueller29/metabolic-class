@@ -52,7 +52,9 @@ pct <- function(k, tot) if (is.na(k) || is.na(tot) || tot == 0) "" else sprintf(
 # notation"). Below that cutoff keep the exponent; at or above it, plain digits.
 fmt_p <- function(p) {
   if (length(p) == 0 || is.na(p)) return(DASH)
-  if (p < 0.001) formatC(p, format = "e", digits = 2) else formatC(p, format = "g", digits = 4)
+  # digits = 1: one decimal in the mantissa, matching S1G and S3C. The S9
+  # legend states only the 0.001 threshold and makes no rounding claim.
+  if (p < 0.001) formatC(p, format = "e", digits = 1) else formatC(p, format = "g", digits = 4)
 }
 
 # median survival "med (lcl, ucl)" per class (named by class number, 1..3)
@@ -167,16 +169,16 @@ build_table <- function(src) {
 # ---- render a table to a white-background PNG -------------------------------
 save_table_png <- function(tab, path) {
   ft <- flextable(tab)
-  # "Median Survival, weeks (95% CI)" -- NOT the plain "Median Survival" used by
+  # "Median Survival, weeks" -- NOT the plain "Median Survival" used by
   # Tables 1/2. Those carry the unit and the CI level in footnotes a and b, but
   # this panel is composited into S9 and its footnotes are dropped, so the header
   # is the only channel. Stating (95% CI) also stops the header's parenthetical
   # reading as a unit when the cells below use parentheses for the interval.
   ft <- set_header_labels(ft,
     Stratum = "", Row = "",
-    c_n = "n (%)", c_fem = "Female", c_male = "Male", c_med = "Median Survival, weeks (95% CI)",
+    c_n = "n (%)", c_fem = "Female", c_male = "Male", c_med = "Median Survival, weeks",
     t_n = "n (%)", t_fem = "Female", t_male = "Male",
-    t_ctrl = "Control", t_trt = "Treatment", t_med = "Median Survival, weeks (95% CI)"
+    t_ctrl = "Control", t_trt = "Treatment", t_med = "Median Survival, weeks"
   )
   # Second block comes from the *_tx_* censuses, which contain controls AND
   # NDE-treated mice (n = 5118 = 2395 control + 2723 treatment -- hence the
