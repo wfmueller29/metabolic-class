@@ -720,10 +720,15 @@ if (TRUE) {
         value = as_paragraph("In weeks."), ref_symbols = "b")
       }
       if (any(is_p)) {
+        # The rounding clause must track p_digits or the footnote contradicts the
+        # values above it: Tables 1/2 use p_digits = 0 and print "8e-4", which IS
+        # rounded to the nearest integer, but S1G uses 1 and prints "8.4e-4",
+        # which is not. Parameterised together so they cannot desync again.
         ft <- flextable::footnote(ft, i = which(is_p)[1], j = "Class or Variable",
           part = "body",
-          value = as_paragraph(
-            "p-values < 0.001 are written in scientific notation and rounded to the nearest integer."),
+          value = as_paragraph(paste0(
+            "p-values < 0.001 are written in scientific notation",
+            if (p_digits == 0) " and rounded to the nearest integer." else ".")),
           ref_symbols = if (self_describing) "a" else "c")
       }
       ft <- italic(ft, part = "footer"); ft <- fontsize(ft, size = 8, part = "footer")
