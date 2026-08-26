@@ -347,3 +347,104 @@ save_as_image(ft, path = "output/sample_sizes.png", res = 600)
 image_read("output/sample_sizes.png") %>%
   image_background("white") %>%
   image_write("output/sample_sizes.png")
+
+# =============================================================================
+# EXCLUDED OBSERVATIONS AND MICE
+#
+# The counts quoted in Data cleaning and in Missing/Excluded data. These are
+# measurement-level, not sample sizes, so they get their own table rather than
+# being mixed into the one above.
+#
+# Both sets were carried for weeks as "unverifiable without asking Billy"
+# ([90], [148]). They are not: every one is a deterministic function of files
+# that ship with the paper, and all nine reproduce exactly. Deriving them here
+# means a reader -- or a reviewer -- can rerun rather than take them on trust.
+# =============================================================================
+raw_slam <- "../00a_clean_slam_c1-c10/data"
+
+# Mirrors traj_dataset.Rmd:61-64 (BW), 131-136 (FM), 99-101 (FBG): read, coerce,
+# count NA, apply the rule, count NA. The reported figure is the INCREMENT, so
+# it is insensitive to how blank/text cells are handled -- only to the rule.
+n_outliers <- function(file, col, apply_rule, enc = "") {
+  d <- read.csv(file.path(raw_slam, file), fileEncoding = enc)
+  v <- suppressWarnings(as.numeric(as.character(d[[col]])))
+  sum(is.na(apply_rule(v))) - sum(is.na(v))
+}
+
+# gluc_lact carries a 0x85 byte that breaks UTF-8. Reading it as latin1 is what
+# makes this count reproducible at all -- almost certainly why an earlier
+# attempt concluded it could not be checked.
+bw_out  <- n_outliers("BW_Temp_FC_All_2021-12-23.csv", "bw",
+                      function(v) ifelse(v < 10, NA, ifelse(v > 100, NA, v)))
+fm_out  <- n_outliers("nmr_compiled_2021-11-10.csv", "fat",
+                      function(v) ifelse(v <= 0, NA, v))
+fbg_out <- n_outliers("gluc_lact_2021-12-01.csv", "Glucose",
+                      function(v) ifelse(v < 20, NA, ifelse(v >= 300, NA, v)),
+                      enc = "latin1")
+
+# Complete-case exclusions: mice holding a phenotype but absent from the
+# intersection census, and the measures they contributed.
+comp_ids <- unique(read.csv(census_all)$idno)
+excluded <- function(og_file) {
+  d <- read.csv(file.path(raw, og_file))
+  extra <- setdiff(unique(d$idno), comp_ids)
+  c(mice = length(extra), measures = sum(d$idno %in% extra))
+}
+ex_bw <- excluded("slam_bw_og.csv")
+ex_fm <- excluded("slam_fat_og.csv")
+ex_gl <- excluded("slam_gluc_og.csv")
+
+drops <- rbind(
+  data.frame(Group = "Outliers set to missing", Description = "BW < 10 g or > 100 g",
+             n = bw_out, Source = "00a .../data/BW_Temp_FC_All_2021-12-23.csv"),
+  data.frame(Group = "Outliers set to missing", Description = "FM <= 0",
+             n = fm_out, Source = "00a .../data/nmr_compiled_2021-11-10.csv"),
+  data.frame(Group = "Outliers set to missing", Description = "FBG < 20 or >= 300 mg/dL",
+             n = fbg_out, Source = "00a .../data/gluc_lact_2021-12-01.csv (latin1)"),
+  data.frame(Group = "Complete-case exclusions", Description = "BW measures removed (13 mice)",
+             n = ex_bw[["measures"]], Source = "slam_bw_og.csv ids not in complete census"),
+  data.frame(Group = "Complete-case exclusions", Description = "FM measures removed (9 mice)",
+             n = ex_fm[["measures"]], Source = "slam_fat_og.csv ids not in complete census"),
+  data.frame(Group = "Complete-case exclusions", Description = "FBG measures removed (14 mice)",
+             n = ex_gl[["measures"]], Source = "slam_gluc_og.csv ids not in complete census"),
+  data.frame(Group = "Complete-case exclusions", Description = "Mice, summed across phenotypes",
+             n = sum(ex_bw[["mice"]], ex_fm[["mice"]], ex_gl[["mice"]]),
+             Source = "13 + 9 + 14; double-counts mice missing two phenotypes"),
+  # N() cannot be used here: sizes$n has already been formatted to strings by
+  # this point. Re-derive the union numerically, the same way the row above does.
+  data.frame(Group = "Complete-case exclusions", Description = "Mice, unique (union - intersection)",
+             n = n_union(file.path(raw, paste0("slam_", c("bw", "fat", "gluc", "adiposity"),
+                                               "_og.csv"))) - complete,
+             Source = "1,337 - 1,315; the count the pipeline filter actually drops")
+)
+
+# The manuscript quotes all nine. Assert rather than trust: if a raw file is
+# ever re-exported, this fails loudly instead of the table drifting from print.
+stopifnot(
+  bw_out == 24, fm_out == 36, fbg_out == 25,
+  ex_bw[["mice"]] == 13, ex_bw[["measures"]] == 64,
+  ex_fm[["mice"]] ==  9, ex_fm[["measures"]] == 62,
+  ex_gl[["mice"]] == 14, ex_gl[["measures"]] == 24
+)
+
+drops$n <- format(drops$n, big.mark = ",", trim = TRUE)
+cat("\n")
+print(drops, row.names = FALSE)
+
+ft2 <- flextable(drops) %>%
+  theme_booktabs() %>%
+  merge_v(j = "Group") %>%
+  valign(j = "Group", valign = "top") %>%
+  bold(j = "Group") %>%
+  align(j = "n", align = "right", part = "all") %>%
+  fontsize(j = "Source", size = 8) %>%
+  bold(part = "header") %>%
+  add_header_lines("Excluded observations and mice, and their sources") %>%
+  align(i = 1, align = "center", part = "header") %>%
+  bold(i = 1, part = "header") %>%
+  autofit()
+
+save_as_image(ft2, path = "output/excluded_counts.png", res = 600)
+image_read("output/excluded_counts.png") %>%
+  image_background("white") %>%
+  image_write("output/excluded_counts.png")
