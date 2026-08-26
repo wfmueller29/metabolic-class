@@ -26,6 +26,7 @@
 *.csvr
 .A/
 JDP.R
+JDP/
 rerun_cleaning_and_compare.R
 
 .envrc
