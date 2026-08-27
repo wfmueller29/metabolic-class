@@ -672,9 +672,16 @@ if (TRUE) {
       # and skipped on the p-value row, so it can never reach a percentage, a
       # CI bound, or the decimals of a p-value like "0.2593" -- an unanchored
       # 4-digit match would corrupt all three.
+      # NA-safe: these columns still carry NAs at this point -- the NA -> "-"
+      # substitution happens further down, AFTER this call. regexpr() returns NA
+      # for an NA input, so an unguarded `r > 0` puts NA into `hit`, `any(hit)`
+      # returns NA, and `if (!any(hit))` dies with "missing value where
+      # TRUE/FALSE needed". That silently skipped Table 1, Table 2 and S1G for
+      # two days. NAs are excluded here and fall through untouched to the "-"
+      # substitution, which is where they were always meant to be handled.
       add_big_mark <- function(x) {
         r <- regexpr("^[0-9]{4,}", x)
-        hit <- r > 0
+        hit <- !is.na(r) & r > 0
         if (!any(hit)) return(x)
         len  <- attr(r, "match.length")[hit]
         num  <- substring(x[hit], 1, len)

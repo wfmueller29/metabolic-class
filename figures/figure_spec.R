@@ -345,6 +345,69 @@ FIGURES <- list(
 # else needs touching.
 # =============================================================================
 
+
+# =============================================================================
+# SUPPLEMENTARY TABLE HELPERS  (S1-S5)
+#
+# These five tables ship in the manuscript's supplementary Word file. The
+# builders below reproduce them from save_figtabs so the deck shows what was
+# submitted, not the raw pipeline dumps.
+#
+# EVERY code identifier is renamed here. Nothing in S1-S5 reaches the deck
+# carrying a pipeline column name.
+#
+# ROUNDING is per-quantity, not one rule for all five -- forcing a single
+# precision would make S4 absurd (114.4286 weeks is ten-minute resolution on a
+# mouse lifespan) or S1 useless (HRs need the 4th decimal to separate classes):
+#
+#   S1  4 dp  HR and both CI bounds, trailing zeros kept
+#   S2  4 dp  estimates; p-values BINNED, not printed
+#   S3  2 dp  every statistic -- the source is already
+#             round(psych::describe(...), 2) at 07_display_figures.Rmd:2793,
+#             so this is the data's actual precision, not a choice
+#   S4  1 dp  survival quartiles in weeks
+#   S5  4 dp  entropy; 1 dp smallest class %; 0 dp with thousands separators
+#             for loglik / BIC / AIC / ICL1 / ICL2
+#
+# ALWAYS round from full precision -- never re-round an already-rounded value.
+# =============================================================================
+
+sup_fmt   <- function(x, dp) formatC(as.numeric(x), format = "f", digits = dp)
+sup_fmt_k <- function(x) formatC(as.numeric(x), format = "d", big.mark = ",")
+
+SUP_OUTCOME <- c(bw = "BW", fat = "FM", gluc = "FBG",
+                 "Body Weight" = "BW", "Body Fat" = "FM", "Glucose" = "FBG")
+
+SUP_DATASET <- c(og = "Complete", data = "Complete",
+                 train_test = "Training", training_data = "Training",
+                 test_data = "Testing")
+
+# S3's Measure column. "_ns" = NOT SCALED: the raw, uncentered age. dif_time is
+# age - lag(age) within mouse (07_display_figures.Rmd:2767), which is why its
+# Obs. is lower than the outcome's by exactly the mouse count.
+SUP_MEASURE <- c(bw = "BW", fat = "FM", gluc = "FBG",
+                 age_wk_ns = "Age (weeks)", age_wk = "Age (weeks)",
+                 wave = "Wave", dif_time = "Interval (weeks)")
+
+sup_theme <- function(ft, widths = NULL) {
+  ft <- flextable::theme_vanilla(ft)
+  ft <- flextable::font(ft, fontname = "Arial", part = "all")
+  ft <- flextable::fontsize(ft, size = 8, part = "all")
+  ft <- flextable::autofit(ft)
+  ft <- flextable::set_table_properties(ft, layout = "autofit")
+  flextable::fit_to_width(ft, max_width = max_width, inc = .25, max_iter = 100)
+}
+
+# p-values are binned rather than printed. "n.s." replaced a bare dash so a
+# label reads as a label rather than as a missing value.
+sup_bin_p <- function(p) {
+  p <- as.numeric(p)
+  ifelse(p < 0.0001, "< 0.0001",
+  ifelse(p < 0.001,  "< 0.001",
+  ifelse(p < 0.01,   "< 0.01",
+  ifelse(p < 0.05,   "< 0.05", "n.s."))))
+}
+
 TABLES <- list(
   list(
     part   = "primary",
@@ -378,15 +441,31 @@ TABLES <- list(
   ),
   list(
     part   = "supplemental",
-    title  = "Sex/Strain Adjusted Hazards",
+    title  = "HRs estimated using three Cox models",
     render = "png",
+    # S1. Source: save_figtabs$hr_numeric (Outcome/Class/Model/value/lower/
+    # upper/pval). Stage 07 emits one block per Cox specification; they are
+    # reshaped side by side into Model 1/2/3 columns keyed on Outcome+Class.
+    # Reference classes (1, 4, 7) carry the literal "Reference".
+    # Stars are DERIVED from pval, not parsed from stage 07's pre-formatted
+    # $final string, so the deck does not inherit that formatting.
     build  = function() {
-      flextable(all_env$save_figtabs$hr_table) %>%
-        theme_vanilla() %>%
-        autofit() %>%
-        set_table_properties(layout = "autofit") %>%
-        fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-
+      hn <- all_env$save_figtabs$hr_numeric
+      hn$pval  <- as.numeric(hn$pval)
+      stars    <- ifelse(hn$pval < 0.001, "***",
+                  ifelse(hn$pval < 0.01,  "**",
+                  ifelse(hn$pval < 0.05,  "*", "")))
+      hn$cell  <- trimws(sprintf("%s (%s, %s) %s", sup_fmt(hn$value, 4),
+                                 sup_fmt(hn$lower, 4), sup_fmt(hn$upper, 4), stars))
+      hn$Model <- sub("^HR ", "", hn$Model)
+      w <- stats::reshape(hn[, c("Outcome", "Class", "Model", "cell")],
+                          idvar = c("Outcome", "Class"), timevar = "Model",
+                          direction = "wide")
+      names(w) <- c("LCM", "Class", "HR (CI) Model 1", "HR (CI) Model 2",
+                    "HR (CI) Model 3")
+      w$LCM   <- SUP_OUTCOME[as.character(w$LCM)]
+      w$Class <- sub("^Class", "", as.character(w$Class))
+      sup_theme(flextable(w))
     }
   ),
   list(
@@ -446,44 +525,128 @@ TABLES <- list(
   ),
   list(
     part   = "supplemental",
-    title  = "Descriptive Statistics SLAM C1-C10 datasets",
+    title  = "Descriptive statistics of the modeling variables",
     render = "inline",
+    # S3. Sources: sum_data (complete 12 + training 12) and sum_test (12) = 36
+    # rows. sum_missing (the 13/9/14 excluded mice) is DELIBERATELY excluded --
+    # S3 describes the modelled data, not what was dropped.
+    #
+    # DROPPED  data_id  a pure function of dataset + outcome, and LESS
+    #                   informative than dataset since training and testing
+    #                   share one value
+    #          vars     the describe() row index, 1:4 repeating
+    #          range    max - min, derivable; Min and Max are merged instead
+    #          se       exactly SD/sqrt(Obs.), and pseudo-replicated -- it
+    #                   divides by observations (10,819) when the independent
+    #                   units are mice (1,315), understating uncertainty ~2.8x
+    #
+    # TWO N's  Obs. counts measurements; mice counts animals. Kept distinct.
+    # kurtosis is EXCESS kurtosis (raw - 3); psych returns it that way, and
+    # 26/36 rows fall below 1+skew^2, impossible for raw kurtosis.
     build  = function() {
-      flextable(rbind(
-        all_env$save_figtabs$sum_data,
-        all_env$save_figtabs$sum_test
-      )) %>%
-        theme_vanilla() %>%
-        autofit() %>%
-        set_table_properties(layout = "autofit") %>%
-        fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+      d <- rbind(all_env$save_figtabs$sum_data, all_env$save_figtabs$sum_test)
+      out <- data.frame(
+        Dataset               = SUP_DATASET[as.character(d$data_name)],
+        `Metabolic Variable`  = SUP_OUTCOME[as.character(d$outcome)],
+        Measure               = SUP_MEASURE[as.character(d$variables)],
+        Mice                  = sup_fmt_k(d$unique_id),
+        `Obs.`                = sup_fmt_k(d$n),
+        Mean                  = sup_fmt(d$mean, 2),
+        SD                    = sup_fmt(d$sd, 2),
+        Median                = sup_fmt(d$median, 2),
+        `Trimmed Mean`        = sup_fmt(d$trimmed, 2),
+        MAD                   = sup_fmt(d$mad, 2),
+        `Min–Max`         = paste0(sup_fmt(d$min, 2), "–", sup_fmt(d$max, 2)),
+        Skewness              = sup_fmt(d$skew, 2),
+        `Excess Kurtosis`     = sup_fmt(d$kurtosis, 2),
+        check.names = FALSE, stringsAsFactors = FALSE
+      )
+      sup_theme(flextable(out))
     }
   ),
   list(
     part   = "supplemental",
-    title  = "Median Life Expectancy Data",
+    title  = "Median life expectancy",
     render = "inline",
+    # S4. Source: save_figtabs$table_mle, built by describe_le() at
+    # 07_display_figures.Rmd:2844 from final_models$combined_census[[1]] -- the
+    # object is literally named census_complete. Subgroups come from looping
+    # over config$meta_dataset$covariates (sex, strain) WITHIN that same census,
+    # so every column is a subset of the complete dataset:
+    # 648 + 667 = 1,315 and 649 + 666 = 1,315.
+    #
+    # ESTIMATOR  survfit(surv_object ~ 1) with every argument at default, which
+    #            fixes Kaplan-Meier, conf.int = 0.95 and conf.type = "log".
+    #
+    # TRANSPOSED to groups-in-rows with "estimate (95% CI)" cells, matching
+    # Table 1's Median Survival column. The pipeline emits statistics-in-rows,
+    # which separated each estimate from its own limits by three row positions.
+    #
+    # DROPPED  conf_int (0.95), conf_type (log), type (right) -- constant down
+    #          every column and all three are survfit defaults. Restated in the
+    #          Word footnote, which is where the 95% now lives.
     build  = function() {
-      flextable(all_env$save_figtabs$table_mle) %>%
-        theme_vanilla() %>%
-        autofit() %>%
-        set_table_properties(layout = "autofit") %>%
-        fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+      le  <- all_env$save_figtabs$table_mle
+      le  <- le[c("all", "sex.F", "sex.M", "strain.HET3", "strain.B6"), ]
+      cel <- function(e, lo, hi) sprintf("%s (%s, %s)", sup_fmt(e, 1),
+                                        sup_fmt(lo, 1), sup_fmt(hi, 1))
+      out <- data.frame(
+        Group             = c("All", "F", "M", "HET3", "B6"),
+        n                 = sup_fmt_k(le$n),
+        `Median (95% CI)` = cel(le$Median, le$Lower.Median, le$Upper.Median),
+        `Q1 (95% CI)`     = cel(le$Q1,     le$Lower.Q1,     le$Upper.Q1),
+        `Q3 (95% CI)`     = cel(le$Q3,     le$Lower.Q3,     le$Upper.Q3),
+        check.names = FALSE, stringsAsFactors = FALSE
+      )
+      sup_theme(flextable(out))
     }
   ),
   list(
     part   = "supplemental",
-    title  = "LCM Model Information",
+    title  = "LCM information",
     render = "inline",
+    # S5. Source: save_figtabs$lcmm_table -- helphlme::compare_models(
+    # final_models$final_model)$table with outcome and data_type prepended.
+    #
+    # TRANSPOSED to models-in-rows with a Dataset column, matching S3.
+    #
+    # DROPPED  Model.Number  1:6, fully determined by dataset x outcome
+    #          conv          1 for all six; lcmm's convergence code, not a
+    #                        count. lcmm defines conv = 1 as "the convergence
+    #                        criteria were satisfied", and the canonical
+    #                        summary() prints "Convergence criteria satisfied"
+    #                        six times with zero failures. Stated in words in
+    #                        the Word footnote instead.
+    #          Model         one distinct value across all six; moved to the
+    #                        footnote as an equation.
+    #
+    # The footnote equation, read verbatim off the hlme call:
+    #   outcome ~ (age + age^2) x class + sex x genetic background
+    #             + (age + age^2 | mouse ID)
+    # with idiag = FALSE (non-structured variance-covariance matrix) and
+    # nwg = TRUE (a class-specific PROPORTIONAL parameter multiplies it --
+    # lcmm's own wording; ng-1 parameters, not 6 per class).
+    #
+    # Smallest Class (%) is 1 dp: it is a ratio of integers (124/1315), so the
+    # 3rd decimal was 0.001% of the cohort, about 1/100 of a mouse.
     build  = function() {
-      all_env$save_figtabs$lcmm_table %>%
-        dplyr::rename(`Smallest Class %` = `Smallest.Class....`) %>%
-        dplyr::mutate(`Smallest Class %` = round(`Smallest Class %`, digits = 3)) %>%
-        flextable() %>%
-        theme_vanilla() %>%
-        autofit() %>%
-        set_table_properties(layout = "autofit") %>%
-        fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+      lt  <- all_env$save_figtabs$lcmm_table
+      sm  <- grep("^Smallest", names(lt), value = TRUE)[1]   # make.names mangles it
+      out <- data.frame(
+        Dataset              = SUP_DATASET[as.character(lt$data_type)],
+        `Metabolic Variable` = SUP_OUTCOME[as.character(lt$outcome)],
+        Classes              = lt$k,
+        Parameters           = lt$npm,
+        `Log-Likelihood`     = sup_fmt_k(lt$loglik),
+        BIC                  = sup_fmt_k(lt$BIC),
+        AIC                  = sup_fmt_k(lt$AIC),
+        Entropy              = sup_fmt(lt$entropy, 4),
+        ICL1                 = sup_fmt_k(lt$ICL1),
+        ICL2                 = sup_fmt_k(lt$ICL2),
+        `Smallest Class (%)` = sup_fmt(lt[[sm]], 1),
+        check.names = FALSE, stringsAsFactors = FALSE
+      )
+      sup_theme(flextable(out))
     }
   ),
   list(

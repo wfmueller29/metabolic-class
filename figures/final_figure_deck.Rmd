@@ -182,12 +182,15 @@ tn <- list(primary = 0L, supplemental = 0L)
 # Descriptive Census, C16-C18 stats, Missing Data, LCM Posterior Probabilities,
 # Candidate LCMs, LME Information) -- those are NOT part of the submitted
 # supplement, so they are excluded from the deck here.
+# NOTE: these strings must match TABLES$title in figure_spec.R EXACTLY. They
+# were renamed 2026-08-27 to the titles used in the submitted supplement; the
+# old pipeline names are listed alongside so a stale reference is recognisable.
 SUPP_TABLE_KEEP <- c(
-  "Sex/Strain Adjusted Hazards",                  # Table S1
-  "Linear Mixed Effects Models",                  # Table S2
-  "Descriptive Statistics SLAM C1-C10 datasets",  # Table S3
-  "Median Life Expectancy Data",                  # Table S4
-  "LCM Model Information"                          # Table S5
+  "HRs estimated using three Cox models",              # S1 (was "Sex/Strain Adjusted Hazards")
+  "Linear Mixed Effects Models",                       # S2 (unchanged)
+  "Descriptive statistics of the modeling variables",  # S3 (was "Descriptive Statistics SLAM C1-C10 datasets")
+  "Median life expectancy",                            # S4 (was "Median Life Expectancy Data")
+  "LCM information"                                    # S5 (was "LCM Model Information")
 )
 
 render_tables <- function(which_part) {
