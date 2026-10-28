@@ -32,7 +32,7 @@ paired_cages <- class_cages |>
 cat(sprintf("complete dataset: %d mice | retained (with a cagemate in the complete dataset): %d mice in %d cages | excluded: %d\n", nrow(class_cages), nrow(paired_cages), dplyr::n_distinct(paired_cages$cage), nrow(class_cages) - nrow(paired_cages)))
 #- 86.1.8: Map column names to the three class measures from the pipeline
 measures <- c(BW = "new_class_bw", FM = "new_class_fat", FBG = "new_class_gluc")
-#- 86.1.9: Class assignments from the sex x genetic background model fits (for 86.4)
+#- 86.1.9: Class assignments from the sex x genetic background model fits (for 86.2)
 #! Each fit was built on one group only, so it spreads that group's mice across classes; the pooled fit put most females in one BW class, leaving little room for a cage effect to show. Class numbers differ between fits, which does not matter: the test only asks same class or not.
 group_fits <- c(`F B6` = "fb6", `M B6` = "mb6", `F HET3` = "fhet3", `M HET3` = "mhet3")
 group_classes <- lapply(group_fits, \(tag) readr::read_csv(file.path("04_create_census/output", paste0("slam_c1-c10_age_", tag, "_bwfatgluc"), "complete_census.csv"), col_types = readr::cols(idno = "c"), show_col_types = FALSE, name_repair = "unique_quiet") |>
@@ -42,37 +42,52 @@ group_cages <- lapply(group_classes, \(gc) class_cages |>
   dplyr::select(-new_class_bw, -new_class_fat, -new_class_gluc) |>
   dplyr::inner_join(gc, by = "idno") |>
   dplyr::filter(dplyr::n() >= 2, .by = cage))
-#+ 86.2: Does survival cluster by cage assignment?
-#- 86.2.1: Fit model of survival vs cage + strata
+#- 86.1.11: Cage size at assignment (all census mice in the cage, classified or not)
+#! Counted over the whole census, not the classified subset, so it reflects how many mice actually shared the cage.
+cage_sizes <- cages |>
+  dplyr::mutate(dplyr::across(dplyr::everything(), trimws), cage = paste(cohort, cage)) |>
+  dplyr::summarise(cage_size = dplyr::n_distinct(idno), .by = cage)
+class_cages <- dplyr::left_join(class_cages, cage_sizes, by = "cage") |>
+  dplyr::mutate(housing = factor(ifelse(cage_size < 4, "Fewer than four", "Four"), levels = c("Four", "Fewer than four")))
+#+ 86.2: Are class assignments of cagemates more or less similar than expected by chance
+#! concordance_test(): share of cagemate pairs in the same class vs 999 shuffles within cohort x sex x genetic background. more_alike_P = cage effect; more_different_P = consistent with social order.
+#- 86.2.1: Pooled classes, all mice
+pooled_concordance <- concordance_test(paired_cages, measures)
+print(pooled_concordance, row.names = FALSE)
+#- 86.2.2: Sex x genetic background fit classes, within each fit
+group_concordance <- dplyr::bind_rows(lapply(group_cages, concordance_test, measures = measures), .id = "fit")
+print(group_concordance, row.names = FALSE)
+#+ 86.3: Does survival cluster by cage assignment?
+#- 86.3.1: Fit model of survival vs cage + strata
 #! Stratified because cages are nested within cohort x sex x genetic background.
 cage_frailty <- survival::coxph(survival::Surv(le_wk, dead_censor == 1) ~ survival::frailty(cage) + survival::strata(cohort, sex, strain), data = paired_cages)
-#- 86.2.2: Build a null model without cage for the LRT
+#- 86.3.2: Build a null model without cage for the LRT
 no_cage <- survival::coxph(survival::Surv(le_wk, dead_censor == 1) ~ survival::strata(cohort, sex, strain), data = paired_cages)
-#- 86.2.3: Compute LRT
+#- 86.3.3: Compute LRT
 frailty_lrt(cage_frailty, no_cage) |> round(4) |> print()
-#+ 86.3: Does adding a frailty term for cage alter class/survival associations?
-#- 86.3.1: Pipeline's individual Cox models (slam_age_all.yaml)
+#+ 86.4: Does adding a frailty term for cage alter class/survival associations?
+#- 86.4.1: Pipeline's individual Cox models (slam_age_all.yaml)
 models <- c(`Model 1` = "", `Model 2` = " + sex * strain", `Model 3` = " + sex + survival::strata(strain)")
-#- 86.3.2: Make a grid of all model x class measure combinations
+#- 86.4.2: Make a grid of all model x class measure combinations
 #! Complete dataset (n = 1,315), as in Table S2.1; mice with no cagemate count as cages of one.
 fits <- expand.grid(Model = names(models), LCM = names(measures), stringsAsFactors = FALSE)
-#- 86.3.3: Fit the original models (no cage term)
+#- 86.4.3: Fit the original models (no cage term)
 #! Should reproduce Table S2.1 exactly.
 hr_original <- dplyr::bind_rows(Map(\(lcm, model) data.frame(LCM = lcm, Model = model, fit_class_hrs(class_cages, measures[[lcm]], models[[model]])), fits$LCM, fits$Model))
-#- 86.3.4: Fit the same models with a cage frailty term
+#- 86.4.4: Fit the same models with a cage frailty term
 hr_frailty <- dplyr::bind_rows(Map(\(lcm, model) data.frame(LCM = lcm, Model = model, fit_class_hrs(class_cages, measures[[lcm]], models[[model]], frailty = TRUE)), fits$LCM, fits$Model))
-#- 86.3.5: Compare side by side
+#- 86.4.5: Compare side by side
 #! change = % change in HR with cage; direction = relative to HR = 1 (no effect); sig_flipped = significance at P < 0.05 changed.
-hr_compare <- dplyr::left_join(dplyr::rename(hr_original, without_cage = hr, est_without = est, p_without = p), dplyr::rename(hr_frailty, with_cage = hr, est_with = est, p_with = p), by = c("LCM", "Model", "Class")) |>
+hr_compare <- dplyr::left_join(dplyr::rename(hr_original, without_cage = hr, est_without = est, lower_without = lower, upper_without = upper, p_without = p), dplyr::rename(hr_frailty, with_cage = hr, est_with = est, lower_with = lower, upper_with = upper, p_with = p), by = c("LCM", "Model", "Class")) |>
   dplyr::mutate(change = dplyr::if_else(is.na(est_with), "", sprintf("%+.1f%%", 100 * (est_with / est_without - 1))),
                 direction = dplyr::if_else(is.na(est_with), "", dplyr::if_else(abs(log(est_with)) > abs(log(est_without)), "away from 1", "toward 1")),
                 sig_flipped = dplyr::if_else(is.na(est_with), "", dplyr::if_else((p_without < 0.05) != (p_with < 0.05), "YES", "no")))
 print(dplyr::select(hr_compare, LCM, Model, Class, without_cage, with_cage, change, direction, sig_flipped), row.names = FALSE)
-#+ 86.4: Are class assignments of cagemates more or less similar than expected by chance
-#! concordance_test(): share of cagemate pairs in the same class vs 999 shuffles within cohort x sex x genetic background. more_alike_P = cage effect; more_different_P = consistent with social order.
-#- 86.4.1: Pooled classes, all mice
-pooled_concordance <- concordance_test(paired_cages, measures)
-print(pooled_concordance, row.names = FALSE)
-#- 86.4.2: Sex x genetic background fit classes, within each fit
-group_concordance <- dplyr::bind_rows(lapply(group_cages, concordance_test, measures = measures), .id = "fit")
-print(group_concordance, row.names = FALSE)
+#+ 86.5: Is survival associated with the number of mice housed per cage?
+#! Mice were housed four per cage by design; smaller census cages often follow deaths or separations (e.g. fighting males), so this comparison is descriptive. Complete dataset (n = 1,315), stratified by cohort x sex x genetic background as in 86.3.
+#- 86.5.1: How many mice were in smaller cages
+print(table(housing = class_cages$housing, sex = class_cages$sex))
+#- 86.5.2: Cox model of survival on housing (fewer than four vs four)
+housing_fit <- survival::coxph(survival::Surv(le_wk, dead_censor == 1) ~ housing + survival::strata(cohort, sex, strain), data = class_cages)
+housing_ci <- summary(housing_fit)$conf.int
+cat(sprintf("fewer than four vs four per cage: HR %s\n", format_hr(housing_ci[1, 1], housing_ci[1, 3], housing_ci[1, 4], summary(housing_fit)$coefficients[1, "Pr(>|z|)"])))
