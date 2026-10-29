@@ -42,7 +42,12 @@ group_cages <- lapply(group_classes, \(gc) class_cages |>
   dplyr::select(-new_class_bw, -new_class_fat, -new_class_gluc) |>
   dplyr::inner_join(gc, by = "idno") |>
   dplyr::filter(dplyr::n() >= 2, .by = cage))
-#- 86.1.11: Cage size at assignment (all census mice in the cage, classified or not)
+#- 86.1.11: Mice and cages per sex x genetic background fit (n for the Figure S2.10A legend)
+#! "classified" = mice with a class in that fit (Figure 2.2 n); "retained" = those with a cagemate in it, as tested in 86.2.2.
+data.frame(fit = names(group_fits), classified = sapply(group_classes, nrow), retained = sapply(group_cages, nrow), cages = sapply(group_cages, \(g) dplyr::n_distinct(g$cage))) |>
+  rbind(data.frame(fit = "all fits", classified = sum(sapply(group_classes, nrow)), retained = sum(sapply(group_cages, nrow)), cages = sum(sapply(group_cages, \(g) dplyr::n_distinct(g$cage))))) |>
+  print(row.names = FALSE)
+#- 86.1.12: Cage size at assignment (all census mice in the cage, classified or not)
 #! Counted over the whole census, not the classified subset, so it reflects how many mice actually shared the cage.
 cage_sizes <- cages |>
   dplyr::mutate(dplyr::across(dplyr::everything(), trimws), cage = paste(cohort, cage)) |>
@@ -91,3 +96,41 @@ print(table(housing = class_cages$housing, sex = class_cages$sex))
 housing_fit <- survival::coxph(survival::Surv(le_wk, dead_censor == 1) ~ housing + survival::strata(cohort, sex, strain), data = class_cages)
 housing_ci <- summary(housing_fit)$conf.int
 cat(sprintf("fewer than four vs four per cage: HR %s\n", format_hr(housing_ci[1, 1], housing_ci[1, 3], housing_ci[1, 4], summary(housing_fit)$coefficients[1, "Pr(>|z|)"])))
+#+ 86.6: Does cagemate class agreement differ between females and males?
+#! Pooled classes only: the stratum refits define different classes in each sex, so their agreement cannot be compared across sexes. Kappa = (observed - chance) / (1 - chance) puts both sexes on one scale although their chance levels differ (the pooled BW fit puts most females in one class).
+#! Chance is computed from class counts within cohort x sex x genetic background (cage_agreement()), which is the exact mean of the 86.2 shuffle null, so the bootstrap needs no nested shuffles. 95% CIs from 2,000 boot::boot resamples of cages stratified by those cells, normal-approximation boot.ci() intervals (both as for the reclassification accuracy CIs, Figure S2.5).
+#- 86.6.1: Check the computed chance against the shuffle mean in each sex
+#! The two columns should agree to about the third decimal (the shuffle mean carries Monte Carlo error).
+sex_concordance <- concordance_test(paired_cages, measures, by = "sex")
+sex_chance_check <- dplyr::bind_rows(lapply(names(measures), \(lcm) dplyr::summarise(cage_agreement(paired_cages, measures[[lcm]]), chance = mean(chance), .by = sex) |> dplyr::mutate(LCM = lcm))) |>
+  dplyr::left_join(dplyr::select(sex_concordance, sex, LCM, null_mean), by = c("sex", "LCM"))
+print(sex_chance_check, row.names = FALSE)
+#- 86.6.2: Female vs male kappa, all mice
+sex_kappa_all <- sex_kappa_test(paired_cages, measures)
+print(sex_kappa_all, row.names = FALSE, digits = 3)
+#- 86.6.3: Female vs male kappa within each genetic background
+#! Keeps a sex difference from standing in for a genetic background difference.
+sex_kappa_strain <- dplyr::bind_rows(lapply(split(paired_cages, paired_cages$strain), sex_kappa_test, measures = measures), .id = "strain")
+print(sex_kappa_strain, row.names = FALSE, digits = 3)
+#+ 86.7: Receipt of every number reported in 2.10.2 and the Figure S2.10 legend
+#! Prints each value as written in the text, to check the prose and legend against the run. Agreement in percentage points = 100 x (observed - mean of permutations).
+#- 86.7.1: Sample sizes (paragraph one; legend A and B)
+cat(sprintf("complete dataset n = %d | with a cagemate n = %d in %d cages\n", nrow(class_cages), nrow(paired_cages), dplyr::n_distinct(paired_cages$cage)))
+cat(sprintf("%s retained n = %d\n", names(group_cages), sapply(group_cages, nrow)), sep = "")
+#- 86.7.2: Pooled agreement above chance and upper-tail P (paragraph one)
+cat(sprintf("pooled %s: %.1f percentage points above chance, P = %.3f\n", pooled_concordance$LCM, 100 * (pooled_concordance$observed - pooled_concordance$null_mean), pooled_concordance$more_alike_P), sep = "")
+#- 86.7.3: Sex x genetic background fits (paragraph one)
+cat(sprintf("strata: %d of %d testable comparisons above chance; %d of %d with P < 0.05\n", sum(group_concordance$observed > group_concordance$null_mean), nrow(group_concordance), sum(group_concordance$more_alike_P < 0.05), nrow(group_concordance)))
+#- 86.7.4: Lower tail, pooled and strata together (paragraph one)
+cat(sprintf("less alike than chance: smallest P = %.3f, largest P = %.3f\n", min(c(pooled_concordance$more_different_P, group_concordance$more_different_P)), max(c(pooled_concordance$more_different_P, group_concordance$more_different_P))))
+#- 86.7.5: Survival clustering by cage (paragraph two)
+cage_lrt <- frailty_lrt(cage_frailty, no_cage)
+cat(sprintf("cage frailty: variance = %.4f, likelihood-ratio P = %.2f\n", cage_lrt[["variance"]], cage_lrt[["p"]]))
+#- 86.7.6: Class HRs with a cage frailty term (paragraph three; legend B)
+#! Reference rows dropped. "away from 1" counts HRs whose distance from 1 (on the log scale) grew with the cage term.
+hr_rows <- dplyr::filter(hr_compare, !is.na(est_with))
+cat(sprintf("with cage frailty: %d of %d HRs P < 0.001 (largest P = %.2g); %d of %d decreased relative to the original model; %d of %d moved away from 1, by %.1f%%-%.1f%%\n", sum(hr_rows$p_with < 0.001), nrow(hr_rows), max(hr_rows$p_with), sum(hr_rows$est_with < hr_rows$est_without), nrow(hr_rows), sum(hr_rows$direction == "away from 1"), nrow(hr_rows), min(abs(100 * (hr_rows$est_with / hr_rows$est_without - 1))), max(abs(100 * (hr_rows$est_with / hr_rows$est_without - 1)))))
+#- 86.7.7: Housing (closing paragraph)
+cat(sprintf("housed four per cage: %.0f%% of %d mice | fewer than four vs four: HR %s\n", 100 * mean(class_cages$housing == "Four"), nrow(class_cages), format_hr(housing_ci[1, 1], housing_ci[1, 3], housing_ci[1, 4], summary(housing_fit)$coefficients[1, "Pr(>|z|)"])))
+#- 86.7.8: Female vs male chance-corrected agreement (sex comparison)
+cat(sprintf("%s %s: kappa F = %.3f, M = %.3f, M - F = %.3f [%.3f, %.3f]\n", c(rep("all", nrow(sex_kappa_all)), sex_kappa_strain$strain), c(sex_kappa_all$LCM, sex_kappa_strain$LCM), c(sex_kappa_all$kappa_F, sex_kappa_strain$kappa_F), c(sex_kappa_all$kappa_M, sex_kappa_strain$kappa_M), c(sex_kappa_all$diff_MF, sex_kappa_strain$diff_MF), c(sex_kappa_all$diff_lo, sex_kappa_strain$diff_lo), c(sex_kappa_all$diff_hi, sex_kappa_strain$diff_hi)), sep = "")
