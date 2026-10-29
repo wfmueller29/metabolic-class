@@ -20,17 +20,38 @@ for (yaml in yaml_files) {
   if (ecode != 0) stop(paste("Error in:", yaml))
 }
 
-# Treatment Response ----------------------------------------------------------
-rmarkdown::render("97_treatment_response/treatment_response.Rmd")
+# Downstream analyses ---------------------------------------------------------
+analyses <- list(
+  list(tag = "90_med_max_le",          dir = "90_med_max_le",          script = "med_max_le.R",           type = "source"),
+  list(tag = "91_partial_correlation", dir = "91_partial_correlation", script = "partial_corr.R",         type = "source"),
+  list(tag = "92_overlap_analysis",    dir = "92_overlap_analysis",    script = "overlap.R",              type = "source"),
+  list(tag = "93_strain_analysis",     dir = "93_strain_analysis",     script = "strain_analysis.R",      type = "source"),
+  list(tag = "94_jointlcm",            dir = "94_jointlcm",            script = "jointlcm.R",             type = "source"),
+  list(tag = "95_healthcard_cod",      dir = "95_healthcard_cod/R",    script = "healthcard_cod.rmd",     type = "render"),
+  list(tag = "96_similarity_slam_itp", dir = "96_similarity_slam_itp", script = "similarity_table.R",     type = "source"),
+  list(tag = "97_treatment_response",  dir = "97_treatment_response",  script = "treatment_response.Rmd", type = "render"),
+  list(tag = "98_prep_census",         dir = "98_itp_genotype",        script = "prep_census.R",          type = "source"),
+  list(tag = "98_trajectory",          dir = "98_itp_genotype",        script = "trajectory.R",           type = "source"),
+  list(tag = "98_geno_demographics",   dir = "98_itp_genotype",        script = "itp_geno_demographics_table.R", type = "source")
+)
+
+repo_root <- getwd()
+for (a in analyses) {
+  cat("Running:", a$tag, "\n")
+  args <- if (identical(a$type, "render")) {
+    c("-e", sprintf('rmarkdown::render("%s")', a$script))
+  } else {
+    a$script
+  }
+  setwd(file.path(repo_root, a$dir))
+  ecode <- tryCatch(system2("Rscript", args = args), finally = setwd(repo_root))
+  if (ecode != 0) stop(paste("Error in:", a$tag))
+}
 
 # Figures ---------------------------------------------------------------------
-rmarkdown::render("figures/primary_figures.Rmd",
-  output_format = "pdf_document",
-  output_dir = "figures/output",
-  output_file = "Primary Figures.pdf"
-)
-rmarkdown::render("figures/sup_figures.Rmd",
-  output_format = "pdf_document",
-  output_dir = "figures/output",
-  output_file = "Supplemental Material.pdf"
-)
+setwd("99_pub_ready_figs/")
+ecode <- system2("Rscript", "pub_ready_figs.R")
+if (ecode != 0) stop(paste("Error in pub_ready_figs.R"))
+setwd("..")
+
+rmarkdown::render("figures/final_figure_deck.Rmd")

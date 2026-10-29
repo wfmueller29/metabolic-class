@@ -44,9 +44,9 @@ output:
       "3" = "#5087fe" # blue
     )
     class_colors_final <- c(
-      "Early-Peak-BW" = "#000", # black
-      "Stable BW"     = "#d53b59", # red
-      "Mid-Peak-BW"   = "#53ca3e" # green
+      "Class 1" = "#000", # black
+      "Class 2" = "#d53b59", # red
+      "Class 3" = "#53ca3e" # green
     )
     bin_colors <- c(
       "0" = "#74ae66", # green
@@ -58,11 +58,11 @@ output:
     )
     bin_colors_per_yr <- c(
       "[0]" = "#74ae66", # green
-      "(0–0.5)" = "#f2d14c", # yellow
-      "[0.5–1)" = "#efa52e", # darker yellow-orange
-      "[1–2)" = "#f06151", # red
-      "[2–4)" = "#982215", # dark red
-      "≥4" = "#350202" # dark dark red
+      "(0, 0.5)" = "#f2d14c", # yellow
+      "[0.5, 1)" = "#efa52e", # darker yellow-orange
+      "[1, 2)" = "#f06151", # red
+      "[2, 4)" = "#982215", # dark red
+      "≥ 4" = "#350202" # dark dark red
     )
 ```
 # Load in input data
@@ -478,6 +478,17 @@ output:
 
 ## Examine lifelong healthcards accounting for incidence (non-condition specific)
 ```{r Incidence study}
+  # Unified theme. Defined here (not in the later "compiled plots" chunk) because
+  # this Incidence study chunk is the first to reference it -- defining it downstream
+  # left it undefined at first use.
+  unified_plot_theme <- theme_minimal(base_size = 18) +
+    theme(
+      plot.title = element_text(size = 18, face = "bold", hjust = 0.5),
+      axis.title = element_text(size = 16, face = "bold"),
+      axis.text = element_text(size = 13),
+      legend.title = element_text(size = 16, face = "bold"),
+      legend.text = element_text(size = 13, face = "bold")
+    )
   #* Now, create a lifelong healthcard
     HC_relevant_LL <- classes_i %>%
       select(idno,le_wk,new_class_bw,created_date,recovery_date, tod,abscess:condition_to_death) 
@@ -507,13 +518,13 @@ output:
       )) %>%
       mutate(hc_yr_bin = case_when(
         hc_per_yr == 0 ~ "[0]",
-        hc_per_yr < 0.5 ~ "(0–0.5)",
-        hc_per_yr < 1.0 ~ "[0.5–1)",
-        hc_per_yr < 2 ~ "[1–2)",
-        hc_per_yr < 4 ~ "[2–4)",
-        TRUE ~ "≥4"
+        hc_per_yr < 0.5 ~ "(0, 0.5)",
+        hc_per_yr < 1.0 ~ "[0.5, 1)",
+        hc_per_yr < 2 ~ "[1, 2)",
+        hc_per_yr < 4 ~ "[2, 4)",
+        TRUE ~ "≥ 4"
       )) %>%
-        mutate(hc_yr_bin = factor(hc_yr_bin, levels = c("[0]", "(0–0.5)", "[0.5–1)", "[1–2)", "[2–4)", "≥4")))
+        mutate(hc_yr_bin = factor(hc_yr_bin, levels = c("[0]", "(0, 0.5)", "[0.5, 1)", "[1, 2)", "[2, 4)", "≥ 4")))
   #* Plot raw counts over lifetime
     raw_counts_LL_HCs <- ggplot(hc_lifespan_data, aes(x = condition_bin, fill = factor(new_class_bw))) +
     geom_bar(position = "stack") +
@@ -941,15 +952,7 @@ output:
 ```     
 ## Compile plots
 ```{r compiled plots}
-  # Unified theme
-  unified_plot_theme <- theme_minimal(base_size = 18) +
-    theme(
-      plot.title = element_text(size = 18, face = "bold", hjust = 0.5),
-      axis.title = element_text(size = 16, face = "bold"),
-      axis.text = element_text(size = 13),
-      legend.title = element_text(size = 16, face = "bold"),
-      legend.text = element_text(size = 13, face = "bold")
-    )
+  # unified_plot_theme is defined up in the "Incidence study" chunk (its first use).
   #* Start a PDF device, compile all the pages
   pdf("Healthcard_Figures.pdf", width = 8.5, height = 11, onefile = TRUE)
 
@@ -1060,9 +1063,9 @@ output:
       df %>%
         mutate({{ var }} := recode_factor(
           {{ var }},
-          "1" = "Early-Peak-BW",
-          "2" = "Stable BW",
-          "3" = "Mid-Peak-BW"
+          "1" = "Class 1",
+          "2" = "Class 2",
+          "3" = "Class 3"
         ))
     }
   # Apply to relevant datasets
@@ -1131,13 +1134,10 @@ output:
       final_plot_theme
 
   # Finalize version of S8E (cumulative incidence of HCs, all mice)
+    # Columns already arrive as "Class 1"/"Class 2"/"Class 3"; the descriptor
+    # recode that used to sit here was dropped so S8 labels its classes the same
+    # way every other figure does.
     condition_matrix_norm_renamed <- condition_matrix_norm
-    colnames(condition_matrix_norm_renamed) <- recode(
-      colnames(condition_matrix_norm_renamed),
-      "Class 1" = "Early-Peak-BW",
-      "Class 2" = "Stable BW",
-      "Class 3" = "Mid-Peak-BW"
-    )
     S8E <- pheatmap::pheatmap(
       condition_matrix_norm_renamed,
       scale = "none", # Fix inconsistent coloring

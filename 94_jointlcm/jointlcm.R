@@ -334,7 +334,7 @@ p_bw_obs <- plot_observed_classes(
   title = NULL,
   x_label = "Age (weeks)",
   y_label = "Body weight (g)",
-  class_label = "Body weight Class"
+  class_label = "BW class"
 )
 
 p_bw_km <- plot_km_classes(
@@ -345,7 +345,7 @@ p_bw_km <- plot_km_classes(
   title = NULL,
   x_label = "Age (weeks)",
   y_label = "Survival probability",
-  class_label = "Body weight Class"
+  class_label = "BW class"
 )
 
 
@@ -359,7 +359,7 @@ p_fat_obs <- plot_observed_classes(
   title = NULL,
   x_label = "Age (weeks)",
   y_label = "Fat mass (g)",
-  class_label = "Fat mass Class"
+  class_label = "FM class"
 )
 
 p_fat_km <- plot_km_classes(
@@ -370,7 +370,7 @@ p_fat_km <- plot_km_classes(
   title = NULL,
   x_label = "Age (weeks)",
   y_label = "Survival probability",
-  class_label = "Fat mass Class"
+  class_label = "FM class"
 )
 
 
@@ -384,7 +384,7 @@ p_adiposity_obs <- plot_observed_classes(
   title = NULL,
   x_label = "Age (weeks)",
   y_label = "Adiposity (%)",
-  class_label = "Adiposity Class"
+  class_label = "Adiposity class"
 )
 
 p_adiposity_km <- plot_km_classes(
@@ -395,7 +395,7 @@ p_adiposity_km <- plot_km_classes(
   title = NULL,
   x_label = "Age (weeks)",
   y_label = "Survival probability",
-  class_label = "Adiposity Class"
+  class_label = "Adiposity class"
 )
 
 
@@ -409,7 +409,7 @@ p_gluc_obs <- plot_observed_classes(
   title = NULL,
   x_label = "Age (weeks)",
   y_label = "Blood glucose (mg/dL)",
-  class_label = "Glucose Class"
+  class_label = "FBG class"
 )
 
 p_gluc_km <- plot_km_classes(
@@ -420,7 +420,7 @@ p_gluc_km <- plot_km_classes(
   title = NULL,
   x_label = "Age (weeks)",
   y_label = "Survival probability",
-  class_label = "Glucose Class"
+  class_label = "FBG class"
 )
 
 

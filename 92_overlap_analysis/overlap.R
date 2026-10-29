@@ -1,18 +1,31 @@
 # In this analysis we will investigate the overlap between classes
 # We will use the Rand index
 
-library(consoler)
-library(mclust)
-library(flextable)
-library(magrittr)
-library(webshot2)
-library(UpSetR)
+suppressPackageStartupMessages(library(consoler))
+suppressPackageStartupMessages(library(mclust))
+suppressPackageStartupMessages(library(flextable))
+suppressPackageStartupMessages(library(magrittr))
+suppressPackageStartupMessages(library(webshot2))
+suppressPackageStartupMessages(library(UpSetR))
 
 # load data -------------------------------------------------------------------
 # All figures from this stage go under output/, as in every other stage.
 if (!dir.exists("output")) dir.create("output", recursive = TRUE)
 
-census <- read.csv("../04_create_census/output/slam_c1-c10_age_all_bwfatgluc/train_census.csv")
+# Complete C1-10 census (n = 1,315), NOT the 80% training split. This analysis is
+# descriptive -- it asks how far three independently fitted class assignments
+# agree -- so it fits nothing and predicts nothing, and the train/test split does
+# no work here. Using the complete set also matches the Methods ("across all
+# animals with complete class assignments") and the partial-correlation panels
+# S3B/S3C, which read this same file. C16-18 are excluded either way.
+#
+# CAUTION on the file names: "train_census.csv" means different things per config.
+# Here (internal) it is an 80% SAMPLE WITHIN C1-10 -- 1,056 of 1,315, cohorts 1-10
+# on both sides of the split. In the external config
+# (slam_c1-10_x_slam_c16-18) "train" instead means ALL of C1-10 (1,315) with
+# C16-18 held out as test. Same file name, different meaning -- this is also why
+# Fig 4B ("Complete") and Fig S6H ("Training") render identical statistics.
+census <- read.csv("../04_create_census/output/slam_c1-c10_age_all_bwfatgluc/complete_census.csv")
 
 
 ari_bw_fat <- adjustedRandIndex(
@@ -30,9 +43,9 @@ ari_fat_gluc <- adjustedRandIndex(
   census$new_class_gluc
 )
 
-ari_bw_fat
-ari_bw_gluc
-ari_fat_gluc
+# ari_bw_fat   # (auto-print suppressed; values are in the S3 block at the end)
+# ari_bw_gluc   # (auto-print suppressed; values are in the S3 block at the end)
+# ari_fat_gluc   # (auto-print suppressed; values are in the S3 block at the end)
 
 # make pairwise matrix --------------------------------------------------------
 class_df <- census[, c("new_class_bw", "new_class_fat", "new_class_gluc")]
@@ -51,7 +64,7 @@ for (i in seq_along(class_df)) {
   }
 }
 
-ari_mat
+# ari_mat   # (auto-print suppressed; values are in the S3 block at the end)
 
 
 dimnames(ari_mat) <- list(
@@ -75,15 +88,27 @@ ari_ft <- flextable(ari_df) %>%
   align(align = "center", part = "all") %>%
   align(j = "Comparison", align = "left", part = "all") %>%
   bold(part = "header") %>%
-  set_caption("Adjusted Rand Index Between Latent Class Assignments")
+  # NOTE: save_as_image() DROPS flextable captions -- verified against the
+  # rendered PNGs (this table and the one at ~189 both export titleless despite
+  # having captions here). So this string never reaches S3D. The visible
+  # "Adjusted Rand Index, All Classes" title in the composite deck is typeset by
+  # the figure maintainer, so it is a composite-level instruction, not a code one.
+  # Kept accurate here for any future HTML/docx render of this table; changing it
+  # will NOT change S3D. To bake the title into the PNG instead, swap this for
+  # add_header_lines() as done at ~197 -- but then the maintainer must drop his.
+  set_caption("Adjusted Rand Index, All Classes")
 
 # Preview in RStudio Viewer
-ari_ft
+# ari_ft   # (auto-print suppressed; values are in the S3 block at the end)
 
-save_as_image(
+invisible(save_as_image(
   ari_ft,
-  path = "output/ari_matrix.png"
-)
+  path = "output/ari_matrix.png",
+  # res = 600 to match the HR table below and the table exports in 99.
+  # Without it flextable defaults to 200, which put S3D at 831 px -- ~119 dpi
+  # at full column width, below the 300 dpi floor for a submitted panel.
+  res = 600
+))
 
 # redo analysis comparing just high risk to non-high risk groups
 # NOTE: Class 1, 4, and 7 are the high risk groups
@@ -118,9 +143,9 @@ ari_fat_gluc_risk <- adjustedRandIndex(
   census_risk$gluc_high_risk
 )
 
-ari_bw_fat_risk
-ari_bw_gluc_risk
-ari_fat_gluc_risk
+# ari_bw_fat_risk   # (auto-print suppressed; values are in the S3 block at the end)
+# ari_bw_gluc_risk   # (auto-print suppressed; values are in the S3 block at the end)
+# ari_fat_gluc_risk   # (auto-print suppressed; values are in the S3 block at the end)
 
 
 # Make pairwise matrix ---------------------------------------------------------
@@ -147,11 +172,11 @@ for (i in seq_along(risk_df)) {
 }
 
 dimnames(ari_risk_mat) <- list(
-  c("BW High Risk", "FM High Risk", "FBG High Risk"),
-  c("BW High Risk", "FM High Risk", "FBG High Risk")
+  c("BW high-risk", "FM high-risk", "FBG high-risk"),
+  c("BW high-risk", "FM high-risk", "FBG high-risk")
 )
 
-ari_risk_mat
+# ari_risk_mat   # (auto-print suppressed; values are in the S3 block at the end)
 
 # Make flextable ---------------------------------------------------------------
 
@@ -168,14 +193,22 @@ ari_risk_ft <- flextable(ari_risk_df) %>%
   align(align = "center", part = "all") %>%
   align(j = "Comparison", align = "left", part = "all") %>%
   bold(part = "header") %>%
-  set_caption("Adjusted Rand Index Between High-Risk Latent Class Assignments")
+  # add_header_lines(), not set_caption(): save_as_image() drops captions,
+  # but a header row renders. These two are pasted into the response doc.
+  add_header_lines("Adjusted Rand Index, High risk vs. non-high risk") %>%
+  align(i = 1, align = "center", part = "header") %>%
+  bold(i = 1, part = "header")
 
-ari_risk_ft
+# ari_risk_ft   # (auto-print suppressed; values are in the S3 block at the end)
 
-save_as_image(
+invisible(save_as_image(
   ari_risk_ft,
-  path = "output/ari_high_risk_matrix.png"
-)
+  path = "output/ari_high_risk_matrix.png",
+  # res = 600 to match the HR table below and the table exports in 99.
+  # Without it flextable defaults to 200, which put S3D at 831 px -- ~119 dpi
+  # at full column width, below the 300 dpi floor for a submitted panel.
+  res = 600
+))
 
 # Jaccard index function -------------------------------------------------------
 
@@ -208,9 +241,9 @@ jaccard_fat_gluc_risk <- jaccard_index(
   census_risk$gluc_high_risk
 )
 
-jaccard_bw_fat_risk
-jaccard_bw_gluc_risk
-jaccard_fat_gluc_risk
+# jaccard_bw_fat_risk   # (auto-print suppressed; values are in the S3 block at the end)
+# jaccard_bw_gluc_risk   # (auto-print suppressed; values are in the S3 block at the end)
+# jaccard_fat_gluc_risk   # (auto-print suppressed; values are in the S3 block at the end)
 
 # Make pairwise Jaccard matrix -------------------------------------------------
 
@@ -228,11 +261,11 @@ for (i in seq_along(risk_df)) {
 }
 
 dimnames(jaccard_risk_mat) <- list(
-  c("BW High Risk", "FM High Risk", "FBG High Risk"),
-  c("BW High Risk", "FM High Risk", "FBG High Risk")
+  c("BW high-risk", "FM high-risk", "FBG high-risk"),
+  c("BW high-risk", "FM high-risk", "FBG high-risk")
 )
 
-jaccard_risk_mat
+# jaccard_risk_mat   # (auto-print suppressed; values are in the S3 block at the end)
 
 # Make flextable ---------------------------------------------------------------
 
@@ -249,14 +282,22 @@ jaccard_risk_ft <- flextable(jaccard_risk_df) %>%
   align(align = "center", part = "all") %>%
   align(j = "Comparison", align = "left", part = "all") %>%
   bold(part = "header") %>%
-  set_caption("Jaccard Index Between High-Risk Latent Class Assignments")
+  # add_header_lines(), not set_caption(): save_as_image() drops captions,
+  # but a header row renders. These two are pasted into the response doc.
+  add_header_lines("Jaccard Index, High risk vs. non-high risk") %>%
+  align(i = 1, align = "center", part = "header") %>%
+  bold(i = 1, part = "header")
 
-jaccard_risk_ft
+# jaccard_risk_ft   # (auto-print suppressed; values are in the S3 block at the end)
 
-save_as_image(
+invisible(save_as_image(
   jaccard_risk_ft,
-  path = "output/jaccard_high_risk_matrix.png"
-)
+  path = "output/jaccard_high_risk_matrix.png",
+  # res = 600 to match the HR table below and the table exports in 99.
+  # Without it flextable defaults to 200, which put S3D at 831 px -- ~119 dpi
+  # at full column width, below the 300 dpi floor for a submitted panel.
+  res = 600
+))
 
 # UpSet plot ------------------------------------------------------------------
 
@@ -267,9 +308,9 @@ upset_data <- census_risk[, c(
 )]
 
 names(upset_data) <- c(
-  "BW High Risk",
-  "FM High Risk",
-  "FBG High Risk"
+  "BW high-risk",
+  "FM high-risk",
+  "FBG high-risk"
 )
 
 png(
@@ -277,18 +318,28 @@ png(
   width = 10,
   height = 6,
   units = "in",
-  res = 300,
+  # 600 to match S3D/S3F/S3G, the other three panels in this row.
+  res = 600,
   bg = "white"
 )
 
-upset(
+# print(): UpSetR::upset() draws via an auto-printed grid object. run_90s.R runs
+# this script through source(), whose default print.eval = FALSE suppresses that
+# auto-print, so the device stayed blank. Forcing print() commits it to the png.
+# UpSetR defaults these to "Intersection Size" / "Set Size" (Title Case), which
+# was the only Title Case axis left on the S3 page -- S3F beside it reads
+# "Survival probability" / "Age (weeks)". Both are plain arguments, so this is a
+# label change, not a package modification.
+print(upset(
   upset_data,
-  sets = c("BW High Risk", "FM High Risk", "FBG High Risk"),
+  sets = c("BW high-risk", "FM high-risk", "FBG high-risk"),
   order.by = "freq",
-  text.scale = 1.5
-)
+  text.scale = 1.5,
+  mainbar.y.label = "Intersection size",
+  sets.x.label = "Set size"
+))
 
-dev.off()
+invisible(dev.off())
 
 # High-risk burden survival analysis ------------------------------------------
 # Classify each mouse by the NUMBER of high-risk phenotypes it belongs to
@@ -296,8 +347,8 @@ dev.off()
 # paper's other KM curves, but WITHOUT the dashed median lines and WITHOUT the
 # HR text on the plot) and export the Cox HRs to a separate table image.
 
-library(survival)
-library(survminer)
+suppressPackageStartupMessages(library(survival))
+suppressPackageStartupMessages(library(survminer))
 
 # reuse the project's Cox-HR helper (same HR/CI/star format used elsewhere)
 source("../07_display_figures/R/surv_all.R")
@@ -306,7 +357,7 @@ source("../07_display_figures/R/surv_all.R")
 # Each high-risk "class" belongs to a different phenotype (BW / FM / FBG), and a
 # mouse can be high-risk in at most one class per phenotype, so the count is the
 # number of high-risk PHENOTYPES (0-3). Rename here to taste.
-burden_title  <- "No. of high-risk phenotypes"   # HR-table column header
+burden_title  <- "No. of High-Risk Phenotypes"   # HR-table column header
 burden_legend <- "High-risk phenotypes"          # KM legend title
 
 # census_risk is already the single shared complete-case frame (built near the
@@ -380,7 +431,7 @@ make_km <- function(pal) {
 png("output/km_high_risk_burden.png", width = 8, height = 6, units = "in",
     res = 600, bg = "white")
 print(make_km(pal))
-dev.off()
+invisible(dev.off())
 cat(sprintf("Wrote km_high_risk_burden.png  (palette: %s)\n",
             paste(pal, collapse = ", ")))
 
@@ -393,7 +444,9 @@ cph <- hr_burden_stats[[3]]                # summary.coxph object
 star <- function(p) {
   if (p < .001) "***" else if (p < .01) "**" else if (p < .05) "*" else ""
 }
-fmt2 <- function(x) format(round(x, 2), nsmall = 2)
+# Four decimals to match every other HR table in the deck (1N, 2I, 5D, 5I,
+# S1H, S4I, S4R). Name kept as fmt2 for the call sites below.
+fmt2 <- function(x) format(round(x, 4), nsmall = 4)
 
 hr_strings <- vapply(seq_len(nrow(cph$conf.int)), function(i) {
   hr <- fmt2(cph$conf.int[i, "exp(coef)"])
@@ -425,6 +478,27 @@ hr_ft <- flextable(hr_table) %>%
     "(reference = 0). * p<.05, ** p<.01, *** p<.001."
   ))
 
-hr_ft
+# hr_ft   # (auto-print suppressed; values are in the S3 block at the end)
 
-save_as_image(hr_ft, path = "output/km_high_risk_burden_hr.png", res = 600)
+invisible(save_as_image(hr_ft, path = "output/km_high_risk_burden_hr.png", res = 600))
+
+
+# Values quoted in the S3 Results paragraph.
+cat("\n-- S3 values ------------------------------------------------\n")
+r2 <- function(x) formatC(round(x, 2), format = "f", digits = 2)
+
+cat(sprintf("ARI all classes, FM vs BW      %s\n", r2(ari_mat[1, 2])))
+cat(sprintf("high-risk BW-FM    ARI %s  Jaccard %s\n",
+            r2(ari_risk_mat[1, 2]), r2(jaccard_risk_mat[1, 2])))
+cat(sprintf("high-risk BW-FBG   ARI %s  Jaccard %s\n",
+            r2(ari_risk_mat[1, 3]), r2(jaccard_risk_mat[1, 3])))
+cat(sprintf("high-risk FM-FBG   ARI %s  Jaccard %s\n",
+            r2(ari_risk_mat[2, 3]), r2(jaccard_risk_mat[2, 3])))
+
+b <- census_risk$bw_high_risk == 1
+f <- census_risk$fat_high_risk == 1
+g <- census_risk$gluc_high_risk == 1
+cat(sprintf("\nUpSet   FM only %d   FBG only %d   BW only %d\n",
+            sum(!b & f & !g), sum(!b & !f & g), sum(b & !f & !g)))
+cat(sprintf("        BW+FM %d   FM+FBG %d   BW+FBG %d   all three %d\n\n",
+            sum(b & f & !g), sum(!b & f & g), sum(b & !f & g), sum(b & f & g)))

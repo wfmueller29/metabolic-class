@@ -1,0 +1,230 @@
+---
+title: "Vita9b and Vita9c: is the genotype effect sex-dependent?"
+subtitle: "ITP genotyped cohorts, control + NDE-treated"
+author: "Joshua Preston"
+date: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  html_document:
+    df_print: default
+---
+
+```{r setup, warning=FALSE, message=FALSE, echo=FALSE}
+library(nnet)
+library(qtl)
+
+# echo is on here: the point of this document is to show the code alongside
+# the results, not just the results
+knitr::opts_chunk$set(autodep = TRUE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(cache = FALSE)
+```
+
+trajectory.R tests each locus with an LRT, which shows whether genotype predicts
+BW class but not in which direction. Vita9b and Vita9c are significant within
+each sex but not when the sexes are pooled. This analysis tests directly if 
+this can be attributed to opposing directional effects cancelling on pooling.
+
+# Load genotypes, phenotypes, metadata, and class assignments
+
+```{r source trajectory}
+# Define the two loci in question
+loci <- c(Vita9b = "9_104091597", Vita9c = "9_124056586")
+
+# trajectory.R (Danny) builds mcross / gtsp, defines computeLog10, and writes
+# output/census_mapping.txt -- the input to Figures 5L and S9D. Sourcing it
+# regenerates that file, so the values should be unchanged afterward.
+source("trajectory.R")
+```
+
+```{r pheno}
+# Covariates -------------------------------------------------------------------
+# mcross carries the phenotype columns from um-het3-rqtl.csvr alongside the
+# genotypes, keyed by GenoID. That key is what lets census rownames index into
+# gtsp further down.
+pheno <- data.frame(
+  sex = as.factor(pull.pheno(mcross)[, "sex"]),
+  site = as.factor(pull.pheno(mcross)[, "site"]),
+  cohort = as.factor(pull.pheno(mcross)[, "cohort"]),
+  treatment = as.factor(pull.pheno(mcross)[, "treatment"])
+)
+rownames(pheno) <- pull.pheno(mcross)[, "GenoID"]
+
+
+# Census loader ----------------------------------------------------------------
+# trajectory.R indexes the id column by position (15 / 11 / 12 / 17 / 13 / 13,
+# depending on the file). Naming it is equivalent and does not depend on column
+# order holding.
+loadCensus <- function(file) {
+  census <- read.csv(file, row.names = "id")
+  cdata <- cbind(
+    new_class_bw = as.factor(census[, "new_class_bw"]),
+    pheno[rownames(census), ]
+  )
+  list(cdata = cdata, gts = gtsp[rownames(census), ])
+}
+```
+
+# Reported associations
+
+Reproduce the pattern being explained: significant in each sex, not when pooled.
+
+```{r lod table}
+lodM[names(loci), ]
+```
+
+Both loci clear the Bonferroni threshold of 3.85 (0.05 / 354 tests) in the
+sex-stratified control+treated analyses (`census_tx_f`, `census_tx_m`) and
+neither clears it when the sexes are pooled (`census_tx`). The control-only
+columns are all well below threshold, which is why Figures 5L and S9D display
+the `census_tx_*` columns.
+
+# Class structure of the three models
+
+The pooled model and the two sex-stratified models are separate LCM fits, so
+their classes are not the same variable.
+
+```{r class counts}
+tx <- loadCensus("output/itp_geno_tx_census.csv")
+txf <- loadCensus("output/itp_geno_tx_f_census.csv")
+txm <- loadCensus("output/itp_geno_tx_m_census.csv")
+
+# pooled model: three classes, two of which are strongly sex-segregated.
+# sex comes from the cross object, where R/qtl codes 0 = female, 1 = male --
+# relabelled here so the table matches the M/F used in the census files.
+cls <- table(sex = factor(tx$cdata$sex, labels = c("F", "M")),
+             class = tx$cdata$new_class_bw)
+cls
+
+# share of each class that is female / male
+round(100 * prop.table(cls, 2), 1)
+
+# each sex-stratified model: two classes, fit within that sex
+table(txf$cdata$new_class_bw)
+table(txm$cdata$new_class_bw)
+```
+
+Class 2 is 94% M, class 3 is 99% F... so in the pooled model the class 2 vs 1
+contrast is driven almost entirely by males and class 3 vs 1 almost entirely by
+females. Each stratified model instead fits two classes within that sex. The
+three analyses are not the same test run on different subsets of animals.
+
+# Does the genotype effect depend on sex?
+
+Fit on the pooled census so both sexes share one class definition. The first
+model (`lm.add`) gives genotype a single effect applied to every mouse; the
+second (`lm.int`) adds a sex-by-genotype interaction, letting the effect differ
+between M/F. Opposing effects in the two sexes can only exist in the second
+model, so if that explanation is right, it must fit better.
+
+```{r interaction}
+cdata <- tx$cdata
+
+lods.int <- c()
+for (marker in loci) {
+  mp <- tx$gts[, grep(marker, colnames(tx$gts))]
+  lm.add <- multinom(new_class_bw ~ sex + site + cohort + treatment + mp + 0,
+                     data = cdata, trace = FALSE)
+  lm.int <- multinom(new_class_bw ~ site + cohort + treatment + sex * mp + 0,
+                     data = cdata, trace = FALSE)
+  lods.int <- c(lods.int, computeLog10(lm.add, lm.int))
+}
+names(lods.int) <- names(loci)
+
+round(lods.int, 2)
+10^-lods.int
+```
+
+Neither interaction comes close to significance, so letting the genotype effect
+differ between the sexes does not improve the fit. The opposing-effects
+explanation requires this test to be positive, and it is not.
+
+To be fair, this test has limited power: class 2 is 94% M and class 3 is 99% F,
+so the sex-specific effects are estimated from few animals on the contrasts that
+matter. Thus, a null interaction is weak evidence of absence, which means that
+we need to examine the direction of the effects before making conclusions.
+
+# Direction of the effect in each sex
+
+Same models trajectory.R fits, reading out the genotype coefficients instead of
+a likelihood ratio.
+
+```{r direction}
+# Helper function --------------------------------------------------------------
+
+genoCoef <- function(x, marker) {
+  mp <- x$gts[, grep(marker, colnames(x$gts))]
+  cdata <- x$cdata
+  fit <- multinom(new_class_bw ~ site + cohort + treatment + mp + 0,
+                  data = cdata, trace = FALSE)
+  co <- coef(fit)
+  co[grep("^mp", names(co))]
+}
+
+
+# Coefficients by sex ----------------------------------------------------------
+
+out <- c()
+for (locus in names(loci)) {
+  f <- genoCoef(txf, loci[locus])
+  m <- genoCoef(txm, loci[locus])
+  out <- rbind(out, data.frame(
+    locus = locus,
+    allele = sub("^mp", "", names(f)),
+    female = round(f, 3),
+    male = round(m, 3)
+  ))
+}
+rownames(out) <- NULL
+
+out
+```
+
+The four haplotype probabilities sum to 1, so adding a constant to all four
+coefficients gives the same fit. Only their relative ordering is interpretable,
+which is what this correlation compares:
+
+```{r direction summary}
+for (locus in names(loci)) {
+  s <- out[out$locus == locus, ]
+  cat(locus, ": r =", round(cor(s$female, s$male), 2),
+      " highest =", s$allele[which.max(s$female)], "(F)",
+      s$allele[which.max(s$male)], "(M)",
+      " lowest =", s$allele[which.min(s$female)], "(F)",
+      s$allele[which.min(s$male)], "(M)\n")
+}
+```
+
+# Summary
+
+```{r summary table}
+data.frame(
+  locus = names(loci),
+  lod_female = lodM[names(loci), "census_tx_f"],
+  lod_male = lodM[names(loci), "census_tx_m"],
+  lod_pooled = lodM[names(loci), "census_tx"],
+  interaction_p = round(10^-lods.int, 2),
+  cor_female_male = sapply(names(loci), function(locus) {
+    s <- out[out$locus == locus, ]
+    round(cor(s$female, s$male), 2)
+  }),
+  row.names = NULL
+)
+```
+
+In summary:
+
+1. Each locus is significant within each sex and not when the sexes are pooled.
+2. The sex-by-genotype interaction is not significant.
+3. The F/M haplotype effects are positively correlated rather than opposed.
+
+Together, this all fails to support the opposing-effects explanation. Therefore,
+the pooled result is not a "cancelled" version of the sex-stratified results.
+Moreover, since the pooled model generates three classes, two of which are
+strongly sex-segregated, but each stratified model has two classes fit within
+M/F, the two analyses in reality test genotype associations against
+fundamentally different outcomes, thus their p-values were not directly
+comparable in the first place.
+
+

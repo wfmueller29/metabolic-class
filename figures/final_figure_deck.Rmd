@@ -126,61 +126,117 @@ is_full_width <- function(path) grepl("forest", path, fixed = TRUE)
 ```
 
 <!--
-  This deck deliberately loads NO stage-07 workspaces. Every table it shows is
-  produced upstream by ../99_pub_ready_figs/pub_ready_figs.R and referenced as
-  a PNG through figure_spec.R, so the deck depends only on files on disk. The
-  old `load stage outputs` chunk loaded seven workspaces unconditionally and
-  aborted the whole render if any one config had not run yet -- and nothing in
-  the document used them.
+  Every FIGURE PANEL in this deck is a PNG on disk, produced upstream by
+  ../99_pub_ready_figs/pub_ready_figs.R and referenced by path through
+  figure_spec.R -- those need no workspace.
+
+  The TABLES are different. Table 1/2 and Supplemental Tables S1-S5 are built
+  inline by the build() functions in figure_spec.R's TABLES list, and those read
+  all_env / itp_env / held_out_env. An earlier revision dropped the workspace
+  load on the grounds that "nothing in the document used them", which was true
+  of the panels but not of these tables -- every table then rendered as
+  "FAILED: object 'all_env' not found". The chunk below puts them back.
+
+  It loads only the three workspaces the tables actually reference (not the
+  seven the old chunk pulled in), and a missing one is reported and skipped
+  rather than aborting the render, so a partially-run pipeline still produces a
+  deck -- the affected table alone reports FAILED.
 -->
 
-<!--
-  Tables are NOT built here any more. They are produced by
-  ../99_pub_ready_figs/pub_ready_figs.R along with every other panel, so that
-  all appearance decisions live in one stage. figure_spec.R references them by
-  path under ../99_pub_ready_figs/output/tables/.
--->
+```{r load table workspaces, echo=FALSE, message=FALSE}
+# Width budget (inches) handed to flextable's fit_to_width() by every build()
+# in figure_spec.R's TABLES. It used to be defined by primary_figures.Rmd /
+# sup_figures.Rmd, which produced the old PDFs; those are gone, so without this
+# the tables error with "comparison (>) is possible only for atomic and list
+# types". This is an HTML page, so the value is generous -- it only governs how
+# hard flextable shrinks a table that would otherwise overflow.
+max_width <- 10
 
-# Tables
+TABLE_ENVS <- c(
+  all_env      = "../07_display_figures/output/slam_c1-c10_age_all_bwfatgluc/workspace.RDATA",
+  itp_env      = "../07_display_figures/output/itp_c10c11c13c16_age_controls_bw/workspace.RDATA",
+  held_out_env = "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/workspace.RDATA"
+)
 
-Table 1 and Table 2 -- the class demographics that lead the manuscript.
+for (nm in names(TABLE_ENVS)) {
+  path <- TABLE_ENVS[[nm]]
+  if (!file.exists(path)) {
+    message("table workspace missing, tables using ", nm, " will report FAILED: ", path)
+    next
+  }
+  e <- new.env()
+  load(path, envir = e)
+  assign(nm, e)
+}
+```
 
-Numbered separately from the figures, as in the manuscript. Tables marked
-`png` in figure_spec.R are also written to `output/tables/` as Canva assets;
-the rest render here only.
-
-```{r render tables, results='asis'}
-# Split into two passes: primary tables lead the document (they are Table 1
-# and Table 2 of the manuscript), supplemental tables trail the figures.
+```{r table-setup, echo=FALSE}
+# Table rendering is DEFINED here but the tables render AFTER the figures, to
+# match the manuscript order:  figures -> supplemental figures -> Tables ->
+# Supplemental Tables.  (Primary = Table 1 / Table 2.)
 tn <- list(primary = 0L, supplemental = 0L)
+
+# The deck's supplemental tables are limited to the FIVE that appear in the
+# submitted supplement (canonical_supl.pdf), in order S1-S5. figure_spec.R can
+# build several more working/diagnostic tables (Individual/Combined Cox,
+# Descriptive Census, C16-C18 stats, Missing Data, LCM Posterior Probabilities,
+# Candidate LCMs, LME Information) -- those are NOT part of the submitted
+# supplement, so they are excluded from the deck here.
+# NOTE: these strings must match TABLES$title in figure_spec.R EXACTLY. They
+# were renamed 2026-08-27 to the titles used in the submitted supplement; the
+# old pipeline names are listed alongside so a stale reference is recognisable.
+SUPP_TABLE_KEEP <- c(
+  "HRs estimated using three Cox models",              # S1 (was "Sex/Strain Adjusted Hazards")
+  "Linear Mixed Effects Models",                       # S2 (unchanged)
+  "Descriptive statistics of the modeling variables",  # S3 (was "Descriptive Statistics SLAM C1-C10 datasets")
+  "Median life expectancy",                            # S4 (was "Median Life Expectancy Data")
+  "LCM information"                                    # S5 (was "LCM Model Information")
+)
 
 render_tables <- function(which_part) {
 for (tb in TABLES) {
   if (tb$part != which_part) next
+  # supplemental deck tables are only the five in canonical_supl.pdf
+  if (which_part == "supplemental" && !(tb$title %in% SUPP_TABLE_KEEP)) next
   tn[[tb$part]] <- tn[[tb$part]] + 1L
   label <- paste0(if (tb$part == "supplemental") "Supplemental Table " else "Table ",
                   tn[[tb$part]])
 
   cat("\n\n## ", label, ". ", tb$title, "\n\n", sep = "")
+  if (!is.null(tb$note)) cat("\n> *", tb$note, "*\n\n", sep = "")
 
-  out <- tryCatch(tb$build(), error = function(e) e)
-  if (inherits(out, "error")) {
-    cat("\n*FAILED: ", conditionMessage(out), "*\n\n", sep = "")
+  # NOT named `out`: the figures loop above leaves an `out` (a PNG file path) in
+  # the knit environment, so a local of that name here invites confusion.
+  ft_out <- tryCatch(tb$build(), error = function(e) e)
+  if (inherits(ft_out, "error")) {
+    cat("\n*FAILED: ", conditionMessage(ft_out), "*\n\n", sep = "")
     next
   }
 
-  # build() may return a flextable (already themed) or a plain data frame
-  if (inherits(out, "flextable")) {
-    cat(knitr::knit_child(text = "`r knitr::asis_output(flextable::htmltools_value(out))`",
-                          quiet = TRUE), "\n")
+  # flextable_to_rmd() is flextable's own emitter for asis chunks: it writes the
+  # right markup for the current output format. The previous
+  # asis_output(htmltools_value(...)) handed knitr an htmltools object rather
+  # than a string, which knitr rendered structurally -- that is where the stray
+  # 'NULL, list(name = "style", attribs = list(), ...)' text came from.
+  emit <- function(x) {
+    if (inherits(x, "flextable")) {
+      flextable::flextable_to_rmd(x)
+      cat("\n\n")
+    } else {
+      print(knitr::kable(x))
+      cat("\n")
+    }
+  }
+
+  # build() returns a flextable, a plain data frame, or -- for Table S2, which
+  # is three stacked LCM blocks (Body Weight / Fat Mass / FBG) -- a LIST of them.
+  if (is.list(ft_out) && !inherits(ft_out, "flextable") && !is.data.frame(ft_out)) {
+    for (part in ft_out) emit(part)
   } else {
-    print(knitr::kable(out))
-    cat("\n")
+    emit(ft_out)
   }
 }
 }
-
-render_tables("primary")
 ```
 
 # Figures
@@ -193,6 +249,7 @@ for (fi in seq_along(FIGURES)) {
   fig_id <- figure_ids[[fi]]
 
   cat("\n\n## ", fig_id, ". ", f$title, "\n\n", sep = "")
+  if (!is.null(f$note)) cat("\n> *", f$note, "*\n\n", sep = "")
 
   for (i in seq_along(f$panels)) {
     id   <- panel_id(fig_id, i)
@@ -206,6 +263,17 @@ for (fi in seq_along(FIGURES)) {
     }
 
     img <- magick::image_read(path)
+
+    # Composite onto white. 24 of the 128 source panels carry a genuinely
+    # transparent background (corner alpha 0x00) -- every flextable table PNG
+    # plus the schematics (1A, 3A, 4A, 5A, GA, S6A, S6G). Transparent panels
+    # look fine on a white page but pick up whatever sits behind them in a
+    # composite, a dark-mode viewer, or a slide. Flattening here fixes all of
+    # them at the single copy point rather than in each producing script.
+    # NOTE: this only affects the copies written to output/panels/. The source
+    # PNGs under 9*/output/ keep their alpha.
+    img <- magick::image_background(img, "white")
+
     out <- file.path(PANEL_DIR, paste0(id, ".png"))
     magick::image_write(img, out, format = "png")
 
@@ -213,7 +281,7 @@ for (fi in seq_along(FIGURES)) {
     # image's natural pixel width, which is what shrinks a panel already
     # narrower than the text column. The max-width CSS rule scales it relative
     # to the column instead, which is what shrinks the table PNGs -- those are
-    # written at zoom = 10, so a fraction of their natural width still
+    # written at res = 600, so a fraction of their natural width still
     # overflows the column and would otherwise look unchanged. Both have to
     # move together, hence one scale driving the width and one matching class.
     full  <- is_full_width(path)
@@ -241,7 +309,19 @@ if (length(missing_panels)) {
 }
 ```
 
+# Tables
+
+Table 1 and Table 2 -- the class demographics that lead the manuscript,
+numbered separately from the figures. Tables marked `png` in figure_spec.R are
+also written to `output/tables/` as Canva assets; the rest render here only.
+
+```{r render primary tables, results='asis'}
+render_tables("primary")
+```
+
 # Supplemental Tables
+
+The five tables of the submitted supplement (canonical_supl.pdf), S1-S5.
 
 ```{r render supplemental tables, results='asis'}
 render_tables("supplemental")

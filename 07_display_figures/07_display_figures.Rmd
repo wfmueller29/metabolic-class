@@ -1234,6 +1234,11 @@ forest_parse_final <- function(final) {
 # the forests take the model p-value directly, so they are not bound by it.
 # If no p-value is available the parsed star is used as a fallback.
 forest_stars <- function(pval, fallback = "") {
+  # The hr_table `pval` column is CHARACTER, so a bare `pval < 0.001` compares
+  # LEXICALLY: "9.9e-15" < "0.001" is FALSE because "9" > "0". That silently sent
+  # every scientific-notation (i.e. most-significant) p-value to "" -> "n.s.",
+  # which is why Fig 3E showed HR 3.84 (3.21-4.58) as n.s. Coerce to numeric first.
+  pval <- suppressWarnings(as.numeric(pval))
   if (is.null(pval) || length(pval) == 0 || is.na(pval)) return(fallback)
   if (pval < 0.001) "***" else if (pval < 0.01) "**" else if (pval < 0.05) "*" else ""
 }
@@ -1711,6 +1716,24 @@ km_hr_combine_validation_panels_hr <- lapply(
   }
 )
 
+# The tertile FORESTS need the raw model p-value so forest_stars() can set the
+# asterisks at the legend's p<0.05/0.01/0.001 (as the dose forest does via
+# dose_plot_panel_hr). km_hr_combine_validation_panels_hr above deliberately
+# keeps ONLY `final`, because it ALSO feeds the kable dump below and 99's
+# hr_km_external table -- neither of which may gain a pval column. So build a
+# separate, pval-carrying copy used ONLY by the forests, leaving that object
+# byte-for-byte unchanged.
+km_hr_combine_validation_forest_hr <- lapply(
+  names(km_hr_combine_validation_hrs),
+  function(name) {
+    table <- km_hr_combine_validation_hrs[[name]]
+    keep  <- intersect(c("final", "pval"), colnames(table$hr_table))
+    table <- table$hr_table[, keep, drop = FALSE]
+    names(table)[names(table) == "final"] <- name   # window label = col 1; pval kept
+    table
+  }
+)
+
 # Tertile forests. A forest's facets always match the KM panels of the figure
 # it appears in, so the reader can read a curve and its hazard ratio off the
 # same page. The ten upper bounds are split between two figures and the two
@@ -1725,9 +1748,9 @@ km_hr_combine_validation_panels_hr <- lapply(
 # forest, so the stars come from forest_stars() at p<0.05/0.01/0.001 rather
 # than from SLAM's pre-formatted strings.
 build_km_forest <- function(index) {
-  index <- index[index <= length(km_hr_combine_validation_panels_hr)]
+  index <- index[index <= length(km_hr_combine_validation_forest_hr)]
   rows <- lapply(index, function(i) {
-    panel_i <- km_hr_combine_validation_panels_hr[[i]]
+    panel_i <- km_hr_combine_validation_forest_hr[[i]]
     forest_tidy_panel(panel_i, colnames(panel_i)[1], "Tertile")
   })
   if (!length(rows)) return(NULL)

@@ -173,7 +173,10 @@ CANON <- list(
   # KM must match these two strings by hand -- 92_overlap_analysis writes its
   # PNG directly and so is the one place that has to be kept in step.
   list(pattern = "^age *\\(weeks?\\)$",     label = "Age (weeks)"),
-  list(pattern = "^survival probability$",  label = "Survival probability")
+  list(pattern = "^survival probability$",  label = "Survival probability"),
+  # Forest-panel x axis. Table HEADERS stay Title Case ("Hazard Ratio (CI)");
+  # this is an axis title, so sentence case like every other axis in the deck.
+  list(pattern = "^hazard ratio$",          label = "Hazard ratio")
 )
 
 canonical_label <- function(lab) {
@@ -235,10 +238,13 @@ stars <- function(p) {
 # formatters is invisible until the PNG is rendered.
 format_hr_bare <- function(value, lower, upper, pval, digits = 4) {
   st <- stars(as.numeric(pval))
+  # nsmall MUST equal `digits`. With nsmall = 0 a value whose 4th decimal is a
+  # zero printed short (0.7240 -> "0.724"), leaving a few cells at 3 dp in a
+  # 4 dp column. Verified: those values genuinely carry a trailing zero.
   trimws(sprintf("%s (%s, %s) %s",
-                 format(round(as.numeric(value), digits), nsmall = 0),
-                 format(round(as.numeric(lower), digits), nsmall = 0),
-                 format(round(as.numeric(upper), digits), nsmall = 0), st))
+                 format(round(as.numeric(value), digits), nsmall = digits),
+                 format(round(as.numeric(lower), digits), nsmall = digits),
+                 format(round(as.numeric(upper), digits), nsmall = digits), st))
 }
 
 # Pull one model's rows out of hr_numeric; NULL if 07 did not produce it (the
@@ -282,7 +288,26 @@ OUTCOME_ENVS <- list(
                        outcomes = "bw"),
   # adiposity in place of fat mass
   adiposity_env = list(path = "../07_display_figures/output/slam_c1-c10_age_all_bwadipositygluc/outcome/plot_list.RDATA",
-                       outcomes = c("bw", "adiposity", "gluc"))
+                       outcomes = c("bw", "adiposity", "gluc")),
+
+  # ITP genotyped cohorts (S9). Body weight only, so two plots each: the
+  # trajectory then its KM. Routed through this stage for the same reason as
+  # everything else -- 07 labels these "Body Weight" / "Survival Probability" /
+  # "Age (Weeks) " from the config, and CANON normalises all three on the way
+  # out. The three *_tx_* configs are the rapamycin-treated arms; they have a
+  # history of failing upstream, and simply do not appear if that happens.
+  itp_geno_env      = list(path = "../07_display_figures/output/itp_genotyped/outcome/plot_list.RDATA",
+                           outcomes = "bw"),
+  itp_geno_f_env    = list(path = "../07_display_figures/output/itp_genotyped_F/outcome/plot_list.RDATA",
+                           outcomes = "bw"),
+  itp_geno_m_env    = list(path = "../07_display_figures/output/itp_genotyped_M/outcome/plot_list.RDATA",
+                           outcomes = "bw"),
+  itp_geno_tx_env   = list(path = "../07_display_figures/output/itp_genotyped_treat/outcome/plot_list.RDATA",
+                           outcomes = "bw"),
+  itp_geno_tx_f_env = list(path = "../07_display_figures/output/itp_genotyped_treat_F/outcome/plot_list.RDATA",
+                           outcomes = "bw"),
+  itp_geno_tx_m_env = list(path = "../07_display_figures/output/itp_genotyped_treat_M/outcome/plot_list.RDATA",
+                           outcomes = "bw")
 )
 
 VALIDATION_ENVS <- list(
@@ -299,6 +324,10 @@ save_png <- function(plot, dir, name, width = 4, height = 5, dpi = 300) {
 }
 
 # ---- define-class panels ----------------------------------------------------
+# Collect the ITP-genotype trajectory/KM ggplots as they are rendered, to
+# assemble the S9 composite panels (controls = A, treated = B) after the loop.
+itp_geno_ggplots <- new.env()
+
 for (env_name in names(OUTCOME_ENVS)) {
   spec <- OUTCOME_ENVS[[env_name]]
   path <- spec$path
@@ -332,7 +361,17 @@ for (env_name in names(OUTCOME_ENVS)) {
       }
     }
 
-    save_png(g + ggplot2::theme(legend.position = "none"), out_dir, p$name)
+    # S9 (itp_geno_*) panels KEEP their class legend -- the deck had no key for
+    # those lines. Every other define-class panel is stripped for manual layout,
+    # where one shared legend is placed per group instead.
+    keep_legend <- startsWith(env_name, "itp_geno")
+    g_out <- if (keep_legend) g else g + ggplot2::theme(legend.position = "none")
+    save_png(g_out, out_dir, p$name)
+
+    # keep the legend'd ITP-genotype plot for the S9 composite assembly below
+    if (keep_legend)
+      assign(paste0(env_name, "__", p$name), normalise_labels(g),
+             envir = itp_geno_ggplots)
   }
 
   # the three class legends, exported separately for placement
@@ -344,6 +383,60 @@ for (env_name in names(OUTCOME_ENVS)) {
     }
   }
 }
+
+# ---- S9 composite panels: controls (A) and treated (B) ----------------------
+# The published S9 collapses the twelve ITP-genotype subplots into TWO lettered
+# panels: A = controls, B = treated. Each is a 3-row x 2-col grid --
+#   (Unstratified / Females / Males) x (BW trajectory / KM survival) --
+# with each cohort row titled and ONE shared class legend on the right. Assemble
+# them here from the per-env ggplots collected in the loop above, so the deck's
+# S9A/S9B match the figure rather than showing eleven separate letters. The six
+# per-env PNGs are still written above, in case the individual pieces are wanted
+# for manual layout.
+assemble_itp_composite <- function(envs, cohorts, group, file) {
+  gp <- function(en, nm)
+    get0(paste0(en, "__", nm), envir = itp_geno_ggplots, inherits = FALSE)
+  missing <- vapply(envs, function(en)
+    is.null(gp(en, "bw_by_bw")) || is.null(gp(en, "km_bw")), logical(1))
+  if (any(missing)) {
+    skip("S9 composite '", group, "' -- missing subplot(s) for: ",
+         paste(envs[missing], collapse = ", "))
+    return(invisible(NULL))
+  }
+  # one shared legend for the whole panel; strip the per-subplot legends
+  shared_legend <- cowplot::get_legend(
+    gp(envs[[1]], "bw_by_bw") +
+      ggplot2::theme(legend.position = "right",
+                     legend.box.margin = ggplot2::margin(0, 0, 0, 6)))
+  strip <- ggplot2::theme(legend.position = "none")
+  rows <- lapply(seq_along(envs), function(k) {
+    body <- cowplot::plot_grid(
+      gp(envs[[k]], "bw_by_bw") + strip,
+      gp(envs[[k]], "km_bw")    + strip,
+      nrow = 1)
+    title <- cowplot::ggdraw() +
+      cowplot::draw_label(paste0(group, " (", cohorts[[k]], ")"),
+                          fontface = "bold", size = 13, x = 0.02, hjust = 0)
+    cowplot::plot_grid(title, body, ncol = 1, rel_heights = c(0.10, 1))
+  })
+  grid <- cowplot::plot_grid(plotlist = rows, ncol = 1)
+  full <- cowplot::plot_grid(grid, shared_legend, nrow = 1, rel_widths = c(1, 0.15))
+  dir.create(dirname(file), recursive = TRUE, showWarnings = FALSE)
+  ggplot2::ggsave(file, full, width = 9, height = 11, dpi = 300, bg = "white")
+  message("wrote S9 composite: ", file)
+}
+
+assemble_itp_composite(
+  c("itp_geno_env", "itp_geno_f_env", "itp_geno_m_env"),
+  c("Unstratified", "Females", "Males"), "Controls",
+  file.path("output", "itp_geno_composite", "controls.png"))
+assemble_itp_composite(
+  c("itp_geno_tx_env", "itp_geno_tx_f_env", "itp_geno_tx_m_env"),
+  # The *_tx_* configs model controls AND NDE-treated mice together (n = 5118 =
+  # 2395 control + 2723 treated), so this block is NOT treated-only -- label it
+  # to match the S9 legend ("combined control and NDE-treated mice").
+  c("Unstratified", "Females", "Males"), "Controls + Treated",
+  file.path("output", "itp_geno_composite", "treated.png"))
 
 # ---- validation panels ------------------------------------------------------
 VALIDATION_PANELS <- list(
@@ -369,11 +462,11 @@ for (env_name in names(VALIDATION_ENVS)) {
     g <- if (p$kind == "coef") {
       g + ggplot2::coord_cartesian(ylim = c(-1, 3)) +
         ggplot2::geom_hline(yintercept = 1, linetype = "dotted", colour = "gray40") +
-        ggplot2::ylab("Linear Predictor") + ggplot2::xlab("Upper Bound Age (weeks)")
+        ggplot2::ylab("Linear predictor") + ggplot2::xlab("Upper bound age (weeks)")
     } else {
       g + ggplot2::coord_cartesian(ylim = c(0.4, 0.8)) +
         ggplot2::geom_hline(yintercept = 0.5, linetype = "dotted", colour = "red") +
-        ggplot2::ylab("Concordance") + ggplot2::xlab("Upper Bound Age (weeks)")
+        ggplot2::ylab("Concordance") + ggplot2::xlab("Upper bound age (weeks)")
     }
     save_png(g + ggplot2::theme(legend.position = "none"), out_dir, p$name)
   }
@@ -410,7 +503,11 @@ WORKSPACE_ENVS <- list(
   mb6_env      = "../07_display_figures/output/slam_c1-c10_age_mb6_bwfatgluc/workspace.RDATA",
   mhet3_env    = "../07_display_figures/output/slam_c1-c10_age_mhet3_bwfatgluc/workspace.RDATA",
   itp_env      = "../07_display_figures/output/itp_c10c11c13c16_age_controls_bw/workspace.RDATA",
-  held_out_env = "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/workspace.RDATA"
+  held_out_env = "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/workspace.RDATA",
+  # adiposity variant (bwadipositygluc): its workspace carries save_figtabs/t1_df
+  # for the demographics_adiposity (S1G) and hr_adiposity (S1H) tables. Without it
+  # here it is never assigned to .GlobalEnv, so those two blocks cannot see it.
+  adiposity_env = "../07_display_figures/output/slam_c1-c10_age_all_bwadipositygluc/workspace.RDATA"
 )
 
 # Load whatever workspaces exist. Each table below is wrapped in tbl(), so a
@@ -489,21 +586,52 @@ if (TRUE) {
       "Class 9" = "Low",        "Class 10" = "High"
     )
 
+    # Adiposity classes are renumbered 4/5 -> 9/10 for display, CONTINUING the
+    # manuscript's sequential class numbering across metabolic indices:
+    #   Body Weight 1-3 | Fat Mass 4-6 | FBG 7-8 | Adiposity 9-10.
+    # The adiposity config (bwadipositygluc) has no Fat Mass, so its LCM numbers
+    # the two adiposity classes LOCALLY as 4/5. Left as-is they would (a) collide
+    # with Fat Mass's 4/5 and (b) inherit Fat Mass's descriptors (Early-peak /
+    # Stable) rather than adiposity's (Low / High). Remapping before display fixes
+    # both -- CLASS_DESCRIPTOR above already carries the correct 9=Low / 10=High.
+    # PURE DISPLAY RELABEL: class assignments, HRs and the reference derivation are
+    # unchanged -- the reference is derived on the raw 4/5 labels, THEN relabeled.
+    ADIPOSITY_CLASS_RELABEL <- c("Class 4" = "Class 9", "Class 5" = "Class 10")
+    relabel_classes <- function(x, map) {
+      x <- as.character(x); hit <- x %in% names(map); x[hit] <- map[x[hit]]; x
+    }
+
     # "Body Weight" / "Fat Mass" / "FBG" as printed in the Metabolic Variable
     # column (07 supplies "Body Weight" / "Body Fat" / "Glucose").
     METVAR_LABEL <- c("Body Weight" = "Body Weight", "Body Fat" = "Fat Mass",
                       "Glucose" = "FBG", "Adiposity" = "Adiposity")
 
-    fmt_demog_p <- function(x) {
+    # p_digits: mantissa precision below 0.001. Tables 1/2 are Word tables that
+    # keep footnote c ("...and rounded to the nearest integer"), so they use 0.
+    # S1G is composited into a supplementary figure where footnotes are dropped,
+    # so it uses 1 -- matching S3C and S9C, whose legends state only the 0.001
+    # threshold and make no claim about rounding.
+    fmt_demog_p <- function(x, p_digits = 0) {
       p <- suppressWarnings(as.numeric(x))
       ifelse(is.na(p), "-",
         ifelse(p < 0.001,
-               sub("e([+-])0", "e\\1", formatC(p, format = "e", digits = 0)),
+               sub("e([+-])0", "e\\1", formatC(p, format = "e", digits = p_digits)),
                formatC(p, format = "f", digits = 4)))
     }
 
+    # median_header: Tables 1 and 2 are Word tables that keep their footnotes, so
+    # they use the plain label and put the unit in footnote b. S1G is composited
+    # into a supplementary figure where the footnotes are dropped, so the unit has
+    # to live in the header; the CI notation is stated in the S1 legend instead.
+    # A comma-offset unit (not "(weeks)") avoids a header parenthetical competing
+    # with the interval parentheses in the cells below.
+    # Note this string is also the data-frame column name, hence the footnote
+    # calls reference `median_header` rather than a literal.
     demographics_table <- function(env, file, lcm = NULL, title = NULL,
-                                   strain = TRUE) {
+                                   strain = TRUE, class_relabel = NULL,
+                                   median_header = "Median Survival",
+                                   p_digits = 0) {
+      self_describing <- !identical(median_header, "Median Survival")
       t1 <- env$save_figtabs$t1_df
       if (is.null(t1)) { warning("demographics: t1_df missing -- skipped"); return(invisible(NULL)) }
       tb <- t1
@@ -517,6 +645,9 @@ if (TRUE) {
 
       # descriptive class names: "Class 2" -> "Class 2 (Stable)"
       rn   <- as.character(tb$row_names)
+      # relabel BEFORE the descriptor lookup so remapped classes pick up the right
+      # descriptor (e.g. adiposity 4/5 -> 9/10 -> Low/High, not Early-peak/Stable)
+      if (!is.null(class_relabel)) rn <- relabel_classes(rn, class_relabel)
       desc <- CLASS_DESCRIPTOR[rn]
       unk  <- grepl("^Class ", rn) & is.na(desc)
       if (any(unk)) warning("demographics: no descriptor for ",
@@ -535,11 +666,34 @@ if (TRUE) {
 
       cols <- c(n = "n (%)", sex_F = "Female", sex_M = "Male")
       if (strain) cols <- c(cols, strain_B6 = "B6", strain_HET3 = "HET3")
-      cols <- c(cols, median_surv = "Median Survival")
+      cols <- c(cols, median_surv = median_header)
+      # Thousands separators on the LEADING count only: "1315" -> "1,315" and
+      # "1315 (68.1%)" -> "1,315 (68.1%)". Anchored at the start of the string
+      # and skipped on the p-value row, so it can never reach a percentage, a
+      # CI bound, or the decimals of a p-value like "0.2593" -- an unanchored
+      # 4-digit match would corrupt all three.
+      # NA-safe: these columns still carry NAs at this point -- the NA -> "-"
+      # substitution happens further down, AFTER this call. regexpr() returns NA
+      # for an NA input, so an unguarded `r > 0` puts NA into `hit`, `any(hit)`
+      # returns NA, and `if (!any(hit))` dies with "missing value where
+      # TRUE/FALSE needed". That silently skipped Table 1, Table 2 and S1G for
+      # two days. NAs are excluded here and fall through untouched to the "-"
+      # substitution, which is where they were always meant to be handled.
+      add_big_mark <- function(x) {
+        r <- regexpr("^[0-9]{4,}", x)
+        hit <- !is.na(r) & r > 0
+        if (!any(hit)) return(x)
+        len  <- attr(r, "match.length")[hit]
+        num  <- substring(x[hit], 1, len)
+        rest <- substring(x[hit], len + 1)
+        x[hit] <- paste0(formatC(as.numeric(num), format = "d", big.mark = ","), rest)
+        x
+      }
       for (nm in names(cols)) {
         if (!nm %in% names(tb)) next
         v <- as.character(tb[[nm]])
-        v[is_p] <- fmt_demog_p(v[is_p])           # p-value row -> scientific
+        v[is_p] <- fmt_demog_p(v[is_p], p_digits)  # p-value row -> scientific
+        v[!is_p] <- add_big_mark(v[!is_p])
         # Plain hyphen, not an en dash: the pipeline can run under a C locale,
         # where a multi-byte dash is read as raw bytes and breaks the flextable
         # renderer. Visually equivalent at table scale.
@@ -577,35 +731,59 @@ if (TRUE) {
       # lettered markers, as in the Word tables. The column-name row is the last
       # header row, whichever spanning/title rows were added above it.
       hrow <- nrow(ft$header$dataset)
-      ft <- flextable::footnote(ft, i = hrow, j = "Median Survival", part = "header",
-        value = as_paragraph("95% confidence interval indicated in parentheses following values."),
+      if (!self_describing) {
+      ft <- flextable::footnote(ft, i = hrow, j = median_header, part = "header",
+        # Wording tracks the Word tables, which abbreviate: CI is defined in the
+        # Results ("Confidence intervals (CIs) for the macro-F1 scores...").
+        # Keep the verb -- all three instances in the manuscript and supplement
+        # read "95% CIs are indicated ...", so this string must match verbatim.
+        value = as_paragraph("95% CIs are indicated in parentheses following values."),
         ref_symbols = "a")
-      ft <- flextable::footnote(ft, i = hrow, j = "Median Survival", part = "header",
+      ft <- flextable::footnote(ft, i = hrow, j = median_header, part = "header",
         value = as_paragraph("In weeks."), ref_symbols = "b")
+      }
       if (any(is_p)) {
+        # The rounding clause must track p_digits or the footnote contradicts the
+        # values above it: Tables 1/2 use p_digits = 0 and print "8e-4", which IS
+        # rounded to the nearest integer, but S1G uses 1 and prints "8.4e-4",
+        # which is not. Parameterised together so they cannot desync again.
         ft <- flextable::footnote(ft, i = which(is_p)[1], j = "Class or Variable",
           part = "body",
-          value = as_paragraph(
-            "p-values < 0.001 are written in scientific notation and rounded to the nearest integer."),
-          ref_symbols = "c")
+          value = as_paragraph(paste0(
+            "p-values < 0.001 are written in scientific notation",
+            if (p_digits == 0) " and rounded to the nearest integer." else ".")),
+          ref_symbols = if (self_describing) "a" else "c")
       }
       ft <- italic(ft, part = "footer"); ft <- fontsize(ft, size = 8, part = "footer")
       # Arial renders the en dash; the default substitutes a glyph for it
       ft <- font(ft, fontname = "Arial", part = "all")
       ft <- autofit(ft) %>% set_table_properties(layout = "autofit") %>%
         fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-      invisible(save_as_image(ft, file, zoom = 10))
+      # res = 600, NOT zoom = 10. flextable 0.9.9 removed the `zoom` argument
+    # from save_as_image(); it was being swallowed by `...` and every table
+    # here silently rendered at the default res = 200 (~600-960 px), which is
+    # why 1N/2I/5D/5I/S3C/S4I/S4R were the lowest-resolution panels in the deck.
+    invisible(save_as_image(ft, file, res = 600))
     }
 
     demographics_table(all_env, "output/tables/demographics_slam.png",
                        title = "Table 1. Metabolic Class Demographics.")
-    # ITP is all HET3, so no genetic-background columns
+    # ITP is all HET3, so no genetic-background columns.
+    # "Full", not "Complete": the manuscript reserves *complete* for the
+    # 1,315-mouse SLAM set (Methods L581), so reusing it for the 2,240-mouse ITP
+    # data would collide with that vocabulary.
+    # "Control": these 2,240 are the ITP control arm only, not all ITP mice. The
+    # trajectory input is 00a_itp2/output/itp_control_train.csv, whose `tx`
+    # column is "control" for all 7,889 rows; the 2005 tx+control cohort
+    # (itp_tx_control_test.csv) is a disjoint id set and feeds 5E-5K instead.
     demographics_table(itp_env, "output/tables/demographics_itp.png",
-                       title = "Table 2. Body Weight Class Demographics of ITP Complete Dataset.",
+                       title = paste("Table 2. Body Weight Class Demographics of",
+                                     "the Full ITP Control Dataset."),
                        strain = FALSE)
     # S1G -- adiposity classes only (9 and 10)
     demographics_table(adiposity_env, "output/tables/demographics_adiposity.png",
-                       lcm = "Adiposity")
+                       lcm = "Adiposity", class_relabel = ADIPOSITY_CLASS_RELABEL,
+                       median_header = "Median Survival, weeks", p_digits = 1)
   })
   tbl("partial_correlation", {
     # ---- partial_correlation (S2C) ---------------------------------------
@@ -628,6 +806,22 @@ if (TRUE) {
     pc[["Corr."]]   <- formatC(pc[["Corr."]], format = "f", digits = 2)
     pc[["P value"]] <- formatC(pc[["P value"]], format = "e", digits = 1)
 
+    # Display-layer only -- 91's CSV is left untouched so its own guard still
+    # matches on the original strings. The manuscript hyphenates class nicknames
+    # throughout ("early-peak-BW"), so the table should too.
+    PC_LABEL_FIX <- c(
+      "Early-peak FM (4)" = "Early-peak-FM (4)",
+      "Early-peak BW (1)" = "Early-peak-BW (1)",
+      "Decline FBG (7)"   = "Decline-FBG (7)"
+    )
+    for (.j in c("Variable 1 (Class)", "Variable 2 (Class)")) {
+      .hit <- pc[[.j]] %in% names(PC_LABEL_FIX)
+      pc[[.j]][.hit] <- unname(PC_LABEL_FIX[pc[[.j]][.hit]])
+    }
+    # "p" is a statistical symbol and stays lowercase; hyphenated per the
+    # manuscript convention.
+    names(pc)[names(pc) == "P value"] <- "p-value"
+
     pc_ft <- flextable(pc) %>%
       fig_table_theme() %>%
       align(j = c("Variable 1 (Class)", "Variable 2 (Class)"),
@@ -636,8 +830,51 @@ if (TRUE) {
       set_table_properties(layout = "autofit") %>%
       fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
-    invisible(save_as_image(pc_ft, "output/tables/partial_correlation.png", zoom = 10))
+    invisible(save_as_image(pc_ft, "output/tables/partial_correlation.png", res = 600))
   })
+  # reference_class: derive the reference (dropped) class for an outcome from
+  # t1_df. Defined here, ABOVE the table blocks, because tbl() evaluates its block
+  # eagerly -- a definition placed after the blocks is not yet visible when they run.
+  # (For the full rationale of showing the reference row, see the HR table rules
+  # comment further down.)
+  .cls_key <- function(x) gsub("[^A-Za-z0-9]", "", as.character(x))
+
+  reference_class <- function(env, outcome, present) {
+    t1 <- env$save_figtabs$t1_df
+    if (is.null(t1) || !all(c("oc_name", "row_names") %in% names(t1))) return(NULL)
+    rows <- t1[trimws(as.character(t1$oc_name)) == outcome, , drop = FALSE]
+    cls  <- trimws(as.character(rows$row_names))
+    keep <- grepl("^Class", cls)                      # drop the 'total'/'pval' rows
+    cls  <- cls[keep]
+    if (!length(cls)) return(NULL)
+    miss <- setdiff(.cls_key(cls), .cls_key(present))
+    if (length(miss) != 1) return(NULL)               # ambiguous -- say nothing
+    cls[match(miss, .cls_key(cls))]
+  }
+
+  # Order rows by the HR table rules (grouping columns before "Class", reference
+  # first, then class ascending) and write the PNG. Defined here, above the table
+  # blocks, because tbl() runs its block eagerly. `df` carries a logical .ref
+  # column marking the reference row; it drives the ordering and is then dropped.
+  write_hr_table <- function(df, file) {
+    if (!".ref" %in% names(df)) df$.ref <- FALSE
+    if ("Class" %in% names(df)) {
+      grp_cols <- names(df)[seq_len(match("Class", names(df)) - 1L)]
+      grp <- if (length(grp_cols))
+               do.call(paste, c(df[grp_cols], sep = "\r")) else rep("", nrow(df))
+      cls_no <- suppressWarnings(as.numeric(gsub("[^0-9]", "", df$Class)))
+      df <- df[order(match(grp, unique(grp)), !df$.ref, cls_no), , drop = FALSE]
+      rownames(df) <- NULL
+    }
+    df$.ref <- NULL
+    ft <- flextable(df) %>%
+      fig_table_theme() %>%
+      autofit() %>%
+      set_table_properties(layout = "autofit") %>%
+      fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
+    invisible(save_as_image(ft, file, res = 600))
+  }
+
   tbl("hr_adiposity", {
     # ---- hr_adiposity (S1H) ----------------------------------------------
     # Outcome | Class | HR (CI) Model 1 | Model 2 | Model 3, adiposity only.
@@ -694,6 +931,9 @@ if (TRUE) {
           hr_table <- rbind(r, hr_table)
           rownames(hr_table) <- NULL
         }
+        # relabel AFTER the reference row is added (reference_class ran on the raw
+        # 4/5 labels above): adiposity 4/5 -> 9/10 for the sequential class scheme.
+        hr_table$Class <- relabel_classes(hr_table$Class, ADIPOSITY_CLASS_RELABEL)
         write_hr_table(hr_table, "output/tables/hr_adiposity.png")
       }
     }
@@ -789,45 +1029,11 @@ if (TRUE) {
   # always the shortest-lived class (1/4/7, medians 94/100/107 weeks against
   # 114-117), but this is NOT guaranteed -- some sex/strain HRs exceed 1, which
   # means their reference is not the highest-hazard group.
-  .cls_key <- function(x) gsub("[^A-Za-z0-9]", "", as.character(x))
+  # .cls_key / reference_class are defined ABOVE the first table block (tbl() runs
+  # its block eagerly, so a definition here would come too late for hr_all/hr_adiposity).
 
-  reference_class <- function(env, outcome, present) {
-    t1 <- env$save_figtabs$t1_df
-    if (is.null(t1) || !all(c("oc_name", "row_names") %in% names(t1))) return(NULL)
-    rows <- t1[trimws(as.character(t1$oc_name)) == outcome, , drop = FALSE]
-    cls  <- trimws(as.character(rows$row_names))
-    keep <- grepl("^Class", cls)                      # drop the 'total'/'pval' rows
-    cls  <- cls[keep]
-    if (!length(cls)) return(NULL)
-    miss <- setdiff(.cls_key(cls), .cls_key(present))
-    if (length(miss) != 1) return(NULL)               # ambiguous -- say nothing
-    cls[match(miss, .cls_key(cls))]
-  }
-
-  # Order by the rules above and write the table. `df` carries a logical .ref
-  # column marking the reference row; it drives the ordering and is then dropped.
-  #
-  # The grouping columns are every column BEFORE "Class" -- LCM for 1N, LCM +
-  # Sex / Strain for 2I/S3I/S3R, Outcome for S1H, and none for 5D. Groups keep
-  # the order the builder produced them in; only rows WITHIN a group are sorted.
-  write_hr_table <- function(df, file) {
-    if (!".ref" %in% names(df)) df$.ref <- FALSE
-    if ("Class" %in% names(df)) {
-      grp_cols <- names(df)[seq_len(match("Class", names(df)) - 1L)]
-      grp <- if (length(grp_cols))
-               do.call(paste, c(df[grp_cols], sep = "\r")) else rep("", nrow(df))
-      cls_no <- suppressWarnings(as.numeric(gsub("[^0-9]", "", df$Class)))
-      df <- df[order(match(grp, unique(grp)), !df$.ref, cls_no), , drop = FALSE]
-      rownames(df) <- NULL
-    }
-    df$.ref <- NULL
-    ft <- flextable(df) %>%
-      fig_table_theme() %>%
-      autofit() %>%
-      set_table_properties(layout = "autofit") %>%
-      fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-    invisible(save_as_image(ft, file, zoom = 10))
-  }
+  # write_hr_table is defined ABOVE the first table block, alongside
+  # reference_class, for the same reason (tbl() evaluates its block eagerly).
 
   # ---- sex/strain HR tables (2I, S3I, S3R) ---------------------------------
   # ONE builder for all three. Columns: LCM | Sex / Strain | Class | Hazard
@@ -856,10 +1062,18 @@ if (TRUE) {
     if (!is.null(hn))
       hn <- hn[hn$Outcome == outcome & !is.na(hn$Class) & !is.na(hn$pval), , drop = FALSE]
     if (!is.null(hn) && nrow(hn)) {
+      # hr_numeric$Class labels non-reference classes SEQUENTIALLY (Class2, Class3,
+      # ...), which is only right when the true classes are 2,3,.. in that row
+      # order. It is wrong for cohorts whose classes aren't (F/B6's fourth class is
+      # "9"; M/HET3's are ordered 3,2), which also breaks reference_class(). The
+      # true identities are in mortality_panel_hr, in the SAME row order (both are
+      # the unadjusted ~Class fit), so take the labels from there.
+      tb  <- env$save_figtabs$mortality_panel_hr[[slot]]
+      cls <- if (!is.null(tb) && nrow(tb) == nrow(hn)) rownames(tb) else as.character(hn$Class)
       return(data.frame(
         LCM                 = lcm,
         `Sex / Strain`      = unname(SEX_STRAIN_LABEL[[strata]]),
-        Class               = as.character(hn$Class),
+        Class               = cls,
         `Hazard Ratio (CI)` = mapply(format_hr_bare, hn$value, hn$lower, hn$upper, hn$pval),
         check.names = FALSE, stringsAsFactors = FALSE
       ))
@@ -961,7 +1175,7 @@ if (TRUE) {
       set_table_properties(layout = "autofit") %>%
       fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
-    invisible(save_as_image(hr_table, "output/tables/hr_treatment.png", zoom = 10))
+    invisible(save_as_image(hr_table, "output/tables/hr_treatment.png", res = 600))
   })
   tbl("hr_itp", {
     # ---- hr_itp ----------------------------------------------------------
@@ -1030,77 +1244,7 @@ if (TRUE) {
       set_table_properties(layout = "autofit") %>%
       fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
-    invisible(save_as_image(hr_table, "output/tables/hr_km_external.png", zoom = 10))
-  })
-  tbl("hr_fb6", {
-    # ---- hr_fb6 ----------------------------------------------------------
-    hr_table <- do.call(rbind, fb6_env$save_figtabs$mortality_panel_hr)
-    hr_table <- cbind(Class = rownames(hr_table), hr_table)
-    hr_table <- flextable(hr_table) %>%
-      fig_table_theme() %>%
-      autofit() %>%
-      set_table_properties(layout = "autofit") %>%
-      fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-
-    invisible(save_as_image(hr_table, "output/tables/hr_fb6.png", zoom = 10))
-  })
-  tbl("hr_fhet3", {
-    # ---- hr_fhet3 --------------------------------------------------------
-    hr_table <- do.call(rbind, fhet3_env$save_figtabs$mortality_panel_hr)
-    hr_table <- cbind(Class = rownames(hr_table), hr_table)
-    hr_table <- flextable(hr_table) %>%
-      fig_table_theme() %>%
-      autofit() %>%
-      set_table_properties(layout = "autofit") %>%
-      fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-
-    invisible(save_as_image(hr_table, "output/tables/hr_fhet3.png", zoom = 10))
-  })
-  tbl("hr_mb6", {
-    # ---- hr_mb6 ----------------------------------------------------------
-    hr_table <- do.call(rbind, mb6_env$save_figtabs$mortality_panel_hr)
-    hr_table <- cbind(Class = rownames(hr_table), hr_table)
-    hr_table <- flextable(hr_table) %>%
-      fig_table_theme() %>%
-      autofit() %>%
-      set_table_properties(layout = "autofit") %>%
-      fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-
-    invisible(save_as_image(hr_table, "output/tables/hr_mb6.png", zoom = 10))
-  })
-  tbl("hr_mhet3", {
-    # ---- hr_mhet3 --------------------------------------------------------
-    hr_table <- do.call(rbind, mhet3_env$save_figtabs$mortality_panel_hr)
-    hr_table <- cbind(Class = rownames(hr_table), hr_table)
-    hr_table <- flextable(hr_table) %>%
-      fig_table_theme() %>%
-      autofit() %>%
-      set_table_properties(layout = "autofit") %>%
-      fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-
-    invisible(save_as_image(hr_table, "output/tables/hr_mhet3.png", zoom = 10))
-  })
-  tbl("hr_km_internal", {
-    # ---- hr_km_internal --------------------------------------------------
-    hr_table <- all_env$save_figtabs$km_hr_combine_validation_panels_hr
-    hr_table <- lapply(hr_table, function(table) {
-      table <- cbind(Tertile = seq_len(nrow(table)) + 1, table)
-      table <- cbind(explicit = rownames(table), table)
-      table$column <- rep(colnames(table)[3], nrow(table))
-      colnames(table)[3] <- "HR"
-      rownames(table) <- NULL
-      table
-    })
-    hr_table <- cbind(explicit = rownames(hr_table), hr_table)
-    hr_table <- hr_table[1:10]
-    hr_table <- do.call(rbind, hr_table)
-    hr_table <- flextable(hr_table) %>%
-      fig_table_theme() %>%
-      autofit() %>%
-      set_table_properties(layout = "autofit") %>%
-      fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-
-    invisible(save_as_image(hr_table, "output/tables/hr_km_internal.png", zoom = 10))
+    invisible(save_as_image(hr_table, "output/tables/hr_km_external.png", res = 600))
   })
 
 }
@@ -1111,13 +1255,14 @@ message("99_pub_ready_figs: done")
 # =============================================================================
 # VITA / SOMA LOCUS HEATMAPS   (5L filtered, S9D unfiltered)
 #
-# INPUT: 98_itp_genotype/census_mapping.txt (trajectory.R). Cells are -log10(p)
+# INPUT: 98_itp_genotype/output/census_mapping.txt (trajectory.R). Cells are -log10(p)
 # from a likelihood-ratio test, NOT p-values.
 #
-# COLOUR uses LOD breaks; 3.84 is the Bonferroni threshold. STARS use the usual
-# paper convention (p<0.05/0.01/0.001 -> -log10 > 1.30/2/3), so the two encode
-# different things ON PURPOSE -- a cell can carry a star while sitting below the
-# Bonferroni colour cut. The figure legend has to say so.
+# COLOUR uses LOD breaks; 3.85 is the Bonferroni threshold. STARS follow the
+# manuscript's manual annotation -- a per-LOCUS Bonferroni-LEVEL scheme (* at
+# alpha 0.05 / -log10 3.85, ** at alpha 0.01 / -log10 4.55; see locus_stars),
+# NOT the per-cell p<0.05/0.01/0.001 used on the other figures. Only cells that
+# clear the 3.85 colour cut are marked, so colour and stars agree here.
 #
 #   5L   filtered   loci with >=1 Bonferroni-significant cell   4 colours
 #   S9D  unfiltered  all loci                                    8 colours
@@ -1136,28 +1281,57 @@ LOCUS_ORDER <- c(
   "Soma19a", "Soma19b"
 )
 
-# Column order and headings as published: F, M, All.
-LOCUS_COLS <- c(census_f = "F", census_m = "M", census = "All")
+# Column order and headings as published: F, M, All. These are the
+# TREATMENT-ADJUSTED census columns (census_tx_*), matching canonical Fig 5L /
+# S9D: the plain census_f/census_m/census columns peak at 3.38 (all below the
+# 3.85 Bonferroni cut), which would empty the 5L filter; the significant loci
+# (Vita9b, VitaXa, Soma17a, ...) live in the treatment-adjusted mapping.
+LOCUS_COLS <- c(census_tx_f = "F", census_tx_m = "M", census_tx = "All")
 
-BONFERRONI_NEGLOG <- 3.84        # colour cut, and the 5L row filter
+# Derived, not hardcoded: the Methods state "a Bonferroni correction for 354
+# tests", where 354 = 59 loci x 6 analyses (control and combined, each
+# unstratified / M / F). Evaluates to 3.8500. It was previously written as the
+# literal 3.84 here AND independently in both BREAKS_ vectors below, so a refit
+# with a different N would have desynced them silently and the colours would
+# have stopped matching the asterisks. Verified byte-identical output under
+# 3.84 and 3.85: no cell falls in either affected gap (3.76 | cut | 3.87, and
+# 4.30 | ** cut | 4.94), so the nine 5L loci and all colour bins are unchanged.
+BONFERRONI_NEGLOG <- -log10(0.05 / 354)   # colour cut, and the 5L row filter
 
 # sampled from the legend artwork (.A/sample_legend_hex.R)
 PAL_5L    <- c("#F3F3F3", "#FDCBB4", "#F9A077", "#F57941")
-BREAKS_5L <- c(0, 3.84, 5, 6, Inf)
+BREAKS_5L <- c(0, BONFERRONI_NEGLOG, 5, 6, Inf)
 
 PAL_S9D    <- c("#F3F3F3", "#91DFF7", "#5FCCEC", "#22B9E1", "#00A5D5",
                 "#FDCBB4", "#F9A077", "#F57941")
-BREAKS_S9D <- c(0, 3.04, 3.24, 3.44, 3.64, 3.84, 5, 6, Inf)
+BREAKS_S9D <- c(0, 3.04, 3.24, 3.44, 3.64, BONFERRONI_NEGLOG, 5, 6, Inf)
 
-neglog_stars <- function(x) {
-  vapply(x, function(v) {
-    if (is.na(v)) return("")
-    if (v > 3) "***" else if (v > 2) "**" else if (v > -log10(0.05)) "*" else ""
-  }, character(1))
+# 5L asterisks follow the manuscript's manual annotation: a Bonferroni-LEVEL,
+# PER-LOCUS scheme (NOT the per-cell p<0.05/0.01/0.001 used on the other figures).
+#   - a cell is marked only if its OWN -log10(p) clears the genome-wide cut
+#     (3.85 = -log10(0.05/354), Bonferroni alpha = 0.05);
+#   - the number of stars is set by the LOCUS's strongest cohort (row max):
+#       *  = alpha 0.05  (row max > 3.85)
+#       ** = alpha 0.01  (row max > 4.55 = 3.85 + log10(5), same N)
+#     capped at ** as in the annotation (even -log10 = 7.36 stays **);
+#   - that level is stamped on EVERY marked cohort of the locus, so all its
+#     significant cells share one count (e.g. Vita9c F=4.96 and M=4.30 both **).
+# Reproduces the manual annotation exactly (the * loci top out at 4.07, the **
+# loci start at 4.94, so any cut in that gap -- 4.55 is the principled one).
+STAR_A01_NEGLOG <- BONFERRONI_NEGLOG + log10(5)   # 4.55: shift alpha 0.05 -> 0.01
+locus_stars <- function(mat) {
+  out <- matrix("", nrow(mat), ncol(mat), dimnames = dimnames(mat))
+  for (i in seq_len(nrow(mat))) {
+    row  <- mat[i, ]
+    rmax <- suppressWarnings(max(row, na.rm = TRUE))
+    lvl  <- if (rmax > STAR_A01_NEGLOG) "**" else if (rmax > BONFERRONI_NEGLOG) "*" else ""
+    out[i, ] <- ifelse(!is.na(row) & row > BONFERRONI_NEGLOG, lvl, "")
+  }
+  out
 }
 
 # `cells` selects what is printed in each square:
-#   "stars"   -> ***/**/* by the usual p thresholds        (5L)
+#   "stars"   -> */** by per-locus Bonferroni level         (5L)
 #   "values"  -> the -log10(p) number itself               (S9D)
 locus_heatmap <- function(mat, title, file, pal, breaks, gap = NULL,
                           cells = c("stars", "values")) {
@@ -1168,7 +1342,7 @@ locus_heatmap <- function(mat, title, file, pal, breaks, gap = NULL,
   hm <- pheatmap::pheatmap(
     mat, cluster_rows = FALSE, cluster_cols = FALSE,
     display_numbers = if (cells == "stars") {
-      matrix(neglog_stars(mat), nrow = nrow(mat), dimnames = dimnames(mat))
+      locus_stars(mat)
     } else {
       matrix(formatC(mat, format = "f", digits = 2), nrow = nrow(mat),
              dimnames = dimnames(mat))
@@ -1185,7 +1359,7 @@ locus_heatmap <- function(mat, title, file, pal, breaks, gap = NULL,
   invisible(file)
 }
 
-.map_path <- "../98_itp_genotype/census_mapping.txt"
+.map_path <- "../98_itp_genotype/output/census_mapping.txt"
 if (!file.exists(.map_path)) {
   skip("locus heatmaps -- not found: ", .map_path, " (trajectory.R has not run)")
 } else {
@@ -1216,14 +1390,22 @@ if (!file.exists(.map_path)) {
     # 5L -- only loci with at least one Bonferroni-significant cell
     sig  <- apply(full, 1, function(r) any(r > BONFERRONI_NEGLOG, na.rm = TRUE))
     filt <- full[sig, , drop = FALSE]
+    # rownames() on an all-FALSE matrix subset is NULL, not character(0), so read
+    # them through a NULL-safe helper before startsWith() to avoid a crash if no
+    # locus passes the cut.
+    filt_rn <- rownames(filt); if (is.null(filt_rn)) filt_rn <- character(0)
     message("locus heatmap: ", nrow(filt), " of ", nrow(full),
             " loci pass Bonferroni (-log10 p > ", BONFERRONI_NEGLOG, ")  [",
-            sum(startsWith(rownames(filt), "Vita")), " Vita, ",
-            sum(startsWith(rownames(filt), "Soma")), " Soma]")
-    locus_heatmap(filt, "Vita and Soma loci",
-                  file.path(out_dir, "loci_filtered.png"),
-                  PAL_5L, BREAKS_5L,
-                  gap = sum(startsWith(rownames(filt), "Vita")),
-                  cells = "stars")
+            sum(startsWith(filt_rn, "Vita")), " Vita, ",
+            sum(startsWith(filt_rn, "Soma")), " Soma]")
+    if (nrow(filt) == 0) {
+      warning("no loci pass the Bonferroni cut -- skipping loci_filtered.png (5L)")
+    } else {
+      locus_heatmap(filt, "Vita and Soma loci",
+                    file.path(out_dir, "loci_filtered.png"),
+                    PAL_5L, BREAKS_5L,
+                    gap = sum(startsWith(filt_rn, "Vita")),
+                    cells = "stars")
+    }
   }
 }
