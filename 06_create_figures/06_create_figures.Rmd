@@ -6,11 +6,12 @@ output:
   html_document:
     df_print: paged
 params:
-  input_path: "../05_prediction_data/output/slam_c1-c10_lnage_all_bwfatgluc.yaml"
+  input_path: "../05_prediction_data/output/slam_c1-c10_age_all_bwfatgluc.yaml"
 ---
 
 ```{r setup, warning=FALSE, message=FALSE, echo=FALSE, eval = TRUE}
 library(helphlme)
+library(consoler)
 library(tidyverse)
 library(kableExtra)
 library(survival)
@@ -902,6 +903,346 @@ for (name in names(combined_cox_models)) {
   }
 }
 ```
+
+
+### Create merged census for age-based subsets in complete and training sets
+
+#### Predict Class Assignement for Train Dataframe
+
+```{r source create train prediction results, file = 'R/pred_class.R'}
+source("R/pred_class.R")
+```
+
+```{r create test prediction results}
+# Get the names of the filtered data
+prediction_data_names <- lapply(datasets, function(dataset) {
+  names(dataset$prediction_data$data)
+})
+prediction_data_names <- unlist(prediction_data_names, use.names = FALSE)
+prediction_columns <- unique(prediction_data_names)
+
+prediction_names <- lapply(prediction_columns, strsplit, split = "_data")
+prediction_names <- unlist(prediction_names)
+
+# create a list of lists, where parent list is the filter applied, and the
+# daughter lists provides the filtered dataframes for the corresponding
+# row of final_models. This code does not take into account the case where
+# certain filters are applied to one row, but not another
+filter_list <- lapply(prediction_columns, function(filter) {
+  row_list <- lapply(seq_len(nrow(final_models)), function(row_number) {
+    data_name <- final_models[row_number, "data"]
+    datasets[[data_name]]$prediction_data$data[[filter]]
+  })
+  row_list
+})
+names(filter_list) <- prediction_columns
+
+for (filter in names(filter_list)) {
+  final_models[[filter]] <- filter_list[[filter]]
+}
+
+prediction_results_names <- paste(prediction_names, "results", sep = "_")
+
+prediction_results <- lapply(prediction_columns, function(col) {
+  print(col)
+  predict_class_model_list(
+    nested_newdata_list = final_models[[col]],
+    model_list = final_models$final_model,
+    names = final_models$model_name
+  )
+})
+
+final_models[, prediction_results_names] <- prediction_results
+```
+
+#### Create new class numbering
+
+```{r class numbering}
+increment_class <- function(filtered_df, i = 0) {
+  filtered_df$new_class <- as.character(filtered_df$class + i)
+
+  # Create new prob based off of new_class
+  probs_index <- grepl("^prob", names(filtered_df))
+  probs <- names(filtered_df)[grepl("^prob", names(filtered_df))]
+  probs <- unlist(lapply(strsplit(probs, split = "prob"), `[`, 2))
+  new_probs <- as.numeric(probs) + i
+  new_probs <- paste0("prob", new_probs)
+  names(filtered_df)[probs_index] <- new_probs
+
+  filtered_df
+}
+
+reorder_prediction_class <- function(final_models,
+                                     model_names,
+                                     filtered_df_name) {
+  print(filtered_df_name) # delete
+  i <- 0
+  for (model_name in model_names) {
+    print(model_name) # delete
+    index <- final_models$model_name == model_name
+    row <- final_models[index, ]
+    filtered_dfs <- row[, filtered_df_name][[1]]
+    if (is.list(filtered_dfs)) {
+      filtered_dfs_inced <- lapply(
+        filtered_dfs,
+        increment_class,
+        i
+      )
+    } else {
+      filtered_dfs_inced <- NA
+    }
+
+    column <- final_models[, filtered_df_name]
+    column[[which(index)]] <- filtered_dfs_inced
+    final_models[[filtered_df_name]] <- column
+    i <- as.numeric(row$ng) + i
+    print(i)
+  }
+  final_models
+}
+
+# get complete model names
+train_test_index <- (final_models$data_mod == "train_test")
+train_test_names <- final_models[train_test_index, "model_name"]
+complete_names <- final_models[!train_test_index, "model_name", drop = TRUE]
+
+for (filtered_df_name in prediction_results_names) {
+  final_models <- reorder_prediction_class(
+    final_models = final_models,
+    model_names = complete_names,
+    filtered_df_name = filtered_df_name
+  )
+}
+```
+
+#### Merge prediction dataframes
+
+```{r merge prediction for all data dataframes}
+merge_prediction_data <- function(x, y) {
+  print(y$suffix)
+  print(consoler::peek(x$data_list[[1]]))
+  print(consoler::peek(y$data_list[[1]]))
+  if (length(x$data_list) != length(y$data_list)) {
+    stop("Data lists are not of the same length, cannot merge them")
+  }
+
+  # put suffixes on data ahead of time
+  x$data_list <- lapply(x$data_list, function(data) {
+    class_names_index <- grepl("^class$|^new_class$", names(data))
+    class_names <- names(data)[class_names_index]
+    names(data)[class_names_index] <- paste0(class_names, x$suffix)
+    data
+  })
+  y$data_list <- lapply(y$data_list, function(data) {
+    class_names_index <- grepl("^class$|^new_class$", names(data))
+    class_names <- names(data)[class_names_index]
+    names(data)[class_names_index] <- paste0(class_names, y$suffix)
+    data
+  })
+
+  z <- list()
+  z$data_list <- mapply(merge,
+    x = x$data_list, y = y$data_list,
+    MoreArgs = list(by.x = x$id, by.y = y$id, suffixes = c(x$suffix, y$suffix)),
+    SIMPLIFY = FALSE
+  )
+  print(consoler::peek(z$data_list[[1]]))
+  z$id <- x$id
+  z$suffix <- ""
+
+  z
+}
+
+
+merge_prediction_data_group <- function(
+    final_models,
+    model_names,
+    filtered_df_name) {
+  index <- final_models$model_name %in% model_names
+  desired_dfs <- final_models[index, filtered_df_name]
+  desired_ids <- final_models[index, "subject"]
+  desired_suffixes <- paste0("_", final_models[index, "oc"])
+
+  if (all(is.na(desired_dfs))) {
+    merged_data <- NA
+  } else {
+    reduce_list <- lapply(seq_len(length(desired_dfs)), function(i) {
+      list(
+        data_list = desired_dfs[[i]],
+        id = desired_ids[[i]],
+        suffix = desired_suffixes[[i]]
+      )
+    })
+    merged_data <- Reduce(f = merge_prediction_data, x = reduce_list)$data_list
+
+    # the last element name improperly following reduce function, thus:
+    merged_data <- lapply(merged_data, function(data) {
+      last_class_name <- paste0("class", tail(desired_suffixes, n = 1))
+      last_new_class_name <- paste0("new_class", tail(desired_suffixes, n = 1))
+      colnames(data)[colnames(data) == "class"] <- last_class_name
+      colnames(data)[colnames(data) == "new_class"] <- last_new_class_name
+      data
+    })
+  }
+
+  # create new column to store data
+  column <- final_models[, filtered_df_name]
+  for (row in which(index)) {
+    column[[row]] <- merged_data
+  }
+  new_column_name <- gsub("_results$", "", filtered_df_name)
+  new_column_name <- paste0(new_column_name, "_merged")
+  final_models[[new_column_name]] <- column
+  final_models
+}
+
+# get complete model names
+train_test_index <- (final_models$data_mod == "train_test")
+complete_names <- final_models[!train_test_index, "model_name", drop = TRUE]
+
+for (filtered_df_name in prediction_results_names) {
+  final_models <- merge_prediction_data_group(
+    final_models = final_models,
+    model_names = complete_names,
+    filtered_df_name = filtered_df_name
+  )
+}
+```
+
+```{r merge census}
+merge_census_apply <- function(data_list, census, id) {
+  if (length(data_list) == 1 && is.na(data_list)) {
+    warning("data_list is NA; returning NA")
+    return(NA)
+  }
+
+  drop_columns <- grepl(
+    "class|^prob",
+    names(census),
+    ignore.case = TRUE
+  )
+
+  census <- census[, !drop_columns, drop = FALSE]
+
+  lapply(
+    data_list,
+    function(data) {
+      merge(
+        x = data,
+        y = census,
+        by = id,
+        all.x = TRUE,
+        sort = FALSE
+      )
+    }
+  )
+}
+
+merge_census_column <- function(final_models, filtered_df_name) {
+  final_models_complete <- final_models[!(final_models$data_mod == "train_test"), ]
+  censuses <- final_models_complete[, "census"]
+  data_lol <- final_models_complete[, filtered_df_name]
+  ids <- final_models_complete[, "subject"]
+  data_lol <- mapply(merge_census_apply,
+    data_list = data_lol, census = censuses, id = ids,
+    SIMPLIFY = FALSE
+  )
+
+  final_models[[filtered_df_name]] <- data_lol
+  final_models
+}
+
+merged_prediction_names <- paste0(prediction_names, "_merged")
+
+for (filtered_df_name in merged_prediction_names) {
+  final_models <- merge_census_column(
+    final_models = final_models,
+    filtered_df_name = filtered_df_name
+  )
+}
+```
+
+#### Store Interval Prediction Data for Age Specific Correlation Networks
+
+```{r store interval prediction data}
+complete_index <- !(final_models$data_mod == "train_test")
+
+complete_data_names <- names(
+  final_models$filter_interval_merged
+)[complete_index]
+
+interval_results <- final_models$filter_interval_merged[complete_data_names]
+
+if (length(interval_results) == 0L) {
+  stop("No complete interval datasets were found.")
+}
+
+reference_data_name <- complete_data_names[[1L]]
+reference_intervals <- interval_results[[reference_data_name]]
+
+for (data_name in complete_data_names[-1L]) {
+  current_intervals <- interval_results[[data_name]]
+
+  if (!identical(names(current_intervals), names(reference_intervals))) {
+    stop(
+      "Interval names differ between ",
+      reference_data_name,
+      " and ",
+      data_name,
+      "."
+    )
+  }
+
+  for (interval_name in names(reference_intervals)) {
+    if (!identical(
+      reference_intervals[[interval_name]],
+      current_intervals[[interval_name]]
+    )) {
+      stop(
+        "Interval '",
+        interval_name,
+        "' differs between ",
+        reference_data_name,
+        " and ",
+        data_name,
+        "."
+      )
+    }
+  }
+}
+
+interval_output_path <- file.path(
+  "output",
+  config$out_tag,
+  "interval_data"
+)
+
+dir.create(
+  interval_output_path,
+  recursive = TRUE,
+  showWarnings = FALSE
+)
+
+for (interval_name in names(reference_intervals)) {
+  write.csv(
+    reference_intervals[[interval_name]],
+    file.path(
+      interval_output_path,
+      paste0(interval_name, ".csv")
+    ),
+    row.names = FALSE
+  )
+}
+
+message(
+  "All interval datasets were identical across ",
+  length(complete_data_names),
+  " data sets. One set was saved using ",
+  reference_data_name,
+  " as the reference."
+)
+```
+
 
 ### Determine get Hazard Predictions from test set
 
