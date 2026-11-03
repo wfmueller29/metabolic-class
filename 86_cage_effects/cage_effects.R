@@ -112,6 +112,13 @@ print(sex_kappa_all, row.names = FALSE, digits = 3)
 #! Keeps a sex difference from standing in for a genetic background difference.
 sex_kappa_strain <- dplyr::bind_rows(lapply(split(paired_cages, paired_cages$strain), sex_kappa_test, measures = measures), .id = "strain")
 print(sex_kappa_strain, row.names = FALSE, digits = 3)
+#- 86.6.4: Classified mice per cage, by sex (the cages entering 86.6.2)
+#! Every cage with two or more classified mice enters, each scored on its own pairs; most hold two or three classified mice although most census cages held four (86.1.12).
+paired_sizes <- dplyr::count(paired_cages, cage, sex, name = "mice_per_cage")
+print(dplyr::summarise(paired_sizes, cages = dplyr::n(), mice = sum(mice_per_cage), .by = c(sex, mice_per_cage)) |> dplyr::arrange(sex, mice_per_cage))
+#- 86.6.5: Sensitivity, female vs male kappa in cages with exactly four classified mice
+sex_kappa_four <- sex_kappa_test(dplyr::filter(paired_cages, dplyr::n() == 4, .by = cage), measures)
+print(sex_kappa_four, row.names = FALSE, digits = 3)
 #+ 86.7: Receipt of every number reported in 2.10.2 and the Figure S2.10 legend
 #! Prints each value as written in the text, to check the prose and legend against the run. Agreement in percentage points = 100 x (observed - mean of permutations).
 #- 86.7.1: Sample sizes (paragraph one; legend A and B)
@@ -134,3 +141,5 @@ cat(sprintf("with cage frailty: %d of %d HRs P < 0.001 (largest P = %.2g); %d of
 cat(sprintf("housed four per cage: %.0f%% of %d mice | fewer than four vs four: HR %s\n", 100 * mean(class_cages$housing == "Four"), nrow(class_cages), format_hr(housing_ci[1, 1], housing_ci[1, 3], housing_ci[1, 4], summary(housing_fit)$coefficients[1, "Pr(>|z|)"])))
 #- 86.7.8: Female vs male chance-corrected agreement (sex comparison)
 cat(sprintf("%s %s: kappa F = %.3f, M = %.3f, M - F = %.3f [%.3f, %.3f]\n", c(rep("all", nrow(sex_kappa_all)), sex_kappa_strain$strain), c(sex_kappa_all$LCM, sex_kappa_strain$LCM), c(sex_kappa_all$kappa_F, sex_kappa_strain$kappa_F), c(sex_kappa_all$kappa_M, sex_kappa_strain$kappa_M), c(sex_kappa_all$diff_MF, sex_kappa_strain$diff_MF), c(sex_kappa_all$diff_lo, sex_kappa_strain$diff_lo), c(sex_kappa_all$diff_hi, sex_kappa_strain$diff_hi)), sep = "")
+#- 86.7.9: Sex comparison in cages with four classified mice (robustness)
+cat(sprintf("%s M - F: all cages %.3f [%.3f, %.3f] | four classified mice only (%d F, %d M cages) %.3f [%.3f, %.3f]\n", sex_kappa_all$LCM, sex_kappa_all$diff_MF, sex_kappa_all$diff_lo, sex_kappa_all$diff_hi, sex_kappa_four$cages_F, sex_kappa_four$cages_M, sex_kappa_four$diff_MF, sex_kappa_four$diff_lo, sex_kappa_four$diff_hi), sep = "")
