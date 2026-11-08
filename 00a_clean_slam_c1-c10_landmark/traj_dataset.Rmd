@@ -578,6 +578,8 @@ main_all2_landmark <- subset(main_all2, age_wk < L & le_wk > L + g)
 hist(main_all2_landmark$age_wk)
 hist(main_all2_landmark$le_wk)
 
+main_all2 <- main_all2_landmark
+
 ### rename for igs template
 slam_main_all <- main_all2
 ```

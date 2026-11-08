@@ -9,7 +9,7 @@ library(consoler)
 args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) == 0) {
-  args[[1]] <- "input/slam_c1-c10.yaml"
+  args[[1]] <- "input/slam_c1-c10_landmark.yaml"
 }
 
 datasets <- yaml::read_yaml(args[[1]])
@@ -38,6 +38,7 @@ read_data <- function(datasets) {
 
 read_rdata <- function(file_name) {
   # loads an RData file, and returns it
+  print(file_name)
   load(file_name)
   get(ls()[ls() != "file_name"])
 }
