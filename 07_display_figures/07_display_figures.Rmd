@@ -7,7 +7,7 @@ output:
   html_document:
     df_print: paged
 params:
-  input_path: "../06_create_figures/output/itp_genotyped_treat.yaml"
+  input_path: "../06_create_figures/output/slam_c1-10_x_slam_c16-c18_landmark45_age_bwfatgluc.yaml"
 ---
 
 ```{r setup, warning=FALSE, message=FALSE, echo=FALSE}
@@ -59,7 +59,8 @@ if (!exists("params")) {
   # params$input_path <- "../06_create_figures/output/20250426_itp_C2010_C2011_C2013_C2016_controls_cohort.yaml"
   # params$input_path <- "../06_create_figures/output/20250426_all_cohort.yaml"
   # params$input_path <- "../06_create_figures/output/slam_c1-c10_age_fb6_bwfatgluc.yaml"
-  params$input_path <- "../06_create_figures/output/itp_c10c11c13c16_age_controls_bw.yaml"
+  params$input_path <- "../06_create_figures/output/slam_c1-10_x_slam_c16-c18_landmark45_age_bwfatgluc.yaml"
+  # params$input_path <- "../06_create_figures/output/itp_c10c11c13c16_age_controls_bw.yaml"
   # params$input_path <- "../06_create_figures/output/all_lean.yaml"
   # params$input_path <- "../06_create_figures/output/fb6.yaml"
   # params$input_path <- "../06_create_figures/output/external_validation.yaml"
@@ -609,13 +610,14 @@ cox_table_numeric <- function(final_models, mo_names) {
     row <- final_models[final_models$model_name == name, ]
     if (row$ng == 1) next
     cox_models <- row$cox_models[[1]]
-    outcome    <- row$oc_name
+    outcome <- row$oc_name
 
     xlevels_list <- lapply(cox_models, `[[`, "xlevels")
     xlevels_names <- lapply(xlevels_list, names)
     xlevels_list <- lapply(seq_along(xlevels_names), function(i) {
       unlist(lapply(mapply(paste0, xlevels_names[[i]], xlevels_list[[i]],
-                           SIMPLIFY = FALSE), `[`, -1))
+        SIMPLIFY = FALSE
+      ), `[`, -1))
     })
     xlevels_list <- lapply(xlevels_list, function(x) x[!grepl("strata\\(", x)])
 
@@ -624,21 +626,26 @@ cox_table_numeric <- function(final_models, mo_names) {
       keep <- intersect(c("value", "lower", "upper", "pval", "final"), names(tb))
       out[[length(out) + 1]] <- data.frame(
         Outcome = outcome,
-        Class   = rownames(tb),
-        Model   = paste("HR Model", i),
+        Class = rownames(tb),
+        Model = paste("HR Model", i),
         tb[, keep, drop = FALSE],
         row.names = NULL, stringsAsFactors = FALSE
       )
     }
   }
-  if (!length(out)) return(NULL)
+  if (!length(out)) {
+    return(NULL)
+  }
   res <- do.call(rbind, out)
   res[grepl("^Class\\d+", res$Class), ]
 }
 
 hr_numeric <- tryCatch(
   cox_table_numeric(final_models, model_names),
-  error = function(e) { warning("hr_numeric failed: ", conditionMessage(e)); NULL }
+  error = function(e) {
+    warning("hr_numeric failed: ", conditionMessage(e))
+    NULL
+  }
 )
 
 if (config$custom_palette) {
@@ -1239,7 +1246,9 @@ forest_stars <- function(pval, fallback = "") {
   # every scientific-notation (i.e. most-significant) p-value to "" -> "n.s.",
   # which is why Fig 3E showed HR 3.84 (3.21-4.58) as n.s. Coerce to numeric first.
   pval <- suppressWarnings(as.numeric(pval))
-  if (is.null(pval) || length(pval) == 0 || is.na(pval)) return(fallback)
+  if (is.null(pval) || length(pval) == 0 || is.na(pval)) {
+    return(fallback)
+  }
   if (pval < 0.001) "***" else if (pval < 0.01) "**" else if (pval < 0.05) "*" else ""
 }
 
@@ -1278,8 +1287,10 @@ forest_tidy_panel <- function(df, facet_name, group_prefix) {
     hr_ci = sprintf("(%.2f - %.2f)", parsed$lower, parsed$upper),
     pval_text = forest_pval_text(
       if ("pval" %in% colnames(df)) {
-        vapply(seq_len(nrow(df)),
-               function(k) forest_stars(df$pval[k], parsed$stars[k]), character(1))
+        vapply(
+          seq_len(nrow(df)),
+          function(k) forest_stars(df$pval[k], parsed$stars[k]), character(1)
+        )
       } else {
         parsed$stars
       }
@@ -1395,11 +1406,20 @@ rest_index <- !test_index
 test_index <- which(test_index)[[1]]
 rest_index <- which(rest_index)[[1]]
 
+id <- config$meta_dataset$id
+
 # 6 to 58 weeks
 censuses <- final_models[test_index, "filter_cumulative_test_tmerged"][[1]]
-census_names <- names(censuses)
 
-id <- final_models[test_index, "subject"]
+censuses_index <- lapply(censuses, function(census) {
+  nrow(census) > 0
+})
+
+censuses <- censuses[unlist(censuses_index)]
+
+peek(censuses)
+
+census_names <- names(censuses)
 
 censuses <- lapply(censuses, function(census) {
   order <- order(census[[id]], census[["tstart"]], decreasing = c(FALSE, TRUE))
@@ -1491,6 +1511,17 @@ rest_index <- which(rest_index)[[1]]
 
 # 6 to 58 weeks
 censuses <- final_models[test_index, "filter_cumulative_test_tmerged"][[1]]
+
+id <- config$meta_dataset$id
+
+censuses_index <- lapply(censuses, function(census) {
+  nrow(census) > 0
+})
+
+censuses <- censuses[unlist(censuses_index)]
+
+peek(censuses)
+
 census_names <- names(censuses)
 
 id <- final_models[test_index, "subject"]
@@ -1615,6 +1646,15 @@ rest_index <- which(rest_index)[[1]]
 
 # 6 to 58 weeks
 censuses <- final_models[test_index, "filter_cumulative_test_tmerged_prediction"][[1]]
+
+censuses_index <- lapply(censuses, function(census) {
+  nrow(census) > 0
+})
+
+censuses <- censuses[unlist(censuses_index)]
+
+peek(censuses)
+
 census_names <- names(censuses)
 
 id <- final_models[test_index, "subject"]
@@ -1727,9 +1767,9 @@ km_hr_combine_validation_forest_hr <- lapply(
   names(km_hr_combine_validation_hrs),
   function(name) {
     table <- km_hr_combine_validation_hrs[[name]]
-    keep  <- intersect(c("final", "pval"), colnames(table$hr_table))
+    keep <- intersect(c("final", "pval"), colnames(table$hr_table))
     table <- table$hr_table[, keep, drop = FALSE]
-    names(table)[names(table) == "final"] <- name   # window label = col 1; pval kept
+    names(table)[names(table) == "final"] <- name # window label = col 1; pval kept
     table
   }
 )
@@ -1753,7 +1793,9 @@ build_km_forest <- function(index) {
     panel_i <- km_hr_combine_validation_forest_hr[[i]]
     forest_tidy_panel(panel_i, colnames(panel_i)[1], "Tertile")
   })
-  if (!length(rows)) return(NULL)
+  if (!length(rows)) {
+    return(NULL)
+  }
   forest_plot_style(
     do.call(rbind, rows),
     palette = forest_tertile_palette,
@@ -2300,7 +2342,7 @@ for (i in seq_along(formulas)) {
 
 ```{r table hazard ratios, results = 'asis'}
 save_figtabs$hr_table <- hr_table
-save_figtabs$hr_numeric <- hr_numeric   # numeric HR/CI/p (see cox_table_numeric)
+save_figtabs$hr_numeric <- hr_numeric # numeric HR/CI/p (see cox_table_numeric)
 print_table(environment(),
   table_name = "hr_table",
   title = "Table of Hazard Ratios by Metabolic Indices"
