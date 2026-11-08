@@ -913,7 +913,7 @@ for (name in names(combined_cox_models)) {
 source("R/pred_class.R")
 ```
 
-```{r create test prediction results}
+```{r create train prediction results}
 # Get the names of the filtered data
 prediction_data_names <- lapply(datasets, function(dataset) {
   names(dataset$prediction_data$data)

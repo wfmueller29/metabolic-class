@@ -18,6 +18,18 @@ exit_code <- system2("Rscript",
 )
 if (exit_code != 0) stop("Error was thrown from system2 command")
 
+# For c1-c10 landmark ----------------------------------------------------------
+
+setwd("00a_clean_slam_c1-c10_landmark/")
+
+rmarkdown::render("traj_dataset.Rmd")
+
+setwd("../00b_dataset_mods/")
+
+exit_code <- system2("Rscript",
+  args = c("dataset_mods.R", "input/slam_c1-c10_landmark.yaml")
+)
+if (exit_code != 0) stop("Error was thrown from system2 command")
 
 # For c16-c18 -----------------------------------------------------------------
 setwd("../00a_clean_slam_c16-c18/")
