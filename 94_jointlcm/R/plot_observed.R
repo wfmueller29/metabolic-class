@@ -11,7 +11,8 @@ plot_observed_classes <- function(data,
                                   title = NULL,
                                   x_label = NULL,
                                   y_label = NULL,
-                                  class_label = "Class") {
+                                  class_label = "Class",
+                                  palette = NULL) {
   p <- ggplot(
     data,
     aes(
@@ -27,7 +28,7 @@ plot_observed_classes <- function(data,
     geom_smooth(
       method = smooth_method,
       se = se,
-      linewidth = line_size
+      mapping = aes(linewidth = n)
     ) +
     labs(
       title = title,
@@ -39,7 +40,12 @@ plot_observed_classes <- function(data,
     theme(
       legend.position = "right",
       plot.title = element_text(hjust = 0.5)
-    )
+    ) +
+    scale_linewidth_identity()
+
+  if (!is.null(palette)) {
+    p <- p + scale_color_manual(values = palette)
+  }
 
   return(p)
 }

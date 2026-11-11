@@ -154,6 +154,10 @@ clusterEvalQ(cl, {
   library(survival)
 })
 
+# seed the master and the parallel workers so the refit is reproducible
+set.seed(94)
+clusterSetRNGStream(cl, iseed = 94)
+
 # bw --------------------------------------------------------------------------
 # NOTE: BW 1 class model did not converge with random~age_wk + age_wk2
 # NOTE: We are going to use just age_wk for the random effect
@@ -288,6 +292,16 @@ gluc_jm3 <- gridsearch(
 
 gluc_jm3$conv
 
+# save fitted models ----------------------------------------------------------
+
+dir.create("output", showWarnings = FALSE)
+saveRDS(
+  list(bw_jm1 = bw_jm1, bw_jm3 = bw_jm3, fat_jm1 = fat_jm1, fat_jm3 = fat_jm3,
+       adiposity_jm1 = adiposity_jm1, adiposity_jm3 = adiposity_jm3,
+       gluc_jm1 = gluc_jm1, gluc_jm3 = gluc_jm3),
+  file.path("output", "models.rds")
+)
+
 # reorder class ---------------------------------------------------------------
 
 i <- 0
@@ -301,6 +315,27 @@ adiposity_prob$class <- adiposity_prob$class + i
 i <- i + length(unique(adiposity_prob$class))
 gluc_prob <- gluc_jm3$pprob
 gluc_prob$class <- gluc_prob$class + i
+
+# line width by class size
+n <- ave(bw_prob[["idno"]], bw_prob[["class"]], FUN = length)
+bw_prob$n <- 2 * (n / max(n)) + 1
+n <- ave(fat_prob[["idno"]], fat_prob[["class"]], FUN = length)
+fat_prob$n <- 2 * (n / max(n)) + 1
+n <- ave(adiposity_prob[["idno"]], adiposity_prob[["class"]], FUN = length)
+adiposity_prob$n <- 2 * (n / max(n)) + 1
+n <- ave(gluc_prob[["idno"]], gluc_prob[["class"]], FUN = length)
+gluc_prob$n <- 2 * (n / max(n)) + 1
+
+# match class numbers and colors to figure 1
+bw_prob$class <- factor(c(2, 3, 1)[bw_prob$class], levels = 1:3,
+  labels = c("1 (Early-peak)", "2 (Stable)", "3 (Late-peak)"))
+fat_prob$class <- factor(c(5, 6, 4)[fat_prob$class - 3], levels = 4:6,
+  labels = c("4 (Early-peak)", "5 (Stable)", "6 (Late-peak)"))
+gluc_prob$class <- factor(c(7, 8)[gluc_prob$class - 8], levels = 7:8,
+  labels = c("7 (Decline)", "8 (Stable)"))
+bw_pal <- c("#000000", "#ff2500", "#a144ff")
+fat_pal <- c("#0e33ff", "#00cfd2", "#ff41ff")
+gluc_pal <- c("#ff9f23", "#b8b8b8")
 
 
 # merge  ----------------------------------------------------------------------
@@ -334,7 +369,8 @@ p_bw_obs <- plot_observed_classes(
   title = NULL,
   x_label = "Age (weeks)",
   y_label = "Body weight (g)",
-  class_label = "BW class"
+  class_label = "BW class",
+  palette = bw_pal
 )
 
 p_bw_km <- plot_km_classes(
@@ -345,7 +381,8 @@ p_bw_km <- plot_km_classes(
   title = NULL,
   x_label = "Age (weeks)",
   y_label = "Survival probability",
-  class_label = "BW class"
+  class_label = "BW class",
+  palette = bw_pal
 )
 
 
@@ -359,7 +396,8 @@ p_fat_obs <- plot_observed_classes(
   title = NULL,
   x_label = "Age (weeks)",
   y_label = "Fat mass (g)",
-  class_label = "FM class"
+  class_label = "FM class",
+  palette = fat_pal
 )
 
 p_fat_km <- plot_km_classes(
@@ -370,7 +408,8 @@ p_fat_km <- plot_km_classes(
   title = NULL,
   x_label = "Age (weeks)",
   y_label = "Survival probability",
-  class_label = "FM class"
+  class_label = "FM class",
+  palette = fat_pal
 )
 
 
@@ -409,7 +448,8 @@ p_gluc_obs <- plot_observed_classes(
   title = NULL,
   x_label = "Age (weeks)",
   y_label = "Blood glucose (mg/dL)",
-  class_label = "FBG class"
+  class_label = "FBG class",
+  palette = gluc_pal
 )
 
 p_gluc_km <- plot_km_classes(
@@ -420,7 +460,8 @@ p_gluc_km <- plot_km_classes(
   title = NULL,
   x_label = "Age (weeks)",
   y_label = "Survival probability",
-  class_label = "FBG class"
+  class_label = "FBG class",
+  palette = gluc_pal
 )
 
 
@@ -524,5 +565,93 @@ ggsave(
   width = 7,
   height = 4.5,
   dpi = 300,
+  bg = "white"
+)
+
+# figure 1 size panels --------------------------------------------------------
+
+# same size as 99_pub_ready_figs define_class panels, legends saved separately
+if (!dir.exists(file.path("output", "panel_fig1_size"))) {
+  dir.create(file.path("output", "panel_fig1_size"), recursive = TRUE)
+}
+
+ggsave(
+  filename = file.path("output", "panel_fig1_size", "A_bw_observed.png"),
+  plot = p_bw_obs + theme(legend.position = "none"),
+  width = 4,
+  height = 5,
+  dpi = 600,
+  bg = "white"
+)
+
+ggsave(
+  filename = file.path("output", "panel_fig1_size", "B_bw_km.png"),
+  plot = p_bw_km$plot + theme(legend.position = "none"),
+  width = 4,
+  height = 5,
+  dpi = 600,
+  bg = "white"
+)
+
+ggsave(
+  filename = file.path("output", "panel_fig1_size", "C_fat_observed.png"),
+  plot = p_fat_obs + theme(legend.position = "none"),
+  width = 4,
+  height = 5,
+  dpi = 600,
+  bg = "white"
+)
+
+ggsave(
+  filename = file.path("output", "panel_fig1_size", "D_fat_km.png"),
+  plot = p_fat_km$plot + theme(legend.position = "none"),
+  width = 4,
+  height = 5,
+  dpi = 600,
+  bg = "white"
+)
+
+ggsave(
+  filename = file.path("output", "panel_fig1_size", "G_glucose_observed.png"),
+  plot = p_gluc_obs + theme(legend.position = "none"),
+  width = 4,
+  height = 5,
+  dpi = 600,
+  bg = "white"
+)
+
+ggsave(
+  filename = file.path("output", "panel_fig1_size", "H_glucose_km.png"),
+  plot = p_gluc_km$plot + theme(legend.position = "none"),
+  width = 4,
+  height = 5,
+  dpi = 600,
+  bg = "white"
+)
+
+ggsave(
+  filename = file.path("output", "panel_fig1_size", "legend_bw.png"),
+  plot = ggdraw(get_legend(p_bw_km$plot + theme(legend.position = "right"))),
+  width = 3,
+  height = 3,
+  dpi = 600,
+  bg = "white"
+)
+
+ggsave(
+  filename = file.path("output", "panel_fig1_size", "legend_fm.png"),
+  plot = ggdraw(get_legend(p_fat_km$plot + theme(legend.position = "right"))),
+  width = 3,
+  height = 3,
+  dpi = 600,
+  bg = "white"
+)
+
+ggsave(
+  filename = file.path("output", "panel_fig1_size", "legend_fbg.png"),
+  plot = ggdraw(get_legend(p_gluc_km$plot + theme(legend.position = "right"))),
+  width = 3,
+  height = 3,
+  dpi = 600,
   bg = "white"
 )
