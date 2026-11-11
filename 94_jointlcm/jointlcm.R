@@ -576,7 +576,7 @@ if (!dir.exists(file.path("output", "panel_fig1_size"))) {
 }
 
 ggsave(
-  filename = file.path("output", "panel_fig1_size", "A_bw_observed.png"),
+  filename = file.path("output", "panel_fig1_size", "S2A.png"),
   plot = p_bw_obs + theme(legend.position = "none"),
   width = 4,
   height = 5,
@@ -585,7 +585,7 @@ ggsave(
 )
 
 ggsave(
-  filename = file.path("output", "panel_fig1_size", "B_bw_km.png"),
+  filename = file.path("output", "panel_fig1_size", "S2B.png"),
   plot = p_bw_km$plot + theme(legend.position = "none"),
   width = 4,
   height = 5,
@@ -594,7 +594,7 @@ ggsave(
 )
 
 ggsave(
-  filename = file.path("output", "panel_fig1_size", "C_fat_observed.png"),
+  filename = file.path("output", "panel_fig1_size", "S2C.png"),
   plot = p_fat_obs + theme(legend.position = "none"),
   width = 4,
   height = 5,
@@ -603,7 +603,7 @@ ggsave(
 )
 
 ggsave(
-  filename = file.path("output", "panel_fig1_size", "D_fat_km.png"),
+  filename = file.path("output", "panel_fig1_size", "S2D.png"),
   plot = p_fat_km$plot + theme(legend.position = "none"),
   width = 4,
   height = 5,
@@ -612,7 +612,7 @@ ggsave(
 )
 
 ggsave(
-  filename = file.path("output", "panel_fig1_size", "G_glucose_observed.png"),
+  filename = file.path("output", "panel_fig1_size", "S2E.png"),
   plot = p_gluc_obs + theme(legend.position = "none"),
   width = 4,
   height = 5,
@@ -621,7 +621,7 @@ ggsave(
 )
 
 ggsave(
-  filename = file.path("output", "panel_fig1_size", "H_glucose_km.png"),
+  filename = file.path("output", "panel_fig1_size", "S2F.png"),
   plot = p_gluc_km$plot + theme(legend.position = "none"),
   width = 4,
   height = 5,

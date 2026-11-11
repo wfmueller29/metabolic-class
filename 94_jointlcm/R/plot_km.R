@@ -27,11 +27,11 @@ plot_km_classes <- function(data,
   )
 
   # Plot
-  ggsurvplot(
+  p <- ggsurvplot(
     km_fit,
     data = km_data,
     risk.table = risk_table,
-    pval = pval,
+    pval = FALSE,
     conf.int = conf_int,
     censor = censor,
     palette = palette,
@@ -43,4 +43,15 @@ plot_km_classes <- function(data,
     ggtheme = theme_classic(base_size = 14),
     risk.table.theme = theme_classic(base_size = 12)
   )
+
+  # italic p, bottom left, as in the composite figure
+  if (pval) {
+    pv <- surv_pvalue(km_fit, data = km_data)$pval
+    pv_txt <- if (pv < 0.0001) "'<0.0001'" else paste0("'= ", signif(pv, 2), "'")
+    p$plot <- p$plot +
+      annotate("text", x = 0, y = 0.05, label = paste0("italic(p)~", pv_txt),
+               parse = TRUE, hjust = 0, size = 5)
+  }
+
+  p
 }
