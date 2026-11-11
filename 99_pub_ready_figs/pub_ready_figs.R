@@ -1249,6 +1249,193 @@ if (TRUE) {
 
 }
 
+# =============================================================================
+# LANDMARK FOREST
+#
+# Tertile HR forest for the 45- and 60-week landmark validations, styled as
+# 4G/S7G. It combines two stage-07 runs, so it is built here, not in 07.
+#
+# INPUT: save_figtabs$km_hr_combine_validation_forest_hr in each landmark
+# workspace -- one table per window: column 1 is SLAM's `final` string (HR, CI),
+# column `pval` is the model p-value. Stars come from STAR_RULES via stars().
+# The plotting helpers are copied from the forest section of
+# 07_display_figures.Rmd so this forest matches 4G; keep them in step.
+#
+# OUTPUT: output/landmark/forest.png, 10 x 8.4 in like 4G (4 windows x 3 rows).
+# =============================================================================
+
+LANDMARK_ENVS <- list(
+  "45-week landmark" = "../07_display_figures/output/slam_c1-10_x_slam_c16-c18_landmark45_age_bwfatgluc/workspace.RDATA",
+  "60-week landmark" = "../07_display_figures/output/slam_c1-10_x_slam_c16-c18_landmark_age_bwfatgluc/workspace.RDATA"
+)
+LANDMARK_WINDOWS <- c("[6.5, 84.5]", "[19.6, 84.6]")
+
+forest_tertile_palette <- setNames(c("#00B400", "#FFA024", "#EB2100"), 1:3)
+
+# ggforest's annotation font size: fontsize(0.7) * (11pt -> mm)
+forest_font_mm <- 0.7 * 11 / 72.27 * 25.4
+
+# reduce a cut2 interval label "[0.002665,0.008639)" -> "[0.00267, 0.00864)"
+round_boundary <- function(x, digits = 3) {
+  start <- regexpr("\\[", x)
+  if (start == -1) {
+    return(x)
+  }
+  bracket <- substring(x, start)
+  close <- substr(bracket, nchar(bracket), nchar(bracket))
+  inner <- substr(bracket, 2, nchar(bracket) - 1)
+  parts <- as.numeric(strsplit(inner, ",")[[1]])
+  paste0("[", signif(parts[1], digits), ", ", signif(parts[2], digits), close)
+}
+
+# parse "HR = 1.2513 (1.0542, 1.4853)*" -> value/lower/upper
+forest_parse_final <- function(final) {
+  m <- regmatches(final, regexec(
+    "HR = ([0-9.eE+-]+) \\(([0-9.eE+-]+), ([0-9.eE+-]+)\\)(\\**)", final
+  ))[[1]]
+  data.frame(
+    value = as.numeric(m[2]), lower = as.numeric(m[3]),
+    upper = as.numeric(m[4]), stars = m[5], stringsAsFactors = FALSE
+  )
+}
+
+# significance stars -> p-value column text
+forest_pval_text <- function(stars) {
+  dplyr::case_when(
+    stars == "***" ~ "<0.001 ***",
+    stars == "**" ~ "<0.01 **",
+    stars == "*" ~ "<0.05 *",
+    TRUE ~ "n.s."
+  )
+}
+
+# one window table -> tidy rows, with a reference (tertile 1) row at HR = 1
+forest_tidy_panel <- function(df, facet_name, group_prefix) {
+  finals <- df[[1]]
+  parsed <- do.call(rbind, lapply(finals, forest_parse_final))
+  n <- length(finals)
+  group <- seq_len(n) + 1
+  ref_row <- data.frame(
+    facet = facet_name, group = 1,
+    row_label = paste0(group_prefix, " 1 (reference)"),
+    value = 1, lower = NA, upper = NA,
+    hr_val = "reference", hr_ci = "", pval_text = "",
+    stringsAsFactors = FALSE
+  )
+  main_rows <- data.frame(
+    facet = facet_name, group = group,
+    row_label = paste0(
+      group_prefix, " ", group, " ",
+      vapply(rownames(df), round_boundary, character(1))
+    ),
+    value = parsed$value, lower = parsed$lower, upper = parsed$upper,
+    hr_val = sprintf("%.2f", parsed$value),
+    hr_ci = sprintf("(%.2f - %.2f)", parsed$lower, parsed$upper),
+    pval_text = forest_pval_text(
+      vapply(df$pval, function(p) stars(suppressWarnings(as.numeric(p))), character(1))
+    ),
+    stringsAsFactors = FALSE
+  )
+  rbind(ref_row, main_rows)
+}
+
+forest_plot_style <- function(data, palette, legend_title, title = NULL) {
+  groups_asc <- sort(unique(data$group))
+  data <- data %>%
+    dplyr::mutate(
+      facet = factor(facet, levels = unique(facet)),
+      group_y = factor(group, levels = rev(groups_asc)),
+      group_c = factor(group, levels = groups_asc)
+    ) %>%
+    dplyr::arrange(facet, group) %>%
+    dplyr::mutate(stripe_fill = ifelse(dplyr::row_number() %% 2 == 0, "#00000033", "#FFFFFF33"))
+
+  lg_lo <- log10(min(data$lower, na.rm = TRUE))
+  lg_hi <- log10(max(data$upper, na.rm = TRUE))
+  d <- lg_hi - lg_lo
+
+  x_label <- 10^(lg_lo - 1.0 * d)
+  x_hr <- 10^(lg_lo - 0.35 * d)
+  x_stars <- 10^(lg_hi + 0.13 * d)
+  x_min <- 10^(lg_lo - 1.05 * d)
+  x_max <- 10^(lg_hi + 0.30 * d)
+
+  max_break <- round(10^lg_hi)
+  x_breaks <- seq(1, max_break, by = 1)
+
+  ggplot(data, aes(y = group_y)) +
+    geom_tile(aes(x = 1, y = group_y, fill = stripe_fill), width = Inf, height = 1) +
+    scale_fill_identity() +
+    geom_vline(xintercept = 1, linetype = 3, color = "black") +
+    geom_errorbarh(
+      data = ~ dplyr::filter(.x, !is.na(lower)),
+      aes(xmin = lower, xmax = upper, color = group_c), height = 0.15
+    ) +
+    geom_point(aes(x = value, color = group_c), shape = 15, size = 4) +
+    geom_text(aes(x = x_label, label = row_label), hjust = 0, size = forest_font_mm) +
+    geom_text(aes(x = x_hr, label = hr_val), hjust = 0.5, vjust = -0.1, size = forest_font_mm) +
+    geom_text(aes(x = x_hr, label = hr_ci), hjust = 0.5, vjust = 1.2, size = forest_font_mm, fontface = "italic") +
+    geom_text(aes(x = x_stars, label = pval_text), hjust = 0, size = forest_font_mm, fontface = "italic") +
+    scale_color_manual(
+      values = palette, name = legend_title,
+      breaks = as.character(groups_asc), limits = as.character(groups_asc)
+    ) +
+    scale_x_log10(
+      breaks = x_breaks, labels = function(b) sprintf("%g", b),
+      limits = c(x_min, x_max), expand = expansion(mult = c(0.01, 0.01))
+    ) +
+    facet_grid(rows = vars(facet), scales = "free_y", space = "free_y", switch = "y") +
+    labs(x = "Hazard Ratio", y = NULL, title = title) +
+    theme_light() +
+    theme(
+      panel.grid.minor = element_blank(),
+      panel.grid.major.y = element_blank(),
+      panel.border = element_rect(color = "grey50", fill = NA, linewidth = 0.5),
+      panel.spacing = unit(4, "pt"),
+      strip.placement = "outside",
+      strip.background = element_blank(),
+      strip.text.y.left = element_text(angle = 0, face = "bold", hjust = 0.5, color = "black"),
+      axis.text.y = element_blank(),
+      axis.ticks.y = element_blank(),
+      plot.title = element_text(hjust = 0.5)
+    )
+}
+
+# facets in KM-grid order: 45-week row, then 60-week row; windows left to right
+landmark_rows <- list()
+for (lm in names(LANDMARK_ENVS)) {
+  path <- LANDMARK_ENVS[[lm]]
+  if (!file.exists(path)) {
+    skip("landmark forest -- not found: ", path)
+    next
+  }
+  e <- new.env()
+  load(path, envir = e)
+  tabs <- e$save_figtabs$km_hr_combine_validation_forest_hr
+  if (is.null(tabs)) {
+    skip("landmark forest -- ", lm, " workspace has no pval tables; re-render its stage 07")
+    next
+  }
+  windows <- vapply(tabs, function(t) colnames(t)[1], character(1))
+  for (w in LANDMARK_WINDOWS) {
+    if (is.na(match(w, windows))) {
+      skip("landmark forest -- ", lm, " has no window ", w)
+      next
+    }
+    landmark_rows[[length(landmark_rows) + 1]] <-
+      forest_tidy_panel(tabs[[match(w, windows)]], paste0(lm, "\n", w), "Tertile")
+  }
+}
+
+if (length(landmark_rows) == length(LANDMARK_ENVS) * length(LANDMARK_WINDOWS)) {
+  landmark_forest <- forest_plot_style(
+    do.call(rbind, landmark_rows),
+    palette = forest_tertile_palette,
+    legend_title = "Tertile"
+  )
+  save_png(landmark_forest, file.path("output", "landmark"), "forest", width = 10, height = 8.4)
+}
+
 message("99_pub_ready_figs: done")
 
 
