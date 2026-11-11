@@ -2442,6 +2442,8 @@ for (table in km_hr_combine_validation_panels_hr) {
 
 ```{r km tertiled hr validation forest, fig.height=13, fig.width=12}
 save_figtabs$km_hr_combine_panel_forest <- km_hr_combine_panel_forest
+# keep the pval-carrying copy (every window) for downstream forest plots
+save_figtabs$km_hr_combine_validation_forest_hr <- km_hr_combine_validation_forest_hr
 km_hr_combine_panel_forest
 
 # save standalone png. width matches the combined-cox forest; height scales
