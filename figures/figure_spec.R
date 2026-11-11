@@ -143,21 +143,17 @@ FIGURES <- list(
   list(
     part  = "supplemental",
     title = "Joint Latent Class Model",
-    note  = paste("These joint latent-class panels are the canonical output from",
-                  "Billy Mueller's original run. The joint model is re-fit stochastically",
-                  "and is environment-sensitive, so it is not regenerated on this machine",
-                  "to avoid drift from the paper-displayed figure."),
+    note  = paste("These joint latent-class panels come from the seeded refit (seed 94),",
+                  "which reproduces Billy Mueller's canonical panels byte for byte once",
+                  "classes are renumbered. Class numbers, labels and colours are matched",
+                  "to Figure 1; panels are Figure 1 size (4 x 5 in) without legends."),
     panels = c(
-      # 94_jointlcm writes EIGHT panels, lettered A-H in its own scheme, and its
-      # letters are NOT this figure's letters: 94's E/F are ADIPOSITY, which this
-      # figure does not show. Glucose is 94's G/H. Taking E_/F_ here because they
-      # sort next would silently publish adiposity as glucose.
-      "../94_jointlcm/output/panel/A_bw_observed.png",
-      "../94_jointlcm/output/panel/B_bw_km.png",
-      "../94_jointlcm/output/panel/C_fat_observed.png",
-      "../94_jointlcm/output/panel/D_fat_km.png",
-      "../94_jointlcm/output/panel/G_glucose_observed.png",
-      "../94_jointlcm/output/panel/H_glucose_km.png"
+      "../94_jointlcm/output/panel_fig1_size/S2A.png",
+      "../94_jointlcm/output/panel_fig1_size/S2B.png",
+      "../94_jointlcm/output/panel_fig1_size/S2C.png",
+      "../94_jointlcm/output/panel_fig1_size/S2D.png",
+      "../94_jointlcm/output/panel_fig1_size/S2E.png",
+      "../94_jointlcm/output/panel_fig1_size/S2F.png"
     )
   ),
   list(
