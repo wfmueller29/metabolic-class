@@ -1427,7 +1427,8 @@ for (lm in names(LANDMARK_ENVS)) {
       skip("landmark forest -- ", lm, "-week landmark has no window ", w)
       next
     }
-    facet <- paste0(lm, "-week landmark\n[", LANDMARK_WINDOWS[[w]], ", ", lm, "]")
+    # window only, as in 4G/S7G; the landmark spanner is added in layout
+    facet <- paste0("[", LANDMARK_WINDOWS[[w]], ", ", lm, "]")
     landmark_rows[[length(landmark_rows) + 1]] <-
       forest_tidy_panel(tabs[[match(w, windows)]], facet, "Tertile")
   }

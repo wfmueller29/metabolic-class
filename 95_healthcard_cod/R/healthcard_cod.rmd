@@ -43,10 +43,11 @@ output:
       "2" = "#36b22b", # green
       "3" = "#5087fe" # blue
     )
+    # BW class colours as in Figure 1
     class_colors_final <- c(
-      "Class 1" = "#000", # black
-      "Class 2" = "#d53b59", # red
-      "Class 3" = "#53ca3e" # green
+      "Class 1" = "#000000", # black
+      "Class 2" = "#ff2500", # red
+      "Class 3" = "#a144ff" # purple
     )
     bin_colors <- c(
       "0" = "#74ae66", # green
