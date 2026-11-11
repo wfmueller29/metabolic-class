@@ -1265,10 +1265,15 @@ if (TRUE) {
 # =============================================================================
 
 LANDMARK_ENVS <- list(
-  "45-week landmark" = "../07_display_figures/output/slam_c1-10_x_slam_c16-c18_landmark45_age_bwfatgluc/workspace.RDATA",
-  "60-week landmark" = "../07_display_figures/output/slam_c1-10_x_slam_c16-c18_landmark_age_bwfatgluc/workspace.RDATA"
+  "45" = "../07_display_figures/output/slam_c1-10_x_slam_c16-c18_landmark45_age_bwfatgluc/workspace.RDATA",
+  "60" = "../07_display_figures/output/slam_c1-10_x_slam_c16-c18_landmark_age_bwfatgluc/workspace.RDATA"
 )
-LANDMARK_WINDOWS <- c("[6.5, 84.5]", "[19.6, 84.6]")
+
+# window as named in 07 -> lower bound shown in the figure. The upper bound is
+# shown as the landmark: the landmark data stop at L, so every window past L
+# gives identical HRs (checked to 4 dp in both reports). No measurement falls
+# between 19.4 and 19.7 weeks, so 19.5 and 19.6 select the same data.
+LANDMARK_WINDOWS <- c("[6.5, 84.5]" = "6.5", "[19.6, 84.6]" = "19.5")
 
 forest_tertile_palette <- setNames(c("#00B400", "#FFA024", "#EB2100"), 1:3)
 
@@ -1319,7 +1324,7 @@ forest_tidy_panel <- function(df, facet_name, group_prefix) {
     facet = facet_name, group = 1,
     row_label = paste0(group_prefix, " 1 (reference)"),
     value = 1, lower = NA, upper = NA,
-    hr_val = "reference", hr_ci = "", pval_text = "",
+    hr_val = "Reference", hr_ci = "", pval_text = "",
     stringsAsFactors = FALSE
   )
   main_rows <- data.frame(
@@ -1417,13 +1422,14 @@ for (lm in names(LANDMARK_ENVS)) {
     next
   }
   windows <- vapply(tabs, function(t) colnames(t)[1], character(1))
-  for (w in LANDMARK_WINDOWS) {
+  for (w in names(LANDMARK_WINDOWS)) {
     if (is.na(match(w, windows))) {
-      skip("landmark forest -- ", lm, " has no window ", w)
+      skip("landmark forest -- ", lm, "-week landmark has no window ", w)
       next
     }
+    facet <- paste0(lm, "-week landmark\n[", LANDMARK_WINDOWS[[w]], ", ", lm, "]")
     landmark_rows[[length(landmark_rows) + 1]] <-
-      forest_tidy_panel(tabs[[match(w, windows)]], paste0(lm, "\n", w), "Tertile")
+      forest_tidy_panel(tabs[[match(w, windows)]], facet, "Tertile")
   }
 }
 
@@ -1431,7 +1437,7 @@ if (length(landmark_rows) == length(LANDMARK_ENVS) * length(LANDMARK_WINDOWS)) {
   landmark_forest <- forest_plot_style(
     do.call(rbind, landmark_rows),
     palette = forest_tertile_palette,
-    legend_title = "Tertile"
+    legend_title = "HR tertile"
   )
   save_png(landmark_forest, file.path("output", "landmark"), "forest", width = 10, height = 8.4)
 }

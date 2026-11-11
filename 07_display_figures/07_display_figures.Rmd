@@ -1273,7 +1273,7 @@ forest_tidy_panel <- function(df, facet_name, group_prefix) {
     facet = facet_name, group = 1,
     row_label = paste0(group_prefix, " 1 (reference)"),
     value = 1, lower = NA, upper = NA,
-    hr_val = "reference", hr_ci = "", pval_text = "",
+    hr_val = "Reference", hr_ci = "", pval_text = "",
     stringsAsFactors = FALSE
   )
   main_rows <- data.frame(
