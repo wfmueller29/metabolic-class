@@ -1314,6 +1314,23 @@ forest_pval_text <- function(stars) {
   )
 }
 
+# cut2 can print the cut point two labels share at different precision:
+# "[0.870,1.04)" then "[1.035,4.14]". Rounding "1.035" again gives 1.03, a
+# double rounding. Each shared cut is shown as printed in whichever label has
+# fewer digits, which is cut2's own rounding of the true value.
+shared_cut_labels <- function(x) {
+  b <- substring(x, regexpr("[", x, fixed = TRUE))
+  lo <- sub("^\\[([^,]+),.*$", "\\1", b)
+  hi <- sub("^[^,]+,(.+).$", "\\1", b)
+  ndig <- function(s) nchar(sub("^0+", "", gsub("[^0-9]", "", s)))
+  for (i in seq_along(b)[-1]) {
+    cut <- if (ndig(hi[i - 1]) <= ndig(lo[i])) hi[i - 1] else lo[i]
+    hi[i - 1] <- cut
+    lo[i] <- cut
+  }
+  paste0("[", lo, ",", hi, substring(b, nchar(b)))
+}
+
 # one window table -> tidy rows, with a reference (tertile 1) row at HR = 1
 forest_tidy_panel <- function(df, facet_name, group_prefix) {
   finals <- df[[1]]
@@ -1331,7 +1348,7 @@ forest_tidy_panel <- function(df, facet_name, group_prefix) {
     facet = facet_name, group = group,
     row_label = paste0(
       group_prefix, " ", group, " ",
-      vapply(rownames(df), round_boundary, character(1))
+      vapply(shared_cut_labels(rownames(df)), round_boundary, character(1))
     ),
     value = parsed$value, lower = parsed$lower, upper = parsed$upper,
     hr_val = sprintf("%.2f", parsed$value),
@@ -1441,6 +1458,51 @@ if (length(landmark_rows) == length(LANDMARK_ENVS) * length(LANDMARK_WINDOWS)) {
     legend_title = "HR tertile"
   )
   save_png(landmark_forest, file.path("output", "landmark"), "forest", width = 10, height = 8.4)
+}
+
+# =============================================================================
+# HELD-OUT WINDOW FOREST (Figure 4I)
+#
+# All ten held-out validation windows, [6.5, 19.5] to [6.5, 136.5], in one
+# forest on one axis. Replaces 07's split 4G/S7G forests. Same input and helpers
+# as the landmark forest above. No legend: the figure's shared HR tertile key
+# covers it.
+#
+# OUTPUT: output/heldout_windows/forest.png, 10 in wide like 4G, at 4G's 0.7 in
+# per row (10 windows x 3 rows = 21 in), so text prints at 4G's size when placed
+# at the same width.
+# =============================================================================
+
+HELDOUT_WORKSPACE <- "../07_display_figures/output/slam_c1-10_x_slam_c16-18_age_bwfatgluc/workspace.RDATA"
+
+heldout_tabs <- NULL
+if (file.exists(HELDOUT_WORKSPACE)) {
+  e <- new.env()
+  load(HELDOUT_WORKSPACE, envir = e)
+  heldout_tabs <- e$save_figtabs$km_hr_combine_validation_forest_hr
+} else {
+  skip("held-out window forest -- not found: ", HELDOUT_WORKSPACE)
+}
+
+if (is.null(heldout_tabs)) {
+  skip("held-out window forest -- workspace has no pval tables; re-render its stage 07")
+} else {
+  windows <- vapply(heldout_tabs, function(t) colnames(t)[1], character(1))
+  keep <- which(grepl("^\\[6\\.5, [0-9.]+\\]$", windows))
+  keep <- keep[order(as.numeric(sub("^\\[6\\.5, ([0-9.]+)\\]$", "\\1", windows[keep])))]
+
+  if (length(keep) != 10) {
+    skip("held-out window forest -- expected 10 windows from 6.5, found ", length(keep))
+  } else {
+    heldout_rows <- lapply(keep, function(i) forest_tidy_panel(heldout_tabs[[i]], windows[i], "Tertile"))
+    heldout_forest <- forest_plot_style(
+      do.call(rbind, heldout_rows),
+      palette = forest_tertile_palette,
+      legend_title = "HR tertile"
+    ) + ggplot2::theme(legend.position = "none")
+    out_dir <- file.path("output", "heldout_windows")
+    save_png(heldout_forest, out_dir, "forest", width = 10, height = 21)
+  }
 }
 
 message("99_pub_ready_figs: done")
