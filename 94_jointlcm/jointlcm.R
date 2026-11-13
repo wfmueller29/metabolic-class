@@ -8,6 +8,7 @@ library(parallel)
 library(ggplot2)
 library(survminer)
 library(cowplot)
+source("../figures/source_data.R") # Data S1 helpers: write_trajectory_data(), write_km_data()
 
 # read required data ----------------------------------------------------------
 bw <- read.csv("../00b_dataset_mods/output/slam_c1-c10/data/slam_bw_og.csv")
@@ -142,165 +143,172 @@ gluc_tm <- gluc_tm[complete.cases(gluc_tm[, c(
   "age_wk", "age_wk2", "gluc", "sex_M", "strain_HET3"
 )]), ]
 
-# jointly model each ----------------------------------------------------------
+# JOINTLCM_REUSE=1 loads output/models.rds from the last full run instead of
+# refitting, e.g. to rewrite the panels and their Data S1 files. Unset, refits.
+if (nzchar(Sys.getenv("JOINTLCM_REUSE"))) {
+  if (!file.exists(file.path("output", "models.rds"))) stop("JOINTLCM_REUSE is set but output/models.rds does not exist")
+  list2env(readRDS(file.path("output", "models.rds")), envir = environment())
+} else {
+  # jointly model each ----------------------------------------------------------
 
-# create cluster
-n_cores <- 8
+  # create cluster
+  n_cores <- 8
 
-cl <- makeCluster(n_cores)
+  cl <- makeCluster(n_cores)
 
-clusterEvalQ(cl, {
-  library(lcmm)
-  library(survival)
-})
+  clusterEvalQ(cl, {
+    library(lcmm)
+    library(survival)
+  })
 
-# seed the master and the parallel workers so the refit is reproducible
-set.seed(94)
-clusterSetRNGStream(cl, iseed = 94)
+  # seed the master and the parallel workers so the refit is reproducible
+  set.seed(94)
+  clusterSetRNGStream(cl, iseed = 94)
 
-# bw --------------------------------------------------------------------------
-# NOTE: BW 1 class model did not converge with random~age_wk + age_wk2
-# NOTE: We are going to use just age_wk for the random effect
-bw_jm1 <- Jointlcmm(
-  fixed = bw ~ age_wk + age_wk2 + sex_M * strain_HET3,
-  random = ~age_wk,
-  subject = "idno",
-  survival = Surv(tstart, tstop, death) ~ 1,
-  hazard = "Weibull",
-  ng = 1,
-  data = bw_tm,
-  maxiter = 200
-)
-
-bw_jm1$conv
-
-bw_jm3 <- gridsearch(
-  rep = 50,
-  maxiter = 30,
-  minit = bw_jm1,
-  cl = cl,
-  Jointlcmm(
+  # bw --------------------------------------------------------------------------
+  # NOTE: BW 1 class model did not converge with random~age_wk + age_wk2
+  # NOTE: We are going to use just age_wk for the random effect
+  bw_jm1 <- Jointlcmm(
     fixed = bw ~ age_wk + age_wk2 + sex_M * strain_HET3,
-    mixture = ~ age_wk + age_wk2,
     random = ~age_wk,
     subject = "idno",
     survival = Surv(tstart, tstop, death) ~ 1,
     hazard = "Weibull",
-    ng = 3,
-    data = bw_tm
+    ng = 1,
+    data = bw_tm,
+    maxiter = 200
   )
-)
 
-bw_jm3$conv
+  bw_jm1$conv
 
-# fat -------------------------------------------------------------------------
-fat_jm1 <- Jointlcmm(
-  fixed = fat ~ age_wk + age_wk2 + sex_M * strain_HET3,
-  random = ~age_wk,
-  subject = "idno",
-  survival = Surv(tstart, tstop, death) ~ 1,
-  hazard = "Weibull",
-  ng = 1,
-  data = fat_tm,
-  maxiter = 200
-)
+  bw_jm3 <- gridsearch(
+    rep = 50,
+    maxiter = 30,
+    minit = bw_jm1,
+    cl = cl,
+    Jointlcmm(
+      fixed = bw ~ age_wk + age_wk2 + sex_M * strain_HET3,
+      mixture = ~ age_wk + age_wk2,
+      random = ~age_wk,
+      subject = "idno",
+      survival = Surv(tstart, tstop, death) ~ 1,
+      hazard = "Weibull",
+      ng = 3,
+      data = bw_tm
+    )
+  )
 
-fat_jm1$conv
+  bw_jm3$conv
 
-fat_jm3 <- gridsearch(
-  rep = 50,
-  maxiter = 30,
-  minit = fat_jm1,
-  cl = cl,
-  Jointlcmm(
+  # fat -------------------------------------------------------------------------
+  fat_jm1 <- Jointlcmm(
     fixed = fat ~ age_wk + age_wk2 + sex_M * strain_HET3,
-    mixture = ~ age_wk + age_wk2,
     random = ~age_wk,
     subject = "idno",
     survival = Surv(tstart, tstop, death) ~ 1,
     hazard = "Weibull",
-    ng = 3,
-    data = fat_tm
+    ng = 1,
+    data = fat_tm,
+    maxiter = 200
   )
-)
 
-fat_jm3$conv
+  fat_jm1$conv
 
-# adiposity -------------------------------------------------------------------
-adiposity_jm1 <- Jointlcmm(
-  fixed = adiposity ~ age_wk + age_wk2 + sex_M * strain_HET3,
-  random = ~age_wk,
-  subject = "idno",
-  survival = Surv(tstart, tstop, death) ~ 1,
-  hazard = "Weibull",
-  ng = 1,
-  data = adiposity_tm,
-  maxiter = 200
-)
+  fat_jm3 <- gridsearch(
+    rep = 50,
+    maxiter = 30,
+    minit = fat_jm1,
+    cl = cl,
+    Jointlcmm(
+      fixed = fat ~ age_wk + age_wk2 + sex_M * strain_HET3,
+      mixture = ~ age_wk + age_wk2,
+      random = ~age_wk,
+      subject = "idno",
+      survival = Surv(tstart, tstop, death) ~ 1,
+      hazard = "Weibull",
+      ng = 3,
+      data = fat_tm
+    )
+  )
 
-adiposity_jm1$conv
+  fat_jm3$conv
 
-adiposity_jm3 <- gridsearch(
-  rep = 50,
-  maxiter = 50,
-  minit = adiposity_jm1,
-  cl = cl,
-  Jointlcmm(
+  # adiposity -------------------------------------------------------------------
+  adiposity_jm1 <- Jointlcmm(
     fixed = adiposity ~ age_wk + age_wk2 + sex_M * strain_HET3,
-    mixture = ~age_wk,
     random = ~age_wk,
     subject = "idno",
     survival = Surv(tstart, tstop, death) ~ 1,
     hazard = "Weibull",
-    ng = 2,
-    data = adiposity_tm
+    ng = 1,
+    data = adiposity_tm,
+    maxiter = 200
   )
-)
 
-adiposity_jm3$conv
+  adiposity_jm1$conv
 
-# gluc ------------------------------------------------------------------------
-gluc_jm1 <- Jointlcmm(
-  fixed = gluc ~ age_wk + age_wk2 + sex_M * strain_HET3,
-  random = ~age_wk,
-  subject = "idno",
-  survival = Surv(tstart, tstop, death) ~ 1,
-  hazard = "Weibull",
-  ng = 1,
-  data = gluc_tm,
-  maxiter = 200
-)
+  adiposity_jm3 <- gridsearch(
+    rep = 50,
+    maxiter = 50,
+    minit = adiposity_jm1,
+    cl = cl,
+    Jointlcmm(
+      fixed = adiposity ~ age_wk + age_wk2 + sex_M * strain_HET3,
+      mixture = ~age_wk,
+      random = ~age_wk,
+      subject = "idno",
+      survival = Surv(tstart, tstop, death) ~ 1,
+      hazard = "Weibull",
+      ng = 2,
+      data = adiposity_tm
+    )
+  )
 
-gluc_jm1$conv
+  adiposity_jm3$conv
 
-gluc_jm3 <- gridsearch(
-  rep = 50,
-  maxiter = 30,
-  minit = gluc_jm1,
-  cl = cl,
-  Jointlcmm(
+  # gluc ------------------------------------------------------------------------
+  gluc_jm1 <- Jointlcmm(
     fixed = gluc ~ age_wk + age_wk2 + sex_M * strain_HET3,
-    mixture = ~ age_wk + age_wk2,
     random = ~age_wk,
     subject = "idno",
     survival = Surv(tstart, tstop, death) ~ 1,
     hazard = "Weibull",
-    ng = 2,
-    data = gluc_tm
+    ng = 1,
+    data = gluc_tm,
+    maxiter = 200
   )
-)
 
-gluc_jm3$conv
+  gluc_jm1$conv
 
-# save fitted models ----------------------------------------------------------
+  gluc_jm3 <- gridsearch(
+    rep = 50,
+    maxiter = 30,
+    minit = gluc_jm1,
+    cl = cl,
+    Jointlcmm(
+      fixed = gluc ~ age_wk + age_wk2 + sex_M * strain_HET3,
+      mixture = ~ age_wk + age_wk2,
+      random = ~age_wk,
+      subject = "idno",
+      survival = Surv(tstart, tstop, death) ~ 1,
+      hazard = "Weibull",
+      ng = 2,
+      data = gluc_tm
+    )
+  )
 
-dir.create("output", showWarnings = FALSE)
-saveRDS(
-  list(bw_jm1 = bw_jm1, bw_jm3 = bw_jm3, fat_jm1 = fat_jm1, fat_jm3 = fat_jm3,
-       adiposity_jm1 = adiposity_jm1, adiposity_jm3 = adiposity_jm3,
-       gluc_jm1 = gluc_jm1, gluc_jm3 = gluc_jm3),
-  file.path("output", "models.rds")
-)
+  gluc_jm3$conv
+
+  # save fitted models ----------------------------------------------------------
+
+  dir.create("output", showWarnings = FALSE)
+  saveRDS(
+    list(bw_jm1 = bw_jm1, bw_jm3 = bw_jm3, fat_jm1 = fat_jm1, fat_jm3 = fat_jm3,
+         adiposity_jm1 = adiposity_jm1, adiposity_jm3 = adiposity_jm3,
+         gluc_jm1 = gluc_jm1, gluc_jm3 = gluc_jm3),
+    file.path("output", "models.rds")
+  )
+}
 
 # reorder class ---------------------------------------------------------------
 
@@ -628,6 +636,16 @@ ggsave(
   dpi = 600,
   bg = "white"
 )
+
+# Data S1 source data for S2A-S2F, written beside each PNG and headed as
+# Figure S2 prints them
+s2_dir <- file.path("output", "panel_fig1_size")
+write_panel_data(write_trajectory_data, p_bw_obs, s2_dir, "S2A", "Body weight (g)", "BW class")
+write_panel_data(write_km_data, p_bw_km$plot, s2_dir, "S2B", "BW class")
+write_panel_data(write_trajectory_data, p_fat_obs, s2_dir, "S2C", "Fat mass (g)", "FM class")
+write_panel_data(write_km_data, p_fat_km$plot, s2_dir, "S2D", "FM class")
+write_panel_data(write_trajectory_data, p_gluc_obs, s2_dir, "S2E", "Blood glucose (mg/dL)", "FBG class")
+write_panel_data(write_km_data, p_gluc_km$plot, s2_dir, "S2F", "FBG class")
 
 ggsave(
   filename = file.path("output", "panel_fig1_size", "legend_bw.png"),

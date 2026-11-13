@@ -1784,6 +1784,9 @@ km_hr_combine_validation_forest_hr <- lapply(
 #   c(1, 2, 3, 5, 7, 9)   19.5/32.5/45.5/71.5/    figure S7, panels A-F  -> S7G
 #                         97.5/123.5
 #
+# That is the R1 layout. R2 places 99's forests instead (4I, all ten windows;
+# S7E, landmarks), so these two are no longer in the deck.
+#
 # Uses the same forest_* helpers and already-computed numbers as the dose
 # forest, so the stars come from forest_stars() at p<0.05/0.01/0.001 rather
 # than from SLAM's pre-formatted strings.
@@ -1931,6 +1934,37 @@ hist_plot_panel <- cowplot::plot_grid(title_theme, hist_plot_panel,
 
 ```{r figure lists}
 save_figtabs <- list()
+
+# Data S1: keep the objects the PNGs above were drawn from, so 99 can write
+# each panel's values. No figure changes. The saved workspace keeps only
+# final_models$census and save_figtabs, hence here.
+if (exists("dose_plots")) save_figtabs$data_s1_dose_km <- dose_plots
+if (exists("km_hr_combine_validation")) save_figtabs$data_s1_km_tertile <- km_hr_combine_validation
+# plot_list was last set in "class prediction panel": the classification plots
+if (exists("interval_plots")) save_figtabs$data_s1_classification <- plot_list
+if (exists("hm2")) {
+  heat_census <- final_models$combined_census[[1]]
+  heat_probs <- names(heat_census)[grepl("^prob\\d+", names(heat_census))]
+  save_figtabs$data_s1_heatmap2 <- list(
+    probs = as.matrix(heat_census[, heat_probs]),
+    row_order = hm2$tree_row$order,
+    col_order = hm2$tree_col$order
+  )
+  rm(heat_census, heat_probs)
+}
+# the combined Cox forests: plot_N is c(training models, complete models)
+cox_test <- which(final_models$data_mod == "train_test")
+cox_rest <- which(final_models$data_mod != "train_test")
+if (length(cox_test) && length(cox_rest)) {
+  save_figtabs$data_s1_cox <- list(
+    models = c(final_models$cox_combined_models[[cox_test[[1]]]],
+               final_models$cox_combined_models[[cox_rest[[1]]]]),
+    data = list(final_models$combined_census[[cox_test[[1]]]],
+                final_models$combined_census[[cox_rest[[1]]]]),
+    n_test = length(final_models$cox_combined_models[[cox_test[[1]]]])
+  )
+}
+rm(cox_test, cox_rest)
 ```
 
 ## Display Figures

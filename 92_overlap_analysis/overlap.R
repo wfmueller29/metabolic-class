@@ -8,6 +8,9 @@ suppressPackageStartupMessages(library(magrittr))
 suppressPackageStartupMessages(library(webshot2))
 suppressPackageStartupMessages(library(UpSetR))
 
+# Data S1 source data: each panel writes <name>.csv beside its PNG
+source("../figures/source_data.R")
+
 # load data -------------------------------------------------------------------
 # All figures from this stage go under output/, as in every other stage.
 if (!dir.exists("output")) dir.create("output", recursive = TRUE)
@@ -341,6 +344,26 @@ print(upset(
 
 invisible(dev.off())
 
+# Data S1 source data for S3E: one "Intersection size" row per bar, largest
+# first (order.by = "freq"), then one "Set size" row per set
+upset_sets <- c("BW high-risk", "FM high-risk", "FBG high-risk")
+write_panel_data(function(d, dir, name) {
+  member <- as.matrix(d[, upset_sets]) == 1
+  combo <- apply(member, 1, function(r) paste(as.integer(r), collapse = ""))
+  counts <- sort(table(combo[rowSums(member) > 0]), decreasing = TRUE)
+  yes_no <- function(bits) as.data.frame(t(setNames(ifelse(bits, "Yes", "No"), upset_sets)),
+                                         check.names = FALSE)
+  inter <- do.call(rbind, lapply(names(counts), function(cb) {
+    data.frame(Bar = "Intersection size", yes_no(strsplit(cb, "")[[1]] == "1"),
+               `Number of mice` = as.integer(counts[[cb]]), check.names = FALSE)
+  }))
+  sets <- do.call(rbind, lapply(upset_sets, function(s) {
+    data.frame(Bar = "Set size", yes_no(upset_sets == s),
+               `Number of mice` = sum(member[, s]), check.names = FALSE)
+  }))
+  write_csv_panel(rbind(inter, sets), dir, name)
+}, upset_data, "output", "upset_high_risk")
+
 # High-risk burden survival analysis ------------------------------------------
 # Classify each mouse by the NUMBER of high-risk phenotypes it belongs to
 # (0-3, across BW / FM / FBG), then draw a KM curve (styling matched to the
@@ -432,6 +455,7 @@ png("output/km_high_risk_burden.png", width = 8, height = 6, units = "in",
     res = 600, bg = "white")
 print(make_km(pal))
 invisible(dev.off())
+write_panel_data(write_km_data, make_km(pal)$plot, "output", "km_high_risk_burden", burden_legend)
 cat(sprintf("Wrote km_high_risk_burden.png  (palette: %s)\n",
             paste(pal, collapse = ", ")))
 

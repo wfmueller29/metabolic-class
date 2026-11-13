@@ -15,6 +15,9 @@ library(survival)
 library(flextable)
 library(broom)
 
+# Data S1 source data: each panel writes <name>.csv beside its PNG
+source("../figures/source_data.R")
+
 set.seed(365)
 
 # setting global knitr options for r markdown output
@@ -344,6 +347,7 @@ for (i in seq_along(plots)) {
     width = 6,
     height = 6
   )
+  write_panel_data(write_km_data, plot, output_path, paste0("plot_", i), "Treatment group")
 }
 ```
 
@@ -428,6 +432,7 @@ for (i in seq_along(plots)) {
     path = normalizePath(combined_path),
     width = 6, height = 6
   )
+  write_panel_data(write_km_data, plots[[i]], combined_path, combined_names[[i]], "Treatment group")
 }
 ```
 
@@ -1017,6 +1022,18 @@ abline(v = 1, lty = 2, lwd = 2)
 abline(v = median(downsample_hrs$hr, na.rm = TRUE), lwd = 2)
 
 dev.off()
+
+# Data S1 source data for 5J: one row per bar, y as plotted (hist() bins are
+# right-closed; the first is also left-closed)
+write_panel_data(function(h, dir, name) {
+  out <- data.frame(
+    `Hazard ratio for rapa vs. control, bin start` = head(h$breaks, -1),
+    `Hazard ratio for rapa vs. control, bin end` = h$breaks[-1],
+    `Frequency (%)` = h$counts,
+    check.names = FALSE
+  )
+  write_csv_panel(out, dir, name)
+}, hr_hist, hist_out, "downsampled_class2_hr_histogram")
 ```
 
 ```{r save predicted csv}

@@ -22,6 +22,7 @@ output:
   library(survminer)
   library(survival)
   library(gridtext)
+  source("../../figures/source_data.R") # Data S1 helpers: write_panel_data(), write_csv_panel()
   library(gridExtra)
   library(grid)
   library(lubridate)
@@ -1183,7 +1184,51 @@ output:
     grid::grid.newpage()
     grid::grid.draw(S8E$gtable)
     dev.off()
-```  
+    # Data S1 source data for S8A-S8E, written beside each PNG and headed as
+    # Figure S8 prints them
+    # A, B: stacked bars, one row per class and bin; y is a percentage of mice
+    s8_bars <- function(d, dir, name, fill, fill_title) {
+      out <- data.frame(`BW class` = as.character(d$new_class_bw),
+                        bin = as.character(d[[fill]]),
+                        `Proportion of mice (%)` = 100 * d$proportion,
+                        check.names = FALSE)
+      names(out)[2] <- fill_title
+      # the published legend prints the top HC-count bin as "≥ 5", like S8B's "≥ 4"
+      out[[fill_title]][out[[fill_title]] == "5+"] <- "≥ 5"
+      write_csv_panel(out[order(d$new_class_bw, d[[fill]]), ], dir, name)
+    }
+    write_panel_data(s8_bars, bin_props_stacked_final, output_dir, "S8A",
+                     fill = "condition_bin", fill_title = "# of HCs")
+    write_panel_data(s8_bars, bin_props_yr_final, output_dir, "S8B",
+                     fill = "hc_yr_bin", fill_title = "HCs/yr")
+    # C, D: cumulative steps; the figure's legend names classes "1 (Early-peak)"
+    s8_steps <- function(d, dir, name, y) {
+      out <- data.frame(`BW class` = class_legend_label(sub("^Class ", "", as.character(d$Class))),
+                        `Age (weeks)` = d$event_wk,
+                        `Cumulative HCs/mouse` = d[[y]],
+                        check.names = FALSE)
+      out <- out[!is.na(out$`Age (weeks)`) & !is.na(out$`Cumulative HCs/mouse`), ]
+      write_csv_panel(out[order(out$`BW class`, out$`Age (weeks)`), ], dir, name)
+    }
+    write_panel_data(s8_steps, cumulative_HC_day_events_only_final, output_dir, "S8C",
+                     y = "cum_HC_per_mouse_events_only")
+    write_panel_data(s8_steps, cumulative_HC_day_all_mice_final, output_dir, "S8D",
+                     y = "cum_HC_per_mouse_all")
+    # E: events/year, rows and columns in the clustered order drawn; arrows in
+    # the figure mark the significant conditions
+    write_panel_data(function(hm, dir, name) {
+      m <- condition_matrix_norm_renamed[hm$tree_row$order, hm$tree_col$order, drop = FALSE]
+      sig <- sig_annot_timed[rownames(m), "Significant Difference"]
+      # conditions in sentence case, as the published figure prints them ("Weight loss")
+      condition <- paste0(toupper(substr(rownames(m), 1, 1)), tolower(substring(rownames(m), 2)))
+      # class columns carry the colour key's unit, "Events/year"
+      colnames(m) <- paste0(colnames(m), ", events/year")
+      out <- data.frame(Condition = condition, m,
+                        `Significant difference` = ifelse(sig == "Y", "Yes", "No"),
+                        check.names = FALSE)
+      write_csv_panel(out, dir, name)
+    }, S8E, output_dir, "S8E")
+```
 
 ## Export cleaned data for Michel
 ```{r export data}

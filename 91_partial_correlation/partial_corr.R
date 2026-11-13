@@ -4,6 +4,7 @@ library(ppcor)
 library(qgraph)
 library(gridExtra)
 library(grid)
+source("../figures/source_data.R") # Data S1 helpers: class_nickname(), write_panel_data()
 
 
 # for fat ---------------------------------------------------------------------
@@ -71,6 +72,25 @@ qgraph(pcor_results$estimate,
   title = "Partial Correlation Network"
 )
 dev.off()
+
+# Data S1 source data for S3B: every pair, strongest first, named as in the
+# figure ("Early-peak-BW (1)"). Includes the pairs under qgraph's minimum = 0.05,
+# which the network does not draw.
+net_names <- vapply(names(keep_vars), function(v) {
+  k <- class_num[[v]]
+  if (is.na(k)) v else paste0(class_nickname(k), " (", k, ")")
+}, character(1))
+net_vars <- colnames(pcor_results$estimate)
+net_pairs <- which(lower.tri(pcor_results$estimate), arr.ind = TRUE)
+net_data <- data.frame(
+  `Variable 1` = net_names[net_vars[net_pairs[, "row"]]],
+  `Variable 2` = net_names[net_vars[net_pairs[, "col"]]],
+  `Partial correlation` = pcor_results$estimate[net_pairs],
+  `p-value` = pcor_results$p.value[net_pairs],
+  check.names = FALSE
+)
+net_data <- net_data[order(-abs(net_data$`Partial correlation`)), ]
+write_panel_data(write_csv_panel, net_data, "output", "partial_correlation_network")
 
 
 # Get correlation and p-value matrices
