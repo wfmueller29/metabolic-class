@@ -323,7 +323,48 @@ save_png <- function(plot, dir, name, width = 4, height = 5, dpi = 300) {
                   plot = plot, width = width, height = height, dpi = dpi)
 }
 
+# ---- source data (Data S1) --------------------------------------------------
+# Each graph panel also writes <name>.csv beside its PNG, labelled as the
+# published figure is. figures/data_s1.R collects them into the workbook.
+source("../figures/source_data.R")
+
+# Save a table panel's PNG. Tables get no Data S1 sheet: their values are
+# printed in the figure (see TABLE_PATTERNS in figures/data_s1.R)
+save_table_png <- function(ft, file) {
+  invisible(flextable::save_as_image(ft, file, res = 600))
+}
+
 # ---- define-class panels ----------------------------------------------------
+# Source data uses the published legends. The legend title names the class
+# system. Figures 1, 5B-C and S1 print classes as "1 (Early-peak)"; the
+# sex/strain figures (2, S4) print "Class 4" as the pipeline does; S9 prints
+# "Class 1" with no legend title.
+CLASS_SYSTEM_TITLE <- c(bw = "BW class", fat = "FM class", gluc = "FBG class",
+                        adiposity = "Adiposity class")
+DESCRIPTOR_LEGEND_ENVS <- c("all_env", "adiposity_env", "itp_env")
+# the adiposity config numbers its two classes locally as 4 and 5; published as 9 and 10
+ADIPOSITY_LOCAL_CLASS <- c("4" = "9", "5" = "10")
+
+published_class <- function(x, env_name) {
+  if (!env_name %in% DESCRIPTOR_LEGEND_ENVS) return(x)
+  bad <- unique(x[!grepl("^Class [0-9]+$", x)])
+  if (length(bad)) stop("unexpected class label: ", paste(bad, collapse = ", "))
+  k <- sub("^Class ", "", x)
+  if (env_name == "adiposity_env") {
+    local <- k %in% names(ADIPOSITY_LOCAL_CLASS)
+    k[local] <- ADIPOSITY_LOCAL_CLASS[k[local]]
+  }
+  class_legend_label(k)
+}
+
+write_define_class_data <- function(g, dir, name, p, env_name) {
+  system <- if (p$outcome == "km") sub("^km_", "", p$name) else sub("^.*_by_", "", p$name)
+  title <- if (startsWith(env_name, "itp_geno")) "Class" else CLASS_SYSTEM_TITLE[[system]]
+  df <- if (p$outcome == "km") km_data(g, title) else trajectory_data(g, Y_LABEL[[p$outcome]], title)
+  df[[1]] <- published_class(df[[1]], env_name)
+  write_csv_panel(df, dir, name)
+}
+
 # Collect the ITP-genotype trajectory/KM ggplots as they are rendered, to
 # assemble the S9 composite panels (controls = A, treated = B) after the loop.
 itp_geno_ggplots <- new.env()
@@ -367,6 +408,7 @@ for (env_name in names(OUTCOME_ENVS)) {
     keep_legend <- startsWith(env_name, "itp_geno")
     g_out <- if (keep_legend) g else g + ggplot2::theme(legend.position = "none")
     save_png(g_out, out_dir, p$name)
+    write_panel_data(write_define_class_data, g_out, out_dir, p$name, p, env_name)
 
     # keep the legend'd ITP-genotype plot for the S9 composite assembly below
     if (keep_legend)
@@ -424,6 +466,21 @@ assemble_itp_composite <- function(envs, cohorts, group, file) {
   dir.create(dirname(file), recursive = TRUE, showWarnings = FALSE)
   ggplot2::ggsave(file, full, width = 9, height = 11, dpi = 300, bg = "white")
   message("wrote S9 composite: ", file)
+
+  # Source data: the block's six plots in one sheet. "Panel" is the row title
+  # drawn in the figure; "Plot" says which of its two plots a row belongs to.
+  write_panel_data(function(x, dir, name) {
+    parts <- lapply(seq_along(envs), function(k) {
+      panel <- paste0(group, " (", cohorts[[k]], ")")
+      tr <- trajectory_data(gp(envs[[k]], "bw_by_bw"), Y_LABEL[["bw"]])
+      km <- km_data(gp(envs[[k]], "km_bw"))
+      dplyr::bind_rows(
+        data.frame(Panel = panel, Plot = "Body weight", tr, check.names = FALSE),
+        data.frame(Panel = panel, Plot = "Survival", km, check.names = FALSE)
+      )
+    })
+    write_csv_panel(do.call(dplyr::bind_rows, parts), dir, name)
+  }, NULL, dirname(file), sub("[.]png$", "", basename(file)))
 }
 
 assemble_itp_composite(
@@ -445,6 +502,18 @@ VALIDATION_PANELS <- list(
   list(i = 3, name = "cum_coef",       kind = "coef"),
   list(i = 4, name = "cum_concord",    kind = "concord")
 )
+
+# Source data (S6C-F, S6I-L): each point and its 95% CI (estimate +/- 1.96 SE,
+# as 06's plot_concord_lp draws it), headed as the published panels are
+write_validation_data <- function(g, dir, name, p) {
+  group <- if (startsWith(p$name, "window")) "Window size" else "Lower bound (weeks)"
+  y <- if (p$kind == "coef") "Linear predictor" else "Concordance"
+  cols <- c("Upper bound age (weeks)", y, group, "95% CI lower", "95% CI upper")
+  out <- errorbar_data(g, cols)
+  # 07 labels the window sizes "2 measures" etc.; the published legend prints 2, 3, 4
+  if (group == "Window size") out[[group]] <- sub(" measures$", "", out[[group]])
+  write_csv_panel(out, dir, name)
+}
 
 for (env_name in names(VALIDATION_ENVS)) {
   path <- VALIDATION_ENVS[[env_name]]
@@ -469,6 +538,7 @@ for (env_name in names(VALIDATION_ENVS)) {
         ggplot2::ylab("Concordance") + ggplot2::xlab("Upper bound age (weeks)")
     }
     save_png(g + ggplot2::theme(legend.position = "none"), out_dir, p$name)
+    write_panel_data(write_validation_data, g, out_dir, p$name, p)
   }
 }
 
@@ -763,7 +833,7 @@ if (TRUE) {
     # from save_as_image(); it was being swallowed by `...` and every table
     # here silently rendered at the default res = 200 (~600-960 px), which is
     # why 1N/2I/5D/5I/S3C/S4I/S4R were the lowest-resolution panels in the deck.
-    invisible(save_as_image(ft, file, res = 600))
+    save_table_png(ft, file)
     }
 
     demographics_table(all_env, "output/tables/demographics_slam.png",
@@ -830,7 +900,7 @@ if (TRUE) {
       set_table_properties(layout = "autofit") %>%
       fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
-    invisible(save_as_image(pc_ft, "output/tables/partial_correlation.png", res = 600))
+    save_table_png(pc_ft, "output/tables/partial_correlation.png")
   })
   # reference_class: derive the reference (dropped) class for an outcome from
   # t1_df. Defined here, ABOVE the table blocks, because tbl() evaluates its block
@@ -872,7 +942,7 @@ if (TRUE) {
       autofit() %>%
       set_table_properties(layout = "autofit") %>%
       fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
-    invisible(save_as_image(ft, file, res = 600))
+    save_table_png(ft, file)
   }
 
   tbl("hr_adiposity", {
@@ -1175,7 +1245,7 @@ if (TRUE) {
       set_table_properties(layout = "autofit") %>%
       fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
-    invisible(save_as_image(hr_table, "output/tables/hr_treatment.png", res = 600))
+    save_table_png(hr_table, "output/tables/hr_treatment.png")
   })
   tbl("hr_itp", {
     # ---- hr_itp ----------------------------------------------------------
@@ -1244,7 +1314,7 @@ if (TRUE) {
       set_table_properties(layout = "autofit") %>%
       fit_to_width(max_width = max_width, inc = .25, max_iter = 100)
 
-    invisible(save_as_image(hr_table, "output/tables/hr_km_external.png", res = 600))
+    save_table_png(hr_table, "output/tables/hr_km_external.png")
   })
 
 }
@@ -1254,6 +1324,8 @@ if (TRUE) {
 #
 # Tertile HR forest for the 45- and 60-week landmark validations, styled as
 # 4G/S7G. It combines two stage-07 runs, so it is built here, not in 07.
+# (4G and S7G in this file mean R1's 07 tertile forests; R2 places this forest
+# and the held-out one below instead.)
 #
 # INPUT: save_figtabs$km_hr_combine_validation_forest_hr in each landmark
 # workspace -- one table per window: column 1 is SLAM's `final` string (HR, CI),
@@ -1361,6 +1433,19 @@ forest_tidy_panel <- function(df, facet_name, group_prefix) {
   rbind(ref_row, main_rows)
 }
 
+# Forest source data (Data S1) from saved HR tables (column 1 = SLAM's
+# `final` string, `pval` = the model p-value), one block per facet
+forest_data <- function(tabs, facets, group_prefix, facet_title) {
+  out <- do.call(rbind, lapply(seq_along(tabs), function(k) {
+    r <- forest_tidy_panel(tabs[[k]], facets[[k]], group_prefix)
+    data.frame(r$facet, r$row_label, r$value, r$lower, r$upper,
+               c(NA, suppressWarnings(as.numeric(tabs[[k]]$pval))))
+  }))
+  names(out) <- c(facet_title, group_prefix, "Hazard ratio", "95% CI lower",
+                  "95% CI upper", "p-value")
+  out
+}
+
 forest_plot_style <- function(data, palette, legend_title, title = NULL) {
   groups_asc <- sort(unique(data$group))
   data <- data %>%
@@ -1425,6 +1510,8 @@ forest_plot_style <- function(data, palette, legend_title, title = NULL) {
 
 # facets in KM-grid order: 45-week row, then 60-week row; windows left to right
 landmark_rows <- list()
+landmark_tabs <- list()     # the same tables, kept for the source data
+landmark_facets <- character(0)
 for (lm in names(LANDMARK_ENVS)) {
   path <- LANDMARK_ENVS[[lm]]
   if (!file.exists(path)) {
@@ -1448,6 +1535,8 @@ for (lm in names(LANDMARK_ENVS)) {
     facet <- paste0("[", LANDMARK_WINDOWS[[w]], ", ", lm, "]")
     landmark_rows[[length(landmark_rows) + 1]] <-
       forest_tidy_panel(tabs[[match(w, windows)]], facet, "Tertile")
+    landmark_tabs[[length(landmark_tabs) + 1]] <- tabs[[match(w, windows)]]
+    landmark_facets <- c(landmark_facets, facet)
   }
 }
 
@@ -1458,6 +1547,9 @@ if (length(landmark_rows) == length(LANDMARK_ENVS) * length(LANDMARK_WINDOWS)) {
     legend_title = "HR tertile"
   )
   save_png(landmark_forest, file.path("output", "landmark"), "forest", width = 10, height = 8.4)
+  write_panel_data(function(tabs, dir, name) {
+    write_csv_panel(forest_data(tabs, landmark_facets, "Tertile", "Age window (weeks)"), dir, name)
+  }, landmark_tabs, file.path("output", "landmark"), "forest")
 }
 
 # =============================================================================
@@ -1502,7 +1594,222 @@ if (is.null(heldout_tabs)) {
     ) + ggplot2::theme(legend.position = "none")
     out_dir <- file.path("output", "heldout_windows")
     save_png(heldout_forest, out_dir, "forest", width = 10, height = 21)
+
+    # Data S1: the plotted values, with the p-value behind each star
+    heldout_data <- do.call(rbind, lapply(seq_along(keep), function(k) {
+      r <- heldout_rows[[k]]
+      data.frame(r$facet, r$row_label, r$value, r$lower, r$upper,
+                 c(NA, suppressWarnings(as.numeric(heldout_tabs[[keep[k]]]$pval))))
+    }))
+    names(heldout_data) <- c("Age window (weeks)", "Tertile", "Hazard ratio",
+                             "95% CI lower", "95% CI upper", "p-value")
+    write_csv_panel(heldout_data, out_dir, "forest")
   }
+}
+
+# =============================================================================
+# STAGE 07 PANELS: SOURCE DATA
+#
+# Panels placed straight from stage 07's PNGs (3B-3E, 4B-4H, S3A, S5B-S5M,
+# S6B, S6H, S7A-S7D) are written here, from the objects 07 keeps for them in
+# save_figtabs: data_s1_dose_km, data_s1_km_tertile, data_s1_classification,
+# data_s1_heatmap2 and data_s1_cox (07 chunk "figure lists"), plus the HR
+# tables its forests are drawn from. A workspace rendered before those entries
+# were added has none of them; its panels are skipped until 07 is re-rendered.
+#
+# OUTPUT: output/source_data_07/<07 out_tag>/<07 folder>/<PNG name>.csv, the
+# 07 PNG's path under a different root. figures/data_s1.R looks there for any
+# panel whose PNG comes from 07.
+# =============================================================================
+
+SD07_ROOT <- file.path("output", "source_data_07")
+sd07_dir <- function(tag, folder) file.path(SD07_ROOT, tag, folder)
+
+load_07 <- function(tag) {
+  path <- file.path("../07_display_figures/output", tag, "workspace.RDATA")
+  if (!file.exists(path)) {
+    skip("stage 07 source data -- not found: ", path)
+    return(NULL)
+  }
+  e <- new.env()
+  load(path, envir = e)
+  e
+}
+
+# One block of exports; a failure is reported and the rest of 99 still runs
+sd07_block <- function(label, expr) {
+  tryCatch(force(expr), error = function(e) skip("stage 07 source data ", label, " -- ", conditionMessage(e)))
+  invisible(NULL)
+}
+
+need_07 <- function(sf, name) {
+  x <- sf[[name]]
+  if (is.null(x)) stop("workspace has no save_figtabs$", name, "; re-render this config's stage 07")
+  x
+}
+
+# 07 labels the three window sizes "2 measures", "3 measures", "4 measures";
+# the published legends print 2, 3, 4
+window_label <- function(df) {
+  df[["Window size"]] <- sub(" measures$", "", df[["Window size"]])
+  df
+}
+
+# Life stages as the published S5 x axis prints them
+LIFE_STAGE_LABEL <- c("Early Life" = "Early", "Late life" = "Late", "Midlife" = "Mid",
+                      "Midlife and Late life" = "Mid & Late", "Oldest in Life" = "Oldest")
+life_stage_label <- function(df) {
+  x <- as.character(df[["Life Stage"]])
+  if (!all(x %in% names(LIFE_STAGE_LABEL))) {
+    stop("no published label for life stage: ", paste(setdiff(x, names(LIFE_STAGE_LABEL)), collapse = ", "))
+  }
+  df[["Life Stage"]] <- unname(LIFE_STAGE_LABEL[x])
+  df
+}
+
+# Combined Cox forest (4B, S6B, S6H): the rows survminer's ggforest() draws,
+# computed as ggforest computes them. A variable whose coefficient is not
+# estimable is drawn as "Reference" at HR = 1.
+combined_cox_data <- function(model, data) {
+  dc <- attr(model$terms, "dataClasses")
+  # 07 drops strata terms before ggforest, which cannot plot them
+  dc <- dc[!grepl("strata\\(", names(dc))]
+  terms <- dc[-1]
+  coef <- as.data.frame(broom::tidy(model, conf.int = TRUE))
+  rownames(coef) <- gsub("`", "", coef$term)
+  rows <- do.call(rbind, lapply(names(terms), function(var) {
+    if (terms[[var]] %in% c("factor", "character")) {
+      tab <- table(data[[var]])
+      data.frame(var = var, level = names(tab), N = as.integer(tab))
+    } else if (terms[[var]] == "numeric") {
+      data.frame(var = var, level = "", N = nrow(data))
+    } else {
+      stop("term type not handled: ", var, " (", terms[[var]], ")")
+    }
+  }))
+  est <- coef[paste0(rows$var, rows$level), ]
+  # variable names as printed in 4B / S6B / S6H
+  label <- vapply(rows$var, function(v) {
+    if (grepl("^prob[0-9]+$", v)) {
+      k <- sub("^prob", "", v)
+      paste0("Prob. Class ", k, " (", class_nickname(k), ")")
+    } else if (v == "sex") {
+      "Sex"
+    } else {
+      stop("no published label for: ", v)
+    }
+  }, character(1), USE.NAMES = FALSE)
+  ref <- is.na(est$estimate)
+  out <- data.frame(label, rows$level, rows$N,
+                    ifelse(ref, 1, exp(est$estimate)),
+                    ifelse(ref, NA, exp(est$conf.low)),
+                    ifelse(ref, NA, exp(est$conf.high)),
+                    ifelse(ref, NA, est$p.value))
+  names(out) <- c("Variable", "Level", "N", "Hazard ratio", "95% CI lower",
+                  "95% CI upper", "p-value")
+  out
+}
+
+# KMs by HR tertile, one per window (4C-4H, S7A-S7D)
+sd07_km_tertile <- function(tag, sf) {
+  plots <- need_07(sf, "data_s1_km_tertile")
+  for (i in seq_along(plots)) {
+    write_panel_data(write_km_data, plots[[i]], sd07_dir(tag, "km_combined_hr_validation"),
+                     paste0("plot_", names(plots)[[i]], "_", i), "HR tertile")
+  }
+}
+
+# Combined Cox forests; plot_N as 07 numbers them
+sd07_cox <- function(tag, sf, plots) {
+  cox <- need_07(sf, "data_s1_cox")
+  for (k in plots) {
+    data <- cox$data[[if (k <= cox$n_test) 1 else 2]]
+    write_panel_data(function(model, dir, name) {
+      write_csv_panel(combined_cox_data(model, data), dir, name)
+    }, cox$models[[k]], sd07_dir(tag, "forest"), paste0("plot_", k))
+  }
+}
+
+# ---- complete data: slam_c1-c10_age_all_bwfatgluc ----------------------------
+tag <- "slam_c1-c10_age_all_bwfatgluc"
+e07 <- load_07(tag)
+if (!is.null(e07)) {
+  sf <- e07$save_figtabs
+
+  # 3B-3D (plot_1, 4, 7): KM by class-probability quintile
+  sd07_block("dose KMs", {
+    plots <- need_07(sf, "data_s1_dose_km")
+    for (i in seq_along(plots)) {
+      write_panel_data(write_km_data, plots[[i]], sd07_dir(tag, "dose_response"),
+                       paste0("plot_", i), "Class probability quintile")
+    }
+  })
+
+  # 3E: quintile forest for classes 1, 4, 7, from the HR tables it is drawn from
+  sd07_block("dose forest", write_panel_data(function(tabs, dir, name) {
+    k <- c(1, 4, 7)
+    facets <- paste0("Class ", k, " (", class_nickname(k), ")")
+    write_csv_panel(forest_data(tabs[k], facets, "Quintile", "Class"), dir, name)
+  }, sf$dose_plot_panel_hr, sd07_dir(tag, "dose_response_forest"), "forest"))
+
+  # S3A: one row per mouse, top to bottom, and one column per class, left to
+  # right, in the clustered order heatmap2 draws
+  sd07_block("heatmap", write_panel_data(function(h, dir, name) {
+    m <- h$probs[h$row_order, h$col_order, drop = FALSE]
+    k <- sub("^prob", "", colnames(m))
+    out <- data.frame(seq_len(nrow(m)), m, check.names = FALSE)
+    # each cell is the colour key's quantity, so the class headers name it
+    names(out) <- c("Subject", paste0(class_nickname(k), " (", k, "), probability of class membership"))
+    write_csv_panel(out, dir, name)
+  }, need_07(sf, "data_s1_heatmap2"), sd07_dir(tag, "heatmap"), "heatmap2"))
+
+  # S5B-S5M: classification accuracy. plot_N is strategy-major: interval,
+  # window, cumulative, resampling, each over the outcomes.
+  sd07_block("classification", {
+    plots <- need_07(sf, "data_s1_classification")
+    if (length(plots) %% 4) stop("expected four strategies, found ", length(plots), " plots")
+    per <- length(plots) / 4
+    # The window panels plot each window at its midpoint (06's
+    # plot_boot_accuracy_window, x = average), not its upper bound
+    acc_cols <- list(
+      c("Life Stage", "Accuracy", "95% CI lower", "95% CI upper"),
+      c("Window midpoint age (weeks)", "Accuracy", "Window size", "95% CI lower", "95% CI upper"),
+      c("Upper bound age (weeks)", "Accuracy", "Lower bound (weeks)", "95% CI lower", "95% CI upper"),
+      c("Proportion resampled", "Accuracy", "95% CI lower", "95% CI upper")
+    )
+    for (i in seq_along(plots)) {
+      strategy <- ceiling(i / per)
+      write_panel_data(function(g, dir, name) {
+        out <- errorbar_data(g, acc_cols[[strategy]])
+        if (strategy == 1) out <- life_stage_label(out)
+        if (strategy == 2) out <- window_label(out)
+        write_csv_panel(out, dir, name)
+      }, plots[[i]], sd07_dir(tag, "classification"), paste0("plot_", i))
+    }
+  })
+
+  # 4B (plot_5, complete model 2) and S6B (plot_2, training model 2)
+  sd07_block("combined Cox", sd07_cox(tag, sf, c(2, 5)))
+}
+rm(e07); invisible(gc())
+
+# ---- held-out validation: slam_c1-10_x_slam_c16-18_age_bwfatgluc -------------
+tag <- "slam_c1-10_x_slam_c16-18_age_bwfatgluc"
+e07 <- load_07(tag)
+if (!is.null(e07)) {
+  sf <- e07$save_figtabs
+  sd07_block("held-out KMs", sd07_km_tertile(tag, sf))
+  # S6H (plot_2, training model 2 = all of C1-10)
+  sd07_block("held-out combined Cox", sd07_cox(tag, sf, 2))
+}
+rm(e07); invisible(gc())
+
+# ---- landmark validations (S7A-S7D) -----------------------------------------
+for (tag in c("slam_c1-10_x_slam_c16-c18_landmark45_age_bwfatgluc",
+              "slam_c1-10_x_slam_c16-c18_landmark_age_bwfatgluc")) {
+  e07 <- load_07(tag)
+  if (!is.null(e07)) sd07_block(paste(tag, "KMs"), sd07_km_tertile(tag, e07$save_figtabs))
+  rm(e07); invisible(gc())
 }
 
 message("99_pub_ready_figs: done")
@@ -1612,6 +1919,19 @@ locus_heatmap <- function(mat, title, file, pal, breaks, gap = NULL,
                  units = "in", res = 300, bg = "white")
   grid::grid.newpage(); grid::grid.draw(hm$gtable)
   grDevices::dev.off()
+
+  # Source data: -log10(p) per cell, headed "F, -log(p)" etc. after the colour
+  # key; 5L also gets the asterisks drawn in each cell
+  write_panel_data(function(m, dir, name) {
+    out <- data.frame(Locus = rownames(m), m, check.names = FALSE)
+    names(out)[-1] <- paste0(colnames(m), ", -log(p)")
+    if (cells == "stars") {
+      st <- locus_stars(m)
+      colnames(st) <- paste(colnames(m), "asterisks")
+      out <- cbind(out, st)
+    }
+    write_csv_panel(out, dir, name)
+  }, mat, dirname(file), sub("[.]png$", "", basename(file)))
   invisible(file)
 }
 
