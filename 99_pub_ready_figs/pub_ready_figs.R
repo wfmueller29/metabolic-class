@@ -1548,7 +1548,7 @@ if (length(landmark_rows) == length(LANDMARK_ENVS) * length(LANDMARK_WINDOWS)) {
   )
   save_png(landmark_forest, file.path("output", "landmark"), "forest", width = 10, height = 8.4)
   write_panel_data(function(tabs, dir, name) {
-    write_csv_panel(forest_data(tabs, landmark_facets, "Tertile", "Age window (weeks)"), dir, name)
+    write_csv_panel(forest_data(tabs, landmark_facets, "Tertile", "Age range (weeks)"), dir, name)
   }, landmark_tabs, file.path("output", "landmark"), "forest")
 }
 
@@ -1601,7 +1601,7 @@ if (is.null(heldout_tabs)) {
       data.frame(r$facet, r$row_label, r$value, r$lower, r$upper,
                  c(NA, suppressWarnings(as.numeric(heldout_tabs[[keep[k]]]$pval))))
     }))
-    names(heldout_data) <- c("Age window (weeks)", "Tertile", "Hazard ratio",
+    names(heldout_data) <- c("Age range (weeks)", "Tertile", "Hazard ratio",
                              "95% CI lower", "95% CI upper", "p-value")
     write_csv_panel(heldout_data, out_dir, "forest")
   }
